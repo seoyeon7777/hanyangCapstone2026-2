@@ -81,7 +81,9 @@ match_score(body, item) -> {
 - 추가 키 `reasons` = B가 만든 추천 이유 문장 목록
 - `outfit_bonus(body, top_tags, bottom_tags)` = B의 balance_adjustment (data/balance.json)
 - A의 classify() 결과(ratios, is_mixed)는 B의 profile과 같은 모양이다. C의 body(ratio, kind)와는 `from_profile`/`to_profile`로 바꾼다
-- B 설정(data/config.json)이 지금 `avoid_mode: penalty`라서 **제외되는 옷이 없다**(피해야 할 옷은 점수만 낮아짐). 제외 모드로 바꾸면 C도 자동으로 따른다
+- B 설정(data/config.json)이 지금 `avoid_mode: penalty`라서 **제외되는 옷이 없다**(피해야 할 옷은 점수만 낮아짐).
+  제외하려면 `avoid_mode: "exclude"`와 함께 **`avoid_threshold`를 -1로** 바꿔야 한다 (가중치 최솟값이 -1이라 지금 기준 -3으로는 아무것도 제외 안 됨 — `matching.validate_rules`가 경고함). 그러면 C도 자동으로 따른다
+- B의 체형 점수는 0~1이지만 태그가 없는 옷(중립)이 0.333이다 (가중치 범위 -1~+2를 0~1로 옮긴 것). 임시 매칭의 중립 0.5와 다르다
 
 ### item (상품) 형식
 ```json
