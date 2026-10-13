@@ -280,3 +280,7 @@ pytest.ini
 tagger_llm.py
 data/keywords_expanded.json
 data/candidates.json
+
+# 추천 서버 사용자 데이터 (SQLite). 각자 PC에서 생기는 파일이라 올리지 않는다
+recommend/data/*.db
+recommend/data/*.db-journal

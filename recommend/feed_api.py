@@ -14,7 +14,7 @@ GET  /api/feed/scroll?user_id=u1&S=0.6&W=0.3&N=0.1&page=0&size=10   ← 홈 화�
        mode=general        토글 OFF: 일반 쇼핑몰 추천(인기·자주 누른 스타일·계절) — 체형 없어도 됨
 GET  /feed-demo       연습용 스크롤 화면 (친구들 홈 화면이 오기 전 확인용)
 
-사용자 취향(pref)과 반응 기록(history)은 서버 메모리에 저장한다(서버를 끄면 사라짐 — 시연용).
+사용자 진단 결과와 반응 기록은 SQLite(store.py, recommend/data/feed.db)에 저장한다 — 서버를 꺼도 남는다.
 """
 from datetime import date
 
@@ -26,6 +26,7 @@ from rec_config import (
 from fake_matching import classify_kind
 from feed import (load_items, score_by_mode, home_feed, feed_order, reason,
                   update_pref, need_rediagnosis)
+import store
 from matching_b import from_profile
 from body_profile import classify, InputError  # A 파트 (matching_b가 저장소 맨 위 폴더를 경로에 넣어 둠)
 
@@ -35,8 +36,25 @@ feed_bp = Blueprint("feed", __name__, template_folder="templates")
 ITEMS = load_items()
 ITEMS_BY_ID = {item["id"]: item for item in ITEMS}
 
-# user_id → {"body": {...}, "pref": {...}, "history": [...]}
-USERS = {}
+
+
+def load_user(user_id):
+    """DB에서 사용자를 읽어 {"body", "pref", "history"}로 돌려준다. 없으면 None.
+
+    pref(취향)는 저장된 반응 기록을 처음부터 update_pref로 다시 쌓아 계산한다.
+    지금 상품 목록에 없는 상품의 기록은 건너뛴다.
+    """
+    row = store.get_user(user_id)
+    if row is None:
+        return None
+    pref, history = {}, []
+    for item_id, event in row["events"]:
+        item = ITEMS_BY_ID.get(item_id)
+        if item is None:
+            continue
+        pref = update_pref(pref, item, event)
+        history.append({"item": item, "event": event})
+    return {"body": row["body"], "pref": pref, "history": history}
 
 
 class BadRequest(Exception):
@@ -125,7 +143,7 @@ def resolve_request():
     user_id = data.get("user_id")
     if user_id is not None and not isinstance(user_id, str):
         raise BadRequest("user_id는 문자열이어야 해요")
-    user = USERS.get(user_id) if user_id else None
+    user = load_user(user_id) if user_id else None
     mode = data.get("mode") or "body"
     if mode not in MODES:
         raise BadRequest(f"mode는 {', '.join(MODES)} 중 하나여야 해요 (body = 토글 ON, general = 토글 OFF)")
@@ -144,8 +162,11 @@ def resolve_request():
         raise BadRequest(f"season은 {', '.join(SEASONS)} 중 하나여야 해요")
 
     if user_id:
-        user = USERS.setdefault(user_id, {"pref": {}, "history": [], "body": None})
-        if body is not None:
+        if user is None:
+            store.ensure_user(user_id)
+            user = {"body": None, "pref": {}, "history": []}
+        if body is not None and body != user["body"]:
+            store.save_body(user_id, body)
             user["body"] = body
     return data, user, body, season, mode
 
@@ -205,16 +226,17 @@ def post_event():
     user_id, item_id = data.get("user_id"), data.get("item_id")
     if not isinstance(user_id, str) or not isinstance(item_id, str):
         raise BadRequest("user_id와 item_id는 문자열이어야 해요")
-    user = USERS.get(user_id)
-    if not user:
+    user = load_user(user_id)
+    if user is None:
         raise BadRequest("먼저 /api/feed 또는 /api/feed/scroll을 user_id와 함께 불러 주세요")
     item = ITEMS_BY_ID.get(item_id)
     if not item:
         raise BadRequest("없는 상품이에요")
     try:
-        user["pref"] = update_pref(user["pref"], item, data.get("event"))
+        user["pref"] = update_pref(user["pref"], item, data.get("event"))   # 모르는 반응이면 여기서 400
     except ValueError as e:
         raise BadRequest(str(e))
+    store.add_event(user_id, item_id, data["event"])
     user["history"].append({"item": item, "event": data["event"]})
 
     rediag = need_rediagnosis(user["history"], user["body"])

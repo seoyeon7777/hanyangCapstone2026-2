@@ -34,13 +34,15 @@ recommend/              ★ C 파트 (추천 피드) — 이 폴더에서 작업
   matching_b.py         B 파트 연결: C 약속 모양(match_score, outfit_bonus)으로 B를 감싼다. from_profile/to_profile로 A↔C 이름 변환
   fake_matching.py      임시 매칭 (match_score, outfit_bonus, classify_kind). 이제 test_feed.py 손계산 테스트에서만 쓴다
   feed.py               C 파트 본체 (final_score, score_all, rank, feed_order, home_feed, outfits, reason, update_pref, need_rediagnosis)
-  feed_api.py           7·8단계 API (Flask Blueprint)
+  feed_api.py           7·8단계 API (Flask Blueprint). 사용자는 load_user()로 DB에서 읽는다
+  store.py              사용자 저장 (SQLite): users(진단 결과), events(클릭·찜·구매·반품). 파일 recommend/data/feed.db (환경변수 FEED_DB, git에 안 올림)
   templates/feed_demo.html  8단계 연습용 무한 스크롤 화면 (/feed-demo). 팀 공용 templates/와 분리
   안드로이드_연결가이드.md  앱 담당용: 서버 주소, 요청·응답 모양, Kotlin(Retrofit) 무한 스크롤·토글·찜 예시
   홈화면_연결가이드.md   웹(JavaScript) 버전 사용법 — 연습 화면용
   test_feed.py          C 로직 정답 테스트 (임시 매칭 + items_fake.json, 표준 라이브러리만)
   test_integration.py   A+B+C 연결 테스트 (표준 라이브러리만)
-  test_api.py           API 테스트 (Flask 필요, 맨 위 app.py를 불러옴)
+  test_api.py           API 테스트 (Flask 필요, 맨 위 app.py를 불러옴, 임시 DB 사용)
+  test_store.py         store.py 테스트 (표준 라이브러리만, 임시 DB 사용)
   data/items.json       시연용 가짜 상품 30개 — B 태그 이름(fit:slim, sil:IH …)
   data/items_fake.json  같은 30개의 옛 태그 버전 — test_feed.py 전용
 ```
@@ -145,7 +147,11 @@ match_score(body, item) -> {
 - 잘못된 입력은 400 + `{"ok": false, "error": 한국어 메시지}` (B와 같은 모양). 본문이 JSON 객체가 아니거나, body·answers·measurements·user_id·item_id 모양이 틀려도 400 (500이 나지 않게 막음)
 - app.py가 404·405·예상 못 한 500도 JSON으로 돌려준다 (안드로이드 앱이 HTML 오류 화면을 받지 않게)
 - GET에서 S·W·N 중 빠진 값은 0 (POST와 같음)
-- 사용자 데이터(USERS)는 서버 메모리에만 저장 → 서버를 끄면 사라짐 (시연용. 실제 서비스는 DB 필요)
+- 사용자 데이터는 SQLite(`store.py`)에 저장 → 서버를 꺼도 남는다
+  - users: user_id, body(진단 결과 JSON, 토글 OFF만 쓴 사용자는 NULL) / events: user_id, item_id, event, created_at
+  - pref(취향)는 저장하지 않고 요청마다 events를 처음부터 update_pref로 다시 쌓아 계산 (가중치를 바꾸면 옛 기록에도 적용)
+  - 모르는 event는 저장 전에 400. 지금 상품 목록에 없는 item_id 기록은 계산에서 건너뜀
+  - 시연 데이터 초기화: 서버를 끄고 `recommend/data/feed.db` 파일을 지우면 된다
 - 맨 위 `app.py`가 B의 create_app()에 feed_bp를 등록한다 (B와 C의 API가 한 서버에서 돈다)
 - `POST /api/feed`는 체형을 세 가지로 받는다: `answers`(+`measurements`) → A의 classify로 진단 / `profile`(A 결과) / `body.ratio`
   - A의 InputError(설문 빠짐 등)는 400과 A의 오류 문장으로 돌려준다
@@ -177,7 +183,8 @@ match_score(body, item) -> {
 
 `cd recommend && python test_feed.py` — 현재 38개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 18개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_store.py` — 현재 5개 통과 (DB 저장).
+`cd recommend && python test_api.py` — 현재 20개 통과 (서버 재시작 뒤에도 진단·취향이 남는지 포함) (Flask 필요: `pip install -r requirements.txt`).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
 
@@ -235,7 +242,8 @@ match_score(body, item) -> {
 - [x] 8단계: 홈 화면 무한 스크롤 (feed_order, /api/feed/scroll, /feed-demo) + 테스트 7개
 - [x] 안드로이드 연결 준비: app.py가 같은 네트워크에서 접속 허용, 오류 전부 JSON, 잘못된 입력 500 → 400, 안드로이드_연결가이드.md
 - [ ] 앱(안드로이드) 담당이 /api/feed/scroll·/api/feed/event 연결 — 안드로이드_연결가이드.md
-- [ ] 데이터 저장: 지금은 사용자 기록(USERS)·B 상품 저장소가 메모리, 상품은 JSON 파일 → 서버를 끄면 기록이 사라짐
+- [x] 데이터 저장 (C): 사용자 진단 결과·반응 기록을 SQLite에 — store.py, test_store 5개, 재시작 테스트
+- [ ] 데이터 저장 (상품): B 상품 저장소는 아직 메모리, C 피드는 items.json → 상품 표를 하나로 (B와 같이 정하기)
 - [x] A·B·C 통합 (feature/integration): matching_b.py로 B 연결, app.py 통합 서버, /api/feed에 설문 answers 입력, 상품 태그를 B 이름으로, test_integration.py 8개
 - [x] 9단계: 홈 화면 토글 ON(골격 맞춤)/OFF(일반 쇼핑몰) — general_score, mode 인자, 테스트 9개
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend
