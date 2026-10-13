@@ -1,0 +1,96 @@
+{
+  "_note": "혼용률 문구('면 60% 폴리에스터 40%')에서 섬유를 읽는 규칙. tag가 있는 섬유만 점수에 쓰고(가중치표에 근거가 있는 것), tag가 없는 섬유는 읽어서 저장만 한다. 점수에 쓰는 기준은 config.json의 material_min_share.",
+  "fibers": {
+    "cotton": {
+      "words": [
+        "코튼",
+        "면",
+        "cotton"
+      ],
+      "tag": "mat:cotton"
+    },
+    "wool": {
+      "words": [
+        "울",
+        "양모",
+        "모",
+        "메리노",
+        "wool"
+      ],
+      "tag": "mat:wool"
+    },
+    "nylon": {
+      "words": [
+        "나일론",
+        "폴리아미드",
+        "nylon"
+      ],
+      "tag": "mat:nylon"
+    },
+    "silk": {
+      "words": [
+        "실크",
+        "silk"
+      ],
+      "tag": "mat:silk"
+    },
+    "linen": {
+      "words": [
+        "린넨",
+        "리넨",
+        "마",
+        "linen"
+      ],
+      "tag": "mat:linen"
+    },
+    "cashmere": {
+      "words": [
+        "캐시미어",
+        "cashmere"
+      ],
+      "tag": "mat:cashmere"
+    },
+    "polyester": {
+      "words": [
+        "폴리에스터",
+        "폴리에스테르",
+        "폴리",
+        "polyester",
+        "poly"
+      ],
+      "tag": null
+    },
+    "rayon": {
+      "words": [
+        "레이온",
+        "비스코스",
+        "텐셀",
+        "모달",
+        "tencel",
+        "modal",
+        "viscose",
+        "rayon"
+      ],
+      "tag": null
+    },
+    "acrylic": {
+      "words": [
+        "아크릴",
+        "acrylic"
+      ],
+      "tag": null
+    },
+    "spandex": {
+      "words": [
+        "스판덱스",
+        "스판",
+        "폴리우레탄",
+        "엘라스탄",
+        "spandex",
+        "elastane",
+        "span"
+      ],
+      "tag": null
+    }
+  }
+}
