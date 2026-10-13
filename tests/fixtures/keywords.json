@@ -1,0 +1,22 @@
+{
+  "_note": "상품명·설명에서 찾을 키워드 -> 태그. 예시 일부이며 샘플 상품으로 검증하며 늘린다.",
+  "keywords": {
+    "슬림": ["fit:slim"],
+    "오버핏": ["fit:over"],
+    "크롭": ["len:crop"],
+    "칼라": ["neck:collar"],
+    "하이넥": ["neck:high"],
+    "하이웨이스트": ["waist:high"],
+    "벨트": ["waist:belt"],
+    "와이드": ["sil:wide"],
+    "스키니": ["sil:skinny"],
+    "머메이드": ["sil:mermaid"],
+    "시스루": ["mat:sheer"],
+    "패딩": ["mat:padded"],
+    "러플": ["det:ruffle"],
+    "퍼프": ["det:puff"],
+    "드롭숄더": ["det:drop"],
+    "세로": ["det:vertical"],
+    "워싱": ["det:washed"]
+  }
+}

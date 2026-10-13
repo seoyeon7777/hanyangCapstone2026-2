@@ -1,0 +1,229 @@
+{
+  "_note": "판매자 등록 양식 정의 (직접 등록 상품 전용). 입력값은 전부 저장하고, 그중 점수용 태그가 있는 선택지만 태그를 만든다. 태그 null은 '선택했고 값은 저장하지만 점수에 쓰는 태그 없음'(예: 레귤러 핏)이며 '모름/미입력'과는 다르다. 필수 항목이 비면 오류다. 태그는 가중치표·밸런스 규칙에 있는 것만 쓴다. 기장은 카테고리마다 선택지가 달라 항목을 나눴다: 상의·아우터는 크롭/기본/롱, 팬츠는 길이 구간, 스커트·원피스는 미니/미디/맥시. 팬츠 길이는 근거가 없어 저장만 한다. option_conflicts: 아이템 종류와 기장이 서로 모순되는 선택 조합(예: 기장 '기본' + 롱 카디건, 팬츠 '풀 길이' + 크롭 팬츠)은 서버가 오류로 거절한다. 앱 화면에서도 같은 조합을 선택하지 못하게 막을 것. 혼용률은 내부에서 0~1로 저장하고 판매자 화면은 0~100%로 받는다(matching.percent_to_share로 변환).",
+  "categories": [
+    "top",
+    "outer",
+    "pants",
+    "skirt",
+    "dress"
+  ],
+  "composition_statuses": [
+    "확인 불가",
+    "해당 없음"
+  ],
+  "composition_tolerance": 0.01,
+  "fields": [
+    {
+      "key": "fit",
+      "label": "핏",
+      "required": true,
+      "applies": [
+        "top",
+        "outer",
+        "pants",
+        "skirt",
+        "dress"
+      ],
+      "options": {
+        "슬림": "fit:slim",
+        "레귤러": null,
+        "오버(루즈)": "fit:over"
+      }
+    },
+    {
+      "key": "length_top",
+      "label": "기장(상의·아우터)",
+      "required": true,
+      "applies": [
+        "top",
+        "outer"
+      ],
+      "options": {
+        "크롭": "len:crop",
+        "기본": null,
+        "롱": "len:long"
+      }
+    },
+    {
+      "key": "length_pants",
+      "label": "기장(팬츠)",
+      "required": true,
+      "applies": [
+        "pants"
+      ],
+      "options": {
+        "쇼츠": null,
+        "무릎 길이": null,
+        "종아리 길이": null,
+        "발목 길이": null,
+        "풀 길이": null
+      }
+    },
+    {
+      "key": "length_skirt",
+      "label": "기장(스커트·원피스)",
+      "required": true,
+      "applies": [
+        "skirt",
+        "dress"
+      ],
+      "options": {
+        "미니": null,
+        "미디": null,
+        "맥시": "len:long"
+      }
+    },
+    {
+      "key": "silhouette",
+      "label": "실루엣",
+      "required": false,
+      "applies": [
+        "pants",
+        "skirt",
+        "dress"
+      ],
+      "options": {
+        "와이드": "sil:wide",
+        "A라인": "sil:A",
+        "일자(스트레이트)": "sil:IH",
+        "스키니": "sil:skinny",
+        "해당 없음": null
+      }
+    },
+    {
+      "key": "waist",
+      "label": "허리 위치",
+      "required": false,
+      "applies": [
+        "pants",
+        "skirt"
+      ],
+      "options": {
+        "하이웨이스트": "waist:high",
+        "보통": null,
+        "로우라이즈": null
+      }
+    },
+    {
+      "key": "details",
+      "label": "디테일(복수)",
+      "required": false,
+      "multi": true,
+      "applies": [
+        "top",
+        "outer",
+        "pants",
+        "skirt",
+        "dress"
+      ],
+      "options": {
+        "러플·프릴": "det:ruffle",
+        "리본": "det:ribbon",
+        "해당 없음": null
+      }
+    },
+    {
+      "key": "fabrics",
+      "label": "소재 종류(복수)",
+      "required": false,
+      "multi": true,
+      "applies": [
+        "top",
+        "outer",
+        "pants",
+        "skirt",
+        "dress"
+      ],
+      "options": {
+        "니트": "mat:knit",
+        "데님": "mat:denim",
+        "가죽": "mat:leather",
+        "퍼": "mat:fur",
+        "시폰": "mat:chiffon",
+        "벨벳": "mat:velvet",
+        "코듀로이": "mat:corduroy",
+        "무스탕": "mat:mustang",
+        "해당 없음": null
+      }
+    },
+    {
+      "key": "item_type",
+      "label": "아이템 종류(해당 시)",
+      "required": false,
+      "applies": [
+        "top",
+        "outer",
+        "pants",
+        "skirt",
+        "dress"
+      ],
+      "options": {
+        "테일러드 재킷": "item:tailored_jacket",
+        "타이트 스커트": "item:tight_skirt",
+        "모헤어 니트": "mat:mohair",
+        "롱 카디건": "len:long",
+        "크롭 팬츠": "len:crop",
+        "해당 없음": null
+      },
+      "option_applies": {
+        "테일러드 재킷": [
+          "outer",
+          "top"
+        ],
+        "타이트 스커트": [
+          "skirt"
+        ],
+        "모헤어 니트": [
+          "top",
+          "outer"
+        ],
+        "롱 카디건": [
+          "top",
+          "outer"
+        ],
+        "크롭 팬츠": [
+          "pants"
+        ]
+      },
+      "option_conflicts": {
+        "롱 카디건": {
+          "length_top": [
+            "기본",
+            "크롭"
+          ]
+        },
+        "크롭 팬츠": {
+          "length_pants": [
+            "풀 길이",
+            "쇼츠"
+          ]
+        }
+      }
+    },
+    {
+      "key": "composition",
+      "label": "혼용률(겉감, 섬유와 비율 0~1)",
+      "required": true,
+      "type": "composition",
+      "applies": [
+        "top",
+        "outer",
+        "pants",
+        "skirt",
+        "dress"
+      ],
+      "fibers": [
+        "cotton",
+        "wool",
+        "nylon",
+        "silk",
+        "linen",
+        "cashmere",
+        "polyester",
+        "rayon",
+        "acrylic",
+        "spandex"
+      ]
+    }
+  ]
+}
