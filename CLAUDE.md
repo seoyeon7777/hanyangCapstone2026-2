@@ -8,26 +8,38 @@ AI 코딩 도구가 이 파일만 읽고 작업을 이어갈 수 있게 정리�
 사용자가 키·몸무게·설문을 입력하면 두 가지를 해 준다.
 
 1. **가상 피팅**: 옷 치수·소재를 받아 Blender로 S/M/L 아바타에 입혀 보고 실루엣 이미지와 총평을 보여 준다. → **다른 저장소**(`seoyeon7777/hanyangCapstone2026`)에 있다.
-2. **골격 맞춤 추천**: 사용자의 골격(스트레이트 S / 웨이브 W / 내추럴 N)에 맞는 옷을 점수로 골라 피드로 보여 준다. → **이 저장소**. C 파트(README의 파트 3 "추천·홈 피드")는 `recommend/`에 있다.
+2. **골격 맞춤 추천**: 사용자의 골격(스트레이트 S / 웨이브 W / 내추럴 N)에 맞는 옷을 점수로 골라 피드로 보여 준다. → **이 저장소**.
 
-C 파트는 원래 hanyangCapstone2026 저장소에서 만들었고, 이 저장소로 복사해 왔다. 앞으로는 이 저장소에서 작업한다.
+| 파트 | 담당 브랜치 | 파일 |
+|---|---|---|
+| A 체형 분류 | feature/jihyun | `body_profile.py` (classify), `evaluate.py`, `try_classify.py`, `sample.csv` |
+| B 옷 매칭 | feature/yeonoh | `matching.py`, `server.py`(B API), `data/*.json`(가중치·문장·코디 규칙) |
+| C 추천·홈 피드 | feature/seoyeon | `recommend/` |
+
+세 파트는 feature/integration 브랜치에서 처음 통합했다. 통합 서버는 맨 위 `app.py`다.
+C 파트는 원래 hanyangCapstone2026 저장소에서 만들었고, 이 저장소로 복사해 왔다.
 
 ## 2. 폴더 구조
 
 ```
-README.md               저장소 소개 (파트 1 체형 분류 / 파트 3 추천·홈 피드)
-requirements.txt        flask (API·서버용. 알고리즘과 test_feed.py는 표준 라이브러리만)
+README.md               저장소 소개
+requirements.txt        flask (API·서버용. 알고리즘과 테스트 대부분은 표준 라이브러리만)
+app.py                  ★ 통합 서버 (B server.create_app + C feed_bp). python app.py → /feed-demo
+body_profile.py …       A 파트
+matching.py, server.py, data/   B 파트 (B의 data/는 recommend/data/와 다른 폴더)
 recommend/              ★ C 파트 (추천 피드) — 이 폴더에서 작업
-  server.py             추천 기능만 켜는 Flask 서버 (python server.py → /feed-demo)
   rec_config.py         비중·태그 표 등 숫자 모음. 숫자는 여기서만 바꾼다
-  fake_matching.py      B 파트가 오기 전 임시 매칭 함수 (match_score, classify_kind)
+  matching_b.py         B 파트 연결: C 약속 모양(match_score, outfit_bonus)으로 B를 감싼다. from_profile/to_profile로 A↔C 이름 변환
+  fake_matching.py      임시 매칭 (match_score, outfit_bonus, classify_kind). 이제 test_feed.py 손계산 테스트에서만 쓴다
   feed.py               C 파트 본체 (final_score, score_all, rank, feed_order, home_feed, outfits, reason, update_pref, need_rediagnosis)
   feed_api.py           7·8단계 API (Flask Blueprint)
   templates/feed_demo.html  8단계 연습용 무한 스크롤 화면 (/feed-demo). 팀 공용 templates/와 분리
   홈화면_연결가이드.md   프론트 담당 친구용 API 사용법
-  test_feed.py          정답 테스트 (표준 라이브러리만)
-  test_api.py           API 테스트 (Flask 필요, server.py의 앱을 불러옴)
-  data/items.json       시연용 가짜 상품 30개
+  test_feed.py          C 로직 정답 테스트 (임시 매칭 + items_fake.json, 표준 라이브러리만)
+  test_integration.py   A+B+C 연결 테스트 (표준 라이브러리만)
+  test_api.py           API 테스트 (Flask 필요, 맨 위 app.py를 불러옴)
+  data/items.json       시연용 가짜 상품 30개 — B 태그 이름(fit:slim, sil:IH …)
+  data/items_fake.json  같은 30개의 옛 태그 버전 — test_feed.py 전용
 ```
 
 주의: 설정 파일 이름은 `rec_config.py`다. 원래 저장소에서는 `.gitignore`가 `config.py`를 막고 Blender 쪽 `config.py`와 import가 겹쳐서 이렇게 정했다. 나중에 가상 피팅 서버와 합칠 수 있으니 `config.py`로 바꾸지 말 것.
@@ -57,18 +69,27 @@ match_score(body, item) -> {
     "avoid_tags": [...],     # 1위 타입 기준 피해야 함 태그
 }
 ```
-지금은 `recommend/fake_matching.py`의 임시 구현을 쓴다. B 코드가 오면 `feed.py`의 import 한 줄만 바꾼다.
+**실제 연결 (통합 후)**: B의 `matching.py`는 이름이 다르다(`match_item(item, profile, rules)` → `body_fit`, `reasons` …).
+그래서 `recommend/matching_b.py`가 위 모양으로 바꿔 준다. `feed.py`는 `from matching_b import match_score, outfit_bonus` 한 줄로 B를 쓴다.
+- score = B의 body_fit, excluded = B가 None을 주면 True
+- good_tags/avoid_tags = 1위 타입 가중치(B의 data/tag_weight.json)가 양수/음수인 태그. good_tags는 가중치 큰 순
+- 추가 키 `reasons` = B가 만든 추천 이유 문장 목록
+- `outfit_bonus(body, top_tags, bottom_tags)` = B의 balance_adjustment (data/balance.json)
+- A의 classify() 결과(ratios, is_mixed)는 B의 profile과 같은 모양이다. C의 body(ratio, kind)와는 `from_profile`/`to_profile`로 바꾼다
+- B 설정(data/config.json)이 지금 `avoid_mode: penalty`라서 **제외되는 옷이 없다**(피해야 할 옷은 점수만 낮아짐). 제외 모드로 바꾸면 C도 자동으로 따른다
 
 ### item (상품) 형식
 ```json
 {"id": "t01", "name": "칼라 셔츠", "category": "top|bottom|outer|dress",
- "tags": ["collar", "slim_fit", "firm_fabric"],
+ "tags": ["fit:slim", "mat:cotton"],
  "seasons": ["spring", "fall"], "popularity": 0.8}
 ```
 
 ## 4. C 파트 알고리즘 명세
 
-### 4-1. 체형 적합도 (임시, B 파트 몫)
+### 4-1. 체형 적합도 — B 파트가 계산 (아래는 test_feed.py용 임시 매칭 규칙)
+- 실제 계산: B의 body_fit = Σ 태그 Σ 타입 비율 × 가중치 / 태그 수 → 0~1로 변환, 태그가 적으면 중립 쪽으로 당김 (matching.py 참고)
+- 임시 매칭 규칙:
 - 태그 점수: 골격별로 어울림 태그 +2, 피해야 함 태그 −3 (`rec_config.STYLE_TAGS`)
 - 가중합 = Σ ratio[t] × 태그점수[t]
 - body = clamp(0.5 + 가중합 / 16, 0, 1)
@@ -120,7 +141,9 @@ match_score(body, item) -> {
 - `POST /api/feed/event` `{"user_id", "item_id", "event"}` → `{"pref", "need_rediagnosis", "message"}`
 - 잘못된 입력은 400 + `{"error": 한국어 메시지}`
 - 사용자 데이터(USERS)는 서버 메모리에만 저장 → 서버를 끄면 사라짐 (시연용. 실제 서비스는 DB 필요)
-- 이 저장소에서는 `recommend/server.py`가 feed_bp를 등록한다
+- 맨 위 `app.py`가 B의 create_app()에 feed_bp를 등록한다 (B와 C의 API가 한 서버에서 돈다)
+- `POST /api/feed`는 체형을 세 가지로 받는다: `answers`(+`measurements`) → A의 classify로 진단 / `profile`(A 결과) / `body.ratio`
+  - A의 InputError(설문 빠짐 등)는 400과 A의 오류 문장으로 돌려준다
 - 가상 피팅 서버(hanyangCapstone2026의 app.py)에 붙일 때: app.py에서 recommend 폴더를 sys.path에 넣고 `from feed_api import feed_bp` → `app.register_blueprint(feed_bp)`. 원래 저장소의 작업 브랜치 `claude/skeleton-type-style-guide-q1kpfc`에 이렇게 붙인 예가 있다
 
 ### 4-8. 홈 화면 무한 스크롤 (8단계, 완료)
@@ -136,8 +159,11 @@ match_score(body, item) -> {
 
 ## 5. 정답 테스트 (반드시 통과)
 
-`cd recommend && python test_feed.py` — 현재 32개 통과.
-`cd recommend && python test_api.py` — 현재 9개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_feed.py` — 현재 32개 통과 (C 로직, 임시 매칭 기준 손계산).
+`cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
+`cd recommend && python test_api.py` — 현재 12개 통과 (Flask 필요: `pip install -r requirements.txt`).
+
+아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
 
 | 테스트 | 정답 |
 |---|---|
@@ -189,4 +215,5 @@ match_score(body, item) -> {
 - [x] 7단계: Flask API (/api/feed, /api/feed/event) + test_api.py 6개
 - [x] 8단계: 홈 화면 무한 스크롤 (feed_order, /api/feed/scroll, /feed-demo) + 테스트 7개
 - [ ] 친구들 홈 화면이 저장소에 올라오면 /api/feed/scroll 연결 (홈화면_연결가이드.md)
-- [ ] B 파트 match_score로 교체
+- [x] A·B·C 통합 (feature/integration): matching_b.py로 B 연결, app.py 통합 서버, /api/feed에 설문 answers 입력, 상품 태그를 B 이름으로, test_integration.py 8개
+- [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend

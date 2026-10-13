@@ -1,9 +1,14 @@
-"""7·8단계 API 테스트 (Flask 필요).
+"""API 테스트 (Flask 필요). 저장소 맨 위 app.py(A+B+C 통합 서버)를 그대로 불러와 확인한다.
 
-실행: python test_api.py   (server.py의 앱을 그대로 불러와 확인)
+실행: python test_api.py
 """
-from server import app
-import feed_api
+import os
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+from app import app  # noqa: E402
+import feed_api  # noqa: E402
 
 client = app.test_client()
 
@@ -46,14 +51,15 @@ def test_bad_requests():
 def test_event_learns_and_feed_reflects():
     reset()
     client.post("/api/feed", json={"user_id": "u1", "body": {"ratio": {"S": 1, "W": 0, "N": 0}}, "season": "fall"})
-    before = client.get("/api/feed?user_id=u1&season=fall").get_json()
-    score = lambda feed: next(r["score"] for r in feed["sections"][1]["items"] if r["id"] == "t04")
+    whole = "/api/feed/scroll?user_id=u1&season=fall&size=50"   # 전체 순서에서 크롭 니트 점수를 찾음
+    before = client.get(whole).get_json()
+    score = lambda feed: next(r["score"] for r in feed["items"] if r["id"] == "t04")
 
     res = client.post("/api/feed/event", json={"user_id": "u1", "item_id": "t04", "event": "purchase"})
     assert res.status_code == 200
-    assert res.get_json()["pref"] == {"cropped": 0.2, "soft_fabric": 0.2}
+    assert res.get_json()["pref"] == {"len:crop": 0.2, "mat:knit": 0.2}
 
-    after = client.get("/api/feed?user_id=u1&season=fall").get_json()  # 체형은 저장된 값 재사용
+    after = client.get(whole).get_json()  # 체형은 저장된 값 재사용
     # 취향 0.5 → 0.6 → 최종 +0.25 * 0.1 = +0.025
     assert abs((score(after) - score(before)) - 0.025) < 1e-3
 
@@ -74,7 +80,44 @@ def test_event_triggers_rediagnosis():
 
 def test_routes_registered():
     rules = {r.rule for r in app.url_map.iter_rules()}
-    assert {"/api/feed", "/api/feed/event", "/api/feed/scroll", "/feed-demo"} <= rules
+    assert {"/api/feed", "/api/feed/event", "/api/feed/scroll", "/feed-demo"} <= rules   # C
+    assert {"/api/form", "/api/items", "/api/items/validate", "/api/recommend"} <= rules  # B
+
+
+ANSWERS = {"q1": 1, "q2": 3, "q3": 1, "q4": 2, "q5": 1, "q6": 1, "q7": 3}   # try_classify.py 예시
+MEASURES = {"height": 165.0, "shoulder_width": 31.5, "arm_length": 53.1,
+            "upper_body_length": 47.0, "leg_length": 86.1}
+
+
+def test_feed_from_survey_answers():
+    # A(설문 진단) → B(적합도) → C(피드)가 한 번에 이어지는지
+    reset()
+    res = client.post("/api/feed", json={"user_id": "a1", "answers": ANSWERS, "measurements": MEASURES})
+    assert res.status_code == 200
+    data = res.get_json()
+    from body_profile import classify
+    expected = classify(ANSWERS, MEASURES)
+    assert data["body"]["primary"] == expected["primary"] == "S"
+    assert data["body"]["kind"] == ("mixed" if expected["is_mixed"] else "single")
+    assert abs(data["body"]["ratio"]["S"] - expected["ratios"]["S"]) < 1e-9
+    # 진단한 체형이 저장돼서 스크롤도 바로 됨
+    scroll = client.get("/api/feed/scroll?user_id=a1&page=0").get_json()
+    assert [r["id"] for r in scroll["items"]] == [r["id"] for r in data["sections"][0]["items"]]
+
+
+def test_feed_from_profile():
+    reset()
+    profile = {"ratios": {"S": 0.4, "W": 0.35, "N": 0.25}, "primary": "S", "secondary": "W",
+               "confidence": 0.05, "is_mixed": True}
+    data = client.post("/api/feed", json={"profile": profile}).get_json()
+    assert data["body"]["kind"] == "mixed" and data["body"]["primary"] == "S"
+
+
+def test_bad_survey_answers():
+    reset()
+    res = client.post("/api/feed", json={"answers": {"q1": 1}})
+    assert res.status_code == 400 and "q2" in res.get_json()["error"]
+    assert client.post("/api/feed", json={"profile": {"x": 1}}).status_code == 400
 
 
 def test_scroll_pages():

@@ -3,7 +3,10 @@
 app.py에서 등록:  app.register_blueprint(feed_bp)
 
 GET  /api/feed?user_id=u1&S=0.6&W=0.3&N=0.1&season=fall
-POST /api/feed        {"user_id": "u1", "body": {"ratio": {"S":0.6,"W":0.3,"N":0.1}}, "season": "fall"}
+POST /api/feed        체형은 셋 중 하나로 보낸다
+                      {"user_id": "u1", "answers": {"q1": 1, ..., "q7": 3}, "measurements": {...}}  ← A 파트가 진단
+                      {"user_id": "u1", "profile": A의 classify() 결과}
+                      {"user_id": "u1", "body": {"ratio": {"S":0.6,"W":0.3,"N":0.1}}}
 POST /api/feed/event  {"user_id": "u1", "item_id": "t01", "event": "like"}
 GET  /api/feed/scroll?user_id=u1&S=0.6&W=0.3&N=0.1&page=0&size=10   ← 홈 화면 무한 스크롤용
 GET  /feed-demo       연습용 스크롤 화면 (친구들 홈 화면이 오기 전 확인용)
@@ -20,6 +23,8 @@ from rec_config import (
 from fake_matching import classify_kind
 from feed import (load_items, score_all, home_feed, feed_order, reason,
                   update_pref, need_rediagnosis)
+from matching_b import from_profile
+from body_profile import classify, InputError  # A 파트 (matching_b가 저장소 맨 위 폴더를 경로에 넣어 둠)
 
 # 연습용 화면은 recommend/templates/에 둔다 (팀 공용 templates/와 안 겹치게)
 feed_bp = Blueprint("feed", __name__, template_folder="templates")
@@ -75,9 +80,21 @@ def resolve_request():
 
     user_id가 있으면 사용자를 만들거나 불러와 체형을 저장하고, 비율을 안 보내면 저장된 체형을 쓴다.
     """
+    body = None
     if request.method == "POST":
         data = request.get_json(silent=True) or {}
         ratio = (data.get("body") or {}).get("ratio")
+        if data.get("answers") is not None:      # A 파트로 바로 진단
+            try:
+                body = from_profile(classify(data["answers"], data.get("measurements")))
+            except InputError as e:
+                raise BadRequest(str(e))
+        elif data.get("profile") is not None:    # 이미 진단한 A 결과
+            try:
+                body = make_body(data["profile"]["ratios"])
+                body["kind"] = "mixed" if data["profile"]["is_mixed"] else "single"
+            except (KeyError, TypeError):
+                raise BadRequest("profile은 A 파트 classify() 결과 모양이어야 해요 (ratios, is_mixed)")
     else:
         data = request.args
         ratio = {t: data.get(t) for t in ("S", "W", "N")} if any(t in data for t in "SWN") else None
@@ -85,7 +102,9 @@ def resolve_request():
     user_id = data.get("user_id")
     user = USERS.get(user_id) if user_id else None
 
-    if ratio is not None:
+    if body is not None:
+        pass
+    elif ratio is not None:
         body = make_body(ratio)
     elif user:
         body = user["body"]  # 이전에 보낸 체형 재사용

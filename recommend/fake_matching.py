@@ -1,11 +1,13 @@
-"""B 파트(체형-옷 매칭) 코드가 오기 전까지 쓰는 임시 구현.
+"""임시 매칭 (B 파트 대신). 지금은 test_feed.py의 손계산 정답 테스트에서만 쓴다.
 
-B 팀원 코드가 오면 feed.py의 import 한 줄만 바꾸면 된다.
-    from fake_matching import match_score   →   from matching import match_score
-함수 이름·입력·출력 모양은 CLAUDE.md "3. 팀 약속"을 따른다. 바꾸지 말 것.
+실제 서비스는 matching_b.py(B 파트 matching.py 연결)를 쓴다. 두 파일은 같은 모양의 함수를 갖는다.
+    match_score(body, item)                    → {"score", "excluded", "good_tags", "avoid_tags"}
+    outfit_bonus(body, top_tags, bottom_tags)  → 코디 보너스
+태그는 rec_config.STYLE_TAGS의 이름(collar, slim_fit …)을 쓴다. data/items_fake.json과 짝이다.
 """
 from rec_config import (
     STYLE_TAGS, TAG_GOOD, TAG_AVOID, BODY_SCALE, SINGLE_TYPE_GAP,
+    OUTFIT_BONUS, OUTFIT_RULES,
 )
 
 
@@ -60,3 +62,9 @@ def match_score(body, item):
         "good_tags": good_tags,
         "avoid_tags": avoid_tags,
     }
+
+
+def outfit_bonus(body, top_tags, bottom_tags):
+    """1위 타입의 궁합 규칙(OUTFIT_RULES)을 상의·하의가 둘 다 만족하면 +0.10."""
+    top_rule, bottom_rule = OUTFIT_RULES[body["primary"]]
+    return OUTFIT_BONUS if top_rule & set(top_tags) and bottom_rule & set(bottom_tags) else 0.0

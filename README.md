@@ -7,15 +7,19 @@
 - 분류 결과로 맞춤 홈 피드 추천
 
 ## 구성
-| 파트 | 내용 |
-|---|---|
-| 1 | 체형 분류 엔진 |
-| 2 | (작성 예정) |
-| 3 | 추천·홈 피드 → `recommend/` |
+| 파트 | 내용 | 파일 |
+|---|---|---|
+| A (1) | 체형 분류 엔진 | `body_profile.py` (`classify`), `try_classify.py`, `evaluate.py` |
+| B (2) | 옷 매칭: 태그·체형 적합도·추천 이유·코디 보정 | `matching.py`, `server.py`, `data/` |
+| C (3) | 추천·홈 피드: 최종 점수·순위·홈 화면·무한 스크롤·학습 | `recommend/` |
 
-## 개발 환경
-- Python 3.12
-- 추천 서버: `pip install -r requirements.txt` → `cd recommend` → `python server.py` → http://127.0.0.1:5000/feed-demo
+흐름: 설문·치수 → **A** 골격 비율 → **B** 옷마다 적합도 → **C** 홈 피드 순서·코디·이유
+
+## 실행
+- Python 3.12, `pip install -r requirements.txt`
+- 통합 서버: `python app.py` → http://127.0.0.1:5000/feed-demo (연습 화면)
+- 설문으로 바로 추천: `POST /api/feed` `{"user_id": "u1", "answers": {"q1": 1, ..., "q7": 3}}`
+- B만 따로: `python server.py` / A만 따로: `python try_classify.py`
 
 ## 파트 3: 추천·홈 피드 (`recommend/`)
 체형 분류 결과(스트레이트·웨이브·내추럴 비율)를 받아 홈 화면에 보여 줄 상품 순서, 코디, 추천 이유를 만들어요.
@@ -28,7 +32,7 @@
 | 무한 스크롤 | `GET /api/feed/scroll?page=0&size=10` |
 | 학습 | 클릭·찜·구매·반품으로 취향 반영, 진단과 어긋나면 재진단 안내 |
 
-- 테스트: `cd recommend && python test_feed.py` / `python test_api.py`
+- 테스트: `cd recommend && python test_feed.py` / `python test_integration.py` / `python test_api.py`
 - 자세한 명세: `CLAUDE.md`, 쉬운 설명: `recommend/C파트_쉬운설명.md`, 화면 연결: `recommend/홈화면_연결가이드.md`
-- 파트 2(체형 적합도 매칭)는 아직 임시 코드(`recommend/fake_matching.py`)를 써요
+- 체형 적합도·추천 이유·코디 보정은 B(`matching.py`)를 `recommend/matching_b.py`로 연결해 써요
 

@@ -4,12 +4,21 @@
 정답값은 모두 손으로 계산한 값이다. 계산 과정은 각 테스트 주석 참고.
 AI가 코드를 고친 뒤 이 테스트가 하나라도 깨지면 다음 단계로 넘어가지 않는다.
 """
+import os
+
+import feed
+import fake_matching
 from rec_config import W_BODY, W_PREF, W_TREND
 from fake_matching import classify_kind, match_score
 from feed import (load_items, final_score, score_all, rank, home_feed,
                   outfits, reason, update_pref, need_rediagnosis, feed_order)
 
-ITEMS = {item["id"]: item for item in load_items()}
+# 이 파일의 정답값은 임시 매칭(fake_matching) 기준으로 손계산한 것이다.
+# 실제 B 파트 연결은 test_integration.py에서 확인한다.
+feed.match_score = fake_matching.match_score
+feed.outfit_bonus = fake_matching.outfit_bonus
+FAKE_ITEMS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "items_fake.json")
+ITEMS = {item["id"]: item for item in load_items(FAKE_ITEMS)}
 STRAIGHT = {"ratio": {"S": 1.0, "W": 0.0, "N": 0.0}, "kind": "single", "primary": "S"}
 MIXED = {"ratio": {"S": 0.5, "W": 0.45, "N": 0.05}, "kind": "mixed", "primary": "S"}
 

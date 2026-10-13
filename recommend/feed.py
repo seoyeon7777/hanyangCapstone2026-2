@@ -12,14 +12,15 @@ from rec_config import (
     W_BODY, W_PREF, W_TREND, W_SEASON, W_POPULARITY, PREF_DEFAULT,
     TOP_N, MAX_SAME_CATEGORY_RUN, MAX_SAME_REP_TAG,
     CATEGORY_TOP_N, CATEGORY_TITLES,
-    OUTFIT_TOP_N, OUTFIT_BONUS, OUTFIT_RULES,
+    OUTFIT_TOP_N,
     REASON_TEXT, REASON_MAX_TAGS, REASON_FALLBACK, REASON_EXCLUDED,
-    EVENT_WEIGHTS, POSITIVE_EVENTS, STYLE_TAGS,
+    EVENT_WEIGHTS, POSITIVE_EVENTS,
     REDIAG_WINDOW, REDIAG_RATIO, REDIAG_MIN_EVENTS,
     SCROLL_PAGE_SIZE,
 )
-# B 팀원 코드가 오면 이 한 줄만 `from matching import match_score`로 바꾼다
-from fake_matching import match_score
+# 체형 적합도·코디 보정은 B 파트(matching.py)가 계산한다. matching_b.py가 이름을 맞춰 준다.
+# 임시 매칭으로 돌리려면: from fake_matching import match_score, outfit_bonus
+from matching_b import match_score, outfit_bonus
 
 DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "items.json")
 
@@ -58,7 +59,7 @@ def final_score(body, item, pref=None, season="fall"):
     pref: {태그: -1~1} 또는 None
     season: "spring" | "summer" | "fall" | "winter"
     반환: {"id", "name", "category", "score", "body", "pref", "trend",
-           "excluded", "good_tags", "avoid_tags"}
+           "excluded", "good_tags", "avoid_tags", "tags", "reasons"}
     제외된 옷은 score가 0.0이고 excluded가 True다.
     """
     match = match_score(body, item)
@@ -78,6 +79,8 @@ def final_score(body, item, pref=None, season="fall"):
         "excluded": match["excluded"],
         "good_tags": match["good_tags"],
         "avoid_tags": match["avoid_tags"],
+        "tags": list(item["tags"]),            # 코디 보정(outfit_bonus)에 쓴다
+        "reasons": match.get("reasons", []),   # B가 만든 추천 이유 문장 (임시 매칭은 빈 목록)
     }
 
 
@@ -182,21 +185,18 @@ def outfits(body, items, pref=None, season="fall", top_n=OUTFIT_TOP_N):
     """상의 + 하의 코디 추천 상위 top_n세트.
 
     점수 = (상의 점수 + 하의 점수) / 2 + 보너스
-    보너스: 1위 타입의 궁합 규칙(OUTFIT_RULES)을 상의·하의가 둘 다 만족하면 +0.10
-            예) 웨이브: 크롭 상의 + 하이웨이스트 하의
+    보너스: outfit_bonus()가 정한다 (B: data/balance.json, 보너스 +0.10 / 감점 -0.15)
+            예) 웨이브: 크롭 상의 + 하이웨이스트 하의 → +0.10
     같은 상의는 결과에 한 번만 나온다. 동점이면 (상의 id, 하의 id) 순.
     반환: [{"top": 상의 결과, "bottom": 하의 결과, "score": float, "bonus": float}, ...]
     """
     ordered = _by_score(score_all(body, items, pref, season))
     tops = [r for r in ordered if r["category"] == "top"]
     bottoms = [r for r in ordered if r["category"] == "bottom"]
-    top_rule, bottom_rule = OUTFIT_RULES[body["primary"]]
-
     combos = []
     for t in tops:
         for b in bottoms:
-            ok = top_rule & set(t["good_tags"]) and bottom_rule & set(b["good_tags"])
-            bonus = OUTFIT_BONUS if ok else 0.0
+            bonus = round(outfit_bonus(body, t["tags"], b["tags"]), 4)
             score = (t["score"] + b["score"]) / 2 + bonus
             combos.append({"top": t, "bottom": b, "score": round(score, 4), "bonus": bonus})
     combos.sort(key=lambda c: (-c["score"], c["top"]["id"], c["bottom"]["id"]))
@@ -215,11 +215,14 @@ def outfits(body, items, pref=None, season="fall", top_n=OUTFIT_TOP_N):
 def reason(r):
     """추천 이유 한 문장. r은 final_score() 결과.
 
-    good_tags 앞에서 REASON_MAX_TAGS(2)개를 이어 붙인다.
+    매칭(B)이 만든 이유 문장(r["reasons"])이 있으면 앞에서 REASON_MAX_TAGS(2)개를 쓴다.
+    없으면 good_tags 앞 2개를 REASON_TEXT로 이어 붙인다 (임시 매칭용).
     예) ["collar", "slim_fit"] → "칼라가 목선을 세워 주고, 몸에 맞는 핏이 라인을 정돈해 줘요."
     """
     if r["excluded"]:
         return REASON_EXCLUDED
+    if r.get("reasons"):
+        return " ".join(s.rstrip(". ") + "." for s in r["reasons"][:REASON_MAX_TAGS])
     tags = [t for t in r["good_tags"] if t in REASON_TEXT][:REASON_MAX_TAGS]
     if not tags:
         return REASON_FALLBACK
@@ -252,8 +255,7 @@ def need_rediagnosis(history, body):
     positive = [h["item"] for h in history if h["event"] in POSITIVE_EVENTS][-REDIAG_WINDOW:]
     if len(positive) < REDIAG_MIN_EVENTS:
         return False
-    avoid = STYLE_TAGS[body["primary"]]["avoid"]
-    mismatched = sum(1 for item in positive if avoid & set(item["tags"]))
+    mismatched = sum(1 for item in positive if match_score(body, item)["avoid_tags"])
     return mismatched / len(positive) >= REDIAG_RATIO
 
 
