@@ -1,0 +1,48 @@
+등록 시도 100개 / 등록됨 85개 / 거절됨 15개
+
+[시나리오 묶음별 기대 결과 일치]
+  A 양식을 모두 채움            12/12
+  B 필수만 입력, 글 보충         12/12
+  C 설명 비움                5/5
+  D 해당 없음 선택 유지          10/10
+  E 양식과 글 충돌             10/10
+  F 설명 노이즈               13/13
+  G 혼용률                  10/10
+  H 글 보충 끔               3/3
+  I 잘못된 등록               14/14
+  J 팀 입력(manual)         6/6
+  K 리뷰 일치도               5/5
+  합계                     100/100
+
+[저장된 상품의 태그 분포]
+   mat:cotton 34, fit:slim 21, mat:wool 9, mat:knit 8, fit:over 8, len:long 6, mat:nylon 6, sil:IH 5, waist:high 5, sil:wide 5, mat:denim 5, sil:A 5, det:ruffle 4, len:crop 3, det:ribbon 3, item:tailored_jacket 2, mat:mustang 2, sil:skinny 2, item:tight_skirt 2, mat:chiffon 2, mat:silk 2, mat:velvet 2, mat:corduroy 1, mat:fur 1, mat:mohair 1, mat:leather 1, mat:linen 1
+   글 보충이 일어난 상품 25/85개
+
+[S 단일] 상위 상품
+   0.778  #9 [아틀리에 하나] 하이웨이스트 타이트 스커트  ['fit:slim', 'waist:high', 'item:tight_skirt']
+   0.750  #6 [모노브릭] 하이웨이스트 스트레이트 팬츠  ['fit:slim', 'sil:IH', 'waist:high', 'mat:cotton']
+   0.750  #24 하이웨이스트 스키니 진  ['fit:slim', 'mat:cotton', 'mat:denim', 'waist:high', 'sil:skinny']
+   0.750  #94 [예시몰] 데님 미니 스커트  ['fit:slim', 'mat:cotton', 'mat:denim']
+   0.667  #20 스트레이트 슬랙스  ['sil:IH']
+   코디: [('프릴 장식 블라우스', '[모노브릭] 하이웨이스트 ', 0.8083), ('러플 블라우스', '[모노브릭] 하이웨이스트 ', 0.8083), ('오버사이즈 셔츠', '[모노브릭] 하이웨이스트 ', 0.8083)]
+[W 단일] 상위 상품
+   0.750  #14 플리츠 A라인 미디 스커트  ['sil:A', 'det:ruffle', 'mat:chiffon']
+   0.667  #10 [소이] 시폰 러플 맥시 스커트  ['len:long', 'sil:A', 'det:ruffle', 'mat:chiffon']
+   0.667  #28 플레어 스커트  ['sil:A']
+   0.667  #93 [예시몰] 플레어 미디 원피스  ['sil:A']
+   0.667  #23 모헤어 혼방 니트 풀오버  ['mat:nylon', 'mat:knit', 'mat:mohair']
+   코디: [('모헤어 혼방 니트 풀오버', '플리츠 A라인 미디 스커트', 0.7083), ('벨벳 리본 홀터 탑', '플리츠 A라인 미디 스커트', 0.675), ('[예시몰] 크롭 슬림 니트', '플리츠 A라인 미디 스커트', 0.675)]
+[N 단일] 상위 상품
+   0.833  #5 [소이] 무스탕 롱 자켓  ['fit:over', 'len:long', 'mat:mustang']
+   0.800  #7 [데일리온] 와이드 데님 팬츠  ['fit:over', 'sil:wide', 'mat:denim', 'mat:cotton']
+   0.778  #91 [예시몰] 하이웨이스트 와이드 슬랙스  ['fit:over', 'sil:wide', 'waist:high']
+   0.750  #13 와이드 데님 팬츠 [연청]  ['mat:cotton', 'sil:wide', 'mat:denim', 'waist:high']
+   0.750  #17 코듀로이 오버 자켓  ['fit:over', 'mat:cotton', 'mat:corduroy']
+   코디: [('[데일리온] 박시 크롭 반', '[데일리온] 와이드 데님 ', 0.75), ('린넨 코튼 셔츠', '[데일리온] 와이드 데님 ', 0.7333), ('[루멘] 롱 카디건', '[데일리온] 와이드 데님 ', 0.7333)]
+[혼합 S.5 W.3 N.2] 상위 상품
+   0.575  #24 하이웨이스트 스키니 진  ['fit:slim', 'mat:cotton', 'mat:denim', 'waist:high', 'sil:skinny']
+   0.575  #94 [예시몰] 데님 미니 스커트  ['fit:slim', 'mat:cotton', 'mat:denim']
+   0.542  #6 [모노브릭] 하이웨이스트 스트레이트 팬츠  ['fit:slim', 'sil:IH', 'waist:high', 'mat:cotton']
+   0.533  #9 [아틀리에 하나] 하이웨이스트 타이트 스커트  ['fit:slim', 'waist:high', 'item:tight_skirt']
+   0.522  #57 스트레이트 진  ['mat:cotton', 'sil:IH']
+   코디: [('[예시몰] 크롭 슬림 니트', '[모노브릭] 하이웨이스트 ', 0.6042), ('벨벳 리본 홀터 탑', '[모노브릭] 하이웨이스트 ', 0.5975), ('오버사이즈 셔츠', '[모노브릭] 하이웨이스트 ', 0.5833)]

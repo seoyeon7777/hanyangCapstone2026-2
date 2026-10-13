@@ -1,0 +1,3120 @@
+{
+ "_note": "가상 판매자 등록 샘플 100개. 실제 상품이 아니다. 기대 결과(expect)는 설계 문서에서 내가 정한 것이라 로직 점검용이다.",
+ "items": [
+  {
+   "item_id": 1,
+   "group": "A 양식을 모두 채움",
+   "scenario": "전부 입력, 소재 니트",
+   "body": {
+    "category": "top",
+    "name": "[모노브릭] 슬림 케이블 니트 풀오버",
+    "desc": "차분한 톤의 케이블 짜임 니트. 몸에 붙는 슬림한 실루엣으로 이너로도 단독으로도 좋아요.\nMODEL\n여성 168cm / 착용 사이즈 M",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본",
+     "fabrics": [
+      "니트"
+     ],
+     "details": [
+      "해당 없음"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 70
+     },
+     {
+      "fiber": "acrylic",
+      "percent": 30
+     }
+    ],
+    "item_id": 1
+   },
+   "expect": {
+    "has": [
+     "fit:slim",
+     "mat:knit",
+     "mat:cotton"
+    ],
+    "lacks": [
+     "len:crop",
+     "len:long"
+    ]
+   }
+  },
+  {
+   "item_id": 2,
+   "group": "A 양식을 모두 채움",
+   "scenario": "오버핏 크롭 코튼",
+   "body": {
+    "category": "top",
+    "name": "[데일리온] 박시 크롭 반팔 티셔츠 (3color)",
+    "desc": "여유 있는 박시 핏에 기장은 짧은 크롭. 두께감 있는 20수 원단.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "오버(루즈)",
+     "length_top": "크롭",
+     "details": [
+      "해당 없음"
+     ],
+     "fabrics": [
+      "해당 없음"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 2
+   },
+   "expect": {
+    "has": [
+     "fit:over",
+     "len:crop",
+     "mat:cotton"
+    ],
+    "lacks": [
+     "det:ruffle"
+    ]
+   }
+  },
+  {
+   "item_id": 3,
+   "group": "A 양식을 모두 채움",
+   "scenario": "롱 카디건 종류 선택",
+   "body": {
+    "category": "top",
+    "name": "[루멘] 롱 카디건",
+    "desc": "무릎 위까지 내려오는 롱 카디건. 앞은 오픈형으로 가볍게 걸치기 좋아요.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "롱",
+     "item_type": "롱 카디건",
+     "fabrics": [
+      "니트"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "wool",
+      "percent": 50
+     },
+     {
+      "fiber": "acrylic",
+      "percent": 50
+     }
+    ],
+    "item_id": 3
+   },
+   "expect": {
+    "has": [
+     "len:long",
+     "mat:knit",
+     "mat:wool"
+    ],
+    "fit_stated": "regular"
+   }
+  },
+  {
+   "item_id": 4,
+   "group": "A 양식을 모두 채움",
+   "scenario": "테일러드 재킷",
+   "body": {
+    "category": "outer",
+    "name": "[아틀리에 하나] 싱글 테일러드 재킷",
+    "desc": "어깨선이 정리되는 테일러드 재킷. 안감이 있어 구김이 적어요.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "슬림",
+     "length_top": "기본",
+     "item_type": "테일러드 재킷"
+    },
+    "composition_percent": [
+     {
+      "fiber": "wool",
+      "percent": 60
+     },
+     {
+      "fiber": "polyester",
+      "percent": 40
+     }
+    ],
+    "item_id": 4
+   },
+   "expect": {
+    "has": [
+     "fit:slim",
+     "item:tailored_jacket",
+     "mat:wool"
+    ]
+   }
+  },
+  {
+   "item_id": 5,
+   "group": "A 양식을 모두 채움",
+   "scenario": "혼용률 확인 불가 + 무스탕",
+   "body": {
+    "category": "outer",
+    "name": "[소이] 무스탕 롱 자켓",
+    "desc": "부드러운 인조 무스탕 소재의 롱 기장 자켓. 보온성이 좋습니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "오버(루즈)",
+     "length_top": "롱",
+     "fabrics": [
+      "무스탕"
+     ],
+     "composition_status": "확인 불가"
+    },
+    "item_id": 5
+   },
+   "expect": {
+    "has": [
+     "fit:over",
+     "len:long",
+     "mat:mustang"
+    ],
+    "fibers": []
+   }
+  },
+  {
+   "item_id": 6,
+   "group": "A 양식을 모두 채움",
+   "scenario": "일자 하이웨이스트",
+   "body": {
+    "category": "pants",
+    "name": "[모노브릭] 하이웨이스트 스트레이트 팬츠",
+    "desc": "허리선이 높은 일자 핏. 다리 라인이 곧게 떨어져요.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "슬림",
+     "length_pants": "풀 길이",
+     "silhouette": "일자(스트레이트)",
+     "waist": "하이웨이스트",
+     "fabrics": [
+      "해당 없음"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 98
+     },
+     {
+      "fiber": "spandex",
+      "percent": 2
+     }
+    ],
+    "item_id": 6
+   },
+   "expect": {
+    "has": [
+     "fit:slim",
+     "sil:IH",
+     "waist:high",
+     "mat:cotton"
+    ]
+   }
+  },
+  {
+   "item_id": 7,
+   "group": "A 양식을 모두 채움",
+   "scenario": "와이드 데님, 허리 보통",
+   "body": {
+    "category": "pants",
+    "name": "[데일리온] 와이드 데님 팬츠",
+    "desc": "넉넉한 통 와이드 데님. 워싱이 자연스러워요.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "오버(루즈)",
+     "length_pants": "풀 길이",
+     "silhouette": "와이드",
+     "waist": "보통",
+     "fabrics": [
+      "데님"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 7
+   },
+   "expect": {
+    "has": [
+     "fit:over",
+     "sil:wide",
+     "mat:denim",
+     "mat:cotton"
+    ],
+    "lacks": [
+     "waist:high"
+    ]
+   }
+  },
+  {
+   "item_id": 8,
+   "group": "A 양식을 모두 채움",
+   "scenario": "스키니 레귤러",
+   "body": {
+    "category": "pants",
+    "name": "[루멘] 스키니 앵클 팬츠",
+    "desc": "발목이 드러나는 기장의 스키니 팬츠. 신축성이 좋아요.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "발목 길이",
+     "silhouette": "스키니"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 95
+     },
+     {
+      "fiber": "spandex",
+      "percent": 5
+     }
+    ],
+    "item_id": 8
+   },
+   "expect": {
+    "has": [
+     "sil:skinny",
+     "mat:cotton"
+    ],
+    "fit_stated": "regular"
+   }
+  },
+  {
+   "item_id": 9,
+   "group": "A 양식을 모두 채움",
+   "scenario": "타이트 스커트, 혼방",
+   "body": {
+    "category": "skirt",
+    "name": "[아틀리에 하나] 하이웨이스트 타이트 스커트",
+    "desc": "몸선을 따라 떨어지는 H라인 미디 스커트.",
+    "source": "direct",
+    "attrs": {
+     "category": "skirt",
+     "fit": "슬림",
+     "length_skirt": "미디",
+     "item_type": "타이트 스커트",
+     "waist": "하이웨이스트"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 70
+     },
+     {
+      "fiber": "rayon",
+      "percent": 30
+     }
+    ],
+    "item_id": 9
+   },
+   "expect": {
+    "has": [
+     "fit:slim",
+     "item:tight_skirt",
+     "waist:high"
+    ]
+   }
+  },
+  {
+   "item_id": 10,
+   "group": "A 양식을 모두 채움",
+   "scenario": "시폰 러플 맥시",
+   "body": {
+    "category": "skirt",
+    "name": "[소이] 시폰 러플 맥시 스커트",
+    "desc": "A라인으로 퍼지는 맥시 기장. 시폰 소재에 러플 단이 포인트.",
+    "source": "direct",
+    "attrs": {
+     "category": "skirt",
+     "fit": "레귤러",
+     "length_skirt": "맥시",
+     "silhouette": "A라인",
+     "details": [
+      "러플·프릴"
+     ],
+     "fabrics": [
+      "시폰"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 10
+   },
+   "expect": {
+    "has": [
+     "len:long",
+     "sil:A",
+     "det:ruffle",
+     "mat:chiffon"
+    ]
+   }
+  },
+  {
+   "item_id": 11,
+   "group": "A 양식을 모두 채움",
+   "scenario": "실크 리본 원피스",
+   "body": {
+    "category": "dress",
+    "name": "[루멘] 실크 리본 미니 원피스",
+    "desc": "목 뒤 리본 장식이 있는 슬림 미니 원피스.",
+    "source": "direct",
+    "attrs": {
+     "category": "dress",
+     "fit": "슬림",
+     "length_skirt": "미니",
+     "details": [
+      "리본"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "silk",
+      "percent": 100
+     }
+    ],
+    "item_id": 11
+   },
+   "expect": {
+    "has": [
+     "fit:slim",
+     "det:ribbon",
+     "mat:silk"
+    ]
+   }
+  },
+  {
+   "item_id": 12,
+   "group": "A 양식을 모두 채움",
+   "scenario": "벨벳 맥시",
+   "body": {
+    "category": "dress",
+    "name": "[모노브릭] 벨벳 맥시 원피스",
+    "desc": "광택 있는 벨벳 맥시 원피스. 넉넉한 실루엣.",
+    "source": "direct",
+    "attrs": {
+     "category": "dress",
+     "fit": "오버(루즈)",
+     "length_skirt": "맥시",
+     "fabrics": [
+      "벨벳"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 12
+   },
+   "expect": {
+    "has": [
+     "fit:over",
+     "len:long",
+     "mat:velvet"
+    ]
+   }
+  },
+  {
+   "item_id": 13,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "바지: 실루엣·소재·허리 보충",
+   "body": {
+    "category": "pants",
+    "name": "와이드 데님 팬츠 [연청]",
+    "desc": "하이웨이스트 와이드 핏의 데님 팬츠입니다. 편안한 통을 살렸어요.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 13
+   },
+   "expect": {
+    "added": [
+     "sil:wide",
+     "mat:denim",
+     "waist:high"
+    ],
+    "has": [
+     "mat:cotton"
+    ]
+   }
+  },
+  {
+   "item_id": 14,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "치마: A라인·시폰·러플 보충",
+   "body": {
+    "category": "skirt",
+    "name": "플리츠 A라인 미디 스커트",
+    "desc": "시폰 소재로 가볍게 흔들리고 러플 디테일이 포인트예요.",
+    "source": "direct",
+    "attrs": {
+     "category": "skirt",
+     "fit": "레귤러",
+     "length_skirt": "미디"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 14
+   },
+   "expect": {
+    "added": [
+     "sil:A",
+     "mat:chiffon",
+     "det:ruffle"
+    ]
+   }
+  },
+  {
+   "item_id": 15,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "상의: 프릴·리본 보충",
+   "body": {
+    "category": "top",
+    "name": "러플 칼라 블라우스",
+    "desc": "소매 끝 프릴 장식과 리본 타이가 있는 블라우스.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 15
+   },
+   "expect": {
+    "added": [
+     "det:ruffle",
+     "det:ribbon"
+    ]
+   }
+  },
+  {
+   "item_id": 16,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "벨벳·리본 보충",
+   "body": {
+    "category": "top",
+    "name": "벨벳 리본 홀터 탑",
+    "desc": "벨벳 소재에 리본 장식이 있는 홀터넥 탑.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "크롭"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 16
+   },
+   "expect": {
+    "added": [
+     "mat:velvet",
+     "det:ribbon"
+    ],
+    "has": [
+     "len:crop"
+    ]
+   }
+  },
+  {
+   "item_id": 17,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "골덴 보충",
+   "body": {
+    "category": "outer",
+    "name": "코듀로이 오버 자켓",
+    "desc": "골덴 소재로 부드럽게 떨어지는 오버 자켓입니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "오버(루즈)",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 17
+   },
+   "expect": {
+    "added": [
+     "mat:corduroy"
+    ],
+    "has": [
+     "fit:over",
+     "mat:cotton"
+    ]
+   }
+  },
+  {
+   "item_id": 18,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "무스탕 보충, 혼용률 확인 불가",
+   "body": {
+    "category": "outer",
+    "name": "무스탕 숏 자켓",
+    "desc": "부드러운 무스탕 안감과 겉감. 따뜻하게 입어요.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "composition_status": "확인 불가"
+    },
+    "item_id": 18
+   },
+   "expect": {
+    "added": [
+     "mat:mustang"
+    ]
+   }
+  },
+  {
+   "item_id": 19,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "페이크 퍼 보충",
+   "body": {
+    "category": "outer",
+    "name": "페이크 퍼 롱코트",
+    "desc": "포근한 페이크 퍼 소재의 롱코트. 카라까지 퍼로 마감했습니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "레귤러",
+     "length_top": "롱"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 19
+   },
+   "expect": {
+    "added": [
+     "mat:fur"
+    ],
+    "has": [
+     "len:long"
+    ]
+   }
+  },
+  {
+   "item_id": 20,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "바지: 일자 보충",
+   "body": {
+    "category": "pants",
+    "name": "스트레이트 슬랙스",
+    "desc": "일자로 떨어지는 스트레이트 핏으로 단정하게 입어요.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 65
+     },
+     {
+      "fiber": "rayon",
+      "percent": 30
+     },
+     {
+      "fiber": "spandex",
+      "percent": 5
+     }
+    ],
+    "item_id": 20
+   },
+   "expect": {
+    "added": [
+     "sil:IH"
+    ]
+   }
+  },
+  {
+   "item_id": 21,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "치마: 종류 보충",
+   "body": {
+    "category": "skirt",
+    "name": "클래식 타이트 스커트",
+    "desc": "타이트 스커트 라인으로 단정한 오피스 룩을 완성합니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "skirt",
+     "fit": "레귤러",
+     "length_skirt": "미디"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 21
+   },
+   "expect": {
+    "added": [
+     "item:tight_skirt"
+    ]
+   }
+  },
+  {
+   "item_id": 22,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "재킷: 종류 보충, 울 혼방",
+   "body": {
+    "category": "outer",
+    "name": "오피스 룩 재킷",
+    "desc": "단정한 테일러드 재킷 디자인. 안감 포함.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "wool",
+      "percent": 40
+     },
+     {
+      "fiber": "polyester",
+      "percent": 60
+     }
+    ],
+    "item_id": 22
+   },
+   "expect": {
+    "added": [
+     "item:tailored_jacket"
+    ],
+    "has": [
+     "mat:wool"
+    ]
+   }
+  },
+  {
+   "item_id": 23,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "모헤어 보충, 울 10%는 태그 없음",
+   "body": {
+    "category": "top",
+    "name": "모헤어 혼방 니트 풀오버",
+    "desc": "모헤어가 섞여 보송하게 올라온 니트. 가볍고 따뜻해요.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "acrylic",
+      "percent": 60
+     },
+     {
+      "fiber": "nylon",
+      "percent": 30
+     },
+     {
+      "fiber": "wool",
+      "percent": 10
+     }
+    ],
+    "item_id": 23
+   },
+   "expect": {
+    "added": [
+     "mat:mohair",
+     "mat:knit"
+    ],
+    "has": [
+     "mat:nylon"
+    ],
+    "lacks": [
+     "mat:wool"
+    ]
+   }
+  },
+  {
+   "item_id": 24,
+   "group": "B 필수만 입력, 글 보충",
+   "scenario": "바지: 스키니·데님·허리 보충",
+   "body": {
+    "category": "pants",
+    "name": "하이웨이스트 스키니 진",
+    "desc": "스키니 핏 데님. 하이웨이스트라 다리가 길어 보여요.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "슬림",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 90
+     },
+     {
+      "fiber": "spandex",
+      "percent": 10
+     }
+    ],
+    "item_id": 24
+   },
+   "expect": {
+    "added": [
+     "sil:skinny",
+     "mat:denim",
+     "waist:high"
+    ]
+   }
+  },
+  {
+   "item_id": 25,
+   "group": "C 설명 비움",
+   "scenario": "상품명만: 와이드·데님",
+   "body": {
+    "category": "pants",
+    "name": "와이드 데님 팬츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 25
+   },
+   "expect": {
+    "added": [
+     "sil:wide",
+     "mat:denim"
+    ]
+   }
+  },
+  {
+   "item_id": 26,
+   "group": "C 설명 비움",
+   "scenario": "상품명만: 러플",
+   "body": {
+    "category": "top",
+    "name": "러플 블라우스",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 26
+   },
+   "expect": {
+    "added": [
+     "det:ruffle"
+    ]
+   }
+  },
+  {
+   "item_id": 27,
+   "group": "C 설명 비움",
+   "scenario": "섬유 키워드는 혼용률이 소유 → 보충 없음",
+   "body": {
+    "category": "top",
+    "name": "베이직 코튼 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 27
+   },
+   "expect": {
+    "added": [],
+    "has": [
+     "mat:cotton"
+    ]
+   }
+  },
+  {
+   "item_id": 28,
+   "group": "C 설명 비움",
+   "scenario": "상품명만: 플레어",
+   "body": {
+    "category": "skirt",
+    "name": "플레어 스커트",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "skirt",
+     "fit": "레귤러",
+     "length_skirt": "미디"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 28
+   },
+   "expect": {
+    "added": [
+     "sil:A"
+    ]
+   }
+  },
+  {
+   "item_id": 29,
+   "group": "C 설명 비움",
+   "scenario": "상품명만: 일자",
+   "body": {
+    "category": "pants",
+    "name": "일자 팬츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 29
+   },
+   "expect": {
+    "added": [
+     "sil:IH"
+    ]
+   }
+  },
+  {
+   "item_id": 30,
+   "group": "D 해당 없음 선택 유지",
+   "scenario": "디테일 해당 없음 vs 글의 러플",
+   "body": {
+    "category": "top",
+    "name": "프릴 장식 블라우스",
+    "desc": "소매에 러플 장식이 들어간 블라우스입니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본",
+     "details": [
+      "해당 없음"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 30
+   },
+   "expect": {
+    "lacks": [
+     "det:ruffle"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 31,
+   "group": "D 해당 없음 선택 유지",
+   "scenario": "실루엣·소재 해당 없음 vs 글의 와이드·데님",
+   "body": {
+    "category": "pants",
+    "name": "데님 팬츠",
+    "desc": "와이드 핏의 데님 소재 팬츠.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이",
+     "silhouette": "해당 없음",
+     "fabrics": [
+      "해당 없음"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 31
+   },
+   "expect": {
+    "lacks": [
+     "sil:wide",
+     "mat:denim"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 32,
+   "group": "D 해당 없음 선택 유지",
+   "scenario": "종류 해당 없음 vs 글의 모헤어 (상품명의 니트는 보충됨)",
+   "body": {
+    "category": "top",
+    "name": "니트 풀오버",
+    "desc": "모헤어 혼방으로 보송한 느낌의 풀오버.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "item_type": "해당 없음"
+    },
+    "composition_percent": [
+     {
+      "fiber": "acrylic",
+      "percent": 100
+     }
+    ],
+    "item_id": 32
+   },
+   "expect": {
+    "lacks": [
+     "mat:mohair"
+    ],
+    "added": [
+     "mat:knit"
+    ]
+   }
+  },
+  {
+   "item_id": 33,
+   "group": "D 해당 없음 선택 유지",
+   "scenario": "종류 해당 없음 vs 글의 테일러드",
+   "body": {
+    "category": "outer",
+    "name": "클래식 자켓",
+    "desc": "테일러드 재킷 스타일로 단정하게 떨어집니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "item_type": "해당 없음"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 33
+   },
+   "expect": {
+    "lacks": [
+     "item:tailored_jacket"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 34,
+   "group": "D 해당 없음 선택 유지",
+   "scenario": "허리 보통 vs 글의 하이웨이스트",
+   "body": {
+    "category": "skirt",
+    "name": "미디 스커트",
+    "desc": "하이웨이스트로 올려 입는 미디 스커트.",
+    "source": "direct",
+    "attrs": {
+     "category": "skirt",
+     "fit": "레귤러",
+     "length_skirt": "미디",
+     "waist": "보통"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 34
+   },
+   "expect": {
+    "lacks": [
+     "waist:high"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 35,
+   "group": "D 해당 없음 선택 유지",
+   "scenario": "실루엣 해당 없음 vs 글의 A라인",
+   "body": {
+    "category": "skirt",
+    "name": "플레어 스커트",
+    "desc": "A라인 플레어로 퍼지는 실루엣.",
+    "source": "direct",
+    "attrs": {
+     "category": "skirt",
+     "fit": "레귤러",
+     "length_skirt": "미디",
+     "silhouette": "해당 없음"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 35
+   },
+   "expect": {
+    "lacks": [
+     "sil:A"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 36,
+   "group": "D 해당 없음 선택 유지",
+   "scenario": "소재 해당 없음 vs 글의 니트",
+   "body": {
+    "category": "top",
+    "name": "베이직 긴팔 티셔츠",
+    "desc": "부드러운 니트 소재의 긴팔 티셔츠.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "fabrics": [
+      "해당 없음"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 36
+   },
+   "expect": {
+    "lacks": [
+     "mat:knit"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 37,
+   "group": "D 해당 없음 선택 유지",
+   "scenario": "디테일 해당 없음 vs 글의 리본·러플",
+   "body": {
+    "category": "dress",
+    "name": "셔링 원피스",
+    "desc": "리본과 러플로 포인트를 준 원피스.",
+    "source": "direct",
+    "attrs": {
+     "category": "dress",
+     "fit": "레귤러",
+     "length_skirt": "미디",
+     "details": [
+      "해당 없음"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 37
+   },
+   "expect": {
+    "lacks": [
+     "det:ribbon",
+     "det:ruffle"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 38,
+   "group": "D 해당 없음 선택 유지",
+   "scenario": "허리 로우라이즈 vs 글의 하이웨이스트",
+   "body": {
+    "category": "pants",
+    "name": "코튼 팬츠",
+    "desc": "로우라이즈가 아닌 하이웨이스트 핏.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이",
+     "waist": "로우라이즈"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 38
+   },
+   "expect": {
+    "lacks": [
+     "waist:high"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 39,
+   "group": "D 해당 없음 선택 유지",
+   "scenario": "종류 해당 없음 vs 글의 타이트 스커트",
+   "body": {
+    "category": "skirt",
+    "name": "슬림 스커트",
+    "desc": "타이트 스커트 실루엣의 미디 기장.",
+    "source": "direct",
+    "attrs": {
+     "category": "skirt",
+     "fit": "슬림",
+     "length_skirt": "미디",
+     "item_type": "해당 없음"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 39
+   },
+   "expect": {
+    "lacks": [
+     "item:tight_skirt"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 40,
+   "group": "E 양식과 글 충돌",
+   "scenario": "핏 레귤러 vs 글의 오버핏",
+   "body": {
+    "category": "top",
+    "name": "오버핏 후드 티셔츠",
+    "desc": "오버핏 느낌의 박시한 실루엣, 넉넉하게 떨어져요.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 40
+   },
+   "expect": {
+    "lacks": [
+     "fit:over"
+    ],
+    "fit_stated": "regular"
+   }
+  },
+  {
+   "item_id": 41,
+   "group": "E 양식과 글 충돌",
+   "scenario": "핏 슬림 vs 글의 오버사이즈",
+   "body": {
+    "category": "top",
+    "name": "오버사이즈 셔츠",
+    "desc": "넉넉한 오버사이즈 실루엣. 여유 있게 입으세요.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 41
+   },
+   "expect": {
+    "has": [
+     "fit:slim"
+    ],
+    "lacks": [
+     "fit:over"
+    ]
+   }
+  },
+  {
+   "item_id": 42,
+   "group": "E 양식과 글 충돌",
+   "scenario": "기장 기본 vs 글의 롱코트",
+   "body": {
+    "category": "outer",
+    "name": "롱코트 스타일 자켓",
+    "desc": "롱코트 기장으로 무릎 위까지 내려옵니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "wool",
+      "percent": 70
+     },
+     {
+      "fiber": "polyester",
+      "percent": 30
+     }
+    ],
+    "item_id": 42
+   },
+   "expect": {
+    "lacks": [
+     "len:long"
+    ],
+    "has": [
+     "mat:wool"
+    ]
+   }
+  },
+  {
+   "item_id": 43,
+   "group": "E 양식과 글 충돌",
+   "scenario": "실루엣 일자 vs 글의 와이드",
+   "body": {
+    "category": "pants",
+    "name": "와이드 일자 팬츠",
+    "desc": "와이드 핏으로 통이 넉넉하지만 라인은 곧게.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이",
+     "silhouette": "일자(스트레이트)"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 43
+   },
+   "expect": {
+    "has": [
+     "sil:IH"
+    ],
+    "lacks": [
+     "sil:wide"
+    ]
+   }
+  },
+  {
+   "item_id": 44,
+   "group": "E 양식과 글 충돌",
+   "scenario": "혼용률 확인 불가 vs 글의 코튼 100%",
+   "body": {
+    "category": "top",
+    "name": "코튼 100% 티셔츠",
+    "desc": "코튼 100%의 순면 티셔츠입니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "composition_status": "확인 불가"
+    },
+    "item_id": 44
+   },
+   "expect": {
+    "lacks": [
+     "mat:cotton"
+    ],
+    "fibers": []
+   }
+  },
+  {
+   "item_id": 45,
+   "group": "E 양식과 글 충돌",
+   "scenario": "혼용률 폴리 100 vs 글의 코튼",
+   "body": {
+    "category": "pants",
+    "name": "코튼 와이드 팬츠",
+    "desc": "코튼 소재로 시원한 와이드 팬츠.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 45
+   },
+   "expect": {
+    "lacks": [
+     "mat:cotton"
+    ]
+   }
+  },
+  {
+   "item_id": 46,
+   "group": "E 양식과 글 충돌",
+   "scenario": "소재 니트 선택 vs 글의 데님",
+   "body": {
+    "category": "top",
+    "name": "포켓 디테일 티셔츠",
+    "desc": "데님 포켓 디테일이 들어간 티셔츠.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "fabrics": [
+      "니트"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 46
+   },
+   "expect": {
+    "has": [
+     "mat:knit"
+    ],
+    "lacks": [
+     "mat:denim"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 47,
+   "group": "E 양식과 글 충돌",
+   "scenario": "핏 오버 vs 글의 슬림핏",
+   "body": {
+    "category": "outer",
+    "name": "슬림핏 블루종",
+    "desc": "슬림핏으로 몸에 붙게 떨어지는 블루종.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "오버(루즈)",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "nylon",
+      "percent": 100
+     }
+    ],
+    "item_id": 47
+   },
+   "expect": {
+    "has": [
+     "fit:over"
+    ],
+    "lacks": [
+     "fit:slim"
+    ]
+   }
+  },
+  {
+   "item_id": 48,
+   "group": "E 양식과 글 충돌",
+   "scenario": "기장 미니 vs 글의 맥시",
+   "body": {
+    "category": "skirt",
+    "name": "맥시 기장 스커트",
+    "desc": "발목까지 오는 맥시 기장입니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "skirt",
+     "fit": "레귤러",
+     "length_skirt": "미니"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 48
+   },
+   "expect": {
+    "lacks": [
+     "len:long"
+    ]
+   }
+  },
+  {
+   "item_id": 49,
+   "group": "E 양식과 글 충돌",
+   "scenario": "실루엣 A라인 vs 글의 스트레이트",
+   "body": {
+    "category": "dress",
+    "name": "스트레이트 라인 원피스",
+    "desc": "스트레이트 라인으로 떨어지는 셔츠 원피스.",
+    "source": "direct",
+    "attrs": {
+     "category": "dress",
+     "fit": "레귤러",
+     "length_skirt": "미디",
+     "silhouette": "A라인"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 49
+   },
+   "expect": {
+    "has": [
+     "sil:A"
+    ],
+    "lacks": [
+     "sil:IH"
+    ]
+   }
+  },
+  {
+   "item_id": 50,
+   "group": "F 설명 노이즈",
+   "scenario": "케어라벨 핏 범례표",
+   "body": {
+    "category": "top",
+    "name": "베이직 후드 집업",
+    "desc": "정석 레귤러 핏의 후드 집업입니다.\n세탁방법 | 드라이클리닝 | 일반세탁 | 단독세탁 | 손세탁\n핏 | 슬림핏 | 기본핏 | 루즈핏/오버핏 | 와이드핏\n신축성 | 없음 | 약간 | 좋음 | -\n두께감 | 얇음 | 보통 | 두꺼움 | -",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 60
+     },
+     {
+      "fiber": "polyester",
+      "percent": 40
+     }
+    ],
+    "item_id": 50
+   },
+   "expect": {
+    "lacks": [
+     "fit:slim",
+     "fit:over",
+     "sil:wide",
+     "sil:IH"
+    ],
+    "fit_stated": "regular",
+    "added": []
+   }
+  },
+  {
+   "item_id": 51,
+   "group": "F 설명 노이즈",
+   "scenario": "반품 안내문의 '천연가죽 제품의 경우'",
+   "body": {
+    "category": "pants",
+    "name": "워커 팬츠",
+    "desc": "작업복 느낌의 코튼 팬츠.\n교환 및 반품 안내\n단순 변심에 의한 교환·환불은 수령 후 7일 이내 가능합니다.\n천연가죽 제품의 경우 미세한 스크레치, 주름, 반점 등은 불량으로 보지 않습니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 51
+   },
+   "expect": {
+    "lacks": [
+     "mat:leather"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 52,
+   "group": "F 설명 노이즈",
+   "scenario": "가죽패치",
+   "body": {
+    "category": "pants",
+    "name": "카고 팬츠",
+    "desc": "크랙 가공된 소가죽을 사용하여 조화로운 가죽패치 사용. 포켓이 많은 카고 디자인.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 52
+   },
+   "expect": {
+    "lacks": [
+     "mat:leather"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 53,
+   "group": "F 설명 노이즈",
+   "scenario": "제조일자의 '일자'",
+   "body": {
+    "category": "outer",
+    "name": "나일론 윈드브레이커",
+    "desc": "가벼운 나일론 소재의 윈드브레이커.\n제조일자: 2026년 06월\n제조국: 베트남",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "nylon",
+      "percent": 100
+     }
+    ],
+    "item_id": 53
+   },
+   "expect": {
+    "lacks": [
+     "sil:IH"
+    ],
+    "added": [],
+    "has": [
+     "mat:nylon"
+    ]
+   }
+  },
+  {
+   "item_id": 54,
+   "group": "F 설명 노이즈",
+   "scenario": "'넉넉한 넥라인'",
+   "body": {
+    "category": "top",
+    "name": "스퀘어넥 티셔츠",
+    "desc": "넉넉한 넥라인이 어깨선을 시원하게 보여줍니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 54
+   },
+   "expect": {
+    "lacks": [
+     "fit:over"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 55,
+   "group": "F 설명 노이즈",
+   "scenario": "코디 추천 문장",
+   "body": {
+    "category": "top",
+    "name": "소프트 가디건",
+    "desc": "블랙 니트나 와이드 팬츠와 매치해 입으면 좋아요. 데님과도 잘 어울립니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "acrylic",
+      "percent": 100
+     }
+    ],
+    "item_id": 55
+   },
+   "expect": {
+    "added": []
+   }
+  },
+  {
+   "item_id": 56,
+   "group": "F 설명 노이즈",
+   "scenario": "세탁 문구의 '울 코스'",
+   "body": {
+    "category": "pants",
+    "name": "코튼 팬츠",
+    "desc": "면 소재 팬츠.\n세탁 시 단독 세탁을 권장하며 울 코스로 세탁해 주세요.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 56
+   },
+   "expect": {
+    "lacks": [
+     "mat:wool"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 57,
+   "group": "F 설명 노이즈",
+   "scenario": "색상명 DENIM (상품명의 스트레이트는 보충됨)",
+   "body": {
+    "category": "pants",
+    "name": "스트레이트 진",
+    "desc": "COLOR : DENIM\n컬러는 연한 청색입니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 57
+   },
+   "expect": {
+    "lacks": [
+     "mat:denim"
+    ],
+    "added": [
+     "sil:IH"
+    ]
+   }
+  },
+  {
+   "item_id": 58,
+   "group": "F 설명 노이즈",
+   "scenario": "벨벳 테이프(장식)",
+   "body": {
+    "category": "top",
+    "name": "소매 포인트 니트",
+    "desc": "소매 끝을 벨벳 테이프로 마감했어요.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "acrylic",
+      "percent": 100
+     }
+    ],
+    "item_id": 58
+   },
+   "expect": {
+    "lacks": [
+     "mat:velvet"
+    ],
+    "added": [
+     "mat:knit"
+    ]
+   }
+  },
+  {
+   "item_id": 59,
+   "group": "F 설명 노이즈",
+   "scenario": "'서울'·'겨울'의 울",
+   "body": {
+    "category": "outer",
+    "name": "겨울 서울 한정 점퍼",
+    "desc": "서울 본사 출고, 겨울 시즌 신상입니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "nylon",
+      "percent": 100
+     }
+    ],
+    "item_id": 59
+   },
+   "expect": {
+    "lacks": [
+     "mat:wool"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 60,
+   "group": "F 설명 노이즈",
+   "scenario": "사이즈 목록의 WIDE",
+   "body": {
+    "category": "pants",
+    "name": "사이즈 안내 팬츠",
+    "desc": "사이즈 064,067,070 WIDE 중 선택해 주세요.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 60
+   },
+   "expect": {
+    "lacks": [
+     "sil:wide"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 61,
+   "group": "F 설명 노이즈",
+   "scenario": "와이드 카라",
+   "body": {
+    "category": "outer",
+    "name": "와이드 카라 코트",
+    "desc": "와이드 카라 디테일이 포인트인 코트.",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "wool",
+      "percent": 50
+     },
+     {
+      "fiber": "polyester",
+      "percent": 50
+     }
+    ],
+    "item_id": 61
+   },
+   "expect": {
+    "lacks": [
+     "sil:wide"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 62,
+   "group": "F 설명 노이즈",
+   "scenario": "상의에는 실루엣 항목이 없다 → 보충하지 않음",
+   "body": {
+    "category": "top",
+    "name": "와이드 핏 티셔츠",
+    "desc": "와이드 핏으로 넉넉하게 떨어지는 티셔츠입니다.",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 62
+   },
+   "expect": {
+    "lacks": [
+     "sil:wide"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 63,
+   "group": "G 혼용률",
+   "scenario": "코튼 25% (30% 미만)",
+   "body": {
+    "category": "top",
+    "name": "코튼 혼방 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 25
+     },
+     {
+      "fiber": "polyester",
+      "percent": 75
+     }
+    ],
+    "item_id": 63
+   },
+   "expect": {
+    "lacks": [
+     "mat:cotton"
+    ],
+    "fibers": [
+     "cotton",
+     "polyester"
+    ]
+   }
+  },
+  {
+   "item_id": 64,
+   "group": "G 혼용률",
+   "scenario": "울 정확히 30%",
+   "body": {
+    "category": "top",
+    "name": "울 혼방 니트",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "wool",
+      "percent": 30
+     },
+     {
+      "fiber": "polyester",
+      "percent": 70
+     }
+    ],
+    "item_id": 64
+   },
+   "expect": {
+    "has": [
+     "mat:wool"
+    ]
+   }
+  },
+  {
+   "item_id": 65,
+   "group": "G 혼용률",
+   "scenario": "3종 혼방",
+   "body": {
+    "category": "outer",
+    "name": "울 나일론 혼방 코트",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "wool",
+      "percent": 45
+     },
+     {
+      "fiber": "nylon",
+      "percent": 35
+     },
+     {
+      "fiber": "polyester",
+      "percent": 20
+     }
+    ],
+    "item_id": 65
+   },
+   "expect": {
+    "has": [
+     "mat:wool",
+     "mat:nylon"
+    ]
+   }
+  },
+  {
+   "item_id": 66,
+   "group": "G 혼용률",
+   "scenario": "혼용률 확인 불가",
+   "body": {
+    "category": "top",
+    "name": "원단 정보 미기재 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "composition_status": "확인 불가"
+    },
+    "item_id": 66
+   },
+   "expect": {
+    "fibers": []
+   }
+  },
+  {
+   "item_id": 67,
+   "group": "G 혼용률",
+   "scenario": "가죽 → 혼용률 해당 없음",
+   "body": {
+    "category": "outer",
+    "name": "리얼 레더 자켓",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "슬림",
+     "length_top": "기본",
+     "fabrics": [
+      "가죽"
+     ],
+     "composition_status": "해당 없음"
+    },
+    "item_id": 67
+   },
+   "expect": {
+    "has": [
+     "mat:leather"
+    ],
+    "fibers": []
+   }
+  },
+  {
+   "item_id": 68,
+   "group": "G 혼용률",
+   "scenario": "한 가지 섬유",
+   "body": {
+    "category": "top",
+    "name": "코튼 100% 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 68
+   },
+   "expect": {
+    "has": [
+     "mat:cotton"
+    ],
+    "lacks": [
+     "mat:wool",
+     "mat:nylon"
+    ]
+   }
+  },
+  {
+   "item_id": 69,
+   "group": "G 혼용률",
+   "scenario": "점수 없는 섬유만",
+   "body": {
+    "category": "pants",
+    "name": "폴리 트레이닝 팬츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 69
+   },
+   "expect": {
+    "lacks": [
+     "mat:cotton",
+     "mat:wool",
+     "mat:nylon"
+    ],
+    "fibers": [
+     "polyester"
+    ]
+   }
+  },
+  {
+   "item_id": 70,
+   "group": "G 혼용률",
+   "scenario": "실크 혼방",
+   "body": {
+    "category": "top",
+    "name": "실크 코튼 블라우스",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "silk",
+      "percent": 60
+     },
+     {
+      "fiber": "cotton",
+      "percent": 40
+     }
+    ],
+    "item_id": 70
+   },
+   "expect": {
+    "has": [
+     "mat:silk",
+     "mat:cotton"
+    ]
+   }
+  },
+  {
+   "item_id": 71,
+   "group": "G 혼용률",
+   "scenario": "린넨 혼방",
+   "body": {
+    "category": "top",
+    "name": "린넨 코튼 셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "linen",
+      "percent": 55
+     },
+     {
+      "fiber": "cotton",
+      "percent": 45
+     }
+    ],
+    "item_id": 71
+   },
+   "expect": {
+    "has": [
+     "mat:linen",
+     "mat:cotton"
+    ]
+   }
+  },
+  {
+   "item_id": 72,
+   "group": "G 혼용률",
+   "scenario": "캐시미어 20%는 태그 없음",
+   "body": {
+    "category": "outer",
+    "name": "캐시미어 울 코트",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "outer",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cashmere",
+      "percent": 20
+     },
+     {
+      "fiber": "wool",
+      "percent": 80
+     }
+    ],
+    "item_id": 72
+   },
+   "expect": {
+    "has": [
+     "mat:wool"
+    ],
+    "lacks": [
+     "mat:cashmere"
+    ]
+   }
+  },
+  {
+   "item_id": 73,
+   "group": "H 글 보충 끔",
+   "scenario": "text_fill=false",
+   "body": {
+    "category": "pants",
+    "name": "와이드 데님 팬츠",
+    "desc": "하이웨이스트 와이드 데님.",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "text_fill": false,
+    "item_id": 73
+   },
+   "expect": {
+    "added": [],
+    "lacks": [
+     "sil:wide",
+     "mat:denim"
+    ]
+   }
+  },
+  {
+   "item_id": 74,
+   "group": "H 글 보충 끔",
+   "scenario": "상품명만 있어도 끌 수 있음",
+   "body": {
+    "category": "top",
+    "name": "러플 블라우스",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "text_fill": false,
+    "item_id": 74
+   },
+   "expect": {
+    "added": [],
+    "lacks": [
+     "det:ruffle"
+    ]
+   }
+  },
+  {
+   "item_id": 75,
+   "group": "H 글 보충 끔",
+   "scenario": "치마 text_fill=false",
+   "body": {
+    "category": "skirt",
+    "name": "A라인 스커트",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "skirt",
+     "fit": "레귤러",
+     "length_skirt": "미디"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "text_fill": false,
+    "item_id": 75
+   },
+   "expect": {
+    "added": [],
+    "lacks": [
+     "sil:A"
+    ]
+   }
+  },
+  {
+   "item_id": 76,
+   "group": "I 잘못된 등록",
+   "scenario": "핏 누락",
+   "body": {
+    "category": "top",
+    "name": "핏 누락 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 76
+   },
+   "expect": {
+    "error": "핏"
+   }
+  },
+  {
+   "item_id": 77,
+   "group": "I 잘못된 등록",
+   "scenario": "기장 누락",
+   "body": {
+    "category": "top",
+    "name": "기장 누락 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 77
+   },
+   "expect": {
+    "error": "기장"
+   }
+  },
+  {
+   "item_id": 78,
+   "group": "I 잘못된 등록",
+   "scenario": "혼용률도 확인 불가도 없음",
+   "body": {
+    "category": "top",
+    "name": "혼용률 누락 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "item_id": 78
+   },
+   "expect": {
+    "error": "혼용률"
+   }
+  },
+  {
+   "item_id": 79,
+   "group": "I 잘못된 등록",
+   "scenario": "상의에 바지 기장",
+   "body": {
+    "category": "top",
+    "name": "바지 기장을 쓴 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 79
+   },
+   "expect": {
+    "error": "없는 항목"
+   }
+  },
+  {
+   "item_id": 80,
+   "group": "I 잘못된 등록",
+   "scenario": "핏에 없는 값",
+   "body": {
+    "category": "top",
+    "name": "없는 핏 선택",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "타이트",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 80
+   },
+   "expect": {
+    "error": "없는 선택지"
+   }
+  },
+  {
+   "item_id": 81,
+   "group": "I 잘못된 등록",
+   "scenario": "롱 카디건 ⇄ 기본",
+   "body": {
+    "category": "top",
+    "name": "롱 카디건인데 기본 기장",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "item_type": "롱 카디건"
+    },
+    "composition_percent": [
+     {
+      "fiber": "acrylic",
+      "percent": 100
+     }
+    ],
+    "item_id": 81
+   },
+   "expect": {
+    "error": "모순"
+   }
+  },
+  {
+   "item_id": 82,
+   "group": "I 잘못된 등록",
+   "scenario": "크롭 팬츠 ⇄ 풀 길이",
+   "body": {
+    "category": "pants",
+    "name": "크롭 팬츠인데 풀 길이",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "pants",
+     "fit": "레귤러",
+     "length_pants": "풀 길이",
+     "item_type": "크롭 팬츠"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 82
+   },
+   "expect": {
+    "error": "모순"
+   }
+  },
+  {
+   "item_id": 83,
+   "group": "I 잘못된 등록",
+   "scenario": "혼용률 합계 90%",
+   "body": {
+    "category": "top",
+    "name": "합계 90% 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 60
+     },
+     {
+      "fiber": "polyester",
+      "percent": 30
+     }
+    ],
+    "item_id": 83
+   },
+   "expect": {
+    "error": "합계"
+   }
+  },
+  {
+   "item_id": 84,
+   "group": "I 잘못된 등록",
+   "scenario": "섬유 0%",
+   "body": {
+    "category": "top",
+    "name": "0% 섬유 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     },
+     {
+      "fiber": "polyester",
+      "percent": 0
+     }
+    ],
+    "item_id": 84
+   },
+   "expect": {
+    "error": "퍼센트"
+   }
+  },
+  {
+   "item_id": 85,
+   "group": "I 잘못된 등록",
+   "scenario": "같은 섬유 두 번",
+   "body": {
+    "category": "top",
+    "name": "섬유 중복 티셔츠",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 50
+     },
+     {
+      "fiber": "cotton",
+      "percent": 50
+     }
+    ],
+    "item_id": 85
+   },
+   "expect": {
+    "error": "중복"
+   }
+  },
+  {
+   "item_id": 86,
+   "group": "I 잘못된 등록",
+   "scenario": "혼용률 수치 + 상태",
+   "body": {
+    "category": "top",
+    "name": "수치와 확인 불가 동시",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "composition_status": "확인 불가"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 86
+   },
+   "expect": {
+    "error": "함께"
+   }
+  },
+  {
+   "item_id": 87,
+   "group": "I 잘못된 등록",
+   "scenario": "디테일 해당 없음 + 리본",
+   "body": {
+    "category": "top",
+    "name": "해당 없음과 리본 동시 선택",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "details": [
+      "해당 없음",
+      "리본"
+     ]
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 87
+   },
+   "expect": {
+    "error": "함께"
+   }
+  },
+  {
+   "item_id": 88,
+   "group": "I 잘못된 등록",
+   "scenario": "source가 direct/manual이 아님",
+   "body": {
+    "category": "top",
+    "name": "알 수 없는 출처",
+    "desc": "",
+    "source": "import",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 88
+   },
+   "expect": {
+    "error": "source"
+   }
+  },
+  {
+   "item_id": 89,
+   "group": "I 잘못된 등록",
+   "scenario": "body.category와 attrs.category가 다름",
+   "body": {
+    "category": "pants",
+    "name": "카테고리 불일치",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 89
+   },
+   "expect": {
+    "error": "다르다"
+   }
+  },
+  {
+   "item_id": 90,
+   "group": "J 팀 입력(manual)",
+   "scenario": "팀 입력: 상의",
+   "body": {
+    "category": "top",
+    "name": "[예시몰] 크롭 슬림 니트 탑",
+    "desc": "몸에 붙는 슬림 핏의 짧은 니트 탑. 부드러운 니트 소재.",
+    "source": "manual",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "크롭"
+    },
+    "composition_percent": [
+     {
+      "fiber": "acrylic",
+      "percent": 70
+     },
+     {
+      "fiber": "nylon",
+      "percent": 30
+     }
+    ],
+    "item_id": 90
+   },
+   "expect": {
+    "has": [
+     "fit:slim",
+     "len:crop",
+     "mat:nylon"
+    ],
+    "added": [
+     "mat:knit"
+    ]
+   }
+  },
+  {
+   "item_id": 91,
+   "group": "J 팀 입력(manual)",
+   "scenario": "팀 입력: 바지",
+   "body": {
+    "category": "pants",
+    "name": "[예시몰] 하이웨이스트 와이드 슬랙스",
+    "desc": "하이웨이스트에 와이드 핏. 떨어지는 핏이 좋아요.",
+    "source": "manual",
+    "attrs": {
+     "category": "pants",
+     "fit": "오버(루즈)",
+     "length_pants": "풀 길이"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 70
+     },
+     {
+      "fiber": "rayon",
+      "percent": 30
+     }
+    ],
+    "item_id": 91
+   },
+   "expect": {
+    "has": [
+     "fit:over"
+    ],
+    "added": [
+     "sil:wide",
+     "waist:high"
+    ]
+   }
+  },
+  {
+   "item_id": 92,
+   "group": "J 팀 입력(manual)",
+   "scenario": "팀 입력: 아우터",
+   "body": {
+    "category": "outer",
+    "name": "[예시몰] 오버사이즈 울 코트",
+    "desc": "넉넉한 오버사이즈 롱코트.",
+    "source": "manual",
+    "attrs": {
+     "category": "outer",
+     "fit": "오버(루즈)",
+     "length_top": "롱"
+    },
+    "composition_percent": [
+     {
+      "fiber": "wool",
+      "percent": 70
+     },
+     {
+      "fiber": "polyester",
+      "percent": 30
+     }
+    ],
+    "item_id": 92
+   },
+   "expect": {
+    "has": [
+     "fit:over",
+     "len:long",
+     "mat:wool"
+    ],
+    "added": []
+   }
+  },
+  {
+   "item_id": 93,
+   "group": "J 팀 입력(manual)",
+   "scenario": "팀 입력: 원피스",
+   "body": {
+    "category": "dress",
+    "name": "[예시몰] 플레어 미디 원피스",
+    "desc": "허리선에서 퍼지는 플레어 실루엣의 미디 원피스.",
+    "source": "manual",
+    "attrs": {
+     "category": "dress",
+     "fit": "레귤러",
+     "length_skirt": "미디"
+    },
+    "composition_percent": [
+     {
+      "fiber": "polyester",
+      "percent": 100
+     }
+    ],
+    "item_id": 93
+   },
+   "expect": {
+    "added": [
+     "sil:A"
+    ],
+    "fit_stated": "regular"
+   }
+  },
+  {
+   "item_id": 94,
+   "group": "J 팀 입력(manual)",
+   "scenario": "팀 입력: 치마",
+   "body": {
+    "category": "skirt",
+    "name": "[예시몰] 데님 미니 스커트",
+    "desc": "데님 소재의 미니 스커트.",
+    "source": "manual",
+    "attrs": {
+     "category": "skirt",
+     "fit": "슬림",
+     "length_skirt": "미니"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 94
+   },
+   "expect": {
+    "has": [
+     "fit:slim",
+     "mat:cotton"
+    ],
+    "added": [
+     "mat:denim"
+    ]
+   }
+  },
+  {
+   "item_id": 95,
+   "group": "J 팀 입력(manual)",
+   "scenario": "팀 입력: 설명도 혼용률도 없음",
+   "body": {
+    "category": "top",
+    "name": "[예시몰] 단가라 티셔츠",
+    "desc": "",
+    "source": "manual",
+    "attrs": {
+     "category": "top",
+     "fit": "레귤러",
+     "length_top": "기본",
+     "composition_status": "확인 불가"
+    },
+    "item_id": 95
+   },
+   "expect": {
+    "fit_stated": "regular",
+    "added": [],
+    "fibers": []
+   }
+  },
+  {
+   "item_id": 96,
+   "group": "K 리뷰 일치도",
+   "scenario": "12명 중 1명 다름",
+   "body": {
+    "category": "top",
+    "name": "슬림 셔츠 (리뷰 많음, 거의 일치)",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "review": {
+     "n": 12,
+     "mismatch": 1
+    },
+    "item_id": 96
+   },
+   "expect": {
+    "has": [
+     "fit:slim"
+    ],
+    "agreement": 0.93
+   }
+  },
+  {
+   "item_id": 97,
+   "group": "K 리뷰 일치도",
+   "scenario": "8명 중 6명 다름",
+   "body": {
+    "category": "top",
+    "name": "슬림 셔츠 (리뷰 다수 불일치)",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "review": {
+     "n": 8,
+     "mismatch": 6
+    },
+    "item_id": 97
+   },
+   "expect": {
+    "has": [
+     "fit:slim"
+    ],
+    "agreement": 0.45
+   }
+  },
+  {
+   "item_id": 98,
+   "group": "K 리뷰 일치도",
+   "scenario": "리뷰 없음",
+   "body": {
+    "category": "top",
+    "name": "슬림 셔츠 (리뷰 없음)",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "item_id": 98
+   },
+   "expect": {
+    "has": [
+     "fit:slim"
+    ],
+    "agreement": 1.0
+   }
+  },
+  {
+   "item_id": 99,
+   "group": "K 리뷰 일치도",
+   "scenario": "3명 중 3명 다름",
+   "body": {
+    "category": "top",
+    "name": "슬림 셔츠 (3명 모두 다름)",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "review": {
+     "n": 3,
+     "mismatch": 3
+    },
+    "item_id": 99
+   },
+   "expect": {
+    "has": [
+     "fit:slim"
+    ],
+    "agreement": 0.5
+   }
+  },
+  {
+   "item_id": 100,
+   "group": "K 리뷰 일치도",
+   "scenario": "다르다는 답이 전체보다 많음",
+   "body": {
+    "category": "top",
+    "name": "잘못된 리뷰 수",
+    "desc": "",
+    "source": "direct",
+    "attrs": {
+     "category": "top",
+     "fit": "슬림",
+     "length_top": "기본"
+    },
+    "composition_percent": [
+     {
+      "fiber": "cotton",
+      "percent": 100
+     }
+    ],
+    "review": {
+     "n": 3,
+     "mismatch": 4
+    },
+    "item_id": 100
+   },
+   "expect": {
+    "error": "review"
+   }
+  }
+ ]
+}
