@@ -47,7 +47,7 @@ def load(path, split):
 # 예측 · 평가
 # ─────────────────────────────────────────────
 def predict(row, mode="combined", w_survey=P.W_SURVEY):
-    s = P.normalize(P.score_survey(row["answers"]))
+    s = P.survey_ratios(row["answers"])
     a = P.normalize(P.score_avatar(row["meas"]))
     if mode == "survey":
         ratios = s
@@ -119,7 +119,7 @@ def report(path, split):
     if not wrong:
         print("  없음")
     for row, out in wrong:
-        s = P.normalize(P.score_survey(row["answers"]))
+        s = P.survey_ratios(row["answers"])
         a = P.normalize(P.score_avatar(row["meas"]))
         print(f"  {row['id']} 정답 {row['truth']} → 예측 {out['primary']}"
               f"{' (혼합형)' if out['is_mixed'] else ''}")

@@ -182,6 +182,22 @@ def normalize(scores):
     return {t: scores[t] / total for t in TYPES}
 
 
+# 설문에서 타입마다 받을 수 있는 최고점 (선택지 최고점 × 문항 weight 의 합).
+# 지금 표로는 S 15 / W 14 / N 13.5 라서, 원점수를 그대로 비율로 바꾸면 S가 유리하다.
+SURVEY_MAX = {t: sum(max(opt[t] for opt in spec["options"].values()) * spec["weight"]
+                     for spec in SURVEY.values()) for t in TYPES}
+
+
+def survey_ratios(answers):
+    """설문 비율. 타입별 최고점으로 먼저 나눈 뒤(같은 출발선) 합이 1인 비율로 바꾼다.
+
+    최고점으로 나누지 않으면 무작위 답 2,187가지 중 1위가 S 42% / W 31% / N 27%로 기운다.
+    튜닝용 21명 기준 정확도: 지금(나누지 않음) 81.0% → 나눔 95.2% (테스트 9명은 둘 다 9/9).
+    """
+    raw = score_survey(answers)
+    return normalize({t: raw[t] / SURVEY_MAX[t] for t in TYPES})
+
+
 def combine(survey_r, avatar_r, w_survey=W_SURVEY, w_avatar=W_AVATAR):
     """설문 비율 × 0.6 + 아바타 비율 × 0.4"""
     return {t: w_survey * survey_r[t] + w_avatar * avatar_r[t] for t in TYPES}
@@ -284,7 +300,7 @@ def classify(answers, measurements=None):
     """
     validate_answers(answers)                              # 설문 답변 검증
     
-    survey_r = normalize(score_survey(answers))            # 설문 점수 계산 및 정규화
+    survey_r = survey_ratios(answers)                      # 설문 점수 계산 및 정규화 (타입별 최고점 보정)
     
     if measurements is None:
         return decide_type(survey_r)                       # 신체 치수가 없는 경우, 
@@ -333,7 +349,7 @@ def explain(title, answers, measurements=None):
         return
 
     print("\n[2] 계산 과정  (작업 1: 점수 계산 → 작업 2: 정규화·합산)")
-    survey_r = normalize(score_survey(answers))
+    survey_r = survey_ratios(answers)
     print(f"    설문 비율          {_pct(survey_r)}")
     if measurements is None:
         print("    (치수가 없어서 설문 비율이 그대로 최종 비율)")
