@@ -218,3 +218,28 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# 파이썬 생성 파일
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# 키·환경 설정 (API 키는 환경변수로만 쓴다)
+.env
+*.key
+
+# 외부 쇼핑몰(무신사·에이블리)에서 수집한 상품 데이터: 약관·저작권 문제로 저장소에 올리지 않는다.
+# 평가 재현이 필요하면 압축 파일로 따로 전달한다.
+samples/musinsa_96.json
+samples/real_50*
+samples/new_50*
+samples/ably_names.json
+samples/detail_images.json
+samples/product_names.csv
+samples/validation_items.json
+samples/vision_*.json
+samples/llm_cache_*.json
+samples/llm_result_*.json
+samples/labeling/
