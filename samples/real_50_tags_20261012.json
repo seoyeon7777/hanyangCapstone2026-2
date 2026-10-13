@@ -1,0 +1,826 @@
+{
+ "_note": "2026-10-12 현재 matching.py 기준 자동 태그 (정확도 검증 전)",
+ "items": {
+  "M1429284": {
+   "name": "5원소 팬츠 블루스톤",
+   "tags": [
+    "mat:nylon"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "nylon",
+     "share": 0.76,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.24,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "nylon",
+     "share": 0.76,
+     "part": "sub"
+    }
+   ]
+  },
+  "M6967922": {
+   "name": "Side fly layered bootscut pants CHARCOAL",
+   "tags": [
+    "fit:slim",
+    "mat:cotton",
+    "mat:nylon"
+   ],
+   "fit_stated": "slim",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 0.75,
+     "part": "main"
+    },
+    {
+     "fiber": "nylon",
+     "share": 0.46,
+     "part": "main"
+    }
+   ]
+  },
+  "M4057732": {
+   "name": "원턱 와이드 스웨트 팬츠 [그레이]",
+   "tags": [
+    "fit:slim",
+    "sil:wide",
+    "fit:over"
+   ],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "M5446309": {
+   "name": "Slant Pleats Multi Cargo Sweat Pants Black",
+   "tags": [
+    "fit:over",
+    "sil:wide",
+    "mat:cotton"
+   ],
+   "fit_stated": "over",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 0.74,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "polyester",
+     "share": 0.22,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.04,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M5158802": {
+   "name": "77 아플리케 팬츠 (블랙)",
+   "tags": [
+    "sil:wide",
+    "mat:cotton"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 1.0,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M7146772": {
+   "name": "NOVA WIDE PANTS / WINE",
+   "tags": [
+    "sil:wide",
+    "sil:IH",
+    "mat:cotton"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 1.0,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M6450018": {
+   "name": "우먼즈 에센셜 스트레이트 데님 팬츠 [블랙]",
+   "tags": [
+    "fit:slim",
+    "sil:IH",
+    "mat:denim",
+    "mat:cotton"
+   ],
+   "fit_stated": "slim",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 0.99,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.01,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M7294545": {
+   "name": "레터즈 브이넥 소프트 후드 티셔츠 ( 핑크 )",
+   "tags": [
+    "fit:slim",
+    "fit:over"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "polyester",
+     "share": 0.95,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.05,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M5385615": {
+   "name": "중량담요 후드티 네이비",
+   "tags": [
+    "fit:over",
+    "mat:cotton"
+   ],
+   "fit_stated": "over",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 0.7,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "polyester",
+     "share": 0.3,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M6275493": {
+   "name": "Cut-Out Open Long Sleeve (Gray)",
+   "tags": [
+    "mat:cotton"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 0.58,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "rayon",
+     "share": 0.37,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.05,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M2990463": {
+   "name": "SMALL CENTER 후드 (STHSTD-0015)",
+   "tags": [
+    "fit:over",
+    "mat:cotton"
+   ],
+   "fit_stated": "over",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 0.4,
+     "part": "main"
+    },
+    {
+     "fiber": "polyester",
+     "share": 0.6,
+     "part": "main"
+    }
+   ]
+  },
+  "M6704403": {
+   "name": "[빅토리아 울] 우먼즈 칼라드 니트 [민트 그레이]",
+   "tags": [
+    "mat:knit",
+    "mat:wool",
+    "mat:nylon"
+   ],
+   "fit_stated": "regular",
+   "materials": [
+    {
+     "fiber": "wool",
+     "share": 0.5,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "nylon",
+     "share": 0.45,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "cashmere",
+     "share": 0.05,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M7178855": {
+   "name": "Dain Cotton Shirt_Brown",
+   "tags": [
+    "fit:over",
+    "mat:cotton"
+   ],
+   "fit_stated": "over",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 1.0,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M6032908": {
+   "name": "뷔스티에 매칭 블라우스 RMBLG49NT4",
+   "tags": [],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "polyester",
+     "share": 0.57,
+     "part": "main"
+    },
+    {
+     "fiber": "rayon",
+     "share": 0.48,
+     "part": "main"
+    },
+    {
+     "fiber": "nylon",
+     "share": 0.22,
+     "part": "main"
+    }
+   ]
+  },
+  "M6953288": {
+   "name": "SOFT ALPACA LAYERED U-NECK KNIT, CHARCOAL",
+   "tags": [
+    "mat:knit"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "wool",
+     "share": 0.07,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "polyester",
+     "share": 0.45,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "rayon",
+     "share": 0.37,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.03,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M5732965": {
+   "name": "Align™ 크롭 캐미 탱크탑 *라이트 서포트, A B컵",
+   "tags": [
+    "len:crop"
+   ],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "M4867343": {
+   "name": "피쉬테일 숏 야상 후드 점퍼  (블랙)",
+   "tags": [
+    "mat:cotton"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 1.0,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M4327315": {
+   "name": "[5컬러] 핸드메이드 에이라인 울 하프 코트",
+   "tags": [
+    "fit:over",
+    "sil:A",
+    "mat:knit",
+    "mat:wool"
+   ],
+   "fit_stated": "over",
+   "materials": [
+    {
+     "fiber": "wool",
+     "share": 0.7,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M5392884": {
+   "name": "여성) 우사기 패딩 자켓(BLACK)",
+   "tags": [],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "M7389917": {
+   "name": "스몰 트위치 로고 기모 후드 집업 그레이",
+   "tags": [
+    "mat:cotton"
+   ],
+   "fit_stated": "regular",
+   "materials": [
+    {
+     "fiber": "polyester",
+     "share": 0.54,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "cotton",
+     "share": 0.44,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "rayon",
+     "share": 0.02,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M7335966": {
+   "name": "뷔스티에 레이어 원피스 차콜",
+   "tags": [],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "polyester",
+     "share": 1.0,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "cotton",
+     "share": 1.0,
+     "part": "sub"
+    }
+   ]
+  },
+  "M6305532": {
+   "name": "핀턱 로우라이즈 원피스 [WHITE] / GF2LOP507",
+   "tags": [
+    "fit:slim"
+   ],
+   "fit_stated": "slim",
+   "materials": [
+    {
+     "fiber": "polyester",
+     "share": 0.61,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "linen",
+     "share": 0.04,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "cotton",
+     "share": 1.0,
+     "part": "sub"
+    }
+   ]
+  },
+  "M6849487": {
+   "name": "우먼즈 브러쉬드 스트레이트 맥시 스커트 [미디엄 그레이]",
+   "tags": [
+    "fit:slim",
+    "len:long",
+    "sil:IH"
+   ],
+   "fit_stated": "slim",
+   "materials": [
+    {
+     "fiber": "polyester",
+     "share": 0.66,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "rayon",
+     "share": 0.27,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "wool",
+     "share": 0.05,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.02,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "M5587662": {
+   "name": "메탈 믹스 부클 미디 스커트 [BLACK] / WBE4L54540",
+   "tags": [],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "polyester",
+     "share": 0.49,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "nylon",
+     "share": 0.21,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "acrylic",
+     "share": 0.18,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "wool",
+     "share": 0.1,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.02,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "polyester",
+     "share": 1.0,
+     "part": "sub"
+    }
+   ]
+  },
+  "M5620201": {
+   "name": "여성 뒷플리츠 카고형 스커트 BLACK (WOMAN)",
+   "tags": [
+    "mat:wool"
+   ],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "A36825390": {
+   "name": "[부드러운 폭닥함💭] 도톰 아방핏 브이넥 래글런 오버핏 긴팔니트 넉넉함보장",
+   "tags": [
+    "fit:over",
+    "sil:wide",
+    "mat:knit"
+   ],
+   "fit_stated": "over",
+   "materials": [
+    {
+     "fiber": "acrylic",
+     "share": 0.33,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "polyester",
+     "share": 0.63,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.04,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "A42847880": {
+   "name": "간절기템🧚🏻‍♀️ 키키 단가라 와펜 브이넥 니트 (4color)",
+   "tags": [
+    "mat:knit"
+   ],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "A76636191": {
+   "name": "[7부/배색] NB1624 - 나그랑 t",
+   "tags": [],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "A27382527": {
+   "name": "[달라붙지않는핏/프리미엄] 가장 베이직한, 가을 겨울 라운드 긴팔 티셔츠 베이직 캐주얼 무지 세미 크롭 Y2K 겨울 긴팔티 6color",
+   "tags": [
+    "fit:over",
+    "len:crop",
+    "sil:IH",
+    "mat:cotton"
+   ],
+   "fit_stated": "over",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 1.0,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "A76895822": {
+   "name": "[말라핏!] 촉촉 딥 브이넥 찰랑 루즈핏 긴팔 티셔츠 - 4color",
+   "tags": [
+    "fit:over"
+   ],
+   "fit_stated": "over",
+   "materials": [
+    {
+     "fiber": "rayon",
+     "share": 0.97,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.03,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "A58441825": {
+   "name": "[아방핏🪽/군살커버✨] 배색 나그랑 데일리 긴팔 맨투맨",
+   "tags": [
+    "fit:over"
+   ],
+   "fit_stated": "over",
+   "materials": []
+  },
+  "A23438041": {
+   "name": "1+1할인#기모추가[넉넉한핏!/데일리.기본템]체형커버랍빠유넥라운드여유핏긴팔티(6color)",
+   "tags": [
+    "fit:slim",
+    "fit:over"
+   ],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "A37983205": {
+   "name": "[*가을니트/소프트핏💭] 솝 브이넥 루즈핏 니트 knit - 12 color",
+   "tags": [
+    "fit:over",
+    "mat:knit"
+   ],
+   "fit_stated": "over",
+   "materials": []
+  },
+  "A77002369": {
+   "name": "26FW 남성 드루모어 스웨터 D8W203NLWO 540 BEIGE",
+   "tags": [
+    "mat:wool"
+   ],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "A53804070": {
+   "name": "기모선택🔥백포켓/사이드핀턱🤎[숏&롱/기장선택/4COL] 제이닝 가을 신상 사이드 핀턱 입체 포켓 하이웨스트 밴딩 스트링 와이드 팬츠 겨울 기장선택 키작녀 빅사이즈 사계절 바지",
+   "tags": [
+    "sil:wide",
+    "waist:high",
+    "mat:cotton"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 0.65,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "polyester",
+     "share": 0.3,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "spandex",
+     "share": 0.05,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "A53320246": {
+   "name": "기모선택🔥사이드핀턱🤎[숏&롱/기장선택/4COL/투웨이/당일] 제이닝 140/150/160 핀턱 와이드 팬츠 가을 신상 하이웨스트 롱 하체커버 힙 간절기 사계절 벌룬핏 바지",
+   "tags": [
+    "sil:wide",
+    "waist:high",
+    "mat:cotton"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "polyester",
+     "share": 1.0,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "cotton",
+     "share": 1.0,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "A39579938": {
+   "name": "[MADE❤️숏,롱/사계절! 앞핀턱 #벌룬핏 해비와이드팬츠 쭈리 트레이닝팬츠] 테크핀턱와이드팬츠",
+   "tags": [
+    "sil:wide"
+   ],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "A52967978": {
+   "name": "[투웨이🤎/숏&롱/5COL/벌룬핏!] 기장선택 절개 트임 핀턱 바지 롱 와이드 데일리 트레이닝 밴딩 팬츠 키작녀 키큰녀 하이웨스트 허리밴딩 사계절 간절기 와이드 바지 당일",
+   "tags": [
+    "sil:wide",
+    "waist:high",
+    "mat:cotton"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 0.35,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "polyester",
+     "share": 0.65,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "A76628231": {
+   "name": "코듀로이🤎[여유부츠컷✨/핏보장/사이즈선택] 스웨이드 로우 밴딩 스트링 롱 부츠컷 팬츠 가을 신상 골덴 코듀로이 트레이닝 바지 하체커버 세미부츠컷 키작녀 슬림 체형보정 당일",
+   "tags": [
+    "fit:slim",
+    "mat:corduroy",
+    "waist:high"
+   ],
+   "fit_stated": "slim",
+   "materials": [
+    {
+     "fiber": "polyester",
+     "share": 1.0,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "A37243177": {
+   "name": "[기모*MADE🤎숏,롱/따뜻기모! 앞핀턱 벌룬핏 와이드팬츠 겨울팬츠 트레이닝 기모바지] (기모)테크핀턱와이드팬츠",
+   "tags": [
+    "sil:wide"
+   ],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "A27806367": {
+   "name": "(숏,롱)[사계절!/벌룬핏 *옆핀턱* 데일리 와이드팬츠 트레이닝팬츠 가을팬츠] 보드사이드핀턱와이드팬츠",
+   "tags": [
+    "len:long",
+    "sil:wide"
+   ],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "A75851121": {
+   "name": "가을신상🤎[숏&롱/하체커버✨] 하이웨스트 밴딩 트랙 사이드 핀턱 와이드 팬츠 가을 신상 사계절 삥줄 롱 트레이닝 바지 기장선택 키작녀 체형커버 하비추천 데일리 당일",
+   "tags": [
+    "sil:wide",
+    "waist:high",
+    "mat:cotton"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "cotton",
+     "share": 0.65,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "polyester",
+     "share": 0.35,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "A62591237": {
+   "name": "[체형보정💪🏻/역대급부드러움!] *3사이즈 크렘 가디건* 니트가디건 롱슬리브 팔뚝살 커버 가을 가을옷 (6colors/3size)",
+   "tags": [
+    "fit:over",
+    "mat:knit"
+   ],
+   "fit_stated": "unknown",
+   "materials": [
+    {
+     "fiber": "rayon",
+     "share": 0.5,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "nylon",
+     "share": 0.22,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "A76591223": {
+   "name": "[귀여움🧸/여리아방핏!] 배색 투웨이 펜던트 와펜 루즈핏 니트 벌룬 후드집업 간절기 가을 아우터",
+   "tags": [
+    "fit:over",
+    "mat:knit",
+    "mat:nylon"
+   ],
+   "fit_stated": "over",
+   "materials": [
+    {
+     "fiber": "nylon",
+     "share": 0.45,
+     "part": "unlabeled"
+    },
+    {
+     "fiber": "polyester",
+     "share": 0.29,
+     "part": "unlabeled"
+    }
+   ]
+  },
+  "A76582117": {
+   "name": "[단독자체제작] 에어로 패치 슬림 후드집업",
+   "tags": [
+    "fit:slim"
+   ],
+   "fit_stated": "slim",
+   "materials": []
+  },
+  "A76222601": {
+   "name": "Vintage Stripe Hood Zip-Up – 빈티지 스트라이프 후드집업",
+   "tags": [
+    "fit:over"
+   ],
+   "fit_stated": "over",
+   "materials": []
+  },
+  "A76826009": {
+   "name": "[프첼MADE] 네이커 포니 엠블럼 프린팅 패딩 점퍼",
+   "tags": [],
+   "fit_stated": "unknown",
+   "materials": []
+  },
+  "A11238241": {
+   "name": "[포근해☁️] 뭉게뭉게 구름이 빅사이즈 오버핏 양털 후리스 집업 가디건 (남녀공용/커플집업)",
+   "tags": [
+    "fit:over"
+   ],
+   "fit_stated": "over",
+   "materials": []
+  },
+  "A10506242": {
+   "name": "[✨재오픈~남녀공용/1만장돌파✨] 자체제작 크치Made #남녀공용 꿈에 나온 핏, 양기모 후드집업 ; 18컬러",
+   "tags": [],
+   "fit_stated": "regular",
+   "materials": []
+  },
+  "A76892192": {
+   "name": "[후드일체형/따뜻해요🤍]후리스배색후드레이어드투웨이박스핏집업(2color)",
+   "tags": [
+    "fit:over"
+   ],
+   "fit_stated": "over",
+   "materials": []
+  }
+ }
+}

@@ -1,0 +1,997 @@
+{
+  "report": {
+    "n": 96,
+    "keyword_name_only": {
+      "avg_tags": 0.7,
+      "zero": 46,
+      "zero_pct": 48,
+      "items_with_attr": 32,
+      "exact_match": "17/32",
+      "non_regular_found": "5/20",
+      "regular_false_positive": "0/12"
+    },
+    "keyword_name_text": {
+      "avg_tags": 0.91,
+      "zero": 45,
+      "zero_pct": 47,
+      "items_with_attr": 32,
+      "exact_match": "17/32",
+      "non_regular_found": "5/20",
+      "regular_false_positive": "0/12"
+    },
+    "llm_name_text": {
+      "provider": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "avg_tags": 0.93,
+      "zero": 42,
+      "zero_pct": 44,
+      "items_with_attr": 32,
+      "exact_match": "17/32",
+      "non_regular_found": "5/20",
+      "regular_false_positive": "0/12",
+      "failures": 0,
+      "grounded_rate": "89/89",
+      "dropped_tags": 0
+    }
+  },
+  "rows": [
+    {
+      "id": "5441447",
+      "name": "여성 플리스 집업 티셔츠 (BLACK)",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "6272201",
+      "name": "우먼즈 스트레이트 히든 밴딩 슬랙스 [클래식 베이지]",
+      "tags": [
+        "sil:IH"
+      ],
+      "grounded": [
+        "sil:IH"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "6272202",
+      "name": "우먼즈 세미 부츠 컷 히든 밴딩 슬랙스 [그레이시 베이지]",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "6322180",
+      "name": "올 잇 테익스 리브드 키홀 숏슬리브 셔츠 BLK",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "6330408",
+      "name": "우먼즈 기모 릴렉스드 라운지 스웨트 팬츠 [건메탈]",
+      "tags": [
+        "fit:over"
+      ],
+      "grounded": [
+        "fit:over"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "6423922",
+      "name": "Lace Bustier Half Neck Top (black)",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "6507761",
+      "name": "스트랩 레이어드 골지 홀터넥 긴팔티 (멜란지그레이)",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "6595807",
+      "name": "우먼즈 CR 스트라이프 릴렉스드 긴소매 티셔츠 [라이트 그레이]",
+      "tags": [
+        "fit:over"
+      ],
+      "grounded": [
+        "fit:over"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "6595808",
+      "name": "우먼즈 CR 스트라이프 릴렉스드 긴소매 티셔츠 [그레이]",
+      "tags": [
+        "fit:over"
+      ],
+      "grounded": [
+        "fit:over"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "6595809",
+      "name": "우먼즈 울 텐셀 오프숄더 긴소매 티셔츠 [블랙]",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "6685525",
+      "name": "우먼즈 멀티 스트라이프 칼라드 튜닉 니트 [네이비]",
+      "tags": [
+        "neck:collar",
+        "mat:knit"
+      ],
+      "grounded": [
+        "neck:collar",
+        "mat:knit"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "6704409",
+      "name": "[빅토리아 울] 우먼즈 크루 넥 니트 [플럼]",
+      "tags": [
+        "mat:wool",
+        "mat:knit"
+      ],
+      "grounded": [
+        "mat:wool",
+        "mat:knit"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "6746997",
+      "name": "벨 버튼 탑 *퓨어 화이트",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "6875475",
+      "name": "Slim Fit Pintuck Blouse / WHBLG3832F",
+      "tags": [
+        "fit:slim"
+      ],
+      "grounded": [
+        "fit:slim"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "6880006",
+      "name": "먼작귀 친구들 그래픽 반팔티셔츠 화이트",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "6961662",
+      "name": "Velvet Button Shirring Slim Long Sleeve (Charcoal)",
+      "tags": [
+        "fit:slim",
+        "mat:chiffon"
+      ],
+      "grounded": [
+        "fit:slim",
+        "mat:chiffon"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "6970728",
+      "name": "RL ROSARY HOOD T-SHIRT(BLACK)",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "6978941",
+      "name": "원숄더 셔링 롱슬리브 차콜",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "6979708",
+      "name": "[크롭] 스트라이프 레이어드 헨리넥 롱슬리브_버건디",
+      "tags": [
+        "len:crop"
+      ],
+      "grounded": [
+        "len:crop"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7020526",
+      "name": "러플 레이어드 롱슬리브 블랙",
+      "tags": [
+        "det:ruffle"
+      ],
+      "grounded": [
+        "det:ruffle"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7038513",
+      "name": "Segment Cotton Pants (Khaki)",
+      "tags": [
+        "sil:wide",
+        "det:washed",
+        "mat:cotton"
+      ],
+      "grounded": [
+        "sil:wide",
+        "det:washed",
+        "mat:cotton"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7047607",
+      "name": "MOCK NECK SLEEVELESS (4 COLORS)",
+      "tags": [
+        "fit:slim",
+        "neck:high"
+      ],
+      "grounded": [
+        "fit:slim",
+        "neck:high"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7048752",
+      "name": "울 브러쉬 케이블 니트 집업 [멜란지]",
+      "tags": [
+        "mat:knit",
+        "mat:wool"
+      ],
+      "grounded": [
+        "mat:knit",
+        "mat:wool"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7092446",
+      "name": "SHEER TATTOO LONGSLEEVE IN PURPLE",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7104365",
+      "name": "파이어버드 배럴 팬츠 - 블랙 / LF1057",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7115809",
+      "name": "Crinkle Washed Low Rise Slim Flared Jeans DCWPT035BLACK",
+      "tags": [
+        "det:washed",
+        "waist:low",
+        "fit:slim",
+        "sil:A",
+        "mat:denim"
+      ],
+      "grounded": [
+        "det:washed",
+        "waist:low",
+        "fit:slim",
+        "sil:A",
+        "mat:denim"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7119932",
+      "name": "ARVEL MULTI STRIPE T-SHIRTS 2COL_NAVY",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7158383",
+      "name": "팀가이스트 경량 패딩 - 크리스탈스카이 / LC8271",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7208174",
+      "name": "레이어드 브이넥 니트 풀오버 [OATMEAL] / GF7LKP512",
+      "tags": [
+        "mat:knit",
+        "neck:uv"
+      ],
+      "grounded": [
+        "mat:knit",
+        "neck:uv"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7225084",
+      "name": "헤리티지 와플 스트라이프 긴팔티 (블랙)",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7242145",
+      "name": "콤비 슬리브 원피스 / 블랙",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7242208",
+      "name": "벨벳 코르셋 스커트 - 브라운",
+      "tags": [
+        "det:washed",
+        "mat:chiffon",
+        "mat:cotton"
+      ],
+      "grounded": [
+        "det:washed",
+        "mat:chiffon",
+        "mat:cotton"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7243099",
+      "name": "VELVET DENIM PLEATS MIDI SKIRT_KHAKI(NG2GFUPA92A)",
+      "tags": [
+        "mat:chiffon",
+        "mat:denim"
+      ],
+      "grounded": [
+        "mat:chiffon",
+        "mat:denim"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7243109",
+      "name": "VELVET DENIM PLEATS MIDI SKIRT_PURPLE(NG2GFUPA92A)",
+      "tags": [
+        "mat:denim",
+        "mat:chiffon"
+      ],
+      "grounded": [
+        "mat:denim",
+        "mat:chiffon"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7244154",
+      "name": "레이어드 요크 밴딩 플레어 스커트_MELANGE GREY",
+      "tags": [
+        "sil:A"
+      ],
+      "grounded": [
+        "sil:A"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7249938",
+      "name": "라고 원피스 (S26FWTOP35) Chocolate Khaki",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7253103",
+      "name": "Slim Maxi Skirt DCSK009BLUE",
+      "tags": [
+        "fit:slim",
+        "len:long"
+      ],
+      "grounded": [
+        "fit:slim",
+        "len:long"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7262029",
+      "name": "컨투어 미디 스커트 [블랙]",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7266664",
+      "name": "플라워 새틴 맥시 스커트_BLACK",
+      "tags": [
+        "len:long"
+      ],
+      "grounded": [
+        "len:long"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7271577",
+      "name": "LIV VOLUME COTTON SKIRT (CHARCOAL)",
+      "tags": [
+        "mat:cotton"
+      ],
+      "grounded": [
+        "mat:cotton"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7271933",
+      "name": "스쿠바 하이라이즈 미니 스커트 BLK",
+      "tags": [
+        "waist:high"
+      ],
+      "grounded": [
+        "waist:high"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7283303",
+      "name": "스위프츠 레이어드 랩 롱 스커트 - 블랙",
+      "tags": [
+        "len:long"
+      ],
+      "grounded": [
+        "len:long"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7284902",
+      "name": "(SK-5125)EYELET BELTED STRIPE LOW RISE MAXI SKIRT S",
+      "tags": [
+        "det:vertical",
+        "waist:low",
+        "len:long",
+        "waist:belt"
+      ],
+      "grounded": [
+        "det:vertical",
+        "waist:low",
+        "len:long",
+        "waist:belt"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7284910",
+      "name": "헤이즐 플리츠 미니스커트",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7288724",
+      "name": "Suede Midi Skirt VW6AS980_2color",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7292157",
+      "name": "빈티지 피그먼트 맥시 스커트 [2COL] / GF3LSK512",
+      "tags": [
+        "len:long"
+      ],
+      "grounded": [
+        "len:long"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7296976",
+      "name": "CUT-OUT LONG SKIRT charcoal",
+      "tags": [
+        "len:long"
+      ],
+      "grounded": [
+        "len:long"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7302248",
+      "name": "패턴 믹스 A라인 쉬폰 롱 원피스_T266MOP139W",
+      "tags": [
+        "sil:A",
+        "mat:chiffon",
+        "len:long",
+        "waist:belt"
+      ],
+      "grounded": [
+        "sil:A",
+        "mat:chiffon",
+        "len:long",
+        "waist:belt"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7302255",
+      "name": "프릴 플라워 패턴 롱 원피스_T266MOP137W",
+      "tags": [
+        "det:ruffle",
+        "sil:A",
+        "waist:belt",
+        "mat:chiffon",
+        "len:long"
+      ],
+      "grounded": [
+        "det:ruffle",
+        "sil:A",
+        "waist:belt",
+        "mat:chiffon",
+        "len:long"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7302479",
+      "name": "Satin Lace-Hem Skirt (Brown)",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7307297",
+      "name": "SATIN FLORAL MIDI SKIRT / CREAM",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7308595",
+      "name": "여성 플리스 그래픽 후드 원피스_MSG4OO2400",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7311871",
+      "name": "PANEL MERMAID KNIT SKIRT_IVORY",
+      "tags": [
+        "mat:knit"
+      ],
+      "grounded": [
+        "mat:knit"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7313809",
+      "name": "Suede Belt Low Rise Long Skirt (Charcoal)",
+      "tags": [
+        "waist:low",
+        "len:long",
+        "waist:belt"
+      ],
+      "grounded": [
+        "waist:low",
+        "len:long",
+        "waist:belt"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7326326",
+      "name": "DD flatlock stitch fleece pullover (MAROON)",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7336003",
+      "name": "포켓 러플 쇼츠 블랙",
+      "tags": [
+        "det:ruffle"
+      ],
+      "grounded": [
+        "det:ruffle"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7336004",
+      "name": "포켓 러플 쇼츠 차콜",
+      "tags": [
+        "det:ruffle"
+      ],
+      "grounded": [
+        "det:ruffle"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7336158",
+      "name": "블룸 프릴 가디건 차콜",
+      "tags": [
+        "det:ruffle"
+      ],
+      "grounded": [
+        "det:ruffle"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7336191",
+      "name": "폴딩 프릴 부츠컷 팬츠 블랙",
+      "tags": [
+        "det:ruffle"
+      ],
+      "grounded": [
+        "det:ruffle"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7336250",
+      "name": "프릴 케이프 코트 핑크",
+      "tags": [
+        "det:ruffle"
+      ],
+      "grounded": [
+        "det:ruffle"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7336252",
+      "name": "프릴 케이프 코트 블랙",
+      "tags": [
+        "det:ruffle"
+      ],
+      "grounded": [
+        "det:ruffle"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7336255",
+      "name": "프릴 케이프 코트 아이보리",
+      "tags": [
+        "det:ruffle"
+      ],
+      "grounded": [
+        "det:ruffle"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7336290",
+      "name": "리버시블 무스탕 하프 코트 블랙",
+      "tags": [
+        "mat:linen"
+      ],
+      "grounded": [
+        "mat:linen"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7390592",
+      "name": "레터즈 뮤즈 와이드 스웻팬츠 ( 블루 )",
+      "tags": [
+        "sil:wide"
+      ],
+      "grounded": [
+        "sil:wide"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7395376",
+      "name": "FLEECE CURVED JOGGER PANTS DEEP BROWN",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7395380",
+      "name": "FLEECE CURVED JOGGER PANTS PINK",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7395384",
+      "name": "DOT WAIST FRILL SWEAT PANTS DEEP GRAY",
+      "tags": [
+        "det:ruffle"
+      ],
+      "grounded": [
+        "det:ruffle"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7401184",
+      "name": "POLAR FLEECE PANTS BLUE",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7401642",
+      "name": "Flower Pocket Pants, Gray",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7401646",
+      "name": "Soft Easy Bootcut Pants, Gray",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7404040",
+      "name": "G ELIO AIRY PADDING JACKET (NAVY)",
+      "tags": [
+        "fit:over"
+      ],
+      "grounded": [
+        "fit:over"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7419888",
+      "name": "퍼 트리밍 커브드 붓컷 조거 - 블랙",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7420142",
+      "name": "디스트로이드 로 엣지 붓컷 조거 - 블랙",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7421565",
+      "name": "TEDDY FUR HOODED LONG PARKA, KHAKI",
+      "tags": [
+        "len:long"
+      ],
+      "grounded": [
+        "len:long"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7421566",
+      "name": "TEDDY FUR HOODED LONG PARKA, DUSTY BLUE",
+      "tags": [
+        "len:long"
+      ],
+      "grounded": [
+        "len:long"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7421567",
+      "name": "TEDDY QUILTED JACKET, BEIGE",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7421568",
+      "name": "TEDDY QUILTED JACKET, CHARCOAL",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7421582",
+      "name": "CHECK LAYERED COLLAR DOUBLE WOOL COAT, BLACK",
+      "tags": [
+        "neck:collar",
+        "mat:wool"
+      ],
+      "grounded": [
+        "neck:collar",
+        "mat:wool"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7429166",
+      "name": "코듀로이 쇼츠 블랙",
+      "tags": [
+        "mat:linen",
+        "mat:cotton"
+      ],
+      "grounded": [
+        "mat:linen",
+        "mat:cotton"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7429178",
+      "name": "코듀로이 쇼츠 브라운",
+      "tags": [
+        "mat:linen",
+        "mat:cotton",
+        "sil:wide"
+      ],
+      "grounded": [
+        "mat:linen",
+        "mat:cotton",
+        "sil:wide"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7435043",
+      "name": "NP6NS80J 여성 알렌 팬츠 BLACK",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7435050",
+      "name": "NP6NS80K 여성 알렌 팬츠 BLACK COFFEE",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7435255",
+      "name": "D26 폴딩웨이스트 밑단스냅 투웨이 와이드 롱 스웨트팬츠_블랙",
+      "tags": [
+        "sil:wide",
+        "len:long"
+      ],
+      "grounded": [
+        "sil:wide",
+        "len:long"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7436085",
+      "name": "아벨르 코듀라인 벌룬 데님",
+      "tags": [
+        "mat:linen",
+        "mat:denim"
+      ],
+      "grounded": [
+        "mat:linen",
+        "mat:denim"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7438371",
+      "name": "Washed Down Puffer Jacket Black",
+      "tags": [
+        "det:washed"
+      ],
+      "grounded": [
+        "det:washed"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7438393",
+      "name": "PERTEX T Down Jacket Black",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7458909",
+      "name": "WXJ063 누쿠모리 레이어드 뽀글뽀글 코튼 자켓 (NAVY)",
+      "tags": [
+        "mat:cotton"
+      ],
+      "grounded": [
+        "mat:cotton"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7458910",
+      "name": "WXJ063 누쿠모리 레이어드 뽀글뽀글 코튼 자켓 (PURPLE)",
+      "tags": [
+        "mat:cotton"
+      ],
+      "grounded": [
+        "mat:cotton"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7458912",
+      "name": "WXJ066 히토하리 니트 배색 경량 패딩 (SKY BLUE)",
+      "tags": [
+        "mat:knit"
+      ],
+      "grounded": [
+        "mat:knit"
+      ],
+      "dropped": []
+    },
+    {
+      "id": "7458914",
+      "name": "WXJ061 하나카쿠레 뽀글뽀글 립스탑 점퍼 (KHAKI)",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7458915",
+      "name": "WXJ064 아루모리 패딩 자켓 (CHARCOAL)",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7463571",
+      "name": "2WAY 슬래쉬 퍼 후드 집업_2 COLOR",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7463574",
+      "name": "VLAD 웨이브 플리스 쿼터 집업_4 COLOR",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7463575",
+      "name": "2WAY 웨이브 플리스 후드 집업_4 COLOR",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7478136",
+      "name": "WXJ023 리에 네코 레이스 엄청난 기모 후드집업 (BLACK)",
+      "tags": [],
+      "grounded": [],
+      "dropped": []
+    },
+    {
+      "id": "7478596",
+      "name": "NBMDG4W052 / WOMEN 에센셜 기모 다잉 후드집업 (DENIM)",
+      "tags": [
+        "mat:denim"
+      ],
+      "grounded": [
+        "mat:denim"
+      ],
+      "dropped": []
+    }
+  ]
+}

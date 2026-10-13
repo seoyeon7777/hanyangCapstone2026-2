@@ -1,0 +1,257 @@
+{
+ "_note": "시연용 후보: 글 설명이 있는 20개 + 상세 이미지 주소를 모은 상품. 이미지 상품은 tools/vision_experiment.py로 읽어 캐시한다.",
+ "items": [
+  {
+   "id": "6272201",
+   "cat": "bottom",
+   "name": "우먼즈 스트레이트 히든 밴딩 슬랙스 [클래식 베이지]",
+   "source": "image",
+   "fit": "레귤러"
+  },
+  {
+   "id": "6272202",
+   "cat": "bottom",
+   "name": "우먼즈 세미 부츠 컷 히든 밴딩 슬랙스 [그레이시 베이지]",
+   "source": "image",
+   "fit": "슬림"
+  },
+  {
+   "id": "6322180",
+   "cat": "top",
+   "name": "올 잇 테익스 리브드 키홀 숏슬리브 셔츠 BLK",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "6330408",
+   "cat": "bottom",
+   "name": "우먼즈 기모 릴렉스드 라운지 스웨트 팬츠 [건메탈]",
+   "source": "image",
+   "fit": "루즈"
+  },
+  {
+   "id": "6507761",
+   "cat": "top",
+   "name": "스트랩 레이어드 골지 홀터넥 긴팔티 (멜란지그레이)",
+   "source": "image",
+   "fit": null
+  },
+  {
+   "id": "6595807",
+   "cat": "top",
+   "name": "우먼즈 CR 스트라이프 릴렉스드 긴소매 티셔츠 [라이트 그레이]",
+   "source": "image",
+   "fit": "루즈"
+  },
+  {
+   "id": "6595809",
+   "cat": "top",
+   "name": "우먼즈 울 텐셀 오프숄더 긴소매 티셔츠 [블랙]",
+   "source": "image",
+   "fit": "슬림"
+  },
+  {
+   "id": "6685525",
+   "cat": "top",
+   "name": "우먼즈 멀티 스트라이프 칼라드 튜닉 니트 [네이비]",
+   "source": "image",
+   "fit": "오버사이즈"
+  },
+  {
+   "id": "6704409",
+   "cat": "top",
+   "name": "[빅토리아 울] 우먼즈 크루 넥 니트 [플럼]",
+   "source": "image",
+   "fit": "레귤러"
+  },
+  {
+   "id": "6746997",
+   "cat": "top",
+   "name": "벨 버튼 탑 *퓨어 화이트",
+   "source": "image",
+   "fit": "슬림"
+  },
+  {
+   "id": "6961662",
+   "cat": "top",
+   "name": "Velvet Button Shirring Slim Long Sleeve (Charcoal)",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "6979708",
+   "cat": "top",
+   "name": "[크롭] 스트라이프 레이어드 헨리넥 롱슬리브_버건디",
+   "source": "image",
+   "fit": "슬림"
+  },
+  {
+   "id": "7038513",
+   "cat": "bottom",
+   "name": "Segment Cotton Pants (Khaki)",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7047607",
+   "cat": "top",
+   "name": "MOCK NECK SLEEVELESS (4 COLORS)",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7048752",
+   "cat": "top",
+   "name": "울 브러쉬 케이블 니트 집업 [멜란지]",
+   "source": "image",
+   "fit": "루즈"
+  },
+  {
+   "id": "7158383",
+   "cat": "outer",
+   "name": "팀가이스트 경량 패딩 - 크리스탈스카이 / LC8271",
+   "source": "image",
+   "fit": null
+  },
+  {
+   "id": "7242208",
+   "cat": "dress",
+   "name": "벨벳 코르셋 스커트 - 브라운",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7266664",
+   "cat": "dress",
+   "name": "플라워 새틴 맥시 스커트_BLACK",
+   "source": "text",
+   "fit": "레귤러"
+  },
+  {
+   "id": "7271577",
+   "cat": "dress",
+   "name": "LIV VOLUME COTTON SKIRT (CHARCOAL)",
+   "source": "text",
+   "fit": "레귤러"
+  },
+  {
+   "id": "7271933",
+   "cat": "dress",
+   "name": "스쿠바 하이라이즈 미니 스커트 BLK",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7284902",
+   "cat": "dress",
+   "name": "(SK-5125)EYELET BELTED STRIPE LOW RISE MAXI SKIRT S",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7302248",
+   "cat": "dress",
+   "name": "패턴 믹스 A라인 쉬폰 롱 원피스_T266MOP139W",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7302255",
+   "cat": "dress",
+   "name": "프릴 플라워 패턴 롱 원피스_T266MOP137W",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7308595",
+   "cat": "dress",
+   "name": "여성 플리스 그래픽 후드 원피스_MSG4OO2400",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7313809",
+   "cat": "dress",
+   "name": "Suede Belt Low Rise Long Skirt (Charcoal)",
+   "source": "text",
+   "fit": "루즈"
+  },
+  {
+   "id": "7326326",
+   "cat": "top",
+   "name": "DD flatlock stitch fleece pullover (MAROON)",
+   "source": "image",
+   "fit": "레귤러"
+  },
+  {
+   "id": "7336004",
+   "cat": "bottom",
+   "name": "포켓 러플 쇼츠 차콜",
+   "source": "image",
+   "fit": null
+  },
+  {
+   "id": "7404040",
+   "cat": "outer",
+   "name": "G ELIO AIRY PADDING JACKET (NAVY)",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7429166",
+   "cat": "bottom",
+   "name": "코듀로이 쇼츠 블랙",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7429178",
+   "cat": "bottom",
+   "name": "코듀로이 쇼츠 브라운",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7435043",
+   "cat": "bottom",
+   "name": "NP6NS80J 여성 알렌 팬츠 BLACK",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7435050",
+   "cat": "bottom",
+   "name": "NP6NS80K 여성 알렌 팬츠 BLACK COFFEE",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7438371",
+   "cat": "outer",
+   "name": "Washed Down Puffer Jacket Black",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7438393",
+   "cat": "outer",
+   "name": "PERTEX T Down Jacket Black",
+   "source": "text",
+   "fit": null
+  },
+  {
+   "id": "7458914",
+   "cat": "outer",
+   "name": "WXJ061 하나카쿠레 뽀글뽀글 립스탑 점퍼 (KHAKI)",
+   "source": "image",
+   "fit": "루즈"
+  },
+  {
+   "id": "7478596",
+   "cat": "outer",
+   "name": "NBMDG4W052 / WOMEN 에센셜 기모 다잉 후드집업 (DENIM)",
+   "source": "image",
+   "fit": null
+  }
+ ]
+}

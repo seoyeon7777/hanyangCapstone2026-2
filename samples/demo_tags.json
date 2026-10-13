@@ -1,0 +1,678 @@
+[
+ {
+  "item_id": "6272201",
+  "name": "우먼즈 스트레이트 히든 밴딩 슬랙스 [클래식 베이지]",
+  "cat": "bottom",
+  "tags": [
+   "sil:IH"
+  ],
+  "materials": [
+   {
+    "fiber": "polyester",
+    "share": 0.67,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "rayon",
+    "share": 0.29,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "spandex",
+    "share": 0.04,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "image"
+ },
+ {
+  "item_id": "6272202",
+  "name": "우먼즈 세미 부츠 컷 히든 밴딩 슬랙스 [그레이시 베이지]",
+  "cat": "bottom",
+  "tags": [
+   "fit:slim"
+  ],
+  "materials": [
+   {
+    "fiber": "polyester",
+    "share": 0.67,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "rayon",
+    "share": 0.29,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "spandex",
+    "share": 0.04,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "image"
+ },
+ {
+  "item_id": "6322180",
+  "name": "올 잇 테익스 리브드 키홀 숏슬리브 셔츠 BLK",
+  "cat": "top",
+  "tags": [],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "6330408",
+  "name": "우먼즈 기모 릴렉스드 라운지 스웨트 팬츠 [건메탈]",
+  "cat": "bottom",
+  "tags": [
+   "fit:over",
+   "sil:IH",
+   "mat:cotton"
+  ],
+  "materials": [],
+  "material_basis": null,
+  "source": "image"
+ },
+ {
+  "item_id": "6507761",
+  "name": "스트랩 레이어드 골지 홀터넥 긴팔티 (멜란지그레이)",
+  "cat": "top",
+  "tags": [
+   "fit:slim",
+   "mat:cotton"
+  ],
+  "materials": [
+   {
+    "fiber": "cotton",
+    "share": 1.0,
+    "part": "main"
+   },
+   {
+    "fiber": "cotton",
+    "share": 0.95,
+    "part": "sub"
+   },
+   {
+    "fiber": "spandex",
+    "share": 0.05,
+    "part": "sub"
+   }
+  ],
+  "material_basis": "main",
+  "source": "image"
+ },
+ {
+  "item_id": "6595807",
+  "name": "우먼즈 CR 스트라이프 릴렉스드 긴소매 티셔츠 [라이트 그레이]",
+  "cat": "top",
+  "tags": [
+   "fit:over",
+   "mat:cotton"
+  ],
+  "materials": [
+   {
+    "fiber": "cotton",
+    "share": 0.6,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "rayon",
+    "share": 0.4,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "image"
+ },
+ {
+  "item_id": "6595809",
+  "name": "우먼즈 울 텐셀 오프숄더 긴소매 티셔츠 [블랙]",
+  "cat": "top",
+  "tags": [
+   "fit:slim"
+  ],
+  "materials": [
+   {
+    "fiber": "rayon",
+    "share": 0.86,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "wool",
+    "share": 0.1,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "spandex",
+    "share": 0.04,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "image"
+ },
+ {
+  "item_id": "6685525",
+  "name": "우먼즈 멀티 스트라이프 칼라드 튜닉 니트 [네이비]",
+  "cat": "top",
+  "tags": [
+   "fit:over",
+   "mat:knit"
+  ],
+  "materials": [
+   {
+    "fiber": "polyester",
+    "share": 0.86,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "acrylic",
+    "share": 0.12,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "spandex",
+    "share": 0.03,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "image"
+ },
+ {
+  "item_id": "6704409",
+  "name": "[빅토리아 울] 우먼즈 크루 넥 니트 [플럼]",
+  "cat": "top",
+  "tags": [
+   "mat:knit",
+   "mat:wool",
+   "mat:nylon"
+  ],
+  "materials": [
+   {
+    "fiber": "wool",
+    "share": 0.5,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "nylon",
+    "share": 0.45,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "cashmere",
+    "share": 0.05,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "image"
+ },
+ {
+  "item_id": "6746997",
+  "name": "벨 버튼 탑 *퓨어 화이트",
+  "cat": "top",
+  "tags": [
+   "mat:cotton"
+  ],
+  "materials": [
+   {
+    "fiber": "cotton",
+    "share": 1.0,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "image"
+ },
+ {
+  "item_id": "6961662",
+  "name": "Velvet Button Shirring Slim Long Sleeve (Charcoal)",
+  "cat": "top",
+  "tags": [
+   "fit:slim",
+   "mat:velvet"
+  ],
+  "materials": [
+   {
+    "fiber": "polyester",
+    "share": 1.0,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "text"
+ },
+ {
+  "item_id": "6979708",
+  "name": "[크롭] 스트라이프 레이어드 헨리넥 롱슬리브_버건디",
+  "cat": "top",
+  "tags": [
+   "len:crop",
+   "mat:cotton"
+  ],
+  "materials": [
+   {
+    "fiber": "cotton",
+    "share": 1.0,
+    "part": "main"
+   },
+   {
+    "fiber": "cotton",
+    "share": 0.8,
+    "part": "sub"
+   },
+   {
+    "fiber": "polyester",
+    "share": 0.76,
+    "part": "sub"
+   },
+   {
+    "fiber": "spandex",
+    "share": 0.04,
+    "part": "sub"
+   }
+  ],
+  "material_basis": "main",
+  "source": "image"
+ },
+ {
+  "item_id": "7038513",
+  "name": "Segment Cotton Pants (Khaki)",
+  "cat": "bottom",
+  "tags": [
+   "sil:wide",
+   "mat:cotton"
+  ],
+  "materials": [
+   {
+    "fiber": "cotton",
+    "share": 1.0,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "text"
+ },
+ {
+  "item_id": "7047607",
+  "name": "MOCK NECK SLEEVELESS (4 COLORS)",
+  "cat": "top",
+  "tags": [
+   "fit:slim"
+  ],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7048752",
+  "name": "울 브러쉬 케이블 니트 집업 [멜란지]",
+  "cat": "top",
+  "tags": [
+   "mat:knit"
+  ],
+  "materials": [
+   {
+    "fiber": "polyester",
+    "share": 0.65,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "acrylic",
+    "share": 0.13,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "nylon",
+    "share": 0.13,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "wool",
+    "share": 0.06,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "spandex",
+    "share": 0.03,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "image"
+ },
+ {
+  "item_id": "7158383",
+  "name": "팀가이스트 경량 패딩 - 크리스탈스카이 / LC8271",
+  "cat": "outer",
+  "tags": [
+   "fit:slim",
+   "mat:nylon"
+  ],
+  "materials": [],
+  "material_basis": null,
+  "source": "image"
+ },
+ {
+  "item_id": "7242208",
+  "name": "벨벳 코르셋 스커트 - 브라운",
+  "cat": "dress",
+  "tags": [
+   "mat:denim",
+   "mat:velvet",
+   "mat:cotton"
+  ],
+  "materials": [
+   {
+    "fiber": "cotton",
+    "share": 0.85,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "rayon",
+    "share": 0.15,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "text"
+ },
+ {
+  "item_id": "7266664",
+  "name": "플라워 새틴 맥시 스커트_BLACK",
+  "cat": "dress",
+  "tags": [
+   "len:long"
+  ],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7271577",
+  "name": "LIV VOLUME COTTON SKIRT (CHARCOAL)",
+  "cat": "dress",
+  "tags": [
+   "mat:cotton"
+  ],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7271933",
+  "name": "스쿠바 하이라이즈 미니 스커트 BLK",
+  "cat": "dress",
+  "tags": [
+   "waist:high"
+  ],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7284902",
+  "name": "(SK-5125)EYELET BELTED STRIPE LOW RISE MAXI SKIRT S",
+  "cat": "dress",
+  "tags": [
+   "len:long"
+  ],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7302248",
+  "name": "패턴 믹스 A라인 쉬폰 롱 원피스_T266MOP139W",
+  "cat": "dress",
+  "tags": [
+   "len:long",
+   "sil:A",
+   "mat:chiffon"
+  ],
+  "materials": [
+   {
+    "fiber": "polyester",
+    "share": 1.0,
+    "part": "main"
+   },
+   {
+    "fiber": "polyester",
+    "share": 1.0,
+    "part": "sub"
+   }
+  ],
+  "material_basis": "main",
+  "source": "text"
+ },
+ {
+  "item_id": "7302255",
+  "name": "프릴 플라워 패턴 롱 원피스_T266MOP137W",
+  "cat": "dress",
+  "tags": [
+   "len:long",
+   "sil:A",
+   "det:ruffle",
+   "mat:chiffon"
+  ],
+  "materials": [
+   {
+    "fiber": "polyester",
+    "share": 1.0,
+    "part": "main"
+   },
+   {
+    "fiber": "polyester",
+    "share": 1.0,
+    "part": "sub"
+   }
+  ],
+  "material_basis": "main",
+  "source": "text"
+ },
+ {
+  "item_id": "7308595",
+  "name": "여성 플리스 그래픽 후드 원피스_MSG4OO2400",
+  "cat": "dress",
+  "tags": [],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7313809",
+  "name": "Suede Belt Low Rise Long Skirt (Charcoal)",
+  "cat": "dress",
+  "tags": [
+   "len:long"
+  ],
+  "materials": [
+   {
+    "fiber": "polyester",
+    "share": 0.93,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "text"
+ },
+ {
+  "item_id": "7326326",
+  "name": "DD flatlock stitch fleece pullover (MAROON)",
+  "cat": "top",
+  "tags": [],
+  "materials": [
+   {
+    "fiber": "polyester",
+    "share": 1.0,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "image"
+ },
+ {
+  "item_id": "7336004",
+  "name": "포켓 러플 쇼츠 차콜",
+  "cat": "bottom",
+  "tags": [
+   "det:ruffle"
+  ],
+  "materials": [],
+  "material_basis": null,
+  "source": "image"
+ },
+ {
+  "item_id": "7404040",
+  "name": "G ELIO AIRY PADDING JACKET (NAVY)",
+  "cat": "outer",
+  "tags": [
+   "fit:over"
+  ],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7429166",
+  "name": "코듀로이 쇼츠 블랙",
+  "cat": "bottom",
+  "tags": [
+   "mat:corduroy",
+   "mat:cotton"
+  ],
+  "materials": [
+   {
+    "fiber": "cotton",
+    "share": 0.98,
+    "part": "main"
+   },
+   {
+    "fiber": "spandex",
+    "share": 0.02,
+    "part": "main"
+   }
+  ],
+  "material_basis": "main",
+  "source": "text"
+ },
+ {
+  "item_id": "7429178",
+  "name": "코듀로이 쇼츠 브라운",
+  "cat": "bottom",
+  "tags": [
+   "mat:corduroy",
+   "mat:cotton"
+  ],
+  "materials": [
+   {
+    "fiber": "cotton",
+    "share": 0.98,
+    "part": "main"
+   },
+   {
+    "fiber": "spandex",
+    "share": 0.02,
+    "part": "main"
+   }
+  ],
+  "material_basis": "main",
+  "source": "text"
+ },
+ {
+  "item_id": "7435043",
+  "name": "NP6NS80J 여성 알렌 팬츠 BLACK",
+  "cat": "bottom",
+  "tags": [],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7435050",
+  "name": "NP6NS80K 여성 알렌 팬츠 BLACK COFFEE",
+  "cat": "bottom",
+  "tags": [
+   "mat:cotton"
+  ],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7438371",
+  "name": "Washed Down Puffer Jacket Black",
+  "cat": "outer",
+  "tags": [],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7438393",
+  "name": "PERTEX T Down Jacket Black",
+  "cat": "outer",
+  "tags": [],
+  "materials": [],
+  "material_basis": null,
+  "source": "text"
+ },
+ {
+  "item_id": "7458914",
+  "name": "WXJ061 하나카쿠레 뽀글뽀글 립스탑 점퍼 (KHAKI)",
+  "cat": "outer",
+  "tags": [
+   "mat:cotton",
+   "mat:nylon"
+  ],
+  "materials": [
+   {
+    "fiber": "cotton",
+    "share": 0.7,
+    "part": "main"
+   },
+   {
+    "fiber": "nylon",
+    "share": 0.3,
+    "part": "main"
+   },
+   {
+    "fiber": "polyester",
+    "share": 1.0,
+    "part": "main"
+   },
+   {
+    "fiber": "polyester",
+    "share": 1.0,
+    "part": "sub"
+   }
+  ],
+  "material_basis": "main",
+  "source": "image"
+ },
+ {
+  "item_id": "7478596",
+  "name": "NBMDG4W052 / WOMEN 에센셜 기모 다잉 후드집업 (DENIM)",
+  "cat": "outer",
+  "tags": [
+   "mat:cotton"
+  ],
+  "materials": [
+   {
+    "fiber": "cotton",
+    "share": 0.69,
+    "part": "unlabeled"
+   },
+   {
+    "fiber": "polyester",
+    "share": 0.31,
+    "part": "unlabeled"
+   }
+  ],
+  "material_basis": "unlabeled",
+  "source": "image"
+ }
+]
