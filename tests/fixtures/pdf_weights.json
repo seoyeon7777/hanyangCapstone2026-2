@@ -1,0 +1,32 @@
+{
+  "_note": "PDF 5쪽 임시값. 확정되면 이 파일만 교체한다. src에 근거를 적는다.",
+  "tags": {
+    "fit:slim":       {"S":  2, "W":  1, "N": -3, "src": "PDF 임시"},
+    "fit:regular":    {"S":  1, "W":  1, "N":  0, "src": "PDF 임시"},
+    "fit:over":       {"S": -3, "W": -3, "N":  2, "src": "PDF 임시"},
+    "mat:structured": {"S":  2, "W": -2, "N":  1, "src": "PDF 임시"},
+    "mat:soft":       {"S":  0, "W":  2, "N": -1, "src": "PDF 임시"},
+    "mat:thick":      {"S": -1, "W": -3, "N":  2, "src": "PDF 임시"},
+    "mat:sheer":      {"S": -1, "W":  1, "N": -3, "src": "PDF 임시"},
+    "mat:padded":     {"S": -3, "W": -2, "N":  1, "src": "PDF 임시"},
+    "neck:high":      {"S": -3, "W":  1, "N":  0, "src": "PDF 임시"},
+    "neck:collar":    {"S":  2, "W":  0, "N":  1, "src": "PDF 임시"},
+    "neck:uv":        {"S":  1, "W":  1, "N":  1, "src": "PDF 임시"},
+    "len:crop":       {"S":  1, "W":  2, "N": -1, "src": "PDF 임시"},
+    "len:long":       {"S":  0, "W": -1, "N":  2, "src": "PDF 임시"},
+    "waist:high":     {"S": -1, "W":  2, "N":  0, "src": "PDF 임시"},
+    "waist:low":      {"S":  0, "W": -3, "N":  0, "src": "PDF 임시"},
+    "waist:belt":     {"S": -1, "W":  2, "N":  1, "src": "PDF 임시"},
+    "sil:IH":         {"S":  2, "W": -1, "N":  0, "src": "PDF 임시"},
+    "sil:A":          {"S": -1, "W":  2, "N":  0, "src": "PDF 임시"},
+    "sil:wide":       {"S":  0, "W":  1, "N":  2, "src": "PDF 임시"},
+    "sil:skinny":     {"S":  0, "W":  0, "N": -3, "src": "PDF 임시"},
+    "sil:mermaid":    {"S": -1, "W":  2, "N": -1, "src": "PDF 임시"},
+    "det:ruffle":     {"S": -3, "W":  2, "N": -1, "src": "PDF 임시"},
+    "det:puff":       {"S": -2, "W":  2, "N": -1, "src": "PDF 임시"},
+    "det:pad":        {"S":  1, "W": -3, "N": -2, "src": "PDF 임시"},
+    "det:drop":       {"S": -1, "W": -1, "N":  2, "src": "PDF 임시"},
+    "det:vertical":   {"S":  2, "W":  0, "N":  0, "src": "PDF 임시"},
+    "det:washed":     {"S":  0, "W": -1, "N":  2, "src": "PDF 임시"}
+  }
+}
