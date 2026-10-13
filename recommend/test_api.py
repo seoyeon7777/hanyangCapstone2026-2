@@ -156,6 +156,44 @@ def test_demo_page():
     assert res.status_code == 200 and "/api/feed/scroll" in res.get_data(as_text=True)
 
 
+def test_toggle_off_without_body():
+    # 토글 OFF: 체형 진단 없이 홈 피드·스크롤·반응 기록이 모두 됨
+    reset()
+    res = client.get("/api/feed/scroll?user_id=g1&mode=general&season=fall")
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data["mode"] == "general" and data["body"] is None and data["total"] == 30
+    assert all(r["reason"] for r in data["items"])
+    home = client.get("/api/feed?user_id=g1&mode=general&season=fall").get_json()
+    assert [s["title"] for s in home["sections"]][-1] == "추천 코디"
+    ev = client.post("/api/feed/event", json={"user_id": "g1", "item_id": "t01", "event": "like"})
+    assert ev.status_code == 200 and ev.get_json()["need_rediagnosis"] is False
+    # 토글 ON은 여전히 체형이 필요
+    assert client.get("/api/feed/scroll?user_id=g1&mode=body").status_code == 400
+
+
+def test_toggle_switch_keeps_history():
+    # 같은 사용자가 ON ↔ OFF를 바꿔도 체형·취향 기록이 이어짐
+    reset()
+    on = client.get("/api/feed/scroll?user_id=t1&S=0.8&W=0.1&N=0.1&mode=body&season=fall&size=50").get_json()
+    off = client.get("/api/feed/scroll?user_id=t1&mode=general&season=fall&size=50").get_json()
+    assert on["mode"] == "body" and off["mode"] == "general"
+    assert [r["id"] for r in on["items"][:10]] != [r["id"] for r in off["items"][:10]]   # 순서가 다름
+    client.post("/api/feed/event", json={"user_id": "t1", "item_id": "t04", "event": "purchase"})
+    on2 = client.get("/api/feed/scroll?user_id=t1&mode=body&season=fall").get_json()     # 체형 다시 안 보내도 됨
+    assert on2["body"]["primary"] == "S"
+    off2 = client.get("/api/feed/scroll?user_id=t1&mode=general&season=fall&size=50").get_json()
+    t04 = lambda f: next(r for r in f["items"] if r["id"] == "t04")
+    # OFF에서도 구매 기록 반영: 취향 0.5 → 0.6 → 0.3 × 0.1 = +0.03
+    assert abs((t04(off2)["score"] - t04(off)["score"]) - 0.03) < 1e-3
+
+
+def test_bad_mode():
+    reset()
+    res = client.get("/api/feed/scroll?S=1&W=0&N=0&mode=random")
+    assert res.status_code == 400 and "mode" in res.get_json()["error"]
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     failed = 0

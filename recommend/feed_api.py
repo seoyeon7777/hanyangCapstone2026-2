@@ -9,6 +9,9 @@ POST /api/feed        체형은 셋 중 하나로 보낸다
                       {"user_id": "u1", "body": {"ratio": {"S":0.6,"W":0.3,"N":0.1}}}
 POST /api/feed/event  {"user_id": "u1", "item_id": "t01", "event": "like"}
 GET  /api/feed/scroll?user_id=u1&S=0.6&W=0.3&N=0.1&page=0&size=10   ← 홈 화면 무한 스크롤용
+     /api/feed, /api/feed/scroll 둘 다 mode로 홈 화면 토글을 받는다
+       mode=body    (기본) 토글 ON: 골격 맞춤 추천 — 체형 필요
+       mode=general        토글 OFF: 일반 쇼핑몰 추천(인기·자주 누른 스타일·계절) — 체형 없어도 됨
 GET  /feed-demo       연습용 스크롤 화면 (친구들 홈 화면이 오기 전 확인용)
 
 사용자 취향(pref)과 반응 기록(history)은 서버 메모리에 저장한다(서버를 끄면 사라짐 — 시연용).
@@ -18,10 +21,10 @@ from datetime import date
 from flask import Blueprint, jsonify, render_template, request
 
 from rec_config import (
-    SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE,
+    SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE, MODES,
 )
 from fake_matching import classify_kind
-from feed import (load_items, score_all, home_feed, feed_order, reason,
+from feed import (load_items, score_by_mode, home_feed, feed_order, reason,
                   update_pref, need_rediagnosis)
 from matching_b import from_profile
 from body_profile import classify, InputError  # A 파트 (matching_b가 저장소 맨 위 폴더를 경로에 넣어 둠)
@@ -76,9 +79,10 @@ def bad_request(e):
 
 
 def resolve_request():
-    """요청에서 (data, user, body, season)을 꺼낸다. /api/feed와 /api/feed/scroll 공통.
+    """요청에서 (data, user, body, season, mode)를 꺼낸다. /api/feed와 /api/feed/scroll 공통.
 
     user_id가 있으면 사용자를 만들거나 불러와 체형을 저장하고, 비율을 안 보내면 저장된 체형을 쓴다.
+    mode="general"(토글 OFF)이면 체형이 없어도 된다 (body는 None일 수 있음).
     """
     body = None
     if request.method == "POST":
@@ -101,24 +105,28 @@ def resolve_request():
 
     user_id = data.get("user_id")
     user = USERS.get(user_id) if user_id else None
+    mode = data.get("mode") or "body"
+    if mode not in MODES:
+        raise BadRequest(f"mode는 {', '.join(MODES)} 중 하나여야 해요 (body = 토글 ON, general = 토글 OFF)")
 
     if body is not None:
         pass
     elif ratio is not None:
         body = make_body(ratio)
-    elif user:
+    elif user and user.get("body"):
         body = user["body"]  # 이전에 보낸 체형 재사용
-    else:
-        raise BadRequest("체형 비율(S, W, N)이 필요해요")
+    elif mode == "body":
+        raise BadRequest("체형 비율(S, W, N)이 필요해요 (체형 없이 보려면 mode=general)")
 
     season = data.get("season") or current_season()
     if season not in SEASONS:
         raise BadRequest(f"season은 {', '.join(SEASONS)} 중 하나여야 해요")
 
     if user_id:
-        user = USERS.setdefault(user_id, {"pref": {}, "history": []})
-        user["body"] = body
-    return data, user, body, season
+        user = USERS.setdefault(user_id, {"pref": {}, "history": [], "body": None})
+        if body is not None:
+            user["body"] = body
+    return data, user, body, season, mode
 
 
 def int_arg(data, name, default, low, high):
@@ -133,10 +141,10 @@ def int_arg(data, name, default, low, high):
 
 @feed_bp.route("/api/feed", methods=["GET", "POST"])
 def get_feed():
-    _, user, body, season = resolve_request()
+    _, user, body, season, mode = resolve_request()
     pref = user["pref"] if user else None
-    feed = with_reasons(home_feed(body, ITEMS, pref, season))
-    return jsonify({"body": body, "season": season, **feed})
+    feed = with_reasons(home_feed(body, ITEMS, pref, season, mode=mode))
+    return jsonify({"mode": mode, "body": body, "season": season, **feed})
 
 
 @feed_bp.route("/api/feed/scroll", methods=["GET", "POST"])
@@ -146,14 +154,15 @@ def scroll_feed():
     page=0이 맨 위(= 오늘의 추천). 화면이 바닥에 닿으면 page를 1씩 올려 다시 부른다.
     취향이 바뀌면 순서도 바뀌므로, 반응(event) 뒤에는 page=0부터 다시 부르는 게 정확하다.
     """
-    data, user, body, season = resolve_request()
+    data, user, body, season, mode = resolve_request()
     page = int_arg(data, "page", 0, 0, 10_000)
     size = int_arg(data, "size", SCROLL_PAGE_SIZE, 1, SCROLL_MAX_PAGE_SIZE)
     pref = user["pref"] if user else None
 
-    ordered = feed_order(score_all(body, ITEMS, pref, season), page_size=size)
+    ordered = feed_order(score_by_mode(mode, body, ITEMS, pref, season), page_size=size)
     chunk = ordered[page * size:(page + 1) * size]
     return jsonify({
+        "mode": mode,
         "body": body,
         "season": season,
         "page": page,
@@ -174,7 +183,7 @@ def post_event():
     data = request.get_json(silent=True) or {}
     user = USERS.get(data.get("user_id"))
     if not user:
-        raise BadRequest("먼저 /api/feed로 체형을 보내 주세요 (user_id 필요)")
+        raise BadRequest("먼저 /api/feed 또는 /api/feed/scroll을 user_id와 함께 불러 주세요")
     item = ITEMS_BY_ID.get(data.get("item_id"))
     if not item:
         raise BadRequest("없는 상품이에요")

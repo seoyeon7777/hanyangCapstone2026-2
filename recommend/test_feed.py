@@ -11,7 +11,8 @@ import fake_matching
 from rec_config import W_BODY, W_PREF, W_TREND
 from fake_matching import classify_kind, match_score
 from feed import (load_items, final_score, score_all, rank, home_feed,
-                  outfits, reason, update_pref, need_rediagnosis, feed_order)
+                  outfits, reason, update_pref, need_rediagnosis, feed_order,
+                  general_score, score_by_mode)
 
 # 이 파일의 정답값은 임시 매칭(fake_matching) 기준으로 손계산한 것이다.
 # 실제 B 파트 연결은 test_integration.py에서 확인한다.
@@ -340,6 +341,61 @@ def test_feed_order_rules_per_page():
     for start in range(0, len(order), 10):
         reps = [r["good_tags"][0] for r in order[start:start + 10] if r["good_tags"]]
         assert all(reps.count(t) <= 3 for t in reps)
+
+
+# ── 9단계: 홈 화면 토글 OFF = 일반 쇼핑몰 추천 (general) ──────
+def test_general_score_hand_calc():
+    # 칼라 셔츠 t01: 인기 0.8, 봄·가을 상품, 기록 없음(취향 0.5), 가을
+    # 0.5×0.8 + 0.3×0.5 + 0.2×1 = 0.4 + 0.15 + 0.2 = 0.75
+    r = general_score(ITEMS["t01"], season="fall")
+    assert close(r["score"], 0.75)
+    assert r["body"] is None and not r["excluded"]
+    # 인기 0.8 ≥ 0.75 → 인기 문장, 가을 상품 → 계절 문장 (취향 0.5 < 0.55라 취향 문장 없음)
+    assert reason(r) == "요즘 많이 찾는 인기 상품이에요. 지금 계절에 입기 좋아요."
+
+
+def test_general_uses_click_history():
+    # collar를 좋아함 → 취향 1.0 → 0.4 + 0.3 + 0.2 = 0.9, 이유 첫 문장이 "자주 본 스타일"
+    r = general_score(ITEMS["t01"], pref={"collar": 1.0}, season="fall")
+    assert close(r["score"], 0.9)
+    assert reason(r).startswith("자주 본 스타일과 비슷해요.")
+
+
+def test_general_ignores_body_and_never_excludes():
+    a = score_by_mode("general", STRAIGHT, ITEMS.values())
+    b = score_by_mode("general", WAVE, ITEMS.values())
+    c = score_by_mode("general", None, ITEMS.values())      # 체형 진단 없이도 됨
+    assert [(r["id"], r["score"]) for r in a] == [(r["id"], r["score"]) for r in b] \
+        == [(r["id"], r["score"]) for r in c]
+    # 토글 ON(스트레이트 단일형)에서는 러플 블라우스가 제외되지만 OFF에서는 보임
+    # 0.5×0.6 + 0.3×0.5 + 0.2×0(봄·여름 상품) = 0.45
+    ruffle = next(r for r in a if r["id"] == "t06")
+    assert not ruffle["excluded"] and close(ruffle["score"], 0.45)
+    assert final_score(STRAIGHT, ITEMS["t06"])["excluded"]
+
+
+def test_general_feed_order_hand_calc():
+    # 가을, 기록 없음 → 점수 = 0.5×인기 + 0.15 + 0.2×(가을 상품)
+    # b03 0.85 사계절 → 0.775, t08 0.85 봄·가을 → 0.775 (동점이면 id순 b03, t08)
+    # 0.75: b06(0.8 사계절), t01(0.8 봄·가을), t11(0.8 사계절) → id순
+    # 종류: 하의, 상의, 하의, 상의, 상의 → 같은 종류 3연속 없음
+    order = feed_order(score_by_mode("general", None, ITEMS.values()))
+    assert ids(order[:5]) == ["b03", "t08", "b06", "t01", "t11"]
+    assert len(order) == 30   # 제외가 없어서 전부 나옴
+
+
+def test_general_outfits_have_no_body_bonus():
+    looks = outfits(None, list(ITEMS.values()), mode="general")
+    assert len(looks) == 3 and all(c["bonus"] == 0.0 for c in looks)
+
+
+def test_mode_validation():
+    try:
+        score_by_mode("random", STRAIGHT, ITEMS.values())
+        assert False, "모르는 mode는 오류여야 함"
+    except ValueError:
+        pass
+    assert need_rediagnosis([{"item": ITEMS["t06"], "event": "like"}] * 20, None) is False
 
 
 if __name__ == "__main__":

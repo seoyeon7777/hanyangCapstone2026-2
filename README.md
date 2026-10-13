@@ -30,6 +30,7 @@
 | 순위·다양성 | 같은 종류 연속 2개, 같은 스타일 10개 중 3개까지 |
 | 홈 화면 | 오늘의 추천 + 상의·하의·아우터·원피스 + 추천 코디 |
 | 무한 스크롤 | `GET /api/feed/scroll?page=0&size=10` |
+| 홈 화면 토글 | ON `mode=body`: 골격 맞춤 / OFF `mode=general`: 인기·자주 본 스타일 (체형 없이도 됨) |
 | 학습 | 클릭·찜·구매·반품으로 취향 반영, 진단과 어긋나면 재진단 안내 |
 
 - 테스트: `cd recommend && python test_feed.py` / `python test_integration.py` / `python test_api.py`

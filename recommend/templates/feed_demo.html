@@ -21,6 +21,18 @@
     .controls input, .controls select { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
     .controls button { grid-column: 1 / -1; padding: 10px; border: 0; border-radius: 10px;
                        background: var(--text); color: #fff; font-size: 14px; cursor: pointer; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--surface);
+                  border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+    .toggle-row .label { font-size: 14px; font-weight: 600; }
+    .toggle-row .hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .switch { position: relative; width: 50px; height: 28px; flex: 0 0 50px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: #ccc; border-radius: 999px; cursor: pointer; transition: .2s; }
+    .slider::before { content: ""; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px;
+                      background: #fff; border-radius: 50%; transition: .2s; }
+    .switch input:checked + .slider { background: var(--accent); }
+    .switch input:checked + .slider::before { transform: translateX(22px); }
+    .controls.off { opacity: .45; }
     .status { font-size: 13px; color: var(--muted); margin: 8px 0 12px; }
     .notice { display: none; background: #fff4e8; border: 1px solid var(--warn); color: var(--warn);
               border-radius: 10px; padding: 10px; font-size: 13px; margin-bottom: 12px; }
@@ -45,7 +57,15 @@
   <h1>추천 피드 (연습 화면)</h1>
   <p class="sub">스크롤을 내리면 알고리즘 순서대로 다음 상품을 불러와요.</p>
 
-  <div class="controls">
+  <div class="toggle-row">
+    <div>
+      <div class="label" id="modeLabel">골격 맞춤 추천 ON</div>
+      <div class="hint" id="modeHint">내 체형에 어울리는 옷을 먼저 보여 줘요</div>
+    </div>
+    <label class="switch"><input type="checkbox" id="algoToggle" checked><span class="slider"></span></label>
+  </div>
+
+  <div class="controls" id="controls">
     <label>스트레이트 <input id="S" type="number" min="0" step="0.1" value="0.8"></label>
     <label>웨이브 <input id="W" type="number" min="0" step="0.1" value="0.1"></label>
     <label>내추럴 <input id="N" type="number" min="0" step="0.1" value="0.1"></label>
@@ -74,10 +94,13 @@
   const list = document.getElementById("list");
   const sentinel = document.getElementById("sentinel");
 
+  const toggle = document.getElementById("algoToggle");
+  const mode = () => (toggle.checked ? "body" : "general");   // ON = 골격 맞춤, OFF = 일반 쇼핑몰
+
   function query(withBody) {
-    const p = new URLSearchParams({ user_id: USER_ID, page, size: PAGE_SIZE,
+    const p = new URLSearchParams({ user_id: USER_ID, page, size: PAGE_SIZE, mode: mode(),
                                     season: document.getElementById("season").value });
-    if (withBody) ["S", "W", "N"].forEach(t => p.set(t, document.getElementById(t).value || 0));
+    if (withBody && mode() === "body") ["S", "W", "N"].forEach(t => p.set(t, document.getElementById(t).value || 0));
     return p.toString();
   }
 
@@ -90,12 +113,15 @@
       if (!res.ok) throw new Error(data.error || "불러오기 실패");
 
       const b = data.body;
+      const who = data.mode === "general" ? "일반 추천(체형 미반영)"
+                                          : `${TYPE[b.primary]} ${b.kind === "single" ? "단일형" : "혼합형"}`;
       document.getElementById("status").textContent =
-        `${TYPE[b.primary]} ${b.kind === "single" ? "단일형" : "혼합형"} · 전체 ${data.total}개 중 ${Math.min((page + 1) * PAGE_SIZE, data.total)}개 표시`;
+        `${who} · 전체 ${data.total}개 중 ${Math.min((page + 1) * PAGE_SIZE, data.total)}개 표시`;
 
       const mark = document.createElement("div");
       mark.className = "page-mark";
-      mark.textContent = page === 0 ? "— 오늘의 추천 —" : `— ${page + 1}번째 묶음 —`;
+      mark.textContent = page === 0 ? (data.mode === "general" ? "— 인기·자주 본 스타일 —" : "— 오늘의 추천 —")
+                                    : `— ${page + 1}번째 묶음 —`;
       list.appendChild(mark);
       data.items.forEach(addCard);
 
@@ -151,6 +177,15 @@
   }
 
   document.getElementById("apply").addEventListener("click", restart);
+  toggle.addEventListener("change", () => {
+    const on = toggle.checked;
+    document.getElementById("modeLabel").textContent = on ? "골격 맞춤 추천 ON" : "골격 맞춤 추천 OFF";
+    document.getElementById("modeHint").textContent = on ? "내 체형에 어울리는 옷을 먼저 보여 줘요"
+                                                         : "인기 상품과 자주 본 스타일 위주로 보여 줘요";
+    document.getElementById("controls").classList.toggle("off", !on);
+    document.getElementById("notice").style.display = "none";
+    restart();
+  });
   // 바닥(sentinel)이 보이면 다음 묶음을 불러옴 = 무한 스크롤
   new IntersectionObserver(entries => {
     if (entries[0].isIntersecting && page > 0) loadNext();

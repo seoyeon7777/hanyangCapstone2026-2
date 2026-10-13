@@ -157,11 +157,22 @@ match_score(body, item) -> {
   → `{"body", "season", "page", "size", "total", "has_more", "items"}` (items에 reason 포함)
 - `/feed-demo`: 연습 화면. 친구들 홈 화면이 오면 그 화면에서 `/api/feed/scroll`을 부르게 연결하고, 연습 화면은 지워도 된다
 
+### 4-9. 홈 화면 토글 ON/OFF (9단계, 완료)
+- 요구사항: 홈 화면 토글을 켜면 골격 맞춤 추천, 끄면 일반 쇼핑몰 방식(인기·사용자가 자주 누른 것) 추천
+- `mode` = `"body"`(ON, 기본) | `"general"`(OFF) — `rec_config.MODES`
+- `general_score(item, pref, season)`: 체형을 안 본다. 점수 = 인기 0.5 + 취향(pref_score) 0.3 + 계절 0.2
+  - final_score와 같은 모양(body는 None, excluded False, good_tags 빈 목록)이라 rank·feed_order를 그대로 쓴다
+  - 이유 문장: 취향 ≥ 0.55 → "자주 본 스타일과 비슷해요", 인기 ≥ 0.75 → "요즘 많이 찾는 인기 상품이에요", 제철 → "지금 계절에 입기 좋아요" (앞에서 2개)
+- `score_by_mode(mode, body, items, pref, season)`: 토글에 맞는 점수 목록. home_feed·outfits에 `mode` 인자 추가 (OFF면 코디 보정 0)
+- 취향(pref)과 반응 기록은 두 모드가 같이 쓴다. need_rediagnosis는 body가 None이면 False
+- API: `/api/feed`, `/api/feed/scroll`에 `mode` 추가, 응답에 `"mode"`. `mode=general`이면 체형 없이도 된다 (`mode=body`는 여전히 체형 필요 → 400)
+- `/feed-demo`에 토글 스위치
+
 ## 5. 정답 테스트 (반드시 통과)
 
-`cd recommend && python test_feed.py` — 현재 32개 통과 (C 로직, 임시 매칭 기준 손계산).
+`cd recommend && python test_feed.py` — 현재 38개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 12개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_api.py` — 현재 15개 통과 (Flask 필요: `pip install -r requirements.txt`).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
 
@@ -183,6 +194,9 @@ match_score(body, item) -> {
 | 스크롤 첫 묶음 | rank 결과와 같음 |
 | 스크롤 collar 5개 + 다른 1개, 묶음 4 | c1 c2 c3 z / c4 c5 (밀린 옷은 다음 묶음) |
 | 스크롤 끝까지 | 제외 안 된 옷이 전부 정확히 한 번씩 |
+| 토글 OFF 칼라 셔츠, 가을, 기록 없음 | 0.5×0.8 + 0.3×0.5 + 0.2×1 = **0.75** |
+| 토글 OFF + pref {"collar": 1.0} | **0.9** |
+| 토글 OFF 순서 (가을, 기록 없음) | b03, t08, b06, t01, t11 … 30개 전부 (제외 없음) |
 
 새 단계를 만들면 그 단계의 정답 테스트를 손으로 계산해 `test_feed.py`에 추가한다. 기존 정답값은 고치지 않는다(사람이 명시적으로 요청한 경우만 예외).
 
@@ -216,4 +230,5 @@ match_score(body, item) -> {
 - [x] 8단계: 홈 화면 무한 스크롤 (feed_order, /api/feed/scroll, /feed-demo) + 테스트 7개
 - [ ] 친구들 홈 화면이 저장소에 올라오면 /api/feed/scroll 연결 (홈화면_연결가이드.md)
 - [x] A·B·C 통합 (feature/integration): matching_b.py로 B 연결, app.py 통합 서버, /api/feed에 설문 answers 입력, 상품 태그를 B 이름으로, test_integration.py 8개
+- [x] 9단계: 홈 화면 토글 ON(골격 맞춤)/OFF(일반 쇼핑몰) — general_score, mode 인자, 테스트 9개
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend
