@@ -243,3 +243,40 @@ samples/vision_*.json
 samples/llm_cache_*.json
 samples/llm_result_*.json
 samples/labeling/
+# 실험 결과 출력물: tools/ 스크립트로 다시 만들 수 있고, 핵심 내용은 reports/에 정리돼 있어 올리지 않는다
+samples/balance_compare.txt
+samples/mixed_compare.txt
+samples/sensitivity_result.txt
+samples/dual_result.json
+samples/synthetic_report.csv
+samples/synthetic_run.txt
+samples/validation_after_fix*.txt
+samples/validation_before_fix*.txt
+
+# 내가 실험·평가용으로 돌리는 스크립트와 그 입력은 올리지 않는다 (pytest가 쓰는 tools/run_synthetic.py만 남긴다)
+tools/*
+!tools/__init__.py
+!tools/run_synthetic.py
+samples/demo_items.json
+samples/demo_tags.json
+samples/validation_protocol.md
+
+# 보고서 문서는 프로젝트 문서에 있으므로 저장소에 올리지 않는다
+reports/
+
+# 가상 판매자 샘플과 그것을 쓰는 테스트·스크립트도 내가 돌리는 용도라 올리지 않는다
+samples/synthetic_sellers.json
+tests/test_synthetic.py
+tools/__init__.py
+tools/run_synthetic.py
+
+# 단위 테스트는 통합할 때 팀에서 따로 만들 예정이라 지금은 올리지 않는다 (로컬에서는 그대로 쓴다)
+tests/
+
+# 합칠 때 필요한 것(matching.py, server.py, data의 규칙 파일)만 올린다. 나머지는 내가 로컬에서 쓴다.
+demo.py
+samples/
+pytest.ini
+tagger_llm.py
+data/keywords_expanded.json
+data/candidates.json

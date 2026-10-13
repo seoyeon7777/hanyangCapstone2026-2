@@ -1,0 +1,356 @@
+{
+  "_note": "상품명·설명에서 찾을 키워드 -> 태그 (소문자 부분 문자열 일치). 가중치표(tag_weight.json)에 있는 26개 태그만 대상이다. '울'은 '울트라' 등과 겹쳐 앞뒤 구분자를 붙였다. 샘플로 검증하며 늘린다 (python tools/coverage.py).",
+  "keywords": {
+    "슬림": [
+      "fit:slim"
+    ],
+    "slim": [
+      "fit:slim"
+    ],
+    "fitted": [
+      "fit:slim"
+    ],
+    "오버핏": [
+      "fit:over"
+    ],
+    "오버사이즈": [
+      "fit:over"
+    ],
+    "루즈": [
+      "fit:over"
+    ],
+    "릴렉스드": [
+      "fit:over"
+    ],
+    "박시": [
+      "fit:over"
+    ],
+    "oversize": [
+      "fit:over"
+    ],
+    "overfit": [
+      "fit:over"
+    ],
+    "loose": [
+      "fit:over"
+    ],
+    "relaxed": [
+      "fit:over"
+    ],
+    "boxy": [
+      "fit:over"
+    ],
+    "크롭": [
+      "len:crop"
+    ],
+    "crop": [
+      "len:crop"
+    ],
+    "맥시": [
+      "len:long"
+    ],
+    "maxi": [
+      "len:long"
+    ],
+    "롱스커트": [
+      "len:long"
+    ],
+    "롱 스커트": [
+      "len:long"
+    ],
+    "롱원피스": [
+      "len:long"
+    ],
+    "롱 원피스": [
+      "len:long"
+    ],
+    "롱코트": [
+      "len:long"
+    ],
+    "롱 코트": [
+      "len:long"
+    ],
+    "와이드": [
+      "sil:wide"
+    ],
+    "wide": [
+      "sil:wide"
+    ],
+    "a라인": [
+      "sil:A"
+    ],
+    "에이라인": [
+      "sil:A"
+    ],
+    "a-line": [
+      "sil:A"
+    ],
+    "플레어": [
+      "sil:A"
+    ],
+    "flare": [
+      "sil:A"
+    ],
+    "일자": [
+      "sil:IH"
+    ],
+    "스트레이트": [
+      "sil:IH"
+    ],
+    "straight": [
+      "sil:IH"
+    ],
+    "러플": [
+      "det:ruffle"
+    ],
+    "프릴": [
+      "det:ruffle"
+    ],
+    "ruffle": [
+      "det:ruffle"
+    ],
+    "frill": [
+      "det:ruffle"
+    ],
+    "코튼": [
+      "mat:cotton"
+    ],
+    "순면": [
+      "mat:cotton"
+    ],
+    "cotton": [
+      "mat:cotton"
+    ],
+    "데님": [
+      "mat:denim"
+    ],
+    "청바지": [
+      "mat:denim"
+    ],
+    "denim": [
+      "mat:denim"
+    ],
+    "jeans": [
+      "mat:denim"
+    ],
+    "실크": [
+      "mat:silk"
+    ],
+    "캐시미어": [
+      "mat:cashmere"
+    ],
+    "silk": [
+      "mat:silk"
+    ],
+    "cashmere": [
+      "mat:cashmere"
+    ],
+    "시폰": [
+      "mat:chiffon"
+    ],
+    "쉬폰": [
+      "mat:chiffon"
+    ],
+    "벨벳": [
+      "mat:velvet"
+    ],
+    "chiffon": [
+      "mat:chiffon"
+    ],
+    "velvet": [
+      "mat:velvet"
+    ],
+    "린넨": [
+      "mat:linen"
+    ],
+    "리넨": [
+      "mat:linen"
+    ],
+    "코듀로이": [
+      "mat:corduroy"
+    ],
+    "골덴": [
+      "mat:corduroy"
+    ],
+    "무스탕": [
+      "mat:mustang"
+    ],
+    "linen": [
+      "mat:linen"
+    ],
+    "corduroy": [
+      "mat:corduroy"
+    ],
+    "울 ": [
+      "mat:wool"
+    ],
+    "울]": [
+      "mat:wool"
+    ],
+    "울)": [
+      "mat:wool"
+    ],
+    "울_": [
+      "mat:wool"
+    ],
+    "메리노울": [
+      "mat:wool"
+    ],
+    "wool": [
+      "mat:wool"
+    ],
+    "모직": [
+      "mat:wool"
+    ],
+    "니트": [
+      "mat:knit"
+    ],
+    "knit": [
+      "mat:knit"
+    ],
+    "하이웨이스트": [
+      "waist:high"
+    ],
+    "하이웨스트": [
+      "waist:high"
+    ],
+    "하이라이즈": [
+      "waist:high"
+    ],
+    "high waist": [
+      "waist:high"
+    ],
+    "high-waist": [
+      "waist:high"
+    ],
+    "high rise": [
+      "waist:high"
+    ],
+    "스키니": [
+      "sil:skinny"
+    ],
+    "skinny": [
+      "sil:skinny"
+    ],
+    "가죽": [
+      "mat:leather"
+    ],
+    "레더": [
+      "mat:leather"
+    ],
+    "leather": [
+      "mat:leather"
+    ],
+    "나일론": [
+      "mat:nylon"
+    ],
+    "nylon": [
+      "mat:nylon"
+    ],
+    "페이크퍼": [
+      "mat:fur"
+    ],
+    "페이크 퍼": [
+      "mat:fur"
+    ],
+    "퍼자켓": [
+      "mat:fur"
+    ],
+    "퍼 자켓": [
+      "mat:fur"
+    ],
+    "퍼코트": [
+      "mat:fur"
+    ],
+    "퍼 코트": [
+      "mat:fur"
+    ],
+    "faux fur": [
+      "mat:fur"
+    ],
+    "리본": [
+      "det:ribbon"
+    ],
+    "ribbon": [
+      "det:ribbon"
+    ],
+    "여유핏": [
+      "fit:over"
+    ],
+    "넉넉": [
+      "fit:over"
+    ],
+    "박스핏": [
+      "fit:over"
+    ],
+    "아방핏": [
+      "fit:over"
+    ],
+    "널널": [
+      "fit:over"
+    ],
+    "울니트": [
+      "mat:wool"
+    ],
+    "울함유": [
+      "mat:wool"
+    ],
+    "+울": [
+      "mat:wool"
+    ],
+    "울=": [
+      "mat:wool"
+    ],
+    "long skirt": [
+      "len:long"
+    ],
+    "long dress": [
+      "len:long"
+    ],
+    "long coat": [
+      "len:long"
+    ],
+    "long parka": [
+      "len:long"
+    ],
+    "롱 파카": [
+      "len:long"
+    ],
+    "롱패딩": [
+      "len:long"
+    ],
+    "롱 패딩": [
+      "len:long"
+    ],
+    "mustang": [
+      "mat:mustang"
+    ],
+    "테일러드 재킷": [
+      "item:tailored_jacket"
+    ],
+    "테일러드 자켓": [
+      "item:tailored_jacket"
+    ],
+    "테일러드재킷": [
+      "item:tailored_jacket"
+    ],
+    "tailored jacket": [
+      "item:tailored_jacket"
+    ],
+    "타이트 스커트": [
+      "item:tight_skirt"
+    ],
+    "타이트스커트": [
+      "item:tight_skirt"
+    ],
+    "tight skirt": [
+      "item:tight_skirt"
+    ],
+    "모헤어": [
+      "mat:mohair"
+    ],
+    "mohair": [
+      "mat:mohair"
+    ]
+  }
+}
