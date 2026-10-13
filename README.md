@@ -18,6 +18,7 @@
 ## 실행
 - Python 3.12, `pip install -r requirements.txt`
 - 통합 서버: `python app.py` → http://127.0.0.1:5000/feed-demo (연습 화면)
+- 안드로이드 앱 연결: 에뮬레이터 `http://10.0.2.2:5000`, 실제 폰 `http://<PC IP>:5000` — `recommend/안드로이드_연결가이드.md`
 - 설문으로 바로 추천: `POST /api/feed` `{"user_id": "u1", "answers": {"q1": 1, ..., "q7": 3}}`
 - B만 따로: `python server.py` / A만 따로: `python try_classify.py`
 

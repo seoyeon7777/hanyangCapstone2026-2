@@ -75,7 +75,18 @@ def with_reasons(feed):
 
 @feed_bp.errorhandler(BadRequest)
 def bad_request(e):
-    return jsonify({"error": str(e)}), 400
+    # B 파트 API와 같은 오류 모양 {"ok": false, "error": "..."} — 앱에서 한 가지로 처리할 수 있게
+    return jsonify({"ok": False, "error": str(e)}), 400
+
+
+def json_body():
+    """POST 본문(JSON 객체). 비어 있으면 {}, 객체가 아니면(목록·문자열 등) 400."""
+    data = request.get_json(silent=True)
+    if data is None:
+        return {}
+    if not isinstance(data, dict):
+        raise BadRequest("요청 본문은 JSON 객체({ ... })여야 해요")
+    return data
 
 
 def resolve_request():
@@ -86,9 +97,16 @@ def resolve_request():
     """
     body = None
     if request.method == "POST":
-        data = request.get_json(silent=True) or {}
-        ratio = (data.get("body") or {}).get("ratio")
+        data = json_body()
+        body_in = data.get("body") or {}
+        if not isinstance(body_in, dict):
+            raise BadRequest('body는 {"ratio": {"S": .., "W": .., "N": ..}} 모양이어야 해요')
+        ratio = body_in.get("ratio")
         if data.get("answers") is not None:      # A 파트로 바로 진단
+            if not isinstance(data["answers"], dict):
+                raise BadRequest('answers는 {"q1": 1, ..., "q7": 3} 모양이어야 해요')
+            if data.get("measurements") is not None and not isinstance(data["measurements"], dict):
+                raise BadRequest("measurements는 치수 5개를 담은 객체여야 해요")
             try:
                 body = from_profile(classify(data["answers"], data.get("measurements")))
             except InputError as e:
@@ -101,9 +119,12 @@ def resolve_request():
                 raise BadRequest("profile은 A 파트 classify() 결과 모양이어야 해요 (ratios, is_mixed)")
     else:
         data = request.args
-        ratio = {t: data.get(t) for t in ("S", "W", "N")} if any(t in data for t in "SWN") else None
+        # 빠진 값은 0 (POST와 같게). 예: ?S=1 → S 1, W 0, N 0
+        ratio = {t: data.get(t, 0) for t in ("S", "W", "N")} if any(t in data for t in "SWN") else None
 
     user_id = data.get("user_id")
+    if user_id is not None and not isinstance(user_id, str):
+        raise BadRequest("user_id는 문자열이어야 해요")
     user = USERS.get(user_id) if user_id else None
     mode = data.get("mode") or "body"
     if mode not in MODES:
@@ -180,11 +201,14 @@ def feed_demo():
 
 @feed_bp.route("/api/feed/event", methods=["POST"])
 def post_event():
-    data = request.get_json(silent=True) or {}
-    user = USERS.get(data.get("user_id"))
+    data = json_body()
+    user_id, item_id = data.get("user_id"), data.get("item_id")
+    if not isinstance(user_id, str) or not isinstance(item_id, str):
+        raise BadRequest("user_id와 item_id는 문자열이어야 해요")
+    user = USERS.get(user_id)
     if not user:
         raise BadRequest("먼저 /api/feed 또는 /api/feed/scroll을 user_id와 함께 불러 주세요")
-    item = ITEMS_BY_ID.get(data.get("item_id"))
+    item = ITEMS_BY_ID.get(item_id)
     if not item:
         raise BadRequest("없는 상품이에요")
     try:
