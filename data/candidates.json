@@ -1,0 +1,33 @@
+{
+  "_note": "후보 태그 26개. keywords는 한국어 상품명에서 찾을 말(부분 문자열 일치). doc_ref는 팀 외 정리 문서의 규칙표 값을 참조용으로 옮긴 것이며(척도 -1~+2, PDF는 -3~+2), 태그와의 매핑은 해석이다. 확정은 tag_weight.json에서 한다.",
+  "candidates": [
+    {"tag": "fit:slim", "group": "fit", "status": "ready", "keywords": ["슬림"], "vocab": "DeepFashion slim, fitted / K-Fashion 타이트", "weight_basis": "문서 핏 슬림", "doc_ref": {"S": 2, "W": 0, "N": -1}},
+    {"tag": "fit:over", "group": "fit", "status": "ready", "keywords": ["오버핏", "오버사이즈", "루즈"], "vocab": "DeepFashion oversized, loose / K-Fashion 루즈, 오버사이즈", "weight_basis": "문서 핏 오버/루즈", "doc_ref": {"S": -1, "W": -1, "N": 2}},
+    {"tag": "len:crop", "group": "len", "status": "ready", "keywords": ["크롭"], "vocab": "DeepFashion crop, cropped / K-Fashion 크롭", "weight_basis": "문서 길이감 크롭", "doc_ref": {"S": 0, "W": 2, "N": -1}},
+    {"tag": "sil:wide", "group": "sil", "status": "ready", "keywords": ["와이드"], "vocab": "DeepFashion wide-leg / K-Fashion 와이드", "weight_basis": "문서 와이드팬츠(아이템)", "doc_ref": {"S": 0, "W": -1, "N": 2}},
+    {"tag": "sil:skinny", "group": "sil", "status": "ready", "keywords": ["스키니"], "vocab": "DeepFashion skinny / K-Fashion 스키니", "weight_basis": "문서에 별도 행 없음(핏 슬림의 N 감점만)", "doc_ref": null},
+    {"tag": "sil:A", "group": "sil", "status": "ready", "keywords": ["A라인", "에이라인", "플레어"], "vocab": "DeepFashion a-line, flare", "weight_basis": "문서 플레어스커트(아이템)", "doc_ref": {"S": 0, "W": 2, "N": 0}},
+    {"tag": "det:ruffle", "group": "det", "status": "ready", "keywords": ["러플", "프릴"], "vocab": "DeepFashion ruffle, flounce / K-Fashion 프릴", "weight_basis": "문서 장식 '많음'(러플 포함은 해석)", "doc_ref": {"S": -1, "W": 2, "N": -1}},
+
+    {"tag": "len:long", "group": "len", "status": "conditional", "keywords": ["맥시", "롱스커트", "롱원피스", "롱코트"], "vocab": "DeepFashion maxi, longline / K-Fashion 롱, 맥시", "weight_basis": "문서 길이감 롱", "doc_ref": {"S": -1, "W": 0, "N": 2}, "note": "'롱' 단독은 롱슬리브와 겹쳐 제외"},
+    {"tag": "sil:IH", "group": "sil", "status": "conditional", "keywords": ["일자", "스트레이트"], "vocab": "DeepFashion straight-leg, pencil, sheath", "weight_basis": "문서 스트레이트팬츠(아이템)", "doc_ref": {"S": 2, "W": 0, "N": 0}, "note": "상의 직선 라인은 근거 없음"},
+    {"tag": "det:drop", "group": "det", "status": "conditional", "keywords": ["드롭숄더", "드롭 숄더"], "vocab": "K-Fashion 드롭숄더 / DeepFashion drop-sleeve, dolman", "weight_basis": "없음", "doc_ref": null},
+    {"tag": "det:washed", "group": "det", "status": "conditional", "keywords": ["워싱", "워시드"], "vocab": "DeepFashion washed, wash", "weight_basis": "없음", "doc_ref": null},
+    {"tag": "det:vertical", "group": "det", "status": "conditional", "keywords": ["세로", "핀스트라이프"], "vocab": "DeepFashion vertical, pinstripe", "weight_basis": "없음", "doc_ref": null, "note": "'스트라이프' 단독은 가로줄 포함이라 제외"},
+    {"tag": "det:puff", "group": "det", "status": "conditional", "keywords": ["퍼프"], "vocab": "K-Fashion 퍼프 (DeepFashion에는 없음)", "weight_basis": "없음", "doc_ref": null},
+    {"tag": "neck:high", "group": "neck", "status": "conditional", "keywords": ["하이넥", "터틀넥", "폴라", "모크넥"], "vocab": "DeepFashion high-neck, turtle-neck, mock neck", "weight_basis": "없음", "doc_ref": null},
+    {"tag": "neck:collar", "group": "neck", "status": "conditional", "keywords": ["칼라", "카라"], "vocab": "DeepFashion collar, collared / K-Fashion 셔츠칼라 등", "weight_basis": "없음", "doc_ref": null},
+    {"tag": "neck:uv", "group": "neck", "status": "conditional", "keywords": ["브이넥", "유넥", "V넥", "U넥"], "vocab": "DeepFashion v-neck, scoop / K-Fashion 브이넥, 유넥", "weight_basis": "없음", "doc_ref": null},
+    {"tag": "waist:high", "group": "waist", "status": "conditional", "keywords": ["하이웨이스트", "하이웨스트", "하이라이즈"], "vocab": "DeepFashion high-waist(ed), high-rise", "weight_basis": "없음", "doc_ref": null},
+    {"tag": "waist:low", "group": "waist", "status": "conditional", "keywords": ["로우라이즈", "로우웨이스트"], "vocab": "DeepFashion low-rise", "weight_basis": "없음", "doc_ref": null},
+    {"tag": "waist:belt", "group": "waist", "status": "conditional", "keywords": ["벨트", "벨티드"], "vocab": "DeepFashion belted", "weight_basis": "없음", "doc_ref": null, "note": "'벨트 포함' 같은 부속 표기와 구분 필요"},
+
+    {"tag": "mat:cotton", "group": "mat", "status": "material", "keywords": ["면 ", "코튼", "순면"], "vocab": "DeepFashion cotton / K-Fashion 소재", "weight_basis": "문서 소재 면", "doc_ref": {"S": 1, "W": 0, "N": 1}, "note": "'면' 단독은 오탐이 많아 공백 포함 등으로 제한"},
+    {"tag": "mat:denim", "group": "mat", "status": "material", "keywords": ["데님", "청바지"], "vocab": "DeepFashion denim / K-Fashion 데님", "weight_basis": "문서 소재 데님", "doc_ref": {"S": 2, "W": 0, "N": 2}},
+    {"tag": "mat:silk", "group": "mat", "status": "material", "keywords": ["실크", "캐시미어"], "vocab": "-", "weight_basis": "문서 소재 실크·캐시미어", "doc_ref": {"S": 1, "W": 0, "N": 0}},
+    {"tag": "mat:chiffon", "group": "mat", "status": "material", "keywords": ["시폰", "벨벳"], "vocab": "DeepFashion chiffon, velvet", "weight_basis": "문서 소재 시폰·벨벳·퍼", "doc_ref": {"S": 0, "W": 1, "N": 0}, "note": "'퍼'는 '퍼프'와 겹쳐 키워드에서 제외"},
+    {"tag": "mat:linen", "group": "mat", "status": "material", "keywords": ["린넨", "리넨", "코듀로이", "골덴", "무스탕"], "vocab": "DeepFashion linen, corduroy / K-Fashion 코듀로이, 무스탕", "weight_basis": "문서 소재 마·코듀로이·무스탕", "doc_ref": {"S": 0, "W": 0, "N": 2}},
+    {"tag": "mat:wool", "group": "mat", "status": "material", "keywords": ["울", "모직"], "vocab": "-", "weight_basis": "문서 소재 울", "doc_ref": {"S": 0, "W": 0, "N": 1}, "note": "'울' 오탐 여부는 커버리지 결과에서 확인"},
+    {"tag": "mat:knit", "group": "mat", "status": "material", "keywords": ["니트"], "vocab": "DeepFashion knit / K-Fashion 니트", "weight_basis": "문서 소재 니트", "doc_ref": {"S": -1, "W": 1, "N": 1}}
+  ]
+}

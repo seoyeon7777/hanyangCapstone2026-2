@@ -13,7 +13,7 @@ AI 코딩 도구가 이 파일만 읽고 작업을 이어갈 수 있게 정리�
 | 파트 | 담당 브랜치 | 파일 |
 |---|---|---|
 | A 체형 분류 | feature/jihyun | `body_profile.py` (classify), `evaluate.py`, `try_classify.py`, `sample.csv` |
-| B 옷 매칭 | feature/yeonoh | `matching.py`, `server.py`(B API), `data/*.json`(가중치·문장·코디 규칙) |
+| B 옷 매칭 | yeonoh (처음엔 feature/yeonoh) | `matching.py`, `server.py`(B API), `data/*.json`(가중치·문장·코디 규칙), `tests/`(pytest 129개), `tools/`·`reports/`(실험·근거 문서), `tagger_llm.py`(선택: LLM 태깅, API 키 필요) |
 | C 추천·홈 피드 | feature/seoyeon | `recommend/` |
 
 세 파트는 feature/integration 브랜치에서 처음 통합했다. 통합 서버는 맨 위 `app.py`다.
@@ -159,6 +159,7 @@ match_score(body, item) -> {
 
 ## 5. 정답 테스트 (반드시 통과)
 
+`python -m pytest` (맨 위에서) — B 테스트 129개 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 32개 통과 (C 로직, 임시 매칭 기준 손계산).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
 `cd recommend && python test_api.py` — 현재 12개 통과 (Flask 필요: `pip install -r requirements.txt`).
