@@ -13,6 +13,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+import math
 
 TYPES = ("S", "W", "N")
 DATA_DIR = Path(__file__).parent / "data"
@@ -25,7 +26,7 @@ def normalize_profile(profile: dict) -> dict:
 
     입력: {"ratios": {"S":..,"W":..,"N":..}, "primary": "S", "secondary": "N", "confidence": .25, "is_mixed": False}
     - ratios 합이 1이 아니면(반올림 오차 등) 1로 맞춘다.
-    - ratios·primary·is_mixed 가 없거나, 비율이 음수·합 0이면 ValueError.
+    - ratios·primary·is_mixed 가 없거나, 비율이 음수·NaN·무한대·합 0이거나, primary가 비율 최대 유형이 아니면 ValueError.
     - 예전 이름(p / main / mixed)도 받지만 내부에서는 새 이름만 쓴다. secondary·confidence·source 는 계산에 쓰지 않는다.
     """
     ratios = profile.get("ratios", profile.get("p"))
@@ -34,8 +35,8 @@ def normalize_profile(profile: dict) -> dict:
     if not isinstance(ratios, dict) or any(t not in ratios for t in TYPES):
         raise ValueError('profile: "ratios"에 S, W, N 세 값이 모두 필요하다')
     vals = {t: ratios[t] for t in TYPES}
-    if any(isinstance(v, bool) or not isinstance(v, (int, float)) or v < 0 for v in vals.values()):
-        raise ValueError("profile: 비율은 0 이상의 숫자여야 한다")
+    if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0 for v in vals.values()):
+        raise ValueError("profile: 비율은 0 이상의 유한한 숫자여야 한다 (NaN·무한대 불가)")
     total = sum(vals.values())
     if total <= 0:
         raise ValueError("profile: 비율의 합이 0이다")
@@ -43,6 +44,8 @@ def normalize_profile(profile: dict) -> dict:
         raise ValueError('profile: "primary"는 S, W, N 중 하나여야 한다')
     if not isinstance(mixed, bool):
         raise ValueError('profile: "is_mixed"는 true/false여야 한다')
+    if vals[primary] < max(vals.values()) * (1 - 1e-6):
+        raise ValueError(f'profile: primary={primary!r}가 비율이 가장 큰 유형이 아니다 (ratios={vals})')
     return {"ratios": {t: v / total for t, v in vals.items()}, "primary": primary,
             "secondary": profile.get("secondary"), "is_mixed": mixed}
 
@@ -140,7 +143,8 @@ def validate_rules(rules: Rules) -> list[str]:
 
 # ---------------------------------------------------------------- 2) 태깅 -> tagging.py
 
-from tagging import (  # 태깅은 tagging.py로 분리했다. 기존 이름(matching.tag_item 등)은 그대로 쓸 수 있게 다시 내보낸다.
+from tagging import (
+    MAX_DESC_CHARS,  # 태깅은 tagging.py로 분리했다. 기존 이름(matching.tag_item 등)은 그대로 쓸 수 있게 다시 내보낸다.
     _SKIP_SENT,
     _COTTON_KO,
     _NEGATED,
@@ -434,6 +438,13 @@ def match_item(item: dict, profile: dict, rules: Rules) -> dict:
     agreement = review_agreement(item.get("review"), rules)
     applied = agreement if rules.config.get("review_mode", "off") != "off" else 1.0      # 기본은 수집·표시만 하고 점수에는 반영하지 않는다
     score = body_fit(tags, profile, rules, applied)
+    # 정보 없음: 점수에 쓸 태그가 하나도 없고 핏 표기도 못 읽은 상품. 중립 점수를 주는 대신 추천에서 뺀다(config.exclude_no_info).
+    # 핏을 읽었는데(레귤러 등) 태그가 없는 상품은 '특징 없는 기본 상품'이라 정보가 있는 것으로 보고 중립 점수로 남긴다.
+    no_info = not _known(tags, rules) and fit_stated == "unknown"
+    if no_info and rules.config.get("exclude_no_info", True):
+        score = None
+    else:
+        no_info = False
     return {
         "item_id": item["item_id"],
         "tags": tags,
@@ -442,6 +453,7 @@ def match_item(item: dict, profile: dict, rules: Rules) -> dict:
         "fit_stated": fit_stated,
         "body_fit": score,
         "excluded": score is None,
+        "no_info": no_info,
         "reasons": [] if score is None else reasons(tags, profile, rules),
     }
 
@@ -497,15 +509,38 @@ def rank_items(matched: list[dict], profile: dict, rules: Rules, k: int = 10, st
 _OUTFIT_GROUP = {"top": "top", "outer": "outer", "bottom": "bottom", "pants": "bottom", "skirt": "bottom"}   # 원피스(dress)는 코디 짝이 없어 상품 점수만 낸다
 
 
+def validate_item(it: dict) -> None:
+    """추천에 넣는 상품 한 개의 형식을 검사한다. 잘못되면 ValueError (서버에서는 400)."""
+    if not isinstance(it, dict):
+        raise ValueError("상품은 객체여야 한다")
+    iid = it.get("item_id")
+    if iid is None or isinstance(iid, bool) or not isinstance(iid, (str, int)) or iid == "":
+        raise ValueError("item_id는 비어 있지 않은 문자열 또는 정수여야 한다")
+    if it.get("category") not in _OUTFIT_GROUP and it.get("category") != "dress":
+        raise ValueError(f'item {iid}: category는 {sorted(set(_OUTFIT_GROUP) | {"dress"})} 중 하나여야 한다 (받은 값: {it.get("category")!r})')
+    for key in ("name", "desc"):
+        if it.get(key) is not None and not isinstance(it[key], str):
+            raise ValueError(f"item {iid}: {key}는 문자열이어야 한다")
+    if len(it.get("desc") or "") > MAX_DESC_CHARS:
+        raise ValueError(f"item {iid}: desc는 {MAX_DESC_CHARS}자 이하여야 한다")
+    tags = it.get("tags")
+    if tags is not None and (not isinstance(tags, list) or any(not isinstance(g, str) for g in tags)):
+        raise ValueError(f"item {iid}: tags는 문자열 목록이어야 한다")
+
+
 def recommend(profile: dict, items: list[dict], rules: Rules | None = None, top_n: int = 3, list_size: int = 10, mixed_strategy: str | None = None) -> dict:
     """C에 넘기는 한 번에 호출 함수. items = [{item_id, category, name, desc?, tags?, source?, attrs?}, ...]
     category: top | bottom | outer | pants | skirt | dress. 양식 입력 상품(source direct·manual)은 attrs의 category를 쓰므로 둘이 같아야 한다.
-    반환: {"items": [match_item 결과 + category], "ranking": {top|bottom|outer: rank_items 결과}, "outfits": [코디 top_n개], "fit_unknown": 핏 표기를 못 읽은 상품 item_id 목록}
+    반환: {"items": [match_item 결과 + category], "ranking": {top|bottom|outer: rank_items 결과}, "outfits": [코디 top_n개], "fit_unknown": 핏 표기를 못 읽은 상품 item_id 목록, "no_info": 태그도 핏도 못 읽어 추천에서 뺀 상품 item_id 목록}
     ranking의 k는 list_size(기본 10), 혼합형 방식은 config.mixed_strategy(blend|quota) 또는 mixed_strategy 인자."""
     rules = rules or load_rules()
     normalize_profile(profile)      # 상품이 없어도 잘못된 체형 입력은 오류로 알린다
-    matched = []
+    matched, seen = [], set()
     for it in items:
+        validate_item(it)
+        if it["item_id"] in seen:
+            raise ValueError(f'item_id {it["item_id"]!r}가 중복되었다')
+        seen.add(it["item_id"])
         cat = it.get("category")
         if it.get("source") in FORM_SOURCES and it.get("attrs", {}).get("category", cat) != cat:
             raise ValueError(f'item {it.get("item_id")}: category={cat!r}와 attrs.category가 다르다')
@@ -514,4 +549,5 @@ def recommend(profile: dict, items: list[dict], rules: Rules | None = None, top_
     outfits = recommend_outfits(group("top"), group("bottom"), profile, rules, outers=group("outer"), top_n=top_n)
     ranking = {g: rank_items(group(g), profile, rules, list_size, mixed_strategy) for g in ("top", "bottom", "outer")}
     return {"items": matched, "ranking": ranking, "outfits": outfits,
-            "fit_unknown": [m["item_id"] for m in matched if m["fit_stated"] == "unknown"]}
+            "fit_unknown": [m["item_id"] for m in matched if m["fit_stated"] == "unknown"],
+            "no_info": [m["item_id"] for m in matched if m["no_info"]]}

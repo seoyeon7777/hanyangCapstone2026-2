@@ -18,19 +18,36 @@ FORM_SOURCES = matching.FORM_SOURCES
 
 def create_app(rules: matching.Rules | None = None) -> Flask:
     app = Flask(__name__)
+    app.config["MAX_CONTENT_LENGTH"] = 1_000_000      # 요청 본문 1MB 제한 (넘으면 413)
     app.json.ensure_ascii = False
     rules = rules or matching.load_rules()
     store: dict = {}
+    next_id = [1]
 
     def fail(msg: str, code: int = 400):
         return jsonify({"ok": False, "error": msg}), code
+
+    @app.errorhandler(413)
+    def on_too_large(e):
+        return fail("요청이 너무 크다 (최대 1MB)", 413)
+
+    def json_body() -> dict:
+        body = request.get_json(silent=True)
+        if body is None:
+            return {}
+        if not isinstance(body, dict):
+            raise ValueError("요청 본문은 JSON 객체여야 한다")
+        return body
 
     @app.errorhandler(ValueError)
     def on_value_error(e):
         return fail(str(e))
 
     def read_attrs(body: dict) -> dict:
-        attrs = dict(body.get("attrs") or {})
+        attrs = body.get("attrs") or {}
+        if not isinstance(attrs, dict):
+            raise ValueError("attrs는 객체여야 한다")
+        attrs = dict(attrs)
         if body.get("composition_percent") is not None:
             if attrs.get("composition"):
                 raise ValueError("composition과 composition_percent를 함께 보낼 수 없다")
@@ -48,7 +65,7 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
 
     @app.post("/api/items/validate")
     def validate():
-        body = request.get_json(silent=True) or {}
+        body = json_body()
         r = tagging.tag_from_attributes(read_attrs(body), rules)
         text_added = []
         if body.get("text_fill") is not False and (body.get("name") or body.get("desc")):
@@ -58,20 +75,29 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
 
     @app.post("/api/items")
     def add_item():
-        body = request.get_json(silent=True) or {}
+        body = json_body()
         source, category = body.get("source"), body.get("category")
         if source not in FORM_SOURCES:
             return fail(f'source는 {list(FORM_SOURCES)} 중 하나여야 한다')
-        if not body.get("name"):
-            return fail("name이 필요하다")
+        if not isinstance(body.get("name"), str) or not body["name"].strip():
+            return fail("name은 비어 있지 않은 문자열이어야 한다")
         attrs = read_attrs(body)
         if attrs.get("category") != category:
             return fail(f'category={category!r}와 attrs.category={attrs.get("category")!r}가 다르다')
-        item_id = body.get("item_id", len(store) + 1)
+        if body.get("item_id") is None:
+            item_id = next_id[0]
+            while item_id in store:         # 직접 넣은 숫자 id와 겹치지 않게 건너뛴다
+                item_id += 1
+            next_id[0] = item_id + 1
+        else:
+            item_id = body["item_id"]
+            if isinstance(item_id, bool) or not isinstance(item_id, (str, int)) or item_id == "":
+                return fail("item_id는 비어 있지 않은 문자열 또는 정수여야 한다")
         if item_id in store:
             return fail(f"item_id {item_id!r}가 이미 있다", 409)
-        item = {"item_id": item_id, "category": category, "name": body["name"], "desc": body.get("desc", ""),
+        item = {"item_id": item_id, "category": category, "name": body["name"], "desc": body.get("desc") or "",
                 "source": source, "attrs": attrs}
+        matching.validate_item(item)        # item_id 형식·category·desc 길이 (잘못되면 ValueError -> 400)
         if body.get("text_fill") is False:
             item["text_fill"] = False
         if body.get("review") is not None:
@@ -90,13 +116,16 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
 
     @app.post("/api/recommend")
     def recommend():
-        body = request.get_json(silent=True) or {}
+        body = json_body()
         if "profile" not in body:
             return fail("profile이 필요하다")
         items = body["items"] if body.get("items") is not None else list(store.values())
         # 서비스는 양식으로 등록한 상품(source=direct|manual)이나 이미 태그가 붙은 상품(tags)만 받는다.
         # 글만 있는 상품(다른 쇼핑몰에서 가져온 것)을 글에서 읽어 추천하는 경로는 평가용(matching.py 직접 호출)이다.
+        if not isinstance(items, list):
+            return fail("items는 목록이어야 한다")
         for it in items:
+            matching.validate_item(it)
             if it.get("source") not in FORM_SOURCES and it.get("tags") is None:
                 return fail(f'상품 {it.get("item_id")}: source가 {list(FORM_SOURCES)} 중 하나이거나 tags가 있어야 한다 (글만 있는 상품은 서비스에서 받지 않는다)')
         top_n = body.get("top_n", 3)

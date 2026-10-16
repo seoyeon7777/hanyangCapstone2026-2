@@ -22,7 +22,8 @@ _SENT_SPLIT = re.compile(r"[.\n■●▶]|(?<=다)\s|(?=composition|혼용률|ma
 
 _FIT_LEGEND = re.compile(r"(?:(?:슬림|기본|레귤러|세미\s*루즈|루즈|오버|와이드)\s*핏(?:\s*/\s*(?:오버)\s*핏)?[\s|/·,]*){3,}")   # 케어라벨 범례표 '슬림핏|기본핏|루즈핏/오버핏|와이드핏' (상품 설명이 아님)
 _FIT_SCALE = re.compile(r"(?:슬림|타이트|레귤러|세미\s*루즈|루즈|오버)\s*(?:핏|fit)?\s*(?:적당함?|보통|정\s*사이즈|좋음|없음)\s*(?:슬림|타이트|레귤러|세미\s*루즈|루즈|오버)?\s*(?:핏|fit)?")   # 상세 이미지 속 착용감 척도 '슬림핏 적당함 루즈핏' (선택지일 뿐 선택값이 아님)
-_STYLING_TAIL = re.compile(r"(?:[가-힣a-z]+\s*,\s*){0,3}[가-힣a-z]*\s*스타일링(?:에|으로)?\s*(?:활용|사용)?\s*(?:가능|하기\s*좋)")   # '...루즈핏 실루엣 드롭 숄더 데일리, 빈티지, 스트릿 스타일링에 활용 가능'처럼 마침표 없이 이어진 문장에서 뒤쪽 코디 문구 때문에 앞쪽 핏 설명까지 버려지는 것 방지
+MAX_DESC_CHARS = 5000
+_STYLING_TAIL = re.compile(r"(?:[가-힣a-z]+\s{0,3},\s{0,3}){0,3}[가-힣a-z]*\s{0,3}스타일링(?:에|으로)?\s{0,3}(?:활용|사용)?\s{0,3}(?:가능|하기\s{0,3}좋)")   # '...루즈핏 실루엣 드롭 숄더 데일리, 빈티지, 스트릿 스타일링에 활용 가능'처럼 마침표 없이 이어진 문장에서 뒤쪽 코디 문구 때문에 앞쪽 핏 설명까지 버려지는 것 방지
 _CARE_START = re.compile(r"washing\s*(?:tips?|info(?:rmation)?|guide)|care\s*guide|세탁\s*방법\s*및\s*주의|세탁\s*및\s*취급|취급\s*시?\s*주의|how\s*to\s*care|care\s*instruction", re.I)   # 여기서부터는 소재별 세탁 안내표 ('LEATHER 가죽 ...'가 소재로 잡힘)
 _CARE_MATERIAL = re.compile(r"^\s*(?:denim|leather|suede|fur|wool|knit|cotton|silk|linen)\s*\n\s*(?:데님|가죽|스웨이드|퍼|울|니트|면|실크|린넨)[^\n]*", re.M)   # 케어 안내표의 소재 제목 ('LEATHER / 가죽 ...')
 _BODY_SLIM = re.compile(r"(?:허리|골반|밑단|허벅지|종아리|팔뚝|다리)\s*(?:은|는|이|가)\s*슬림")   # '허리는 슬림하게' 신체 효과 설명, 핏 표기가 아님
@@ -55,6 +56,7 @@ def _clean_desc(desc: str) -> str:
     예: '니트나 후드와 매치해...'(→ 니트 오탐), '사이즈 064,067 WIDE'(→ 와이드 오탐)."""
     if not desc:
         return ""
+    desc = desc[:MAX_DESC_CHARS]      # 정규식 몇 개가 아주 긴 반복 문자열에서 제곱 시간이 걸리므로 길이를 막는다 (서버는 이보다 길면 400)
     desc = _STYLING_TAIL.sub(" . ", desc)
     desc = _COORD_ANY.sub(" ", _COORD_FROM.sub(" . ", desc))
     m = _CARE_START.search(desc)
@@ -131,8 +133,12 @@ def _fiber_tags(materials: list[dict], rules: Rules) -> tuple[list[str], str]:
 def percent_to_share(percent_list: list[dict]) -> list[dict]:
     """판매자 화면의 퍼센트 입력([{"fiber": "cotton", "percent": 60}, ...], 0 초과 100 이하)을 내부 비율(0~1)로 바꾼다.
     범위·합계 검증은 tag_from_attributes가 한다(서버에서 다시 확인)."""
+    if percent_list is not None and not isinstance(percent_list, list):
+        raise ValueError('composition_percent는 [{"fiber": ..., "percent": ...}, ...] 목록이어야 한다')
     out = []
     for m in percent_list or []:
+        if not isinstance(m, dict):
+            raise ValueError('composition_percent의 각 항목은 {"fiber": ..., "percent": ...} 객체여야 한다')
         p = m.get("percent")
         if not isinstance(p, (int, float)) or isinstance(p, bool) or not 0 < p <= 100:
             raise ValueError(f"attrs: {m.get('fiber')}의 퍼센트는 0 초과 100 이하여야 한다 (받은 값: {p!r})")
@@ -195,6 +201,8 @@ def tag_from_attributes(attrs: dict, rules: Rules) -> dict:
         raise ValueError("attrs: 필수 항목이 비어 있다: " + ", ".join(missing))
     materials: list[dict] = []
     if comp:
+        if not isinstance(comp, list) or any(not isinstance(m, dict) for m in comp):
+            raise ValueError('attrs: composition은 [{"fiber": ..., "share": ...}, ...] 목록이어야 한다')
         seen = set()
         for m in comp:
             fiber, share = m.get("fiber"), m.get("share")
