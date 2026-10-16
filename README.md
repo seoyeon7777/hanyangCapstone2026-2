@@ -37,7 +37,7 @@ python tools/coverage.py [상품명.csv]   # 실제 상품명 CSV(category,name)
 입력
 - `profile = {"ratios": {"S":.61,"W":.17,"N":.22}, "primary":"S", "secondary":"N", "is_mixed":False}` (A의 분류 결과)
 - 상품 `{item_id, category, name, desc?, tags?, source?, attrs?}`. `category`는 top | bottom | outer | pants | skirt | dress.
-  - `source` 없음(가져온 상품): `name`/`desc`에서 태그를 만든다. **평가용 경로다.** 다른 쇼핑몰 상품을 수집해 서비스에서 추천하는 것은 약관·저작권 문제가 있어 서비스에 넣지 않는다. `server.py`는 이런 상품(source도 tags도 없음)을 400으로 거절한다. 이미지 글자 읽기(`tools/vision_experiment.py`)도 평가용 도구다.
+  - `source` 없음(가져온 상품): `name`/`desc`에서 태그를 만든다. **평가용 경로다.** 다른 쇼핑몰 상품을 수집해 서비스에서 추천하는 것은 약관·저작권 문제가 있어 서비스에 넣지 않는다. `server.py`는 이런 상품(source도 tags도 없음)을 400으로 거절한다. 이미지 글자 읽기(`tools/vision_experiment.py`)도 평가용 도구다. **평가용 경로다.** 다른 쇼핑몰 상품을 수집해 서비스에서 추천하는 것은 약관·저작권 문제가 있어 서비스에 넣지 않는다. `server.py`는 이런 상품(source도 tags도 없음)을 400으로 거절한다. 이미지 글자 읽기(`tools/vision_experiment.py`)도 평가용 도구다.
   - `source="direct"`(판매자 직접 등록) 또는 `"manual"`(팀이 외부 상품을 같은 양식으로 입력): `attrs`(등록 양식)가 우선한다. 양식 검증을 통과하지 못하면 `ValueError`. 양식에서 미입력인 선택 항목(실루엣·허리·디테일·소재·종류)만 `name`/`desc`에서 보충하고("해당 없음"을 고른 항목은 보충하지 않는다), 보충한 태그는 `text_added`에 따로 적는다. 핏·기장·혼용률은 글에서 보충하지 않는다.
   - `tags`를 직접 주면 그대로 쓴다.
   - `review = {"n": 답한 리뷰 수, "mismatch": 등록 정보와 다르다고 한 수}`(선택): `review_agreement = (n - mismatch + k0) / (n + k0)`(k0 = `review_prior_k` 3, 설계 가정)를 출력에 싣는다. `config.review_mode`가 `off`(기본)면 점수에 반영하지 않고, `both`·`positive_only`로 켜면 점수를 중립 쪽으로 당긴다(실험 기능, `tools/review_demo.py`). 리뷰 수집 화면은 앱 쪽 일이다.
@@ -62,3 +62,7 @@ python tools/coverage.py [상품명.csv]   # 실제 상품명 CSV(category,name)
 - 외부 상품 글에 핏 표기가 없으면 읽을 수 없다(`fit_stated="unknown"`). 직접 등록·팀 입력 양식이 이를 피하는 경로다.
 - 같은 세트에서 규칙을 고친 뒤 확인한 결과이고 독립 검증이 아니다. 자세한 수치는 `reports/태깅 검증 결과.md`.
 - 점수에 쓰는 태그 26종 중 근거가 약한 가중치의 크기는 설계 가정이다(`reports/골격진단 가중치 근거 조사.md`).
+
+## 파일 구분 (태깅 / 추천)
+- `tagging.py` — 태그 붙이기. 판매자 등록 때 한 번 돈다. 결과는 상품과 함께 저장된다 (`server.py`의 `POST /api/items`).
+- `matching.py` — 저장된 태그로 점수·이유·코디·추천. 태깅은 다시 하지 않는다 (`from tagging import ...`로 기존 이름도 그대로 쓸 수 있다).

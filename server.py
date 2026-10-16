@@ -11,6 +11,7 @@ POST /api/recommend         (글만 있는 상품은 받지 않는다: source가
 from flask import Flask, jsonify, request
 
 import matching
+import tagging
 
 FORM_SOURCES = matching.FORM_SOURCES
 
@@ -33,7 +34,7 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
         if body.get("composition_percent") is not None:
             if attrs.get("composition"):
                 raise ValueError("composition과 composition_percent를 함께 보낼 수 없다")
-            attrs["composition"] = matching.percent_to_share(body["composition_percent"])
+            attrs["composition"] = tagging.percent_to_share(body["composition_percent"])
         return attrs
 
     @app.get("/api/form")
@@ -48,7 +49,7 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
     @app.post("/api/items/validate")
     def validate():
         body = request.get_json(silent=True) or {}
-        r = matching.tag_from_attributes(read_attrs(body), rules)
+        r = tagging.tag_from_attributes(read_attrs(body), rules)
         text_added = []
         if body.get("text_fill") is not False and (body.get("name") or body.get("desc")):
             text_added = [g for g in matching._text_fill_tags(r["attributes"], body.get("name", ""), body.get("desc", ""), rules) if g not in r["tags"]]
@@ -76,7 +77,10 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
         if body.get("review") is not None:
             matching.review_agreement(body["review"], rules)      # 형식 검증 (n, mismatch)
             item["review"] = body["review"]
-        matching.match_item(item, {"ratios": {"S": 1, "W": 0, "N": 0}, "primary": "S", "is_mixed": False}, rules)   # 검증만 한다 (실패하면 ValueError -> 400)
+        # 태깅은 등록할 때 한 번 한다. 추천은 여기서 저장한 태그만 읽는다 (검증 실패 시 ValueError -> 400).
+        r = tagging.tag_from_attributes(attrs, rules)
+        text_added = [] if item.get("text_fill") is False else [g for g in matching._text_fill_tags(r["attributes"], item["name"], item["desc"], rules) if g not in r["tags"]]
+        item.update({"tags": r["tags"] + text_added, "text_added": text_added, "fit_stated": r["fit_stated"], "material_basis": r["material_basis"]})
         store[item_id] = item
         return jsonify({"ok": True, "item": item}), 201
 
