@@ -194,6 +194,41 @@ def test_bad_mode():
     assert res.status_code == 400 and "mode" in res.get_json()["error"]
 
 
+def test_bad_inputs_return_json_400_not_500():
+    # 점검에서 서버 오류(500)가 났던 입력들 → 이제 모두 400 + JSON
+    reset()
+    client.post("/api/feed", json={"user_id": "x", "body": {"ratio": {"S": 1}}})
+    cases = [
+        ("/api/feed/event", {"user_id": "x", "item_id": ["t01"], "event": "like"}),
+        ("/api/feed", {"answers": {f"q{i}": 1 for i in range(1, 8)}, "measurements": "abc"}),
+        ("/api/feed", {"body": "S"}),
+        ("/api/feed", [1, 2]),
+        ("/api/feed/event", [1, 2]),
+        ("/api/feed", {"user_id": ["x"], "body": {"ratio": {"S": 1}}}),
+        ("/api/feed", {"answers": "abc"}),
+    ]
+    for url, payload in cases:
+        res = client.post(url, json=payload)
+        assert res.status_code == 400, (url, payload, res.status_code)
+        data = res.get_json()
+        assert data["ok"] is False and data["error"], (url, payload)
+
+
+def test_errors_are_json_everywhere():
+    res = client.get("/api/없는주소")
+    assert res.status_code == 404 and res.get_json()["ok"] is False
+    res = client.delete("/api/feed")
+    assert res.status_code == 405 and res.get_json()["ok"] is False
+
+
+def test_get_missing_ratio_values_are_zero():
+    # ?S=1만 보내면 W·N은 0 (POST와 같게)
+    reset()
+    res = client.get("/api/feed?S=1&mode=body")
+    assert res.status_code == 200
+    assert res.get_json()["body"]["ratio"] == {"S": 1.0, "W": 0.0, "N": 0.0}
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     failed = 0
