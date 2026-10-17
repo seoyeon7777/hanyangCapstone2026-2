@@ -5,7 +5,7 @@ GET  /api/form              판매자 등록 양식 정의 (화면을 그리는 
 POST /api/items/validate    양식 입력 검증 + 태그 미리보기. 저장하지 않는다.
 POST /api/items             상품 등록(저장). source = direct(판매자) | manual(팀 입력)
 GET  /api/items             저장된 상품
-POST /api/recommend         (글만 있는 상품은 받지 않는다: source가 direct|manual이거나 tags가 있어야 한다) {"profile": A의 분류 결과, "top_n": 3, "list_size": 10, "mixed_strategy": "blend|quota|quota_safe" (선택), "items": (선택) 저장소 대신 쓸 상품 목록}
+POST /api/recommend         체형은 {"profile": A의 분류 결과} 또는 {"answers": {...q1~q7}, "measurements": {...} (선택)} 중 하나로 보낸다(후자는 body_profile.classify로 B가 대신 진단하고 응답 profile에 결과를 싣는다). (글만 있는 상품은 받지 않는다: source가 direct|manual이거나 tags가 있어야 한다) {"profile": A의 분류 결과, "top_n": 3, "list_size": 10, "mixed_strategy": "blend|quota|quota_safe" (선택), "items": (선택) 저장소 대신 쓸 상품 목록}
 오류는 400 {"ok": false, "error": "..."}. 혼용률은 attrs.composition(비율 0~1) 또는 composition_percent(퍼센트 0~100) 중 하나로 보낸다.
 """
 from flask import Flask, jsonify, request
@@ -14,6 +14,31 @@ import matching
 import tagging
 
 FORM_SOURCES = matching.FORM_SOURCES
+
+
+def diagnose(body: dict) -> dict:
+    """요청 본문에서 체형 profile을 꺼낸다. profile을 직접 주거나, answers(+measurements)를 주면 A의 body_profile.classify로 진단한다."""
+    has_profile, has_answers = body.get("profile") is not None, body.get("answers") is not None
+    if has_profile and has_answers:
+        raise ValueError("profile과 answers를 함께 보낼 수 없다")
+    if has_profile:
+        return body["profile"]
+    if not has_answers:
+        raise ValueError("profile 또는 answers가 필요하다")
+    try:
+        import body_profile        # A 파트 (저장소 맨 위 폴더)
+    except ImportError:
+        raise ValueError("answers로 진단하려면 A 파트(body_profile.py)가 같은 폴더에 있어야 한다") from None
+    if not isinstance(body["answers"], dict):
+        raise ValueError("answers는 {\"q1\": 1, ..., \"q7\": 3} 모양이어야 한다")
+    if body.get("measurements") is not None and not isinstance(body["measurements"], dict):
+        raise ValueError("measurements는 치수 5개를 담은 객체여야 한다")
+    try:
+        return body_profile.classify(body["answers"], body.get("measurements"))
+    except body_profile.InputError as e:
+        raise ValueError(str(e)) from None
+    except (AttributeError, TypeError) as e:
+        raise ValueError(f"answers/measurements 형식이 맞지 않다: {e}") from None
 
 
 def create_app(rules: matching.Rules | None = None) -> Flask:
@@ -117,8 +142,7 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
     @app.post("/api/recommend")
     def recommend():
         body = json_body()
-        if "profile" not in body:
-            return fail("profile이 필요하다")
+        profile = diagnose(body)
         items = body["items"] if body.get("items") is not None else list(store.values())
         # 서비스는 양식으로 등록한 상품(source=direct|manual)이나 이미 태그가 붙은 상품(tags)만 받는다.
         # 글만 있는 상품(다른 쇼핑몰에서 가져온 것)을 글에서 읽어 추천하는 경로는 평가용(matching.py 직접 호출)이다.
@@ -134,8 +158,8 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
         list_size = body.get("list_size", 10)
         if isinstance(list_size, bool) or not isinstance(list_size, int) or list_size < 1:
             return fail("list_size는 1 이상의 정수여야 한다")
-        out = matching.recommend(body["profile"], items, rules, top_n=top_n, list_size=list_size, mixed_strategy=body.get("mixed_strategy"))
-        return jsonify({"ok": True, **out})
+        out = matching.recommend(profile, items, rules, top_n=top_n, list_size=list_size, mixed_strategy=body.get("mixed_strategy"))
+        return jsonify({"ok": True, "profile": matching.normalize_profile(profile), **out})
 
     return app
 
