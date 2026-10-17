@@ -1,0 +1,157 @@
+{
+ "_note": "A(body_profile.classify, feature/seoyeon-a-fix)를 실제로 돌려 얻은 출력. answers는 설문 7문항 입력. A 코드는 가져오지 않고 출력 모양만 고정한다.",
+ "S_N": {
+  "answers": {
+   "q1": 1,
+   "q2": 3,
+   "q3": 1,
+   "q4": 1,
+   "q5": 2,
+   "q6": 3,
+   "q7": 2
+  },
+  "result": {
+   "ratios": {
+    "S": 0.4062332079527136,
+    "W": 0.21762493283181084,
+    "N": 0.37614185921547555
+   },
+   "primary": "S",
+   "secondary": "N",
+   "confidence": 0.030091348737238066,
+   "is_mixed": true
+  }
+ },
+ "S_W": {
+  "answers": {
+   "q1": 1,
+   "q2": 1,
+   "q3": 2,
+   "q4": 1,
+   "q5": 1,
+   "q6": 2,
+   "q7": 2
+  },
+  "result": {
+   "ratios": {
+    "S": 0.5161290322580646,
+    "W": 0.48387096774193555,
+    "N": 0.0
+   },
+   "primary": "S",
+   "secondary": "W",
+   "confidence": 0.03225806451612906,
+   "is_mixed": true
+  }
+ },
+ "W_N": {
+  "answers": {
+   "q1": 1,
+   "q2": 3,
+   "q3": 2,
+   "q4": 2,
+   "q5": 2,
+   "q6": 2,
+   "q7": 3
+  },
+  "result": {
+   "ratios": {
+    "S": 0.2997960571040109,
+    "W": 0.36709721278042146,
+    "N": 0.33310673011556763
+   },
+   "primary": "W",
+   "secondary": "N",
+   "confidence": 0.03399048266485383,
+   "is_mixed": true
+  }
+ },
+ "N_S": {
+  "answers": {
+   "q1": 1,
+   "q2": 1,
+   "q3": 3,
+   "q4": 3,
+   "q5": 3,
+   "q6": 2,
+   "q7": 3
+  },
+  "result": {
+   "ratios": {
+    "S": 0.32413470533208605,
+    "W": 0.3157156220767072,
+    "N": 0.3601496725912067
+   },
+   "primary": "N",
+   "secondary": "S",
+   "confidence": 0.03601496725912068,
+   "is_mixed": true
+  }
+ },
+ "pure_S": {
+  "answers": {
+   "q1": 1,
+   "q2": 1,
+   "q3": 1,
+   "q4": 2,
+   "q5": 1,
+   "q6": 1,
+   "q7": 1
+  },
+  "result": {
+   "ratios": {
+    "S": 1.0,
+    "W": 0.0,
+    "N": 0.0
+   },
+   "primary": "S",
+   "secondary": "W",
+   "confidence": 1.0,
+   "is_mixed": false
+  }
+ },
+ "pure_W": {
+  "answers": {
+   "q1": 2,
+   "q2": 2,
+   "q3": 2,
+   "q4": 2,
+   "q5": 3,
+   "q6": 2,
+   "q7": 2
+  },
+  "result": {
+   "ratios": {
+    "S": 0.0,
+    "W": 1.0,
+    "N": 0.0
+   },
+   "primary": "W",
+   "secondary": "S",
+   "confidence": 1.0,
+   "is_mixed": false
+  }
+ },
+ "pure_N": {
+  "answers": {
+   "q1": 3,
+   "q2": 3,
+   "q3": 3,
+   "q4": 3,
+   "q5": 2,
+   "q6": 3,
+   "q7": 3
+  },
+  "result": {
+   "ratios": {
+    "S": 0.03225806451612903,
+    "W": 0.0,
+    "N": 0.9677419354838709
+   },
+   "primary": "N",
+   "secondary": "S",
+   "confidence": 0.9354838709677419,
+   "is_mixed": false
+  }
+ }
+}

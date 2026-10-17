@@ -13,7 +13,7 @@ AI 코딩 도구가 이 파일만 읽고 작업을 이어갈 수 있게 정리�
 | 파트 | 담당 브랜치 | 파일 |
 |---|---|---|
 | A 체형 분류 | feature/jihyun | `body_profile.py` (classify), `evaluate.py`, `try_classify.py`, `sample.csv` |
-| B 옷 매칭 | yeonoh (처음엔 feature/yeonoh) | `matching.py`, `server.py`(B API), `data/*.json`(가중치·문장·코디 규칙), `tests/`(pytest 129개), `tools/`·`reports/`(실험·근거 문서), `tagger_llm.py`(선택: LLM 태깅, API 키 필요) |
+| B 옷 매칭 | feature/yeonoh (10/16 최신, 한때 yeonoh) | `matching.py`(점수·이유·코디), `tagging.py`(태그 붙이기, 10/16 분리), `server.py`(B API), `data/*.json`(가중치·문장·코디 규칙), `tests/`(pytest 240개), `tools/`·`reports/`(실험·근거 문서), `README_B.md`(B 설명) |
 | C 추천·홈 피드 | feature/seoyeon | `recommend/` |
 
 세 파트는 feature/integration 브랜치에서 처음 통합했다. 통합 서버는 맨 위 `app.py`다.
@@ -81,6 +81,7 @@ match_score(body, item) -> {
 - 추가 키 `reasons` = B가 만든 추천 이유 문장 목록
 - `outfit_bonus(body, top_tags, bottom_tags)` = B의 balance_adjustment (data/balance.json)
 - A의 classify() 결과(ratios, is_mixed)는 B의 profile과 같은 모양이다. C의 body(ratio, kind)와는 `from_profile`/`to_profile`로 바꾼다
+- B 설정 `exclude_no_info: true` (10/16 추가): 가중치표 태그가 하나도 없고 핏 표기도 못 읽은 상품은 추천에서 빠진다 (C에서는 excluded). 시연 상품 30개는 모두 태그가 있어 영향 없음
 - B 설정(data/config.json)이 지금 `avoid_mode: penalty`라서 **제외되는 옷이 없다**(피해야 할 옷은 점수만 낮아짐).
   제외하려면 `avoid_mode: "exclude"`와 함께 **`avoid_threshold`를 -1로** 바꿔야 한다 (가중치 최솟값이 -1이라 지금 기준 -3으로는 아무것도 제외 안 됨 — `matching.validate_rules`가 경고함). 그러면 C도 자동으로 따른다
 - B의 체형 점수는 0~1이지만 태그가 없는 옷(중립)이 0.333이다 (가중치 범위 -1~+2를 0~1로 옮긴 것). 임시 매칭의 중립 0.5와 다르다
@@ -183,7 +184,7 @@ match_score(body, item) -> {
 
 ## 5. 정답 테스트 (반드시 통과)
 
-`python -m pytest` (맨 위에서) — B 테스트 129개 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
+`python -m pytest` (맨 위에서) — B 테스트 240개 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 38개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
 `cd recommend && python test_store.py` — 현재 5개 통과 (DB 저장).
