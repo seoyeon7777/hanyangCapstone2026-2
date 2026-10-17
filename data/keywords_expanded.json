@@ -1,0 +1,31 @@
+{
+  "_note": "실험용 확장 키워드(영문·동의어 포함). 태그 -> 키워드 목록, 소문자 부분 문자열 일치. 오탐 가능성이 있는 것(울, 벨트 등)은 coverage 결과를 보고 다듬는다. 확정 사전은 data/keywords.json.",
+  "keywords": {
+    "fit:slim": ["슬림", "slim", "fitted", "tight"],
+    "fit:over": ["오버핏", "오버사이즈", "루즈", "oversize", "overfit", "over fit", "loose", "relaxed", "boxy", "릴렉스드", "박시"],
+    "len:crop": ["크롭", "crop"],
+    "sil:wide": ["와이드", "wide"],
+    "sil:skinny": ["스키니", "skinny"],
+    "sil:A": ["a라인", "에이라인", "플레어", "a-line", "flare"],
+    "det:ruffle": ["러플", "프릴", "ruffle", "frill"],
+    "len:long": ["맥시", "롱스커트", "롱원피스", "롱코트", "maxi"],
+    "sil:IH": ["일자", "스트레이트", "straight"],
+    "det:drop": ["드롭숄더", "드롭 숄더", "drop shoulder"],
+    "det:washed": ["워싱", "워시드", "washed"],
+    "det:vertical": ["세로", "핀스트라이프"],
+    "det:puff": ["퍼프", "puff"],
+    "neck:high": ["하이넥", "터틀넥", "폴라", "모크넥", "turtle", "mock neck", "high neck"],
+    "neck:collar": ["칼라", "카라", "collar"],
+    "neck:uv": ["브이넥", "유넥", "v넥", "u넥", "v-neck", "u-neck"],
+    "waist:high": ["하이웨이스트", "하이웨스트", "하이라이즈", "high waist", "high-waist", "high rise"],
+    "waist:low": ["로우라이즈", "로우웨이스트", "low rise", "low-rise"],
+    "waist:belt": ["벨트", "belted"],
+    "mat:cotton": ["코튼", "순면", "cotton"],
+    "mat:denim": ["데님", "청바지", "denim", "jeans"],
+    "mat:silk": ["실크", "캐시미어", "silk", "cashmere"],
+    "mat:chiffon": ["시폰", "쉬폰", "벨벳", "chiffon", "velvet"],
+    "mat:linen": ["린넨", "리넨", "코듀로이", "골덴", "무스탕", "linen", "corduroy"],
+    "mat:wool": ["울", "모직", "wool"],
+    "mat:knit": ["니트", "knit"]
+  }
+}
