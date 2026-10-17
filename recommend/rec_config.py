@@ -135,3 +135,18 @@ SEASON_BY_MONTH = {12: "winter", 1: "winter", 2: "winter",
 # ── 8단계: 스크롤 피드 (feed_order, /api/feed/scroll) ─────────
 SCROLL_PAGE_SIZE = 10      # 스크롤 한 번에 불러오는 개수 (다양성 규칙도 이 묶음 단위로 적용)
 SCROLL_MAX_PAGE_SIZE = 50  # API에서 한 번에 요청할 수 있는 최대 개수
+
+# ── 9단계: 홈 화면 토글 (ON = 골격 맞춤 / OFF = 일반 쇼핑몰 추천) ──
+MODES = ("body", "general")   # body: 토글 ON(골격 맞춤), general: 토글 OFF(체형을 보지 않음)
+
+# OFF일 때 점수 = 인기 0.5 + 사용자가 자주 누른 스타일(취향) 0.3 + 계절 0.2  (체형은 안 씀)
+GENERAL_W_POPULARITY = 0.5
+GENERAL_W_PREF = 0.3
+GENERAL_W_SEASON = 0.2
+
+# OFF일 때 추천 이유 (조건을 만족하는 앞의 것부터 REASON_MAX_TAGS개)
+GENERAL_PREF_MIN = 0.55        # 취향 점수가 이 이상이면 "자주 본 스타일"
+GENERAL_POPULAR_MIN = 0.75     # 인기도가 이 이상이면 "인기 상품"
+GENERAL_REASON_PREF = "자주 본 스타일과 비슷해요"
+GENERAL_REASON_POPULAR = "요즘 많이 찾는 인기 상품이에요"
+GENERAL_REASON_SEASON = "지금 계절에 입기 좋아요"

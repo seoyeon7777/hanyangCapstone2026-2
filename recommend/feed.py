@@ -17,6 +17,9 @@ from rec_config import (
     EVENT_WEIGHTS, POSITIVE_EVENTS,
     REDIAG_WINDOW, REDIAG_RATIO, REDIAG_MIN_EVENTS,
     SCROLL_PAGE_SIZE,
+    MODES, GENERAL_W_POPULARITY, GENERAL_W_PREF, GENERAL_W_SEASON,
+    GENERAL_PREF_MIN, GENERAL_POPULAR_MIN,
+    GENERAL_REASON_PREF, GENERAL_REASON_POPULAR, GENERAL_REASON_SEASON,
 )
 # 체형 적합도·코디 보정은 B 파트(matching.py)가 계산한다. matching_b.py가 이름을 맞춰 준다.
 # 임시 매칭으로 돌리려면: from fake_matching import match_score, outfit_bonus
@@ -87,6 +90,53 @@ def final_score(body, item, pref=None, season="fall"):
 def score_all(body, items, pref=None, season="fall"):
     """모든 옷의 최종 점수 목록 (정렬 안 함 — 정렬은 3단계 rank()에서)."""
     return [final_score(body, item, pref, season) for item in items]
+
+
+def general_score(item, pref=None, season="fall"):
+    """토글 OFF: 일반 쇼핑몰 추천 점수. 체형은 보지 않는다.
+
+    점수 = 인기 0.5 + 취향 0.3 + 계절 0.2
+      - 인기 = popularity (0~1)
+      - 취향 = pref_score: 사용자가 클릭·찜·구매한 옷의 태그와 얼마나 겹치는지 (기록 없으면 0.5)
+      - 계절 = 지금 계절 상품이면 1, 아니면 0
+    final_score와 같은 모양으로 돌려줘서 rank·feed_order를 그대로 쓴다 (body는 None, 제외 없음).
+    """
+    pop = item["popularity"]
+    p = pref_score(pref, item["tags"])
+    in_season = 1.0 if season in item["seasons"] else 0.0
+    score = GENERAL_W_POPULARITY * pop + GENERAL_W_PREF * p + GENERAL_W_SEASON * in_season
+
+    reasons = []
+    if p >= GENERAL_PREF_MIN:
+        reasons.append(GENERAL_REASON_PREF)
+    if pop >= GENERAL_POPULAR_MIN:
+        reasons.append(GENERAL_REASON_POPULAR)
+    if in_season:
+        reasons.append(GENERAL_REASON_SEASON)
+
+    return {
+        "id": item["id"],
+        "name": item["name"],
+        "category": item["category"],
+        "score": round(score, 4),
+        "body": None,
+        "pref": round(p, 4),
+        "trend": round(W_SEASON * in_season + W_POPULARITY * pop, 4),
+        "excluded": False,
+        "good_tags": [],          # 대표 태그 제한(같은 스타일 3개)은 체형 기준이라 OFF에서는 안 씀
+        "avoid_tags": [],
+        "tags": list(item["tags"]),
+        "reasons": reasons,
+    }
+
+
+def score_by_mode(mode, body, items, pref=None, season="fall"):
+    """토글 상태에 맞는 점수 목록. mode: "body"(ON, 골격 맞춤) | "general"(OFF, 일반)."""
+    if mode not in MODES:
+        raise ValueError(f"mode는 {', '.join(MODES)} 중 하나여야 해요")
+    if mode == "general":
+        return [general_score(item, pref, season) for item in items]
+    return score_all(body, items, pref, season)
 
 
 def _by_score(scored):
@@ -162,14 +212,14 @@ def feed_order(scored, page_size=SCROLL_PAGE_SIZE):
     return _pick_in_order(scored, limit=None, block=page_size)
 
 
-def home_feed(body, items, pref=None, season="fall"):
+def home_feed(body, items, pref=None, season="fall", mode="body"):
     """홈 화면 섹션.
 
     순서: "오늘의 추천"(rank 상위 10) → 상의·하의·아우터·원피스(각 상위 4) → "추천 코디"
     "추천 코디"의 items는 옷이 아니라 outfits()의 코디 세트({"top", "bottom", "score", "bonus"})다.
     반환: {"sections": [{"title": str, "items": [...]}, ...]}
     """
-    scored = score_all(body, items, pref, season)
+    scored = score_by_mode(mode, body, items, pref, season)
     sections = [{"title": "오늘의 추천", "items": rank(scored)}]
 
     ordered = _by_score(scored)
@@ -177,11 +227,11 @@ def home_feed(body, items, pref=None, season="fall"):
         picked = [r for r in ordered if r["category"] == category][:CATEGORY_TOP_N]
         sections.append({"title": title, "items": picked})
 
-    sections.append({"title": "추천 코디", "items": outfits(body, items, pref, season)})
+    sections.append({"title": "추천 코디", "items": outfits(body, items, pref, season, mode=mode)})
     return {"sections": sections}
 
 
-def outfits(body, items, pref=None, season="fall", top_n=OUTFIT_TOP_N):
+def outfits(body, items, pref=None, season="fall", top_n=OUTFIT_TOP_N, mode="body"):
     """상의 + 하의 코디 추천 상위 top_n세트.
 
     점수 = (상의 점수 + 하의 점수) / 2 + 보너스
@@ -190,13 +240,14 @@ def outfits(body, items, pref=None, season="fall", top_n=OUTFIT_TOP_N):
     같은 상의는 결과에 한 번만 나온다. 동점이면 (상의 id, 하의 id) 순.
     반환: [{"top": 상의 결과, "bottom": 하의 결과, "score": float, "bonus": float}, ...]
     """
-    ordered = _by_score(score_all(body, items, pref, season))
+    ordered = _by_score(score_by_mode(mode, body, items, pref, season))
     tops = [r for r in ordered if r["category"] == "top"]
     bottoms = [r for r in ordered if r["category"] == "bottom"]
     combos = []
     for t in tops:
         for b in bottoms:
-            bonus = round(outfit_bonus(body, t["tags"], b["tags"]), 4)
+            # 골격별 코디 보정은 토글 ON일 때만 (OFF는 체형을 모름)
+            bonus = round(outfit_bonus(body, t["tags"], b["tags"]), 4) if mode == "body" else 0.0
             score = (t["score"] + b["score"]) / 2 + bonus
             combos.append({"top": t, "bottom": b, "score": round(score, 4), "bonus": bonus})
     combos.sort(key=lambda c: (-c["score"], c["top"]["id"], c["bottom"]["id"]))
@@ -252,6 +303,8 @@ def need_rediagnosis(history, body):
     최근 긍정 반응(like·purchase) 20개 중 1위 타입이 피해야 할 태그가 붙은 옷이 50% 이상이면 True.
     긍정 반응이 10개 미만이면 판단하지 않고 False.
     """
+    if body is None:
+        return False  # 체형 진단 없이 토글 OFF로만 쓰는 사용자
     positive = [h["item"] for h in history if h["event"] in POSITIVE_EVENTS][-REDIAG_WINDOW:]
     if len(positive) < REDIAG_MIN_EVENTS:
         return False
