@@ -1,10 +1,11 @@
 {
- "_note": "avoid_mode: exclude(단일형이면 후보 제외, avoid_threshold 이하 칸이 있어야 동작) | penalty(제외 없이 점수만 반영). 가중치 척도가 -1~+2라 지금은 penalty. shrink_k: 태그가 적은 상품의 점수를 중립 쪽으로 당기는 강도(0이면 끔). 점수 = 중립 + (점수 - 중립) x n/(n+k), n=태그 수. material_min_share: 혼용률이 읽힌 상품에서 이 비율 이상인 섬유만 소재 태그로 쓴다(실험값, 근거 없음. 원 혼용률은 materials로 따로 저장). review_prior_k: 리뷰의 \"등록 정보와 다름\" 비율로 신뢰도를 낼 때 미리 두는 일치 표 수(설계 가정, 근거 없음). review_mode: off(기본, 일치도를 계산해 표시만 한다) | both(중립 쪽으로 양방향 당김) | positive_only(중립보다 높은 점수만 당김). 실험 기능이며 근거가 없다. mixed_strategy: blend(혼합형도 섞은 점수 하나로 줄 세움, 기본) | quota(혼합형이면 1·2위 유형 비율대로 추천 자리를 나눔). 팀 결정 필요. balance_scope: ratio(기본, is_mixed와 무관하게 세 유형 비율대로 가중 — 상품 점수 계산과 같은 방식) | flag(이전 방식, 코디 밸런스 규칙을 단일형은 1위만, 혼합형은 1·2위만 비율대로 적용 — is_mixed 경계에서 값이 끊김). 추천 이유는 scope와 별개로 혼합 점수에 기여한 태그 기준이다.",
+ "_note": "exclude_no_info: true면 가중치표에 있는 태그가 하나도 없고 핏 표기도 못 읽은 상품(정보 없음)을 추천에서 뺀다(핏을 읽은 기본 상품은 남긴다). false면 중립 점수로 남긴다. avoid_mode: exclude(단일형이면 후보 제외, avoid_threshold 이하 칸이 있어야 동작) | penalty(제외 없이 점수만 반영). 가중치 척도가 -1~+2라 지금은 penalty. shrink_k: 태그가 적은 상품의 점수를 중립 쪽으로 당기는 강도(0이면 끔). 점수 = 중립 + (점수 - 중립) x n/(n+k), n=태그 수. material_min_share: 혼용률이 읽힌 상품에서 이 비율 이상인 섬유만 소재 태그로 쓴다(실험값, 근거 없음. 원 혼용률은 materials로 따로 저장). review_prior_k: 리뷰의 \"등록 정보와 다름\" 비율로 신뢰도를 낼 때 미리 두는 일치 표 수(설계 가정, 근거 없음). review_mode: off(기본, 일치도를 계산해 표시만 한다) | both(중립 쪽으로 양방향 당김) | positive_only(중립보다 높은 점수만 당김). 실험 기능이며 근거가 없다. mixed_strategy: blend(혼합형도 섞은 점수 하나로 줄 세움, 기본) | quota(혼합형이면 1·2위 유형 비율대로 추천 자리를 나눔). 팀 결정 필요. balance_scope: ratio(기본, is_mixed와 무관하게 세 유형 비율대로 가중 — 상품 점수 계산과 같은 방식) | flag(이전 방식, 코디 밸런스 규칙을 단일형은 1위만, 혼합형은 1·2위만 비율대로 적용 — is_mixed 경계에서 값이 끊김). 추천 이유는 scope와 별개로 혼합 점수에 기여한 태그 기준이다.",
+ "exclude_no_info": true,
  "avoid_mode": "penalty",
  "avoid_threshold": -3,
  "shrink_k": 1,
  "reason_max": 2,
- "outfit_top_k": 20,
+ "outfit_top_k": 50,
  "material_min_share": 0.3,
  "review_prior_k": 3,
  "review_mode": "off",

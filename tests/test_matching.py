@@ -92,7 +92,7 @@ def test_reasons_same_for_flag_values(real_rules):
 
 def test_match_item_shape(rules):
     r = matching.match_item({"item_id": 2, "name": "러플 블라우스"}, SINGLE_S, rules)
-    assert r == {"item_id": 2, "tags": ["det:ruffle"], "text_added": [], "review_agreement": 1.0, "fit_stated": "unknown", "body_fit": None, "excluded": True, "reasons": []}
+    assert r == {"item_id": 2, "tags": ["det:ruffle"], "text_added": [], "review_agreement": 1.0, "fit_stated": "unknown", "body_fit": None, "excluded": True, "no_info": False, "reasons": []}
 
 
 def test_current_rules_are_valid():
@@ -557,7 +557,7 @@ def test_rank_items_single_ignores_strategy_and_mixed_blend_is_default(real_rule
     tags = [["fit:slim"], ["fit:over"], [], ["fit:slim", "sil:IH"]]
     m = _matched(real_rules, SINGLE_S, tags)
     by_blend = matching.rank_items(m, SINGLE_S, real_rules, 4, "blend")
-    assert [r["item_id"] for r in by_blend] == [4, 1, 3, 2]                                   # 점수순
+    assert [r["item_id"] for r in by_blend] == [4, 1, 2]                                      # 점수순 (태그도 핏도 없는 3번은 정보 없음이라 빠진다)
     assert matching.rank_items(m, SINGLE_S, real_rules, 4, "quota") == by_blend               # 단일형은 방식과 무관
     mixed = {"ratios": {"S": 0.5, "W": 0.0, "N": 0.5}, "primary": "S", "is_mixed": True}
     mm = _matched(real_rules, mixed, tags)
@@ -596,7 +596,7 @@ def test_recommend_returns_ranking_per_category(real_rules):
              {"item_id": 4, "category": "outer", "name": "d", "tags": []}]
     out = matching.recommend(SINGLE_S, items, real_rules, list_size=5)
     assert [r["item_id"] for r in out["ranking"]["top"]] == [1, 2]
-    assert [r["item_id"] for r in out["ranking"]["bottom"]] == [3] and [r["item_id"] for r in out["ranking"]["outer"]] == [4]
+    assert [r["item_id"] for r in out["ranking"]["bottom"]] == [3] and [r["item_id"] for r in out["ranking"]["outer"]] == [] and out["no_info"] == [4]       # 태그가 없는 4번은 정보 없음으로 제외
 
 
 # ---- 코디 밸런스 규칙 적용 범위 (config.balance_scope)
