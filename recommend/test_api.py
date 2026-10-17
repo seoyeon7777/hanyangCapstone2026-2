@@ -3,18 +3,24 @@
 실행: python test_api.py
 """
 import os
+import subprocess
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
+# 테스트는 진짜 데이터(recommend/data/feed.db)를 건드리지 않게 임시 파일에 저장한다
+TEST_DB = os.path.join(tempfile.mkdtemp(), "test_feed.db")
+os.environ["FEED_DB"] = TEST_DB
 from app import app  # noqa: E402
 import feed_api  # noqa: E402
+import store  # noqa: E402
 
 client = app.test_client()
 
 
 def reset():
-    feed_api.USERS.clear()
+    store.reset()
 
 
 def test_get_feed_with_query():
@@ -227,6 +233,36 @@ def test_get_missing_ratio_values_are_zero():
     res = client.get("/api/feed?S=1&mode=body")
     assert res.status_code == 200
     assert res.get_json()["body"]["ratio"] == {"S": 1.0, "W": 0.0, "N": 0.0}
+
+
+def test_data_survives_server_restart():
+    # 진단·찜·구매를 한 뒤 서버를 껐다 켠 것처럼 "새 파이썬 프로세스"에서 같은 DB를 읽는다
+    reset()
+    client.post("/api/feed", json={"user_id": "r1", "answers": ANSWERS})
+    client.post("/api/feed/event", json={"user_id": "r1", "item_id": "t04", "event": "purchase"})
+    client.post("/api/feed/event", json={"user_id": "r1", "item_id": "t01", "event": "like"})
+    before = feed_api.load_user("r1")
+    code = (
+        "import json, sys, os; sys.path.insert(0, {root!r}); sys.path.append(os.path.join({root!r}, 'recommend'));"
+        "import feed_api; u = feed_api.load_user('r1');"
+        "print(json.dumps({{'body': u['body'], 'pref': u['pref'], 'n': len(u['history'])}}))"
+    ).format(root=ROOT)
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
+                         env={**os.environ, "FEED_DB": TEST_DB}, check=True).stdout
+    import json
+    after = json.loads(out.strip().splitlines()[-1])
+    assert after["body"] == before["body"] and after["body"]["primary"] == "S"
+    assert after["pref"] == before["pref"] == {"len:crop": 0.2, "mat:knit": 0.2, "fit:slim": 0.1, "mat:cotton": 0.1}
+    assert after["n"] == 2
+    # 재시작 뒤에도 체형을 다시 안 보내고 ON 피드가 됨
+    assert client.get("/api/feed/scroll?user_id=r1&mode=body").status_code == 200
+
+
+def test_bad_event_is_not_saved():
+    reset()
+    client.get("/api/feed/scroll?user_id=e1&mode=general")
+    client.post("/api/feed/event", json={"user_id": "e1", "item_id": "t01", "event": "share"})
+    assert store.get_user("e1")["events"] == []
 
 
 if __name__ == "__main__":

@@ -242,3 +242,7 @@ samples/demo_tags.json
 samples/dual_result.json
 samples/validation_after_fix*.txt
 samples/validation_before_fix*.txt
+
+# 추천 서버 사용자 데이터 (SQLite). 각자 PC에서 생기는 파일이라 올리지 않는다
+recommend/data/*.db
+recommend/data/*.db-journal
