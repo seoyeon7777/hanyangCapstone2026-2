@@ -31,7 +31,7 @@ CREATE TABLE "products" (
 	"status"	character varying(20)	DEFAULT '판매중'	NOT NULL,
 	"season"	character varying(20)		NULL,
 	"seasons"	text[]	DEFAULT '{}'	NOT NULL,	-- [알고리즘] C 입력: 계절 목록 (spring/summer/fall/winter)
-	"popularity"	numeric(4, 3)	DEFAULT 0	NOT NULL,	-- [알고리즘] C 입력: 인기도 0~1
+	"popularity"	double precision	DEFAULT 0	NOT NULL,	-- [알고리즘] C 입력: 인기도 0~1
 	"created_at"	timestamp	DEFAULT now()	NOT NULL,
 	"updated_at"	timestamp	DEFAULT now()	NOT NULL,
 	"deleted_at"	timestamp		NULL
@@ -80,14 +80,14 @@ CREATE TABLE "carts" (
 CREATE TABLE "body_infos" (
 	"body_id"	SERIAL		NOT NULL,
 	"user_id"	integer		NOT NULL,
-	"shoulder"	numeric(5, 2)		NULL,
+	"shoulder"	double precision		NULL,	-- [알고리즘] A가 float으로 계산하므로 double precision
 	"chest"	numeric(5, 2)		NULL,
 	"waist"	numeric(5, 2)		NULL,
-	"arm_length"	numeric(5, 2)		NULL,
+	"arm_length"	double precision		NULL,	-- [알고리즘] A가 float으로 계산하므로 double precision
 	"total_length"	numeric(5, 2)		NULL,
-	"height"	numeric(5, 2)		NULL,	-- [알고리즘] A 입력: 키(cm)
-	"upper_body_length"	numeric(5, 2)		NULL,	-- [알고리즘] A 입력: 상체 길이(cm)
-	"leg_length"	numeric(5, 2)		NULL,	-- [알고리즘] A 입력: 다리 길이(cm)
+	"height"	double precision		NULL,	-- [알고리즘] A 입력: 키(cm)
+	"upper_body_length"	double precision		NULL,	-- [알고리즘] A 입력: 상체 길이(cm)
+	"leg_length"	double precision		NULL,	-- [알고리즘] A 입력: 다리 길이(cm)
 	"is_default"	boolean	DEFAULT false	NOT NULL,
 	"created_at"	timestamp	DEFAULT now()	NOT NULL,
 	"updated_at"	timestamp	DEFAULT now()	NOT NULL
@@ -162,7 +162,8 @@ CREATE TABLE "categories" (
 	"category_id"	SERIAL				NOT NULL,
 	"category_name"	character varying(50)		NOT NULL,
 	"clothing_type"	character varying(20)		NOT NULL,
-	"algo_category"	character varying(10)		NULL,	-- [알고리즘] B의 카테고리 분류. 비어 있으면 추천 제외
+	"algo_category"	character varying(10)	GENERATED ALWAYS AS (CASE clothing_type WHEN '상의' THEN 'top' WHEN '아우터' THEN 'outer' WHEN '하의' THEN 'pants' WHEN '치마' THEN 'skirt' WHEN '원피스' THEN 'dress' END) STORED,	-- [알고리즘] B의 카테고리 분류. clothing_type에서 자동 계산 (점프수트는 NULL이라 추천에서 빠진다)
+	"outfit_group"	character varying(10)	GENERATED ALWAYS AS (CASE clothing_type WHEN '상의' THEN 'top' WHEN '아우터' THEN 'outer' WHEN '하의' THEN 'bottom' WHEN '치마' THEN 'bottom' WHEN '원피스' THEN 'dress' END) STORED,	-- [알고리즘] C의 코디 조합이 쓰는 이름 (하의·치마 → bottom). clothing_type에서 자동 계산
 	"created_at"	timestamp	DEFAULT now()	NOT NULL,
 	"updated_at"	timestamp	DEFAULT now()	NOT NULL
 );
@@ -339,6 +340,18 @@ ALTER TABLE products ADD CONSTRAINT CK_products_season
 ALTER TABLE products ADD CONSTRAINT CK_products_seasons
 	CHECK (seasons <@ ARRAY['spring','summer','fall','winter']::text[]);
 ALTER TABLE products ADD CONSTRAINT CK_products_popularity CHECK (popularity >= 0 AND popularity <= 1);
+-- [알고리즘] B는 5000자를 넘는 설명을 거부하므로 같은 길이까지만 저장한다
+ALTER TABLE products ADD CONSTRAINT CK_products_desc_len
+	CHECK (description IS NULL OR char_length(description) <= 5000);
+-- [알고리즘] season(한 값)이 있으면 seasons(목록)에 대응하는 계절이 들어 있어야 한다 (간절기 = 봄 + 가을)
+ALTER TABLE products ADD CONSTRAINT CK_products_season_match
+	CHECK (season IS NULL OR seasons @> CASE season
+		WHEN '봄' THEN ARRAY['spring']
+		WHEN '여름' THEN ARRAY['summer']
+		WHEN '가을' THEN ARRAY['fall']
+		WHEN '겨울' THEN ARRAY['winter']
+		WHEN '간절기' THEN ARRAY['spring','fall']
+	END);
 
 
 ALTER TABLE "product_options" ADD CONSTRAINT "PK_PRODUCT_OPTIONS" PRIMARY KEY (
@@ -447,8 +460,9 @@ ALTER TABLE "categories" ADD CONSTRAINT "PK_CATEGORIES" PRIMARY KEY (
 	"category_id"
 );
 ALTER TABLE categories ADD CONSTRAINT UQ_categories_name UNIQUE (category_name);
+-- [알고리즘] B가 outer를 따로 구분하므로 '아우터'를 허용한다
 ALTER TABLE categories ADD CONSTRAINT CK_categories_clothing_type
-	CHECK (clothing_type IN ('상의','하의','치마','원피스','점프수트'));
+	CHECK (clothing_type IN ('상의','하의','치마','원피스','점프수트','아우터'));
 -- [알고리즘] B의 5개 분류만 허용 (비어 있으면 추천 제외)
 ALTER TABLE categories ADD CONSTRAINT CK_categories_algo
 	CHECK (algo_category IN ('top','outer','pants','skirt','dress'));
@@ -845,12 +859,12 @@ CREATE TABLE "body_profiles" (
 	"profile_id"	SERIAL		NOT NULL,
 	"user_id"	integer		NOT NULL,
 	"body_id"	integer		NULL,
-	"ratio_s"	numeric(5, 4)		NOT NULL,
-	"ratio_w"	numeric(5, 4)		NOT NULL,
-	"ratio_n"	numeric(5, 4)		NOT NULL,
+	"ratio_s"	double precision		NOT NULL,	-- [알고리즘] float으로 읽히게 double precision
+	"ratio_w"	double precision		NOT NULL,	-- [알고리즘] float으로 읽히게 double precision
+	"ratio_n"	double precision		NOT NULL,	-- [알고리즘] float으로 읽히게 double precision
 	"primary_type"	character(1)		NOT NULL,
 	"secondary_type"	character(1)		NULL,
-	"confidence"	numeric(5, 4)		NOT NULL,
+	"confidence"	double precision		NOT NULL,	-- [알고리즘] float으로 읽히게 double precision
 	"is_mixed"	boolean		NOT NULL,
 	"answers"	jsonb		NULL,
 	"is_current"	boolean	DEFAULT true	NOT NULL,
@@ -865,6 +879,8 @@ ALTER TABLE body_profiles ADD CONSTRAINT CK_body_profiles_primary CHECK (primary
 ALTER TABLE body_profiles ADD CONSTRAINT CK_body_profiles_secondary
 	CHECK (secondary_type IS NULL OR secondary_type IN ('S','W','N'));
 ALTER TABLE body_profiles ADD CONSTRAINT CK_body_profiles_confidence CHECK (confidence >= 0 AND confidence <= 1);
+-- [알고리즘] A는 1·2위 차이(confidence)가 0.10 미만이면 혼합형(is_mixed)으로 본다
+ALTER TABLE body_profiles ADD CONSTRAINT CK_body_profiles_mixed CHECK (is_mixed = (confidence < 0.10));
 ALTER TABLE "body_profiles" ADD CONSTRAINT "FK_body_profiles_user" FOREIGN KEY ("user_id") REFERENCES "users" ("user_id") ON DELETE CASCADE;
 ALTER TABLE "body_profiles" ADD CONSTRAINT "FK_body_profiles_body" FOREIGN KEY ("body_id") REFERENCES "body_infos" ("body_id") ON DELETE SET NULL;
 CREATE UNIQUE INDEX UQ_body_profiles_current ON body_profiles (user_id) WHERE is_current = true;
@@ -901,6 +917,10 @@ ALTER TABLE product_tags ADD CONSTRAINT CK_product_tags_basis
 ALTER TABLE product_tags ADD CONSTRAINT CK_product_tags_source CHECK (source IN ('direct','manual','text'));
 ALTER TABLE product_tags ADD CONSTRAINT CK_product_tags_tags_array
 	CHECK (jsonb_typeof(tags) = 'array' AND jsonb_typeof(text_added) = 'array');
+-- [알고리즘] B는 문자열 목록만 받으므로 배열 안 값도 문자열이어야 한다
+ALTER TABLE product_tags ADD CONSTRAINT CK_product_tags_tags_string
+	CHECK (NOT jsonb_path_exists(tags, '$[*] ? (@.type() != "string")')
+		AND NOT jsonb_path_exists(text_added, '$[*] ? (@.type() != "string")'));
 ALTER TABLE "product_tags" ADD CONSTRAINT "FK_product_tags_product" FOREIGN KEY ("product_id") REFERENCES "products" ("product_id") ON DELETE CASCADE;
 CREATE INDEX idx_product_tags_tags ON product_tags USING gin (tags);
 
@@ -931,3 +951,24 @@ CREATE TRIGGER trg_body_profiles_updated_at BEFORE UPDATE ON body_profiles
 	FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 CREATE TRIGGER trg_product_tags_updated_at BEFORE UPDATE ON product_tags
 	FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- --------------------------------------------
+-- [알고리즘 추가] season만 넣어도 seasons가 채워지게 한다 (이미 seasons를 넣었으면 건드리지 않는다)
+-- --------------------------------------------
+CREATE OR REPLACE FUNCTION fill_product_seasons()
+RETURNS TRIGGER AS $$
+BEGIN
+	IF NEW.season IS NOT NULL AND cardinality(NEW.seasons) = 0 THEN
+		NEW.seasons := CASE NEW.season
+			WHEN '봄' THEN ARRAY['spring']
+			WHEN '여름' THEN ARRAY['summer']
+			WHEN '가을' THEN ARRAY['fall']
+			WHEN '겨울' THEN ARRAY['winter']
+			WHEN '간절기' THEN ARRAY['spring','fall']
+		END;
+	END IF;
+	RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER trg_products_fill_seasons BEFORE INSERT OR UPDATE OF season, seasons ON products
+	FOR EACH ROW EXECUTE FUNCTION fill_product_seasons();

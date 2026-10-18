@@ -1,6 +1,6 @@
 # DB (PostgreSQL)
 
-여름방학 앱 전체 DB(노션의 `erd최종_수정본.sql`)에 추천 알고리즘(A 체형 분류 · B 옷 매칭 · C 추천)용 컬럼과 표를 더한 전체 파일이다. 원본에서 바뀐 줄은 없고 더한 줄만 있으며, 더한 곳에는 `[알고리즘]` / `[알고리즘 추가]` 주석이 붙어 있다.
+여름방학 앱 전체 DB(노션의 `erd최종_수정본.sql`)에 추천 알고리즘(A 체형 분류 · B 옷 매칭 · C 추천)용 컬럼과 표를 더한 전체 파일이다. 원본에서 바꾼 곳은 아래에 따로 적었고, 더하거나 바꾼 곳에는 `[알고리즘]` / `[알고리즘 추가]` 주석이 붙어 있다.
 
 ```
 psql -d 데이터베이스 -f db/db.sql
@@ -10,7 +10,8 @@ psql -d 데이터베이스 -f db/db.sql
 
 | 컬럼 | 역할 |
 |---|---|
-| `categories.algo_category` | B의 5개 분류(top / outer / pants / skirt / dress) 중 무엇인지. 비어 있으면 추천에서 빠진다. '상의'는 B에서 top과 outer로 나뉘므로 카테고리 행마다 지정한다 |
+| `categories.algo_category` | B의 5개 분류(top / outer / pants / skirt / dress). `clothing_type`에서 자동으로 계산된다(상의→top, 아우터→outer, 하의→pants, 치마→skirt, 원피스→dress). 점프수트는 NULL이라 추천에서 빠진다. 직접 넣을 수 없다 |
+| `categories.outfit_group` | `clothing_type`에서 자동으로 계산되는 값(읽기만 한다). 하의·치마는 bottom, 나머지는 `algo_category`와 같다. C의 코디 조합이 하의를 bottom으로 보기 때문이다 |
 | `body_infos.height` | A가 받는 키(cm) |
 | `body_infos.upper_body_length` | A가 받는 상체 길이(cm) |
 | `body_infos.leg_length` | A가 받는 다리 길이(cm) |
@@ -18,6 +19,24 @@ psql -d 데이터베이스 -f db/db.sql
 | `products.popularity` | 0~1 인기도. C의 트렌드 점수 중 인기 부분. 기본 0 |
 
 A의 나머지 입력(어깨너비, 팔 길이)은 원본 `body_infos.shoulder`, `arm_length`를 그대로 쓴다. 원본 `season`은 한 값이라 사계절 옷을 표현하지 못해서 `seasons`를 따로 두었다. `season`을 보고 채울 때는 봄→spring, 여름→summer, 가을→fall, 겨울→winter, 간절기→spring+fall로 옮긴다.
+
+## 원본에서 바꾼 것
+
+| 바꾼 곳 | 내용 |
+|---|---|
+| `categories.clothing_type` 허용값 | '아우터' 추가. B가 outer를 따로 구분한다 |
+| `body_infos.shoulder`, `arm_length` | numeric(5,2) → double precision. A가 float으로 계산하는데 numeric은 Python에서 Decimal로 읽혀 계산 오류가 난다 |
+
+더한 컬럼 중 `popularity`, `ratio_s/w/n`, `confidence`, `height`, `upper_body_length`, `leg_length`도 같은 이유로 double precision이다.
+
+## 더한 제약
+
+| 제약 | 이유 |
+|---|---|
+| `products.description`은 5000자 이하 | B가 더 긴 설명을 거부해서 추천 요청 전체가 오류가 난다 |
+| `products.season`이 있으면 `seasons`에 대응하는 계절이 들어 있어야 한다 (간절기는 spring + fall) | 두 값이 어긋나지 않게 한다. `season`만 넣으면 `seasons`는 자동으로 채워진다 |
+| `body_profiles.is_mixed`는 `confidence < 0.10`과 같아야 한다 | A의 혼합형 기준과 같은 값만 저장한다. A의 기준(`MIX_GAP`)을 바꾸면 이 제약도 고쳐야 한다 |
+| `product_tags.tags`, `text_added` 안의 값은 모두 문자열 | B는 문자열 목록만 받는다 |
 
 ## 새 표
 
@@ -68,7 +87,6 @@ C가 취향 점수와 재진단 안내를 계산할 때 쓴다. `wishlists`는 �
 
 ## 직접 채워야 하는 것
 
-- `categories.algo_category`: 카테고리 데이터를 넣은 뒤 행마다 지정한다. 지정하지 않으면 그 카테고리 상품은 모두 추천에서 빠진다.
 - `products.popularity`: 컬럼만 있다. 0~1을 만드는 산식은 C가 정해 갱신해야 하고, 안 하면 전부 0이다.
-- `products.seasons`: 새 상품을 등록할 때 `season`과 함께 채운다.
+- `products.seasons`: `season`만 넣으면 자동으로 채워진다. 여러 계절에 해당하는 상품만 직접 넣는다.
 - `product_tags`: 행이 없는 상품은 B가 점수를 내지 못해 추천에서 빠진다.
