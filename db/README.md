@@ -26,6 +26,7 @@ A의 나머지 입력(어깨너비, 팔 길이)은 원본 `body_infos.shoulder`,
 |---|---|
 | `categories.clothing_type` 허용값 | '아우터' 추가. B가 outer를 따로 구분한다 |
 | `body_infos.shoulder`, `arm_length` | numeric(5,2) → double precision. A가 float으로 계산하는데 numeric은 Python에서 Decimal로 읽혀 계산 오류가 난다 |
+| `users.user_id`, `products.product_id`와 이를 참조하는 열 24개 | integer → text. C의 API가 `user_id`·`item_id`를 문자열로만 받는다. 번호는 자동으로 "1", "2", …로 붙고 `t01`처럼 문자열을 직접 넣어도 된다. 쿼리에서는 `user_id = '1'`처럼 문자열로 비교해야 한다 |
 
 더한 컬럼 중 `popularity`, `ratio_s/w/n`, `confidence`, `height`, `upper_body_length`, `leg_length`도 같은 이유로 double precision이다.
 

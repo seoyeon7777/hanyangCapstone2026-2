@@ -2,8 +2,10 @@
 -- 테이블 생성
 -- ============================================
 
+CREATE SEQUENCE users_user_id_seq;
+
 CREATE TABLE "users" (
-	"user_id"	SERIAL		NOT NULL,
+	"user_id"	text	DEFAULT nextval('users_user_id_seq')::text	NOT NULL,	-- [알고리즘] C의 API가 문자열 id만 받아서 text. 값은 일련번호("1", "2", ...)이고 직접 문자열을 넣어도 된다
 	"password"	character varying(255)		NOT NULL,
 	"name"	character varying(50)		NOT NULL,
 	"gender"	character varying(10)		NULL,
@@ -19,8 +21,10 @@ CREATE TABLE "users" (
 	"deleted_at"	timestamp		NULL
 );
 
+CREATE SEQUENCE products_product_id_seq;
+
 CREATE TABLE "products" (
-	"product_id"	SERIAL		NOT NULL,
+	"product_id"	text	DEFAULT nextval('products_product_id_seq')::text	NOT NULL,	-- [알고리즘] C의 API가 문자열 id만 받아서 text. 값은 일련번호("1", "2", ...)이고 직접 문자열을 넣어도 된다
 	"brand_id"	integer		NOT NULL,
 	"fabric_id"	integer		NOT NULL,
 	"category_id"	integer		NOT NULL,
@@ -39,7 +43,7 @@ CREATE TABLE "products" (
 
 CREATE TABLE "product_options" (
 	"option_id"	SERIAL		NOT NULL,
-	"product_id"	integer		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"size"	character varying(10)		NULL,
 	"color"	character varying(30)		NULL,
 	"created_at"	timestamp	DEFAULT now()	NOT NULL,
@@ -48,7 +52,7 @@ CREATE TABLE "product_options" (
 
 CREATE TABLE "orders" (
 	"order_id"	SERIAL		NOT NULL,
-	"user_id"	integer		NOT NULL,
+	"user_id"	text		NOT NULL,
 	"user_coupon_id"	integer		NULL,
 	"receiver_name"	character varying(50)		NOT NULL,
 	"receiver_phone"	character varying(20)		NOT NULL,
@@ -70,7 +74,7 @@ CREATE TABLE "order_items" (
 
 CREATE TABLE "carts" (
 	"cart_id"	SERIAL		NOT NULL,
-	"user_id"	integer		NOT NULL,
+	"user_id"	text		NOT NULL,
 	"option_id"	integer		NOT NULL,
 	"quantity"	integer		NOT NULL,
 	"created_at"	timestamp	DEFAULT now()	NOT NULL,
@@ -79,7 +83,7 @@ CREATE TABLE "carts" (
 
 CREATE TABLE "body_infos" (
 	"body_id"	SERIAL		NOT NULL,
-	"user_id"	integer		NOT NULL,
+	"user_id"	text		NOT NULL,
 	"shoulder"	double precision		NULL,	-- [알고리즘] A가 float으로 계산하므로 double precision
 	"chest"	numeric(5, 2)		NULL,
 	"waist"	numeric(5, 2)		NULL,
@@ -103,7 +107,7 @@ CREATE TABLE "fabrics" (
 
 CREATE TABLE "fitting_results" (
 	"fitting_id"	SERIAL		NOT NULL,
-	"user_id"	integer		NOT NULL,
+	"user_id"	text		NOT NULL,
 	"option_id"	integer		NOT NULL,
 	"body_id"	integer		NULL,
 	"shape_key_json"	jsonb		NULL,
@@ -137,7 +141,7 @@ CREATE TABLE "delivery_status_history" (
 	"history_id"	SERIAL		NOT NULL,
 	"delivery_id"	integer		NOT NULL,
 	"status"	character varying(50)		NOT NULL,
-	"admin_id"	integer		NULL,
+	"admin_id"	text		NULL,
 	"changed_at"	timestamp	DEFAULT now()	NOT NULL
 );
 
@@ -169,7 +173,7 @@ CREATE TABLE "categories" (
 );
 
 CREATE TABLE "top_measurements" (
-	"product_id"	integer		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"shoulder"	numeric(5,2)		NULL,
 	"chest"	            numeric(5,2)		NULL,
 	"arm_length"	numeric(5,2)		NULL,
@@ -179,7 +183,7 @@ CREATE TABLE "top_measurements" (
 );
 
 CREATE TABLE "bottom_measurements" (
-	"product_id"	integer		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"waist"	numeric(5,2)		NULL,
 	"thigh"	numeric(5,2)		NULL,
 	"total_length"	numeric(5,2)		NULL,
@@ -188,7 +192,7 @@ CREATE TABLE "bottom_measurements" (
 );
 
 CREATE TABLE "skirt_measurements" (
-	"product_id"	integer		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"waist"	numeric(5,2)		NULL,
 	"hip"	numeric(5,2)		NULL,
 	"total_length"	numeric(5,2)		NULL,
@@ -197,7 +201,7 @@ CREATE TABLE "skirt_measurements" (
 );
 
 CREATE TABLE "onepiece_measurements" (
-	"product_id"	integer		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"shoulder"	numeric(5,2)		NULL,
 	"chest"	numeric(5,2)		NULL,
 	"waist"	numeric(5,2)		NULL,
@@ -210,7 +214,7 @@ CREATE TABLE "onepiece_measurements" (
 
 CREATE TABLE "discounts" (
 	"discount_id"	SERIAL	NOT NULL,
-	"product_id"	integer		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"discount_product_name"	character varying(200)		NOT NULL,
 	"discount_rate"	numeric(5,2)		NOT NULL,
 	"minimum_price"	integer		NULL,
@@ -231,8 +235,8 @@ CREATE TABLE "inventory" (
 
 CREATE TABLE "reviews" (
 	"review_id"	SERIAL		NOT NULL,
-	"user_id"	integer		NOT NULL,
-	"product_id"	integer		NOT NULL,
+	"user_id"	text		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"order_item_id"	integer		NOT NULL,
 	"review_title"	character varying(100)		NOT NULL,
 	"review_content"	text		NOT NULL,
@@ -244,7 +248,7 @@ CREATE TABLE "reviews" (
 CREATE TABLE "review_replies" (
 	"reply_id"	SERIAL		NOT NULL,
 	"review_id"	integer		NOT NULL,
-	"admin_id"	integer		NOT NULL,
+	"admin_id"	text		NOT NULL,
 	"reply_content"	text		NOT NULL,
 	"created_at"	timestamp	DEFAULT now()	NOT NULL,
 	"updated_at"	timestamp	DEFAULT now()	NOT NULL
@@ -260,8 +264,8 @@ CREATE TABLE "review_images" (
 
 CREATE TABLE "inquiries" (
 	"inquiry_id"	SERIAL		NOT NULL,
-	"user_id"	integer		NOT NULL,
-	"product_id"	integer		NOT NULL,
+	"user_id"	text		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"inquiry_type"	character varying(50)		NOT NULL,
 	"inquiry_title"	character varying(100)		NOT NULL,
 	"inquiry_content"	text		NOT NULL,
@@ -273,7 +277,7 @@ CREATE TABLE "inquiries" (
 CREATE TABLE "inquiry_replies" (
 	"reply_id"	SERIAL		NOT NULL,
 	"inquiry_id"	integer		NOT NULL,
-	"admin_id"	integer		NOT NULL,
+	"admin_id"	text		NOT NULL,
 	"reply_title"	character varying(100)		NULL,
 	"reply_content"	text		NOT NULL,
 	"created_at"	timestamp	DEFAULT now()	NOT NULL,
@@ -296,7 +300,7 @@ CREATE TABLE "coupons" (
 
 CREATE TABLE "user_coupons" (
 	"user_coupon_id"	SERIAL	NOT NULL,
-	"user_id"	integer		NOT NULL,
+	"user_id"	text		NOT NULL,
 	"coupon_id"	integer		NOT NULL,
 	"is_used"	boolean	DEFAULT false	NOT NULL,
 	"issued_at"	timestamp	DEFAULT now()	NOT NULL,
@@ -305,8 +309,8 @@ CREATE TABLE "user_coupons" (
 
 CREATE TABLE "wishlists" (
 	"wishlist_id"	SERIAL		NOT NULL,
-	"user_id"	integer		NOT NULL,
-	"product_id"	integer		NOT NULL,
+	"user_id"	text		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"created_at"	timestamp	DEFAULT now()	NOT NULL,
 	"updated_at"	timestamp	DEFAULT now()	NOT NULL
 );
@@ -857,7 +861,7 @@ CREATE INDEX idx_wishlists_product_id ON wishlists (product_id);
 -- --------------------------------------------
 CREATE TABLE "body_profiles" (
 	"profile_id"	SERIAL		NOT NULL,
-	"user_id"	integer		NOT NULL,
+	"user_id"	text		NOT NULL,
 	"body_id"	integer		NULL,
 	"ratio_s"	double precision		NOT NULL,	-- [알고리즘] float으로 읽히게 double precision
 	"ratio_w"	double precision		NOT NULL,	-- [알고리즘] float으로 읽히게 double precision
@@ -898,7 +902,7 @@ CREATE INDEX idx_body_profiles_body_id ON body_profiles (body_id);
 --    rules_version   태그를 만들 때의 규칙 버전 (가중치·키워드 JSON을 바꾸면 다시 태깅할 상품을 가려낼 때 쓴다)
 -- --------------------------------------------
 CREATE TABLE "product_tags" (
-	"product_id"	integer		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"tags"	jsonb	DEFAULT '[]'::jsonb	NOT NULL,
 	"text_added"	jsonb	DEFAULT '[]'::jsonb	NOT NULL,
 	"fit_stated"	character varying(10)	DEFAULT 'unknown'	NOT NULL,
@@ -932,8 +936,8 @@ CREATE INDEX idx_product_tags_tags ON product_tags USING gin (tags);
 -- --------------------------------------------
 CREATE TABLE "user_events" (
 	"event_id"	BIGSERIAL		NOT NULL,
-	"user_id"	integer		NOT NULL,
-	"product_id"	integer		NOT NULL,
+	"user_id"	text		NOT NULL,
+	"product_id"	text		NOT NULL,
 	"event"	character varying(10)		NOT NULL,
 	"created_at"	timestamp	DEFAULT now()	NOT NULL
 );
@@ -972,3 +976,9 @@ END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_products_fill_seasons BEFORE INSERT OR UPDATE OF season, seasons ON products
 	FOR EACH ROW EXECUTE FUNCTION fill_product_seasons();
+
+-- --------------------------------------------
+-- [알고리즘 추가] id를 문자열로 바꾼 열의 일련번호를 열에 연결 (열을 지우면 같이 지워진다)
+-- --------------------------------------------
+ALTER SEQUENCE users_user_id_seq OWNED BY users.user_id;
+ALTER SEQUENCE products_product_id_seq OWNED BY products.product_id;
