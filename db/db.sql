@@ -165,9 +165,7 @@ CREATE TABLE "brands" (
 CREATE TABLE "categories" (
 	"category_id"	SERIAL				NOT NULL,
 	"category_name"	character varying(50)		NOT NULL,
-	"clothing_type"	character varying(20)		NOT NULL,
-	"algo_category"	character varying(10)	GENERATED ALWAYS AS (CASE clothing_type WHEN '상의' THEN 'top' WHEN '아우터' THEN 'outer' WHEN '하의' THEN 'pants' WHEN '치마' THEN 'skirt' WHEN '원피스' THEN 'dress' END) STORED,	-- [알고리즘] B의 카테고리 분류. clothing_type에서 자동 계산 (점프수트는 NULL이라 추천에서 빠진다)
-	"outfit_group"	character varying(10)	GENERATED ALWAYS AS (CASE clothing_type WHEN '상의' THEN 'top' WHEN '아우터' THEN 'outer' WHEN '하의' THEN 'bottom' WHEN '치마' THEN 'bottom' WHEN '원피스' THEN 'dress' END) STORED,	-- [알고리즘] C의 코디 조합이 쓰는 이름 (하의·치마 → bottom). clothing_type에서 자동 계산
+	"clothing_type"	character varying(20)		NOT NULL,	-- [알고리즘] 영어 값으로 저장한다 (B·C가 이 값을 그대로 쓴다)
 	"created_at"	timestamp	DEFAULT now()	NOT NULL,
 	"updated_at"	timestamp	DEFAULT now()	NOT NULL
 );
@@ -464,12 +462,9 @@ ALTER TABLE "categories" ADD CONSTRAINT "PK_CATEGORIES" PRIMARY KEY (
 	"category_id"
 );
 ALTER TABLE categories ADD CONSTRAINT UQ_categories_name UNIQUE (category_name);
--- [알고리즘] B가 outer를 따로 구분하므로 '아우터'를 허용한다
+-- [알고리즘] 한글 값을 영어로 바꿨다. B는 5개 분류(top/outer/pants/skirt/dress)를 쓰고, jumpsuit는 대응이 없어 추천 조회에서 뺀다
 ALTER TABLE categories ADD CONSTRAINT CK_categories_clothing_type
-	CHECK (clothing_type IN ('상의','하의','치마','원피스','점프수트','아우터'));
--- [알고리즘] B의 5개 분류만 허용 (비어 있으면 추천 제외)
-ALTER TABLE categories ADD CONSTRAINT CK_categories_algo
-	CHECK (algo_category IN ('top','outer','pants','skirt','dress'));
+	CHECK (clothing_type IN ('top','outer','pants','skirt','dress','jumpsuit'));
 
 ALTER TABLE "top_measurements" ADD CONSTRAINT "PK_TOP_MEASUREMENTS" PRIMARY KEY (
 	"product_id"

@@ -10,8 +10,6 @@ psql -d 데이터베이스 -f db/db.sql
 
 | 컬럼 | 역할 |
 |---|---|
-| `categories.algo_category` | B의 5개 분류(top / outer / pants / skirt / dress). `clothing_type`에서 자동으로 계산된다(상의→top, 아우터→outer, 하의→pants, 치마→skirt, 원피스→dress). 점프수트는 NULL이라 추천에서 빠진다. 직접 넣을 수 없다 |
-| `categories.outfit_group` | `clothing_type`에서 자동으로 계산되는 값(읽기만 한다). 하의·치마는 bottom, 나머지는 `algo_category`와 같다. C의 코디 조합이 하의를 bottom으로 보기 때문이다 |
 | `body_infos.height` | A가 받는 키(cm) |
 | `body_infos.upper_body_length` | A가 받는 상체 길이(cm) |
 | `body_infos.leg_length` | A가 받는 다리 길이(cm) |
@@ -24,9 +22,9 @@ A의 나머지 입력(어깨너비, 팔 길이)은 원본 `body_infos.shoulder`,
 
 | 바꾼 곳 | 내용 |
 |---|---|
-| `categories.clothing_type` 허용값 | '아우터' 추가. B가 outer를 따로 구분한다 |
+| `categories.clothing_type` 값 | 한글(상의·하의·치마·원피스·점프수트)을 영어 `top` / `outer` / `pants` / `skirt` / `dress` / `jumpsuit`로 바꾸고 아우터(`outer`)를 더했다. B와 C가 이 값을 그대로 쓴다(한글 표시는 앱에서 바꾼다). `jumpsuit`는 B에 대응이 없어 추천 조회에서 빼야 한다. B는 모르는 카테고리를 받으면 추천 요청 전체가 오류가 난다 |
 | `body_infos.shoulder`, `arm_length` | numeric(5,2) → double precision. A가 float으로 계산하는데 numeric은 Python에서 Decimal로 읽혀 계산 오류가 난다 |
-| `users.user_id`, `products.product_id`와 이를 참조하는 열 24개 | integer → text. C의 API가 `user_id`·`item_id`를 문자열로만 받는다. 번호는 자동으로 "1", "2", …로 붙고 `t01`처럼 문자열을 직접 넣어도 된다. 쿼리에서는 `user_id = '1'`처럼 문자열로 비교해야 한다 |
+| `users.user_id`, `products.product_id`와 이를 참조하는 열 24개 | integer → text. C의 API가 `user_id`·`product_id`를 문자열로만 받는다. 번호는 자동으로 "1", "2", …로 붙고 `t01`처럼 문자열을 직접 넣어도 된다. 쿼리에서는 `user_id = '1'`처럼 문자열로 비교해야 한다 |
 
 더한 컬럼 중 `popularity`, `ratio_s/w/n`, `confidence`, `height`, `upper_body_length`, `leg_length`도 같은 이유로 double precision이다.
 
