@@ -18,7 +18,7 @@ def rules():
 
 
 def item(i, score, tags=()):
-    return {"item_id": i, "score": score, "tags": list(tags)}
+    return {"product_id": i, "score": score, "tags": list(tags)}
 
 
 def test_pdf_example_straight_ih_bonus(rules):  # (0.75 + 0.74) / 2 + 0.10 = 0.845 (PDF는 ≈0.84)
@@ -62,14 +62,14 @@ def test_score_is_clipped(rules):
 
 
 def test_body_fit_key_is_accepted(rules):  # match_item 결과를 그대로 넘겨도 된다
-    a = {"item_id": 1, "body_fit": 0.6, "tags": []}
-    b = {"item_id": 2, "body_fit": 0.4, "tags": []}
+    a = {"product_id": 1, "body_fit": 0.6, "tags": []}
+    b = {"product_id": 2, "body_fit": 0.4, "tags": []}
     assert matching.outfit_score(a, b, S, rules) == pytest.approx(0.5)
 
 
 def test_excluded_item_raises(rules):
     with pytest.raises(ValueError):
-        matching.outfit_score({"item_id": 1, "body_fit": None, "tags": []}, item(2, 0.5), S, rules)
+        matching.outfit_score({"product_id": 1, "body_fit": None, "tags": []}, item(2, 0.5), S, rules)
 
 
 # ---- recommend_outfits ----
@@ -84,7 +84,7 @@ def test_recommend_unique_top_and_order(rules):
 
 
 def test_recommend_skips_excluded_and_limits_k(rules):
-    tops = [{"item_id": "x", "body_fit": None, "tags": []}, item("t1", 0.5)]
+    tops = [{"product_id": "x", "body_fit": None, "tags": []}, item("t1", 0.5)]
     bottoms = [item("b1", 0.5)]
     out = matching.recommend_outfits(tops, bottoms, S, rules)
     assert [o["top"] for o in out] == ["t1"]

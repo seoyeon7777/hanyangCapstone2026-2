@@ -91,8 +91,8 @@ def test_reasons_same_for_flag_values(real_rules):
 
 
 def test_match_item_shape(rules):
-    r = matching.match_item({"item_id": 2, "name": "러플 블라우스"}, SINGLE_S, rules)
-    assert r == {"item_id": 2, "tags": ["det:ruffle"], "text_added": [], "review_agreement": 1.0, "fit_stated": "unknown", "body_fit": None, "excluded": True, "no_info": False, "reasons": []}
+    r = matching.match_item({"product_id": 2, "product_name": "러플 블라우스"}, SINGLE_S, rules)
+    assert r == {"product_id": 2, "tags": ["det:ruffle"], "text_added": [], "review_agreement": 1.0, "fit_stated": "unknown", "body_fit": None, "excluded": True, "no_info": False, "reasons": []}
 
 
 def test_current_rules_are_valid():
@@ -372,13 +372,13 @@ def test_match_item_attrs_only_for_direct_items():
     r = matching.load_rules()
     profile = {"ratios": {"S": 0.0, "W": 0.0, "N": 1.0}, "primary": "N", "is_mixed": False}
     attrs = {"category": "top", "fit": "오버(루즈)", "length_top": "기본", "composition": [{"fiber": "cotton", "share": 1.0}]}
-    out = matching.match_item({"item_id": 1, "name": "슬림 셔츠", "source": "direct", "attrs": attrs}, profile, r)
+    out = matching.match_item({"product_id": 1, "product_name": "슬림 셔츠", "source": "direct", "attrs": attrs}, profile, r)
     assert set(out["tags"]) == {"fit:over", "mat:cotton"}                 # 이름의 '슬림'은 읽지 않는다
     with pytest.raises(ValueError):                                       # 가져온 상품에 attrs가 오면 조용히 쓰지 않고 오류
-        matching.match_item({"item_id": 2, "name": "슬림 셔츠", "attrs": attrs}, profile, r)
+        matching.match_item({"product_id": 2, "product_name": "슬림 셔츠", "attrs": attrs}, profile, r)
     with pytest.raises(ValueError):                                       # 직접 등록 상품인데 필수 항목이 비면 오류
-        matching.match_item({"item_id": 3, "name": "x", "source": "direct", "attrs": {"category": "top", "fit": "슬림"}}, profile, r)
-    imported = matching.match_item({"item_id": 4, "name": "슬림 셔츠 면 100%"}, profile, r)
+        matching.match_item({"product_id": 3, "product_name": "x", "source": "direct", "attrs": {"category": "top", "fit": "슬림"}}, profile, r)
+    imported = matching.match_item({"product_id": 4, "product_name": "슬림 셔츠 면 100%"}, profile, r)
     assert "fit:slim" in imported["tags"]
 
 
@@ -452,33 +452,33 @@ def test_fit_stated_from_form_and_manual_source(real_rules):
     base = {"category": "top", "length_top": "기본", "composition_status": "확인 불가"}
     for opt, want in (("슬림", "slim"), ("레귤러", "regular"), ("오버(루즈)", "over")):
         assert matching.tag_from_attributes({**base, "fit": opt}, real_rules)["fit_stated"] == want
-    item = {"item_id": 9, "name": "x", "source": "manual", "attrs": {**base, "fit": "레귤러"}}
+    item = {"product_id": 9, "product_name": "x", "source": "manual", "attrs": {**base, "fit": "레귤러"}}
     out = matching.match_item(item, SINGLE_S, real_rules)
     assert out["fit_stated"] == "regular" and out["tags"] == []
     with pytest.raises(ValueError):       # 양식 입력이 불완전하면 manual이어도 오류
-        matching.match_item({"item_id": 10, "name": "x", "source": "manual", "attrs": {"category": "top"}}, SINGLE_S, real_rules)
+        matching.match_item({"product_id": 10, "product_name": "x", "source": "manual", "attrs": {"category": "top"}}, SINGLE_S, real_rules)
     with pytest.raises(ValueError):       # 가져온 상품(source 없음)에는 attrs를 쓸 수 없다
-        matching.match_item({"item_id": 11, "name": "x", "attrs": {**base, "fit": "슬림"}}, SINGLE_S, real_rules)
+        matching.match_item({"product_id": 11, "product_name": "x", "attrs": {**base, "fit": "슬림"}}, SINGLE_S, real_rules)
 
 
 def test_recommend_wrapper(real_rules):
     base = {"length_top": "기본", "composition_status": "확인 불가"}
     items = [
-        {"item_id": 1, "category": "top", "name": "셔츠", "source": "manual", "attrs": {"category": "top", "fit": "슬림", **base}},
-        {"item_id": 2, "category": "top", "name": "티셔츠", "desc": "넉넉한 오버핏"},
-        {"item_id": 3, "category": "pants", "name": "일자 슬랙스", "tags": ["sil:IH"]},
+        {"product_id": 1, "clothing_type": "top", "product_name": "셔츠", "source": "manual", "attrs": {"category": "top", "fit": "슬림", **base}},
+        {"product_id": 2, "clothing_type": "top", "product_name": "티셔츠", "description": "넉넉한 오버핏"},
+        {"product_id": 3, "clothing_type": "pants", "product_name": "일자 슬랙스", "tags": ["sil:IH"]},
     ]
     out = matching.recommend(SINGLE_S, items, real_rules, top_n=2)
-    assert {m["item_id"] for m in out["items"]} == {1, 2, 3}
+    assert {m["product_id"] for m in out["items"]} == {1, 2, 3}
     assert out["outfits"][0]["top"] == 1 and out["outfits"][0]["bottom"] == 3     # 슬림 + 일자가 상위
     assert out["fit_unknown"] == [3]                                             # 핏 표기를 못 읽은 상품만
     with pytest.raises(ValueError):       # category 불일치
-        matching.recommend(SINGLE_S, [{"item_id": 4, "category": "pants", "name": "x", "source": "manual", "attrs": {"category": "top", "fit": "슬림", **base}}], real_rules)
+        matching.recommend(SINGLE_S, [{"product_id": 4, "clothing_type": "pants", "product_name": "x", "source": "manual", "attrs": {"category": "top", "fit": "슬림", **base}}], real_rules)
 
 
 def test_form_item_fills_empty_optional_fields_from_text(real_rules):
     base = {"category": "pants", "fit": "슬림", "length_pants": "풀 길이", "composition": [{"fiber": "cotton", "share": 1.0}]}
-    item = {"item_id": 1, "name": "와이드 데님 팬츠", "desc": "하이웨이스트 핏. 폴리 100%", "source": "direct", "attrs": base}
+    item = {"product_id": 1, "product_name": "와이드 데님 팬츠", "description": "하이웨이스트 핏. 폴리 100%", "source": "direct", "attrs": base}
     out = matching.match_item(item, SINGLE_S, real_rules)
     assert set(out["text_added"]) == {"sil:wide", "waist:high", "mat:denim"}          # 비운 선택 항목은 글에서 보충
     assert "fit:slim" in out["tags"] and "mat:cotton" in out["tags"]                   # 필수 항목은 양식 값
@@ -489,13 +489,13 @@ def test_form_item_fills_empty_optional_fields_from_text(real_rules):
     assert "sil:wide" not in out2["tags"] and "mat:denim" not in out2["tags"] and "sil:IH" in out2["tags"]
     assert out2["text_added"] == ["waist:high"]
     # 글에 오버핏이라 써 있어도 양식의 핏(레귤러)이 이긴다
-    out3 = matching.match_item({**item, "desc": "오버핏", "attrs": {**base, "fit": "레귤러"}}, SINGLE_S, real_rules)
+    out3 = matching.match_item({**item, "description": "오버핏", "attrs": {**base, "fit": "레귤러"}}, SINGLE_S, real_rules)
     assert "fit:over" not in out3["tags"] and out3["fit_stated"] == "regular"
 
 
 def test_explicit_none_choice_is_not_overridden_by_text(real_rules):
     base = {"category": "top", "fit": "슬림", "length_top": "기본", "composition_status": "확인 불가"}
-    item = {"item_id": 1, "name": "러플 데님 셔츠", "desc": "러플 디테일, 데님 소재", "source": "direct"}
+    item = {"product_id": 1, "product_name": "러플 데님 셔츠", "description": "러플 디테일, 데님 소재", "source": "direct"}
     blank = matching.match_item({**item, "attrs": base}, SINGLE_S, real_rules)
     assert set(blank["text_added"]) == {"det:ruffle", "mat:denim"}                        # 미입력은 보충
     none = matching.match_item({**item, "attrs": {**base, "details": ["해당 없음"], "fabrics": ["해당 없음"]}}, SINGLE_S, real_rules)
@@ -506,7 +506,7 @@ def test_explicit_none_choice_is_not_overridden_by_text(real_rules):
 
 def test_text_fill_cannot_bypass_required_fields(real_rules):
     base = {"category": "top", "fit": "슬림", "length_top": "기본", "composition_status": "확인 불가"}
-    item = {"item_id": 1, "name": "롱 카디건 모헤어 니트", "desc": "소재 면 100%", "source": "direct"}
+    item = {"product_id": 1, "product_name": "롱 카디건 모헤어 니트", "description": "소재 면 100%", "source": "direct"}
     out = matching.match_item({**item, "attrs": base}, SINGLE_S, real_rules)
     assert "len:long" not in out["tags"]                      # 기장은 필수 입력(기본)이 이긴다
     assert "mat:cotton" not in out["tags"]                    # 혼용률은 필수 입력(확인 불가)이 이긴다
@@ -525,7 +525,7 @@ def test_review_agreement_is_off_by_default_and_modes(real_rules):
     for bad in ({"n": 3, "mismatch": 4}, {"n": -1, "mismatch": 0}, {"n": 2.5, "mismatch": 1}):
         with pytest.raises(ValueError):
             matching.review_agreement(bad, real_rules)
-    item = {"item_id": 1, "name": "x", "tags": tags, "review": {"n": 10, "mismatch": 10}}
+    item = {"product_id": 1, "product_name": "x", "tags": tags, "review": {"n": 10, "mismatch": 10}}
     plain = matching.match_item({**item, "review": None}, SINGLE_S, real_rules)["body_fit"]
     off = matching.match_item(item, SINGLE_S, real_rules)
     assert off["body_fit"] == plain and off["review_agreement"] == round(3 / 13, 4)       # 기본: 표시만
@@ -534,7 +534,7 @@ def test_review_agreement_is_off_by_default_and_modes(real_rules):
     both = matching.match_item(item, SINGLE_S, on("both"))["body_fit"]
     assert plain > both > neutral
     bad_tags = ["fit:over", "sil:IH"]       # 직선형에게 안 맞는 상품: 낮은 점수
-    bad = {"item_id": 2, "name": "y", "tags": ["fit:over"], "review": {"n": 10, "mismatch": 10}}
+    bad = {"product_id": 2, "product_name": "y", "tags": ["fit:over"], "review": {"n": 10, "mismatch": 10}}
     low = matching.body_fit(["fit:over"], SINGLE_S, real_rules)
     assert low < neutral
     assert matching.match_item(bad, SINGLE_S, on("both"))["body_fit"] > low                # 양방향: 낮은 점수가 올라간다
@@ -543,21 +543,21 @@ def test_review_agreement_is_off_by_default_and_modes(real_rules):
 
 def test_text_fill_can_be_turned_off(real_rules):
     base = {"category": "pants", "fit": "슬림", "length_pants": "풀 길이", "composition_status": "확인 불가"}
-    item = {"item_id": 1, "name": "와이드 데님 팬츠", "source": "manual", "attrs": base}      # desc는 비어 있어도 상품명에서 읽는다
+    item = {"product_id": 1, "product_name": "와이드 데님 팬츠", "source": "manual", "attrs": base}      # desc는 비어 있어도 상품명에서 읽는다
     assert set(matching.match_item(item, SINGLE_S, real_rules)["text_added"]) == {"sil:wide", "mat:denim"}
     off = matching.match_item({**item, "text_fill": False}, SINGLE_S, real_rules)
     assert off["text_added"] == [] and off["tags"] == ["fit:slim"]
 
 
 def _matched(real_rules, profile, tag_lists):
-    return [matching.match_item({"item_id": i, "name": "x", "tags": tags}, profile, real_rules) for i, tags in enumerate(tag_lists, 1)]
+    return [matching.match_item({"product_id": i, "product_name": "x", "tags": tags}, profile, real_rules) for i, tags in enumerate(tag_lists, 1)]
 
 
 def test_rank_items_single_ignores_strategy_and_mixed_blend_is_default(real_rules):
     tags = [["fit:slim"], ["fit:over"], [], ["fit:slim", "sil:IH"]]
     m = _matched(real_rules, SINGLE_S, tags)
     by_blend = matching.rank_items(m, SINGLE_S, real_rules, 4, "blend")
-    assert [r["item_id"] for r in by_blend] == [4, 1, 2]                                      # 점수순 (태그도 핏도 없는 3번은 정보 없음이라 빠진다)
+    assert [r["product_id"] for r in by_blend] == [4, 1, 2]                                      # 점수순 (태그도 핏도 없는 3번은 정보 없음이라 빠진다)
     assert matching.rank_items(m, SINGLE_S, real_rules, 4, "quota") == by_blend               # 단일형은 방식과 무관
     mixed = {"ratios": {"S": 0.5, "W": 0.0, "N": 0.5}, "primary": "S", "is_mixed": True}
     mm = _matched(real_rules, mixed, tags)
@@ -572,12 +572,12 @@ def test_rank_items_quota_splits_slots_by_ratio_and_safe_avoids_penalized(real_r
     out = matching.rank_items(m, mixed, real_rules, 10, "quota")
     picked = [r["picked_for"] for r in out]
     assert picked.count("S") == 6 and picked.count("N") == 4                                   # 10자리를 6:4로
-    assert len({r["item_id"] for r in out}) == 10                                              # 한 상품은 한 번만
+    assert len({r["product_id"] for r in out}) == 10                                              # 한 상품은 한 번만
     assert picked[:2] == ["S", "N"] or picked[:2] == ["S", "S"]                                # 많은 쪽부터, 번갈아
     # 한쪽에는 좋고 다른 쪽에는 안 맞는 상품은 quota에는 들어가지만 quota_safe에서는 뒤로 밀린다
     trap = _matched(real_rules, mixed, [["fit:slim", "det:ruffle"], ["fit:slim", "sil:IH"], ["fit:over", "sil:wide"], ["mat:linen"], ["mat:cotton"]])
-    plain = [r["item_id"] for r in matching.rank_items(trap, mixed, real_rules, 2, "quota")]
-    safe = [r["item_id"] for r in matching.rank_items(trap, mixed, real_rules, 2, "quota_safe")]
+    plain = [r["product_id"] for r in matching.rank_items(trap, mixed, real_rules, 2, "quota")]
+    safe = [r["product_id"] for r in matching.rank_items(trap, mixed, real_rules, 2, "quota_safe")]
     assert len(plain) == len(safe) == 2
     neutral = matching.body_fit([], SINGLE_S, real_rules)
     pure = lambda t, i: matching.body_fit(trap[i - 1]["tags"], matching._pure_profile(t), real_rules)
@@ -590,13 +590,13 @@ def test_rank_items_quota_splits_slots_by_ratio_and_safe_avoids_penalized(real_r
 
 
 def test_recommend_returns_ranking_per_category(real_rules):
-    items = [{"item_id": 1, "category": "top", "name": "a", "tags": ["fit:slim"]},
-             {"item_id": 2, "category": "top", "name": "b", "tags": ["fit:over"]},
-             {"item_id": 3, "category": "pants", "name": "c", "tags": ["sil:IH"]},
-             {"item_id": 4, "category": "outer", "name": "d", "tags": []}]
+    items = [{"product_id": 1, "clothing_type": "top", "product_name": "a", "tags": ["fit:slim"]},
+             {"product_id": 2, "clothing_type": "top", "product_name": "b", "tags": ["fit:over"]},
+             {"product_id": 3, "clothing_type": "pants", "product_name": "c", "tags": ["sil:IH"]},
+             {"product_id": 4, "clothing_type": "outer", "product_name": "d", "tags": []}]
     out = matching.recommend(SINGLE_S, items, real_rules, list_size=5)
-    assert [r["item_id"] for r in out["ranking"]["top"]] == [1, 2]
-    assert [r["item_id"] for r in out["ranking"]["bottom"]] == [3] and [r["item_id"] for r in out["ranking"]["outer"]] == [] and out["no_info"] == [4]       # 태그가 없는 4번은 정보 없음으로 제외
+    assert [r["product_id"] for r in out["ranking"]["top"]] == [1, 2]
+    assert [r["product_id"] for r in out["ranking"]["bottom"]] == [3] and [r["product_id"] for r in out["ranking"]["outer"]] == [] and out["no_info"] == [4]       # 태그가 없는 4번은 정보 없음으로 제외
 
 
 # ---- 코디 밸런스 규칙 적용 범위 (config.balance_scope)

@@ -53,9 +53,9 @@ def test_event_learns_and_feed_reflects():
     client.post("/api/feed", json={"user_id": "u1", "body": {"ratio": {"S": 1, "W": 0, "N": 0}}, "season": "fall"})
     whole = "/api/feed/scroll?user_id=u1&season=fall&size=50"   # 전체 순서에서 크롭 니트 점수를 찾음
     before = client.get(whole).get_json()
-    score = lambda feed: next(r["score"] for r in feed["items"] if r["id"] == "t04")
+    score = lambda feed: next(r["score"] for r in feed["items"] if r["product_id"] == "t04")
 
-    res = client.post("/api/feed/event", json={"user_id": "u1", "item_id": "t04", "event": "purchase"})
+    res = client.post("/api/feed/event", json={"user_id": "u1", "product_id": "t04", "event": "purchase"})
     assert res.status_code == 200
     assert res.get_json()["pref"] == {"len:crop": 0.2, "mat:knit": 0.2}
 
@@ -63,18 +63,18 @@ def test_event_learns_and_feed_reflects():
     # 취향 0.5 → 0.6 → 최종 +0.25 * 0.1 = +0.025
     assert abs((score(after) - score(before)) - 0.025) < 1e-3
 
-    bad = client.post("/api/feed/event", json={"user_id": "u1", "item_id": "t04", "event": "share"})
+    bad = client.post("/api/feed/event", json={"user_id": "u1", "product_id": "t04", "event": "share"})
     assert bad.status_code == 400
-    assert client.post("/api/feed/event", json={"user_id": "u1", "item_id": "zzz", "event": "like"}).status_code == 400
+    assert client.post("/api/feed/event", json={"user_id": "u1", "product_id": "zzz", "event": "like"}).status_code == 400
 
 
 def test_event_triggers_rediagnosis():
     reset()
     client.post("/api/feed", json={"user_id": "u2", "body": {"ratio": {"S": 1, "W": 0, "N": 0}}})
     for _ in range(9):
-        r = client.post("/api/feed/event", json={"user_id": "u2", "item_id": "t06", "event": "like"}).get_json()
+        r = client.post("/api/feed/event", json={"user_id": "u2", "product_id": "t06", "event": "like"}).get_json()
         assert r["need_rediagnosis"] is False  # 10개 전까지는 판단 안 함
-    r = client.post("/api/feed/event", json={"user_id": "u2", "item_id": "t06", "event": "like"}).get_json()
+    r = client.post("/api/feed/event", json={"user_id": "u2", "product_id": "t06", "event": "like"}).get_json()
     assert r["need_rediagnosis"] is True and r["message"]
 
 
@@ -102,7 +102,7 @@ def test_feed_from_survey_answers():
     assert abs(data["body"]["ratio"]["S"] - expected["ratios"]["S"]) < 1e-9
     # 진단한 체형이 저장돼서 스크롤도 바로 됨
     scroll = client.get("/api/feed/scroll?user_id=a1&page=0").get_json()
-    assert [r["id"] for r in scroll["items"]] == [r["id"] for r in data["sections"][0]["items"]]
+    assert [r["product_id"] for r in scroll["items"]] == [r["product_id"] for r in data["sections"][0]["items"]]
 
 
 def test_feed_from_profile():
@@ -129,12 +129,12 @@ def test_scroll_pages():
     assert all(r["reason"] for r in first["items"])
     # 첫 묶음 = 홈 "오늘의 추천"
     home = client.get("/api/feed?user_id=s1&season=fall").get_json()
-    assert [r["id"] for r in first["items"]] == [r["id"] for r in home["sections"][0]["items"]]
+    assert [r["product_id"] for r in first["items"]] == [r["product_id"] for r in home["sections"][0]["items"]]
 
     seen, page = [], 0
     while True:
         data = client.get(f"/api/feed/scroll?user_id=s1&season=fall&size=10&page={page}").get_json()
-        seen += [r["id"] for r in data["items"]]
+        seen += [r["product_id"] for r in data["items"]]
         if not data["has_more"]:
             break
         page += 1
@@ -166,7 +166,7 @@ def test_toggle_off_without_body():
     assert all(r["reason"] for r in data["items"])
     home = client.get("/api/feed?user_id=g1&mode=general&season=fall").get_json()
     assert [s["title"] for s in home["sections"]][-1] == "추천 코디"
-    ev = client.post("/api/feed/event", json={"user_id": "g1", "item_id": "t01", "event": "like"})
+    ev = client.post("/api/feed/event", json={"user_id": "g1", "product_id": "t01", "event": "like"})
     assert ev.status_code == 200 and ev.get_json()["need_rediagnosis"] is False
     # 토글 ON은 여전히 체형이 필요
     assert client.get("/api/feed/scroll?user_id=g1&mode=body").status_code == 400
@@ -178,12 +178,12 @@ def test_toggle_switch_keeps_history():
     on = client.get("/api/feed/scroll?user_id=t1&S=0.8&W=0.1&N=0.1&mode=body&season=fall&size=50").get_json()
     off = client.get("/api/feed/scroll?user_id=t1&mode=general&season=fall&size=50").get_json()
     assert on["mode"] == "body" and off["mode"] == "general"
-    assert [r["id"] for r in on["items"][:10]] != [r["id"] for r in off["items"][:10]]   # 순서가 다름
-    client.post("/api/feed/event", json={"user_id": "t1", "item_id": "t04", "event": "purchase"})
+    assert [r["product_id"] for r in on["items"][:10]] != [r["product_id"] for r in off["items"][:10]]   # 순서가 다름
+    client.post("/api/feed/event", json={"user_id": "t1", "product_id": "t04", "event": "purchase"})
     on2 = client.get("/api/feed/scroll?user_id=t1&mode=body&season=fall").get_json()     # 체형 다시 안 보내도 됨
     assert on2["body"]["primary"] == "S"
     off2 = client.get("/api/feed/scroll?user_id=t1&mode=general&season=fall&size=50").get_json()
-    t04 = lambda f: next(r for r in f["items"] if r["id"] == "t04")
+    t04 = lambda f: next(r for r in f["items"] if r["product_id"] == "t04")
     # OFF에서도 구매 기록 반영: 취향 0.5 → 0.6 → 0.3 × 0.1 = +0.03
     assert abs((t04(off2)["score"] - t04(off)["score"]) - 0.03) < 1e-3
 
@@ -199,7 +199,7 @@ def test_bad_inputs_return_json_400_not_500():
     reset()
     client.post("/api/feed", json={"user_id": "x", "body": {"ratio": {"S": 1}}})
     cases = [
-        ("/api/feed/event", {"user_id": "x", "item_id": ["t01"], "event": "like"}),
+        ("/api/feed/event", {"user_id": "x", "product_id": ["t01"], "event": "like"}),
         ("/api/feed", {"answers": {f"q{i}": 1 for i in range(1, 8)}, "measurements": "abc"}),
         ("/api/feed", {"body": "S"}),
         ("/api/feed", [1, 2]),

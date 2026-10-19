@@ -68,36 +68,36 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
         body = json_body()
         r = tagging.tag_from_attributes(read_attrs(body), rules)
         text_added = []
-        if body.get("text_fill") is not False and (body.get("name") or body.get("desc")):
-            text_added = [g for g in matching._text_fill_tags(r["attributes"], body.get("name", ""), body.get("desc", ""), rules) if g not in r["tags"]]
+        if body.get("text_fill") is not False and (body.get("product_name") or body.get("description")):
+            text_added = [g for g in matching._text_fill_tags(r["attributes"], body.get("product_name", ""), body.get("description", ""), rules) if g not in r["tags"]]
         return jsonify({"ok": True, "tags": r["tags"] + text_added, "text_added": text_added, "fit_stated": r["fit_stated"],
                         "material_basis": r["material_basis"], "attributes": r["attributes"]})
 
     @app.post("/api/items")
     def add_item():
         body = json_body()
-        source, category = body.get("source"), body.get("category")
+        source, clothing_type = body.get("source"), body.get("clothing_type")
         if source not in FORM_SOURCES:
             return fail(f'source는 {list(FORM_SOURCES)} 중 하나여야 한다')
-        if not isinstance(body.get("name"), str) or not body["name"].strip():
-            return fail("name은 비어 있지 않은 문자열이어야 한다")
+        if not isinstance(body.get("product_name"), str) or not body["product_name"].strip():
+            return fail("product_name은 비어 있지 않은 문자열이어야 한다")
         attrs = read_attrs(body)
-        if attrs.get("category") != category:
-            return fail(f'category={category!r}와 attrs.category={attrs.get("category")!r}가 다르다')
-        if body.get("item_id") is None:
-            item_id = next_id[0]
-            while item_id in store:         # 직접 넣은 숫자 id와 겹치지 않게 건너뛴다
-                item_id += 1
-            next_id[0] = item_id + 1
+        if attrs.get("category") != clothing_type:
+            return fail(f'clothing_type={clothing_type!r}와 attrs.category={attrs.get("category")!r}가 다르다')
+        if body.get("product_id") is None:
+            product_id = next_id[0]
+            while product_id in store:         # 직접 넣은 숫자 id와 겹치지 않게 건너뛴다
+                product_id += 1
+            next_id[0] = product_id + 1
         else:
-            item_id = body["item_id"]
-            if isinstance(item_id, bool) or not isinstance(item_id, (str, int)) or item_id == "":
-                return fail("item_id는 비어 있지 않은 문자열 또는 정수여야 한다")
-        if item_id in store:
-            return fail(f"item_id {item_id!r}가 이미 있다", 409)
-        item = {"item_id": item_id, "category": category, "name": body["name"], "desc": body.get("desc") or "",
+            product_id = body["product_id"]
+            if isinstance(product_id, bool) or not isinstance(product_id, (str, int)) or product_id == "":
+                return fail("product_id는 비어 있지 않은 문자열 또는 정수여야 한다")
+        if product_id in store:
+            return fail(f"product_id {product_id!r}가 이미 있다", 409)
+        item = {"product_id": product_id, "clothing_type": clothing_type, "product_name": body["product_name"], "description": body.get("description") or "",
                 "source": source, "attrs": attrs}
-        matching.validate_item(item)        # item_id 형식·category·desc 길이 (잘못되면 ValueError -> 400)
+        matching.validate_item(item)        # product_id 형식·clothing_type·description 길이 (잘못되면 ValueError -> 400)
         if body.get("text_fill") is False:
             item["text_fill"] = False
         if body.get("review") is not None:
@@ -105,9 +105,9 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
             item["review"] = body["review"]
         # 태깅은 등록할 때 한 번 한다. 추천은 여기서 저장한 태그만 읽는다 (검증 실패 시 ValueError -> 400).
         r = tagging.tag_from_attributes(attrs, rules)
-        text_added = [] if item.get("text_fill") is False else [g for g in matching._text_fill_tags(r["attributes"], item["name"], item["desc"], rules) if g not in r["tags"]]
+        text_added = [] if item.get("text_fill") is False else [g for g in matching._text_fill_tags(r["attributes"], item["product_name"], item["description"], rules) if g not in r["tags"]]
         item.update({"tags": r["tags"] + text_added, "text_added": text_added, "fit_stated": r["fit_stated"], "material_basis": r["material_basis"]})
-        store[item_id] = item
+        store[product_id] = item
         return jsonify({"ok": True, "item": item}), 201
 
     @app.get("/api/items")
@@ -127,7 +127,7 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
         for it in items:
             matching.validate_item(it)
             if it.get("source") not in FORM_SOURCES and it.get("tags") is None:
-                return fail(f'상품 {it.get("item_id")}: source가 {list(FORM_SOURCES)} 중 하나이거나 tags가 있어야 한다 (글만 있는 상품은 서비스에서 받지 않는다)')
+                return fail(f'상품 {it.get("product_id")}: source가 {list(FORM_SOURCES)} 중 하나이거나 tags가 있어야 한다 (글만 있는 상품은 서비스에서 받지 않는다)')
         top_n = body.get("top_n", 3)
         if isinstance(top_n, bool) or not isinstance(top_n, int) or top_n < 1:
             return fail("top_n은 1 이상의 정수여야 한다")

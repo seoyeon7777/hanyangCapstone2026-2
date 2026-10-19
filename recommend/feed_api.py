@@ -7,7 +7,7 @@ POST /api/feed        체형은 셋 중 하나로 보낸다
                       {"user_id": "u1", "answers": {"q1": 1, ..., "q7": 3}, "measurements": {...}}  ← A 파트가 진단
                       {"user_id": "u1", "profile": A의 classify() 결과}
                       {"user_id": "u1", "body": {"ratio": {"S":0.6,"W":0.3,"N":0.1}}}
-POST /api/feed/event  {"user_id": "u1", "item_id": "t01", "event": "like"}
+POST /api/feed/event  {"user_id": "u1", "product_id": "t01", "event": "like"}
 GET  /api/feed/scroll?user_id=u1&S=0.6&W=0.3&N=0.1&page=0&size=10   ← 홈 화면 무한 스크롤용
      /api/feed, /api/feed/scroll 둘 다 mode로 홈 화면 토글을 받는다
        mode=body    (기본) 토글 ON: 골격 맞춤 추천 — 체형 필요
@@ -33,7 +33,7 @@ from body_profile import classify, InputError  # A 파트 (matching_b가 저장�
 feed_bp = Blueprint("feed", __name__, template_folder="templates")
 
 ITEMS = load_items()
-ITEMS_BY_ID = {item["id"]: item for item in ITEMS}
+ITEMS_BY_ID = {item["product_id"]: item for item in ITEMS}
 
 # user_id → {"body": {...}, "pref": {...}, "history": [...]}
 USERS = {}
@@ -202,13 +202,13 @@ def feed_demo():
 @feed_bp.route("/api/feed/event", methods=["POST"])
 def post_event():
     data = json_body()
-    user_id, item_id = data.get("user_id"), data.get("item_id")
-    if not isinstance(user_id, str) or not isinstance(item_id, str):
-        raise BadRequest("user_id와 item_id는 문자열이어야 해요")
+    user_id, product_id = data.get("user_id"), data.get("product_id")
+    if not isinstance(user_id, str) or not isinstance(product_id, str):
+        raise BadRequest("user_id와 product_id는 문자열이어야 해요")
     user = USERS.get(user_id)
     if not user:
         raise BadRequest("먼저 /api/feed 또는 /api/feed/scroll을 user_id와 함께 불러 주세요")
-    item = ITEMS_BY_ID.get(item_id)
+    item = ITEMS_BY_ID.get(product_id)
     if not item:
         raise BadRequest("없는 상품이에요")
     try:

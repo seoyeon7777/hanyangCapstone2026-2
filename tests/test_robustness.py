@@ -33,13 +33,13 @@ def test_profile_primary_tie_allowed():
 
 # ---- 상품 형식
 def item(**kw):
-    return {"item_id": 1, "category": "top", "name": "a", "desc": "", "tags": ["fit:slim"], **kw}
+    return {"product_id": 1, "clothing_type": "top", "product_name": "a", "description": "", "tags": ["fit:slim"], **kw}
 
 
 @pytest.mark.parametrize("kw", [
-    {"item_id": None}, {"item_id": [1]}, {"item_id": True}, {"item_id": ""},
-    {"category": None}, {"category": "hat"},
-    {"name": 5}, {"desc": 5}, {"desc": "x" * (tagging.MAX_DESC_CHARS + 1)},
+    {"product_id": None}, {"product_id": [1]}, {"product_id": True}, {"product_id": ""},
+    {"clothing_type": None}, {"clothing_type": "hat"},
+    {"product_name": 5}, {"description": 5}, {"description": "x" * (tagging.MAX_DESC_CHARS + 1)},
     {"tags": "fit:slim"}, {"tags": [1, 2]}, {"tags": {"a": 1}},
 ])
 def test_recommend_rejects_bad_item(kw):
@@ -58,19 +58,19 @@ def client():
     return server.create_app().test_client()
 
 
-FORM = {"source": "manual", "category": "top", "name": "t", "attrs": {"category": "top", "fit": "슬림", "length_top": "기본"}, "composition_percent": [{"fiber": "cotton", "percent": 100}]}
+FORM = {"source": "manual", "clothing_type": "top", "product_name": "t", "attrs": {"category": "top", "fit": "슬림", "length_top": "기본"}, "composition_percent": [{"fiber": "cotton", "percent": 100}]}
 
 
 def test_server_auto_id_skips_manual_ids(client):
-    assert client.post("/api/items", json={**FORM, "item_id": 2}).status_code == 201
+    assert client.post("/api/items", json={**FORM, "product_id": 2}).status_code == 201
     a = client.post("/api/items", json=FORM)
     b = client.post("/api/items", json=FORM)
     c = client.post("/api/items", json=FORM)
     assert [r.status_code for r in (a, b, c)] == [201, 201, 201]
-    assert len({r.get_json()["item"]["item_id"] for r in (a, b, c)} | {2}) == 4
+    assert len({r.get_json()["item"]["product_id"] for r in (a, b, c)} | {2}) == 4
 
 
-@pytest.mark.parametrize("payload", [[], "x", 3, {"name": 5}, {"item_id": [1]}])
+@pytest.mark.parametrize("payload", [[], "x", 3, {"product_name": 5}, {"product_id": [1]}])
 def test_server_bad_bodies_are_400_not_500(client, payload):
     for url in ("/api/items", "/api/items/validate", "/api/recommend"):
         r = client.post(url, json=payload)
@@ -78,9 +78,9 @@ def test_server_bad_bodies_are_400_not_500(client, payload):
 
 
 def test_server_bad_item_fields_400(client):
-    assert client.post("/api/items", json={**FORM, "desc": 5}).status_code == 400
+    assert client.post("/api/items", json={**FORM, "description": 5}).status_code == 400
     assert client.post("/api/items", json={**FORM, "attrs": [1]}).status_code == 400
-    assert client.post("/api/items", json={**FORM, "desc": "가" * 6000}).status_code == 400
+    assert client.post("/api/items", json={**FORM, "description": "가" * 6000}).status_code == 400
 
 
 def test_server_recommend_rejects_nan_profile(client):

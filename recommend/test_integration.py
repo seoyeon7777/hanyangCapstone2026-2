@@ -11,7 +11,7 @@ import matching                       # B (matching_b가 경로를 맞춰 둠)
 from body_profile import classify     # A
 from feed import load_items, final_score, score_all, rank, outfits, reason, need_rediagnosis
 
-ITEMS = {item["id"]: item for item in load_items()}
+ITEMS = {item["product_id"]: item for item in load_items()}
 STRAIGHT = {"ratio": {"S": 1.0, "W": 0.0, "N": 0.0}, "kind": "single", "primary": "S"}
 WAVE = {"ratio": {"S": 0.0, "W": 1.0, "N": 0.0}, "kind": "single", "primary": "W"}
 MIXED = {"ratio": {"S": 0.45, "W": 0.15, "N": 0.40}, "kind": "mixed", "primary": "S"}
@@ -69,14 +69,14 @@ def test_outfit_bonus_follows_b_balance():
     assert close(outfit_bonus(STRAIGHT, ITEMS["t08"]["tags"], ITEMS["b06"]["tags"]), -0.15)
     # C의 코디 결과에도 같은 보정이 들어감
     first = outfits(WAVE, list(ITEMS.values()))[0]
-    assert (first["top"]["id"], first["bottom"]["id"]) == ("t04", "b04") and close(first["bonus"], 0.10)
+    assert (first["top"]["product_id"], first["bottom"]["product_id"]) == ("t04", "b04") and close(first["bonus"], 0.10)
 
 
 def test_straight_ranking_makes_sense():
     top = rank(score_all(STRAIGHT, ITEMS.values()))
     tags = [t for r in top[:5] for t in r["tags"]]
     assert "sil:IH" in tags and "fit:slim" in tags
-    order = [r["id"] for r in sorted(score_all(STRAIGHT, ITEMS.values()), key=lambda r: -r["score"])]
+    order = [r["product_id"] for r in sorted(score_all(STRAIGHT, ITEMS.values()), key=lambda r: -r["score"])]
     assert order.index("t06") > len(order) // 2   # 러플 블라우스는 아래쪽 (B는 지금 제외 대신 감점 모드)
 
 

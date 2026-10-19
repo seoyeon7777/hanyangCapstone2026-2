@@ -11,7 +11,7 @@ import os
 from rec_config import (
     W_BODY, W_PREF, W_TREND, W_SEASON, W_POPULARITY, PREF_DEFAULT,
     TOP_N, MAX_SAME_CATEGORY_RUN, MAX_SAME_REP_TAG,
-    CATEGORY_TOP_N, CATEGORY_TITLES,
+    CATEGORY_TOP_N, CATEGORY_TITLES, OUTFIT_GROUP,
     OUTFIT_TOP_N,
     REASON_TEXT, REASON_MAX_TAGS, REASON_FALLBACK, REASON_EXCLUDED,
     EVENT_WEIGHTS, POSITIVE_EVENTS,
@@ -61,7 +61,7 @@ def final_score(body, item, pref=None, season="fall"):
     item: items.json의 상품 하나
     pref: {태그: -1~1} 또는 None
     season: "spring" | "summer" | "fall" | "winter"
-    반환: {"id", "name", "category", "score", "body", "pref", "trend",
+    반환: {"product_id", "product_name", "clothing_type", "score", "body", "pref", "trend",
            "excluded", "good_tags", "avoid_tags", "tags", "reasons"}
     제외된 옷은 score가 0.0이고 excluded가 True다.
     """
@@ -72,9 +72,9 @@ def final_score(body, item, pref=None, season="fall"):
     score = 0.0 if match["excluded"] else W_BODY * b + W_PREF * p + W_TREND * t
 
     return {
-        "id": item["id"],
-        "name": item["name"],
-        "category": item["category"],
+        "product_id": item["product_id"],
+        "product_name": item["product_name"],
+        "clothing_type": item["clothing_type"],
         "score": round(score, 4),
         "body": round(b, 4),
         "pref": round(p, 4),
@@ -115,9 +115,9 @@ def general_score(item, pref=None, season="fall"):
         reasons.append(GENERAL_REASON_SEASON)
 
     return {
-        "id": item["id"],
-        "name": item["name"],
-        "category": item["category"],
+        "product_id": item["product_id"],
+        "product_name": item["product_name"],
+        "clothing_type": item["clothing_type"],
         "score": round(score, 4),
         "body": None,
         "pref": round(p, 4),
@@ -142,7 +142,7 @@ def score_by_mode(mode, body, items, pref=None, season="fall"):
 def _by_score(scored):
     """제외된 옷을 빼고 score 내림차순, 점수가 같으면 id 오름차순."""
     kept = [r for r in scored if not r["excluded"]]
-    return sorted(kept, key=lambda r: (-r["score"], r["id"]))
+    return sorted(kept, key=lambda r: (-r["score"], r["product_id"]))
 
 
 def _rep_tag(r):
@@ -168,7 +168,7 @@ def _pick_in_order(scored, limit, block):
     def category_ok(r):
         recent = result[-MAX_SAME_CATEGORY_RUN:]
         return not (len(recent) == MAX_SAME_CATEGORY_RUN
-                    and all(x["category"] == r["category"] for x in recent))
+                    and all(OUTFIT_GROUP[x["clothing_type"]] == OUTFIT_GROUP[r["clothing_type"]] for x in recent))
 
     while candidates and (limit is None or len(result) < limit):
         if result and len(result) % block == 0:
@@ -223,8 +223,8 @@ def home_feed(body, items, pref=None, season="fall", mode="body"):
     sections = [{"title": "오늘의 추천", "items": rank(scored)}]
 
     ordered = _by_score(scored)
-    for category, title in CATEGORY_TITLES.items():
-        picked = [r for r in ordered if r["category"] == category][:CATEGORY_TOP_N]
+    for group, title in CATEGORY_TITLES.items():
+        picked = [r for r in ordered if OUTFIT_GROUP[r["clothing_type"]] == group][:CATEGORY_TOP_N]
         sections.append({"title": title, "items": picked})
 
     sections.append({"title": "추천 코디", "items": outfits(body, items, pref, season, mode=mode)})
@@ -241,8 +241,8 @@ def outfits(body, items, pref=None, season="fall", top_n=OUTFIT_TOP_N, mode="bod
     반환: [{"top": 상의 결과, "bottom": 하의 결과, "score": float, "bonus": float}, ...]
     """
     ordered = _by_score(score_by_mode(mode, body, items, pref, season))
-    tops = [r for r in ordered if r["category"] == "top"]
-    bottoms = [r for r in ordered if r["category"] == "bottom"]
+    tops = [r for r in ordered if OUTFIT_GROUP[r["clothing_type"]] == "top"]
+    bottoms = [r for r in ordered if OUTFIT_GROUP[r["clothing_type"]] == "bottom"]
     combos = []
     for t in tops:
         for b in bottoms:
@@ -250,14 +250,14 @@ def outfits(body, items, pref=None, season="fall", top_n=OUTFIT_TOP_N, mode="bod
             bonus = round(outfit_bonus(body, t["tags"], b["tags"]), 4) if mode == "body" else 0.0
             score = (t["score"] + b["score"]) / 2 + bonus
             combos.append({"top": t, "bottom": b, "score": round(score, 4), "bonus": bonus})
-    combos.sort(key=lambda c: (-c["score"], c["top"]["id"], c["bottom"]["id"]))
+    combos.sort(key=lambda c: (-c["score"], c["top"]["product_id"], c["bottom"]["product_id"]))
 
     result, used_tops = [], set()
     for c in combos:
-        if c["top"]["id"] in used_tops:
+        if c["top"]["product_id"] in used_tops:
             continue
         result.append(c)
-        used_tops.add(c["top"]["id"])
+        used_tops.add(c["top"]["product_id"])
         if len(result) == top_n:
             break
     return result
@@ -321,19 +321,19 @@ if __name__ == "__main__":
     print(f"{'상품':<16}{'최종':>7}{'체형':>7}{'취향':>7}{'트렌드':>7}")
     for r in results:
         if r["excluded"]:
-            print(f"{r['name']:<16}{'제외':>7}   ← 피해야 함: {', '.join(r['avoid_tags'])}")
+            print(f"{r['product_name']:<16}{'제외':>7}   ← 피해야 함: {', '.join(r['avoid_tags'])}")
         else:
-            print(f"{r['name']:<16}{r['score']:>7.3f}{r['body']:>7.3f}{r['pref']:>7.3f}{r['trend']:>7.3f}")
+            print(f"{r['product_name']:<16}{r['score']:>7.3f}{r['body']:>7.3f}{r['pref']:>7.3f}{r['trend']:>7.3f}")
 
     print("\n── 홈 화면 ──")
     for section in home_feed(straight, load_items())["sections"]:
         if section["title"] == "추천 코디":
-            names = " / ".join(f"{c['top']['name']} + {c['bottom']['name']} ({c['score']:.3f})"
+            names = " / ".join(f"{c['top']['product_name']} + {c['bottom']['product_name']} ({c['score']:.3f})"
                                for c in section["items"])
         else:
-            names = ", ".join(r["name"] for r in section["items"])
+            names = ", ".join(r["product_name"] for r in section["items"])
         print(f"[{section['title']}] {names}")
 
     print("\n── 추천 이유 ──")
     for r in rank(results)[:3]:
-        print(f"{r['name']}: {reason(r)}")
+        print(f"{r['product_name']}: {reason(r)}")

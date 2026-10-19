@@ -1,9 +1,9 @@
 [
-  {"item_id": 1, "name": "슬림 칼라 셔츠", "category": "top", "season": "FW", "popularity": 0.6,
+  {"product_id": 1, "product_name": "슬림 칼라 셔츠", "clothing_type": "top", "season": "FW", "popularity": 0.6,
    "tags": ["fit:slim", "mat:structured", "neck:collar", "det:vertical"]},
-  {"item_id": 2, "name": "러플 블라우스", "category": "top", "season": "FW", "popularity": 0.5},
-  {"item_id": 3, "name": "크롭 드롭숄더 니트", "category": "top", "season": "FW", "popularity": 0.4},
-  {"item_id": 4, "name": "와이드 워싱 데님 팬츠", "category": "bottom", "season": "FW", "popularity": 0.7},
-  {"item_id": 5, "name": "센터프레스 슬랙스", "category": "bottom", "season": "FW", "popularity": 0.6,
+  {"product_id": 2, "product_name": "러플 블라우스", "clothing_type": "top", "season": "FW", "popularity": 0.5},
+  {"product_id": 3, "product_name": "크롭 드롭숄더 니트", "clothing_type": "top", "season": "FW", "popularity": 0.4},
+  {"product_id": 4, "product_name": "와이드 워싱 데님 팬츠", "clothing_type": "bottom", "season": "FW", "popularity": 0.7},
+  {"product_id": 5, "product_name": "센터프레스 슬랙스", "clothing_type": "bottom", "season": "FW", "popularity": 0.6,
    "tags": ["fit:regular", "sil:IH"]}
 ]

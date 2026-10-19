@@ -23,7 +23,7 @@ def add(group, cat, name, desc, fit, length, comp, expect, source="direct", scen
     if length is not None:
         attrs[LEN[cat]] = length
     attrs.update({k: v for k, v in extra.items() if k != "raw"})
-    body = {"category": cat, "name": name, "desc": desc, "source": source, "attrs": attrs}
+    body = {"clothing_type": cat, "product_name": name, "description": desc, "source": source, "attrs": attrs}
     if isinstance(comp, str):
         attrs["composition_status"] = comp
     elif comp:
@@ -33,7 +33,7 @@ def add(group, cat, name, desc, fit, length, comp, expect, source="direct", scen
     if review is not None:
         body["review"] = review
     body.update(extra.get("raw", {}))
-    items.append({"item_id": len(items) + 1, "group": group, "scenario": scenario, "body": {**body, "item_id": len(items) + 1}, "expect": expect})
+    items.append({"product_id": len(items) + 1, "group": group, "scenario": scenario, "body": {**body, "product_id": len(items) + 1}, "expect": expect})
 
 
 # ---- A. 양식을 모두 채운 등록 (1-12)
@@ -175,7 +175,7 @@ add(G, "top", "섬유 중복 티셔츠", "", "레귤러", "기본", [("cotton", 
 add(G, "top", "수치와 확인 불가 동시", "", "레귤러", "기본", [("cotton", 100)], {"error": "함께"}, composition_status="확인 불가", scenario="혼용률 수치 + 상태")
 add(G, "top", "해당 없음과 리본 동시 선택", "", "레귤러", "기본", [("cotton", 100)], {"error": "함께"}, details=["해당 없음", "리본"], scenario="디테일 해당 없음 + 리본")
 add(G, "top", "알 수 없는 출처", "", "레귤러", "기본", [("cotton", 100)], {"error": "source"}, source="import", scenario="source가 direct/manual이 아님")
-add(G, "top", "카테고리 불일치", "", "레귤러", "기본", [("cotton", 100)], {"error": "다르다"}, raw={"category": "pants"}, scenario="body.category와 attrs.category가 다름")
+add(G, "top", "카테고리 불일치", "", "레귤러", "기본", [("cotton", 100)], {"error": "다르다"}, raw={"clothing_type": "pants"}, scenario="clothing_type과 attrs.category가 다름")
 
 # ---- J. 팀이 외부 상품을 같은 양식으로 입력 (90-95)
 G = "J 팀 입력(manual)"

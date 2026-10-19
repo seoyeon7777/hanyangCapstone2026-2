@@ -46,7 +46,7 @@ for name, p in PROF.items():
     prof = matching.normalize_profile({"ratios": p, "primary": max(p, key=p.get), "is_mixed": name == "S55/N45"})
     sc = []
     for it, r in res:
-        m = matching.match_item({"item_id": it["id"], "name": it["name"], "desc": it["text"]}, prof, rules)
+        m = matching.match_item({"product_id": it["id"], "product_name": it["name"], "description": it["text"]}, prof, rules)
         sc.append((m["body_fit"], it, m))
     known = sorted([x for x in sc if x[0] is not None], key=lambda x: -x[0])
     print(f"-- {name}: 점수 계산 {len(known)}/{len(items)}, 제외·태그부족 {len(items)-len(known)}")

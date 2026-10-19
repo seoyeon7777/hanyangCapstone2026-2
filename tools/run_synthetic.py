@@ -66,7 +66,7 @@ def main():
         g[0] += not errs
         g[1] += 1
         if errs:
-            fails.append((it["item_id"], it["scenario"], errs))
+            fails.append((it["product_id"], it["scenario"], errs))
     print(f"등록 시도 {len(data)}개 / 등록됨 {len(stored)}개 / 거절됨 {len(data) - len(stored)}개\n")
     print("[시나리오 묶음별 기대 결과 일치]")
     for k, (ok, n) in by_group.items():
@@ -87,11 +87,11 @@ def main():
     print(f"   글 보충이 일어난 상품 {added}/{len(stored)}개\n")
     for name, prof in PROFILES.items():
         r = client.post("/api/recommend", json={"profile": prof, "top_n": 3, "items": stored}).get_json()
-        names = {b["item_id"]: b["name"] for b in stored}
+        names = {b["product_id"]: b["product_name"] for b in stored}
         top_items = sorted((m for m in r["items"] if m["body_fit"] is not None), key=lambda m: -m["body_fit"])[:5]
         print(f"[{name}] 상위 상품")
         for m in top_items:
-            print(f"   {m['body_fit']:.3f}  #{m['item_id']} {names[m['item_id']][:30]}  {m['tags']}")
+            print(f"   {m['body_fit']:.3f}  #{m['product_id']} {names[m['product_id']][:30]}  {m['tags']}")
         print("   코디:", [(names[o['top']][:14], names[o['bottom']][:14], o['score']) for o in r["outfits"]])
     return 1 if fails else 0
 

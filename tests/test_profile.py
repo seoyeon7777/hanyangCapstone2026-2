@@ -51,4 +51,4 @@ def test_bad_profile_raises(bad):
 def test_bad_profile_raises_from_public_functions():
     rules = matching.load_rules()
     with pytest.raises(ValueError):
-        matching.match_item({"item_id": 1, "name": "슬림 셔츠"}, {"primary": "S"}, rules)
+        matching.match_item({"product_id": 1, "product_name": "슬림 셔츠"}, {"primary": "S"}, rules)

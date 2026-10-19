@@ -34,7 +34,7 @@ def from_profile(profile):
 
 def match_score(body, item):
     """C 약속 모양: {"score", "excluded", "good_tags", "avoid_tags"} + B가 만든 "reasons"."""
-    m = matching.match_item({"item_id": item["id"], "name": item["name"], "tags": item["tags"]},
+    m = matching.match_item({"product_id": item["product_id"], "product_name": item["product_name"], "tags": item["tags"]},
                             to_profile(body), RULES)
     weights, primary = RULES.weights, body["primary"]
     known = [t for t in m["tags"] if t in weights]

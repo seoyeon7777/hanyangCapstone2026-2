@@ -8,7 +8,7 @@ import os
 
 import feed
 import fake_matching
-from rec_config import W_BODY, W_PREF, W_TREND
+from rec_config import W_BODY, W_PREF, W_TREND, OUTFIT_GROUP
 from fake_matching import classify_kind, match_score
 from feed import (load_items, final_score, score_all, rank, home_feed,
                   outfits, reason, update_pref, need_rediagnosis, feed_order,
@@ -19,7 +19,7 @@ from feed import (load_items, final_score, score_all, rank, home_feed,
 feed.match_score = fake_matching.match_score
 feed.outfit_bonus = fake_matching.outfit_bonus
 FAKE_ITEMS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "items_fake.json")
-ITEMS = {item["id"]: item for item in load_items(FAKE_ITEMS)}
+ITEMS = {item["product_id"]: item for item in load_items(FAKE_ITEMS)}
 STRAIGHT = {"ratio": {"S": 1.0, "W": 0.0, "N": 0.0}, "kind": "single", "primary": "S"}
 MIXED = {"ratio": {"S": 0.5, "W": 0.45, "N": 0.05}, "kind": "mixed", "primary": "S"}
 
@@ -29,10 +29,10 @@ def close(a, b, tol=1e-3):
 
 
 def test_items_count():
-    cats = [i["category"] for i in ITEMS.values()]
+    cats = [i["clothing_type"] for i in ITEMS.values()]
     assert len(ITEMS) == 30
-    assert (cats.count("top"), cats.count("bottom"),
-            cats.count("outer"), cats.count("dress")) == (12, 8, 6, 4)
+    assert (cats.count("top"), cats.count("pants"), cats.count("skirt"),
+            cats.count("outer"), cats.count("dress")) == (12, 6, 2, 6, 4)
 
 
 def test_weights_sum_to_one():
@@ -88,10 +88,10 @@ def test_preference_raises_score():
 def test_straight_style_guide_order():
     # 스타일 가이드 검증: 스트레이트 상위권에 칼라 셔츠·센터프레스 슬랙스·H라인 스커트
     results = sorted(score_all(STRAIGHT, ITEMS.values()), key=lambda r: r["score"], reverse=True)
-    top_ids = [r["id"] for r in results[:8]]
+    top_ids = [r["product_id"] for r in results[:8]]
     for must in ("t01", "b02", "b01"):
         assert must in top_ids
-    excluded = {r["id"] for r in results if r["excluded"]}
+    excluded = {r["product_id"] for r in results if r["excluded"]}
     assert {"t06", "t08", "t09", "t12", "o04", "o06"} <= excluded
 
 
@@ -105,13 +105,13 @@ def test_body_score_bounds():
 # ── 3단계: rank ─────────────────────────────────────────────
 def fake(id_, score, category="top", tag=None, excluded=False):
     """rank 테스트용 점수 결과 하나 (final_score 출력 모양)."""
-    return {"id": id_, "name": id_, "category": category, "score": score,
+    return {"product_id": id_, "product_name": id_, "clothing_type": category, "score": score,
             "body": 0, "pref": 0, "trend": 0, "excluded": excluded,
             "good_tags": [tag] if tag else [], "avoid_tags": []}
 
 
 def ids(results):
-    return [r["id"] for r in results]
+    return [r["product_id"] for r in results]
 
 
 def test_rank_sorts_and_drops_excluded():
@@ -158,7 +158,7 @@ def test_rank_real_items_rules():
         top = rank(score_all(body, ITEMS.values()))
         assert len(top) == 10
         assert not any(r["excluded"] for r in top)
-        cats = [r["category"] for r in top]
+        cats = [OUTFIT_GROUP[r["clothing_type"]] for r in top]
         assert not any(cats[i] == cats[i + 1] == cats[i + 2] for i in range(len(cats) - 2))
         reps = [r["good_tags"][0] for r in top if r["good_tags"]]
         assert all(reps.count(t) <= 3 for t in reps)
@@ -172,8 +172,8 @@ def test_home_feed_sections():
     today = feed["sections"][0]["items"]
     assert ids(today) == ids(rank(score_all(STRAIGHT, ITEMS.values())))
     looks = feed["sections"][-1]["items"]  # 추천 코디 = outfits 상위 3세트
-    assert [(c["top"]["id"], c["bottom"]["id"]) for c in looks] == \
-        [(c["top"]["id"], c["bottom"]["id"]) for c in outfits(STRAIGHT, list(ITEMS.values()))]
+    assert [(c["top"]["product_id"], c["bottom"]["product_id"]) for c in looks] == \
+        [(c["top"]["product_id"], c["bottom"]["product_id"]) for c in outfits(STRAIGHT, list(ITEMS.values()))]
 
 
 def test_home_feed_category_sections():
@@ -181,7 +181,7 @@ def test_home_feed_category_sections():
     for section, cat in zip(feed["sections"][1:5], ("top", "bottom", "outer", "dress")):
         items = section["items"]
         assert len(items) == 4
-        assert all(r["category"] == cat and not r["excluded"] for r in items)
+        assert all(OUTFIT_GROUP[r["clothing_type"]] == cat and not r["excluded"] for r in items)
         scores = [r["score"] for r in items]
         assert scores == sorted(scores, reverse=True)
 
@@ -205,7 +205,7 @@ WAVE = {"ratio": {"S": 0.0, "W": 1.0, "N": 0.0}, "kind": "single", "primary": "W
 
 
 def pairs(looks):
-    return [(c["top"]["id"], c["bottom"]["id"]) for c in looks]
+    return [(c["top"]["product_id"], c["bottom"]["product_id"]) for c in looks]
 
 
 def test_outfits_straight():
@@ -230,7 +230,7 @@ def test_outfits_wave_cropped_high_waist():
     # b04 하이웨이스트 슬림 팬츠: high_waist +2, slim_fit +2 → 체형 0.75, 트렌드 0.85 → 0.7025
     # (0.70625 + 0.7025) / 2 + 0.10 = 0.804375 → 1위
     first = outfits(WAVE, list(ITEMS.values()))[0]
-    assert (first["top"]["id"], first["bottom"]["id"]) == ("t04", "b04")
+    assert (first["top"]["product_id"], first["bottom"]["product_id"]) == ("t04", "b04")
     assert first["bonus"] == 0.10
     assert close(first["score"], 0.804375)
 
@@ -239,10 +239,10 @@ def test_outfits_rules():
     for body in (STRAIGHT, MIXED, WAVE):
         looks = outfits(body, list(ITEMS.values()))
         assert len(looks) == 3
-        tops = [c["top"]["id"] for c in looks]
+        tops = [c["top"]["product_id"] for c in looks]
         assert len(set(tops)) == 3  # 같은 상의 한 번만
         for c in looks:
-            assert c["top"]["category"] == "top" and c["bottom"]["category"] == "bottom"
+            assert OUTFIT_GROUP[c["top"]["clothing_type"]] == "top" and OUTFIT_GROUP[c["bottom"]["clothing_type"]] == "bottom"
             assert not c["top"]["excluded"] and not c["bottom"]["excluded"]
 
 
@@ -322,7 +322,7 @@ def test_feed_order_shows_every_item_once():
     # 제외 안 된 옷은 스크롤 끝까지 내리면 전부 정확히 한 번씩 나옴 (태그 제한으로 버려지지 않음)
     for body in (STRAIGHT, MIXED, WAVE):
         scored = score_all(body, ITEMS.values())
-        expected = sorted(r["id"] for r in scored if not r["excluded"])
+        expected = sorted(r["product_id"] for r in scored if not r["excluded"])
         assert sorted(ids(feed_order(scored))) == expected
 
 
@@ -365,11 +365,11 @@ def test_general_ignores_body_and_never_excludes():
     a = score_by_mode("general", STRAIGHT, ITEMS.values())
     b = score_by_mode("general", WAVE, ITEMS.values())
     c = score_by_mode("general", None, ITEMS.values())      # 체형 진단 없이도 됨
-    assert [(r["id"], r["score"]) for r in a] == [(r["id"], r["score"]) for r in b] \
-        == [(r["id"], r["score"]) for r in c]
+    assert [(r["product_id"], r["score"]) for r in a] == [(r["product_id"], r["score"]) for r in b] \
+        == [(r["product_id"], r["score"]) for r in c]
     # 토글 ON(스트레이트 단일형)에서는 러플 블라우스가 제외되지만 OFF에서는 보임
     # 0.5×0.6 + 0.3×0.5 + 0.2×0(봄·여름 상품) = 0.45
-    ruffle = next(r for r in a if r["id"] == "t06")
+    ruffle = next(r for r in a if r["product_id"] == "t06")
     assert not ruffle["excluded"] and close(ruffle["score"], 0.45)
     assert final_score(STRAIGHT, ITEMS["t06"])["excluded"]
 

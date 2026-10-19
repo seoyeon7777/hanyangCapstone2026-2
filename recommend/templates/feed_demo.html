@@ -40,7 +40,7 @@
             padding: 14px; margin-bottom: 10px; display: flex; gap: 12px; }
     .thumb { flex: 0 0 64px; height: 64px; border-radius: 10px; display: flex; align-items: center;
              justify-content: center; font-size: 13px; color: #fff; font-weight: 600; }
-    .top { background: #7aa6c2; } .bottom { background: #8f8bc4; }
+    .top { background: #7aa6c2; } .pants, .skirt { background: #8f8bc4; }
     .outer { background: #b49a7a; } .dress { background: #c48b9f; }
     .info { flex: 1; min-width: 0; }
     .name { font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
@@ -87,7 +87,7 @@
 <script>
   const USER_ID = "demo";
   const PAGE_SIZE = 10;
-  const CATEGORY = { top: "상의", bottom: "하의", outer: "아우터", dress: "원피스" };
+  const CATEGORY = { top: "상의", pants: "하의", skirt: "하의", outer: "아우터", dress: "원피스" };
   const TYPE = { S: "스트레이트", W: "웨이브", N: "내추럴" };
 
   let page = 0, hasMore = true, loading = false;
@@ -142,7 +142,7 @@
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <div class="thumb ${item.category}">${CATEGORY[item.category]}</div>
+      <div class="thumb ${item.clothing_type}">${CATEGORY[item.clothing_type]}</div>
       <div class="info">
         <div class="name"><span></span><span class="score">${item.score.toFixed(3)}점</span></div>
         <p class="reason"></p>
@@ -150,11 +150,11 @@
           <button data-e="like">찜</button><button data-e="purchase">구매</button><button data-e="return">반품</button>
         </div>
       </div>`;
-    card.querySelector(".name span").textContent = item.name;   // 상품명은 텍스트로만 넣음
+    card.querySelector(".name span").textContent = item.product_name;   // 상품명은 텍스트로만 넣음
     card.querySelector(".reason").textContent = item.reason;
     card.addEventListener("click", ev => {
       const event = ev.target.dataset.e || "click";
-      sendEvent(item.id, event, ev.target);
+      sendEvent(item.product_id, event, ev.target);
     });
     list.appendChild(card);
   }
@@ -162,7 +162,7 @@
   async function sendEvent(itemId, event, button) {
     const res = await fetch("/api/feed/event", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: USER_ID, item_id: itemId, event }),
+      body: JSON.stringify({ user_id: USER_ID, product_id: itemId, event }),
     });
     const data = await res.json();
     if (button && button.dataset.e) button.textContent += " ✓";

@@ -37,7 +37,7 @@ def run(scope, bodies, names):
 def main():
     data = json.load(open(ROOT / "samples" / "synthetic_sellers.json", encoding="utf-8"))["items"]
     bodies = [it["body"] for it in data]
-    names = {b["item_id"]: b["name"] for b in bodies}
+    names = {b["product_id"]: b["product_name"] for b in bodies}
     flag, ratio = run("flag", bodies, names), run("ratio", bodies, names)
     lines = ["코디 밸런스 규칙 적용 범위 비교: flag(이전: 단일형=1위만, 혼합형=1·2위만) vs ratio(세 유형 비율대로)",
              "상품: 가상 판매자 샘플 중 등록된 상품. 코디 상위 10개 비교. 어느 쪽이 더 좋은 추천인지는 이 결과로 판단할 수 없다.", ""]

@@ -68,6 +68,8 @@ CATEGORY_TITLES = {       # 섹션 순서 = 이 순서
     "outer": "아우터",
     "dress": "원피스",
 }
+# 상품의 clothing_type(DB 값) -> 홈 섹션·코디 조합이 쓰는 묶음. 바지·치마는 하의(bottom) 하나로 본다. B의 matching._OUTFIT_GROUP과 같은 값
+OUTFIT_GROUP = {"top": "top", "outer": "outer", "bottom": "bottom", "pants": "bottom", "skirt": "bottom", "dress": "dress"}
 
 # ── 5단계: 코디 조합 (outfits) ───────────────────────────────
 OUTFIT_TOP_N = 3     # "추천 코디" 세트 수

@@ -19,7 +19,7 @@ out = []
 for it in items:
     desc = (text.get(it["id"]) or "") + "\n" + (vision.get(it["id"]) or "")
     r = matching.tag_item_full(it["name"], desc, rules)
-    out.append({"item_id": it["id"], "name": it["name"], "cat": it["cat"], "tags": r["tags"],
+    out.append({"product_id": it["id"], "name": it["name"], "cat": it["cat"], "tags": r["tags"],
                 "materials": r["materials"], "material_basis": r["material_basis"], "source": it["source"]})
 json.dump(out, open(S / "demo_tags.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 with_comp = [o for o in out if o["materials"]]
