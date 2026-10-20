@@ -50,7 +50,8 @@ public final class RecommendApi {
 
     public static final int PAGE_SIZE = 10;
 
-    private static final int TIMEOUT_MS = 5000;
+    // Supabase(싱가포르)를 쓰면 첫 요청이 느릴 수 있어서 넉넉하게
+    private static final int TIMEOUT_MS = 10000;
 
     private static final String PREF_NAME = "recommend";
     private static final String KEY_USER_ID = "user_id";

@@ -137,6 +137,11 @@ public class ProductDetailActivity extends AppCompatActivity {
             );
         }
 
+        // 추천 서버 상품은 DB에 가격이 없으면 0으로 온다 → "0원" 대신 안내
+        if (serverProduct != null && price == 0) {
+            textDetailPrice.setText("가격 정보 준비 중");
+        }
+
 
         // =========================
         // 이미 장바구니 옵션이 있으면
@@ -166,6 +171,10 @@ public class ProductDetailActivity extends AppCompatActivity {
         // =========================
 
         layoutOptionSelect.setOnClickListener(v -> {
+
+            if (showServerProductNotice()) {
+                return;
+            }
 
             if (currentProduct == null) {
                 return;
@@ -224,6 +233,10 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         btnAddCart.setOnClickListener(v -> {
 
+            if (showServerProductNotice()) {
+                return;
+            }
+
             if (currentProduct == null) {
 
                 Toast.makeText(
@@ -258,6 +271,10 @@ public class ProductDetailActivity extends AppCompatActivity {
         // =========================
 
         btnFitting.setOnClickListener(v -> {
+
+            if (showServerProductNotice()) {
+                return;
+            }
 
             if (currentProduct == null) {
 
@@ -557,6 +574,22 @@ public class ProductDetailActivity extends AppCompatActivity {
     // =========================
     // 찜 하트 표시
     // =========================
+
+    /** 추천 서버 상품이면 아직 안 되는 기능이라고 알리고 true (옵션·사이즈 정보가 DB에 들어오면 연결) */
+    private boolean showServerProductNotice() {
+
+        if (currentProduct != null || serverProduct == null) {
+            return false;
+        }
+
+        Toast.makeText(
+                this,
+                "추천 상품은 아직 옵션 선택·장바구니·피팅이 안 돼요 (찜은 돼요)",
+                Toast.LENGTH_SHORT
+        ).show();
+
+        return true;
+    }
 
     private void updateHeart() {
 

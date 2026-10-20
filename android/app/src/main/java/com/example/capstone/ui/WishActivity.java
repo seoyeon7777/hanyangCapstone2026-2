@@ -54,7 +54,7 @@ public class WishActivity extends AppCompatActivity {
 
     private final String[] categories = {
             "전체", "상의", "아우터",
-            "원피스", "바지"
+            "원피스", "바지", "치마"   // 치마: 추천 서버 상품(skirt)용
     };
 
     @Override
