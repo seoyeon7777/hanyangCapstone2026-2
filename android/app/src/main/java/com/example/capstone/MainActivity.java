@@ -5,10 +5,13 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.CompoundButton;
 import androidx.core.widget.NestedScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -16,6 +19,8 @@ import com.example.capstone.adapter.ProductAdapter;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.Product;
+import com.example.capstone.data.RecommendApi;
+import com.example.capstone.ui.BodyTypeActivity;
 import com.example.capstone.ui.BottomMenu;
 import com.example.capstone.ui.CategoryFilterDialog;
 import com.example.capstone.ui.SearchActivity;
@@ -79,6 +84,31 @@ public class MainActivity extends AppCompatActivity {
     private String selectedWeight = "";
     private String selectedBodyType = "";
 
+    // ====================================
+    // 홈 추천 피드 (추천 서버 연결)
+    // ====================================
+
+    // 바닥까지 이만큼 남으면 다음 묶음을 미리 불러온다
+    private static final int LOAD_MORE_DISTANCE_DP = 600;
+
+    private SwitchCompat switchBodyMode;
+    private TextView textHomeRecTitle;
+
+    private final List<Product> homeProducts = new ArrayList<>();
+
+    private int homePage = 0;
+    private boolean homeHasMore = true;
+    private boolean homeLoading = false;
+
+    // 토글을 바꾸거나 다시 불러오면 1씩 올린다. 이전 요청의 응답은 버린다
+    private int homeRequestId = 0;
+
+    // 홈 피드를 불러올 때의 설문 저장 시각. 설문을 새로 하면 다시 불러온다
+    private long loadedSurveyTime = 0L;
+
+    private final CompoundButton.OnCheckedChangeListener modeListener =
+            (button, isChecked) -> reloadHomeFeed();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,6 +148,26 @@ public class MainActivity extends AppCompatActivity {
 
         textHomeEmpty = findViewById(
                 R.id.textHomeEmpty
+        );
+
+        switchBodyMode = findViewById(
+                R.id.switchBodyMode
+        );
+
+        textHomeRecTitle = findViewById(
+                R.id.textHomeRecTitle
+        );
+
+        // 설문을 한 적이 있으면 체형 맞춤(ON)으로 시작
+        setModeSilently(
+                BodyTypeActivity.lastSurveyAnswers(this) != null
+        );
+
+        // 홈 무한 스크롤: 바닥 근처에 오면 다음 묶음
+        homeScrollView.setOnScrollChangeListener(
+                (NestedScrollView.OnScrollChangeListener)
+                        (v, scrollX, scrollY, oldScrollX, oldScrollY) ->
+                                loadMoreIfNearBottom()
         );
 
         recyclerProducts.setLayoutManager(
@@ -253,6 +303,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateProducts() {
 
+        // 홈은 추천 서버가 고른 순서대로 보여 준다
+        if ("홈".equals(selectedMenu)) {
+            reloadHomeFeed();
+            return;
+        }
+
         List<Product> products = new ArrayList<>();
 
         for (Product product : DummyData.getProducts()) {
@@ -381,6 +437,183 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // ====================================
+    // 홈 추천 피드
+    // ====================================
+
+    /** 처음부터 다시 불러온다 (홈 진입, 토글 변경, 설문 변경) */
+    private void reloadHomeFeed() {
+
+        homeRequestId++;
+
+        homeProducts.clear();
+        homePage = 0;
+        homeHasMore = true;
+        homeLoading = false;
+
+        loadedSurveyTime = BodyTypeActivity.lastSurveyTime(this);
+
+        productAdapter = new ProductAdapter(homeProducts);
+        recyclerProducts.setAdapter(productAdapter);
+
+        textHomeEmpty.setVisibility(View.GONE);
+        recyclerProducts.setVisibility(View.VISIBLE);
+
+        updateHomeTitle("");
+
+        loadNextHomePage();
+    }
+
+    private void loadNextHomePage() {
+
+        if (homeLoading
+                || !homeHasMore
+                || !"홈".equals(selectedMenu)) {
+            return;
+        }
+
+        homeLoading = true;
+
+        final int requestId = homeRequestId;
+        final boolean bodyMode = switchBodyMode.isChecked();
+
+        RecommendApi.loadFeed(
+                this,
+                bodyMode
+                        ? RecommendApi.MODE_BODY
+                        : RecommendApi.MODE_GENERAL,
+                homePage,
+                new RecommendApi.Callback<RecommendApi.FeedPage>() {
+
+                    @Override
+                    public void onSuccess(RecommendApi.FeedPage page) {
+
+                        if (requestId != homeRequestId || isFinishing()) {
+                            return;
+                        }
+
+                        homeLoading = false;
+
+                        int start = homeProducts.size();
+                        homeProducts.addAll(page.items);
+                        productAdapter.notifyItemRangeInserted(
+                                start,
+                                page.items.size()
+                        );
+
+                        homePage++;
+                        homeHasMore = page.hasMore;
+
+                        updateHomeTitle(page.primary);
+
+                        boolean isEmpty = homeProducts.isEmpty();
+
+                        textHomeEmpty.setVisibility(
+                                isEmpty ? View.VISIBLE : View.GONE
+                        );
+
+                        // 화면이 아직 안 찼으면 한 묶음 더
+                        homeScrollView.post(
+                                MainActivity.this::loadMoreIfNearBottom
+                        );
+                    }
+
+                    @Override
+                    public void onError(int code, String message) {
+
+                        if (requestId != homeRequestId || isFinishing()) {
+                            return;
+                        }
+
+                        homeLoading = false;
+                        homeHasMore = false;
+
+                        // 체형 진단 전에 토글 ON → 일반 추천으로 바꿔서 보여 준다
+                        if (code == 400 && bodyMode) {
+
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    "체형 진단을 하면 골격 맞춤 추천을 볼 수 있어요. 지금은 일반 추천을 보여 줄게요",
+                                    Toast.LENGTH_LONG
+                            ).show();
+
+                            setModeSilently(false);
+                            reloadHomeFeed();
+                            return;
+                        }
+
+                        // 서버가 꺼져 있으면 기존 더미 상품이라도 보여 준다
+                        if (homeProducts.isEmpty()) {
+
+                            homeProducts.addAll(DummyData.getProducts());
+                            productAdapter.notifyDataSetChanged();
+
+                            message += " 기본 상품을 보여 줄게요";
+                        }
+
+                        Toast.makeText(
+                                MainActivity.this,
+                                message,
+                                Toast.LENGTH_LONG
+                        ).show();
+                    }
+                }
+        );
+    }
+
+    private void loadMoreIfNearBottom() {
+
+        View content = homeScrollView.getChildAt(0);
+
+        if (content == null) {
+            return;
+        }
+
+        int remaining = content.getBottom()
+                - (homeScrollView.getHeight() + homeScrollView.getScrollY());
+
+        float density = getResources().getDisplayMetrics().density;
+
+        if (remaining < LOAD_MORE_DISTANCE_DP * density) {
+            loadNextHomePage();
+        }
+    }
+
+    /** 토글 ON이면 "스트레이트 체형 맞춤 추천"처럼, OFF면 원래 제목 */
+    private void updateHomeTitle(String primary) {
+
+        if (!switchBodyMode.isChecked()) {
+            textHomeRecTitle.setText("취향 저격 추천");
+            return;
+        }
+
+        String typeName;
+
+        switch (primary) {
+            case "S":
+                typeName = "스트레이트 ";
+                break;
+            case "W":
+                typeName = "웨이브 ";
+                break;
+            case "N":
+                typeName = "내추럴 ";
+                break;
+            default:
+                typeName = "";
+        }
+
+        textHomeRecTitle.setText(typeName + "체형 맞춤 추천");
+    }
+
+    /** 리스너를 잠깐 떼고 토글 상태만 바꾼다 (바꾸면서 다시 불러오지 않게) */
+    private void setModeSilently(boolean bodyMode) {
+
+        switchBodyMode.setOnCheckedChangeListener(null);
+        switchBodyMode.setChecked(bodyMode);
+        switchBodyMode.setOnCheckedChangeListener(modeListener);
+    }
+
+    // ====================================
     // 새 필터 팝업
     // ====================================
 
@@ -435,6 +668,17 @@ public class MainActivity extends AppCompatActivity {
 
         if (productAdapter != null) {
             productAdapter.notifyDataSetChanged();
+        }
+
+        // 설문을 새로 하고 돌아왔으면 새 체형으로 홈을 다시 불러온다
+        if ("홈".equals(selectedMenu)
+                && BodyTypeActivity.lastSurveyTime(this) != loadedSurveyTime) {
+
+            setModeSilently(
+                    BodyTypeActivity.lastSurveyAnswers(this) != null
+            );
+
+            reloadHomeFeed();
         }
     }
 }

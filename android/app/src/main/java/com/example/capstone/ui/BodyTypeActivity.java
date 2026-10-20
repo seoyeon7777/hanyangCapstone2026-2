@@ -447,6 +447,45 @@ public class BodyTypeActivity extends AppCompatActivity {
                 .contains(KEY_SURVEY_ANSWERS);
     }
 
+    /**
+     * 최근 설문의 7문항 답 (1·2·3). 설문 기록이 없거나 빠진 문항이 있으면 null
+     * 추천 서버(RecommendApi)가 체형 진단에 쓴다. 문항 순서와 번호는 서버 A 파트 설문과 같다.
+     */
+    public static int[] lastSurveyAnswers(Context context) {
+
+        String saved = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                .getString(KEY_SURVEY_ANSWERS, "");
+
+        String[] parts = saved.split(",");
+
+        if (parts.length != 7) {
+            return null;
+        }
+
+        int[] answers = new int[7];
+
+        for (int i = 0; i < 7; i++) {
+            try {
+                answers[i] = Integer.parseInt(parts[i].trim());
+            } catch (NumberFormatException e) {
+                return null;
+            }
+
+            if (answers[i] < 1 || answers[i] > 3) {
+                return null;
+            }
+        }
+
+        return answers;
+    }
+
+    /** 최근 설문 저장 시각 (없으면 0). 홈 화면이 설문을 새로 했는지 알아챌 때 쓴다 */
+    public static long lastSurveyTime(Context context) {
+
+        return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                .getLong(KEY_SURVEY_AT, 0L);
+    }
+
     public static float lastSurveyHeight(Context context) {
 
         return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
