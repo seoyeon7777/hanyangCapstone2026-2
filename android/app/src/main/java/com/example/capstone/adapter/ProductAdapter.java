@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.R;
 import com.example.capstone.data.Product;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.ui.ProductDetailActivity;
 
 import java.text.NumberFormat;
@@ -79,9 +80,26 @@ public class ProductAdapter
 
         holder.textPrice.setText(price + "원");
 
+        // 추천 서버 상품은 아직 가격이 없어서 가격 대신 추천 이유를 보여 준다
+        boolean fromServer = product.isFromServer();
+
+        holder.textPrice.setVisibility(
+                fromServer && product.getPrice() == 0
+                        ? View.GONE
+                        : View.VISIBLE
+        );
+
+        holder.textReason.setText(product.getReason());
+
+        holder.textReason.setVisibility(
+                product.getReason().isEmpty()
+                        ? View.GONE
+                        : View.VISIBLE
+        );
+
         // NEW 배지
-        // 임시 기준: 상품 ID가 5 이상이면 NEW
-        boolean isNew = product.getId() >= 5;
+        // 임시 기준: 상품 ID가 5 이상이면 NEW (추천 서버 상품은 표시 안 함)
+        boolean isNew = !fromServer && product.getId() >= 5;
 
         holder.textNewBadge.setVisibility(
                 isNew ? View.VISIBLE : View.GONE
@@ -107,6 +125,15 @@ public class ProductAdapter
             currentProduct.setLiked(
                     !currentProduct.isLiked()
             );
+
+            // 찜을 누르면 추천 서버가 취향을 배운다 (찜 해제는 보내지 않음)
+            if (currentProduct.isLiked()) {
+                RecommendApi.sendEvent(
+                        v.getContext(),
+                        currentProduct,
+                        "like"
+                );
+            }
 
             if (isWishMode && !currentProduct.isLiked()) {
 
@@ -138,6 +165,13 @@ public class ProductAdapter
 
             Product selectedProduct =
                     productList.get(currentPosition);
+
+            // 상품을 눌러 본 기록도 추천에 반영
+            RecommendApi.sendEvent(
+                    v.getContext(),
+                    selectedProduct,
+                    "click"
+            );
 
             Intent intent = new Intent(
                     v.getContext(),
@@ -193,6 +227,7 @@ public class ProductAdapter
         TextView textPrice;
         ImageView textHeart;
         TextView textNewBadge;
+        TextView textReason;
 
         public ProductViewHolder(
                 @NonNull View itemView
@@ -217,6 +252,10 @@ public class ProductAdapter
 
             textNewBadge = itemView.findViewById(
                     R.id.textNewBadge
+            );
+
+            textReason = itemView.findViewById(
+                    R.id.textReason
             );
         }
     }
