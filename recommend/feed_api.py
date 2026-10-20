@@ -180,7 +180,9 @@ def scroll_feed():
     size = int_arg(data, "size", SCROLL_PAGE_SIZE, 1, SCROLL_MAX_PAGE_SIZE)
     pref = user["pref"] if user else None
 
-    ordered = feed_order(score_by_mode(mode, body, ITEMS, pref, season), page_size=size)
+    # 다양성 규칙의 묶음은 항상 SCROLL_PAGE_SIZE(10)개다. 요청한 size는 "몇 개를 보낼지"만 정한다.
+    # (size로 묶음을 잡으면 앱이 한 번에 받는 개수에 따라 추천 순서가 달라진다)
+    ordered = feed_order(score_by_mode(mode, body, ITEMS, pref, season))
     chunk = ordered[page * size:(page + 1) * size]
     return jsonify({
         "mode": mode,

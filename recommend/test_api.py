@@ -229,6 +229,27 @@ def test_get_missing_ratio_values_are_zero():
     assert res.get_json()["body"]["ratio"] == {"S": 1.0, "W": 0.0, "N": 0.0}
 
 
+def test_scroll_order_same_for_any_page_size():
+    # 앱이 한 번에 몇 개를 받든(5·10·30·50개) 이어 붙인 순서는 같아야 한다
+    # (예전에는 "같은 스타일 3개까지" 묶음을 요청한 size로 잡아서, size=30이면 순서가 달라졌다)
+    reset()
+    client.post("/api/feed", json={"user_id": "z1", "body": {"ratio": {"S": 1, "W": 0, "N": 0}}})
+
+    def whole(size):
+        out, page = [], 0
+        while True:
+            d = client.get(f"/api/feed/scroll?user_id=z1&season=fall&size={size}&page={page}").get_json()
+            out += [r["product_id"] for r in d["items"]]
+            if not d["has_more"]:
+                return out
+            page += 1
+
+    base = whole(10)
+    assert len(base) == 30
+    for size in (5, 7, 30, 50):
+        assert whole(size) == base, size
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     failed = 0

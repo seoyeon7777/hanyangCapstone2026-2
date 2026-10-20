@@ -80,11 +80,12 @@ match_score(body, item) -> {
 - `outfit_bonus(body, top_tags, bottom_tags)` = B의 balance_adjustment (data/balance.json)
 - A의 classify() 결과(ratios, is_mixed)는 B의 profile과 같은 모양이다. C의 body(ratio, kind)와는 `from_profile`/`to_profile`로 바꾼다
 - B 설정 `exclude_no_info: true` (10/16 추가): 가중치표 태그가 하나도 없고 핏 표기도 못 읽은 상품은 추천에서 빠진다 (C에서는 excluded). 시연 상품 30개는 모두 태그가 있어 영향 없음
-- B 설정(data/config.json)이 지금 `avoid_mode: penalty`라서 **제외되는 옷이 없다**(피해야 할 옷은 점수만 낮아짐). 제외 모드로 바꾸면 C도 자동으로 따른다
+- B 설정(data/config.json)이 지금 `avoid_mode: penalty`라서 **제외되는 옷이 없다**(피해야 할 옷은 점수만 낮아짐).
+  제외하려면 `avoid_mode: "exclude"`와 함께 **`avoid_threshold`를 -1로** 바꿔야 한다 (가중치 최솟값이 -1이라 지금 기준 -3으로는 아무것도 제외 안 됨 — `matching.validate_rules`가 경고함). 그러면 C도 자동으로 따른다
 
 ### item (상품) 형식
 ```json
-{"id": "t01", "name": "칼라 셔츠", "category": "top|bottom|outer|dress",
+{"product_id": "t01", "product_name": "칼라 셔츠", "clothing_type": "top|outer|pants|skirt|dress",
  "tags": ["fit:slim", "mat:cotton"],
  "seasons": ["spring", "fall"], "popularity": 0.8}
 ```
@@ -108,10 +109,10 @@ match_score(body, item) -> {
 ### 4-3. 정렬 + 다양성 `rank(scored, top_n=10)` (3단계, 완료)
 - 입력은 score_all() 결과, 반환은 상위 top_n개 목록
 - 제외된 옷을 빼고 score 내림차순
-- 같은 category가 3개 연속으로 나오지 않게 한다 (연속 최대 2개). 바꿀 후보가 없으면 그대로 둔다
+- 같은 종류(clothing_type을 `rec_config.OUTFIT_GROUP`으로 묶은 값: 바지·치마는 하의 하나)가 3개 연속으로 나오지 않게 한다 (연속 최대 2개). 바꿀 후보가 없으면 그대로 둔다
 - 상위 top_n 안에서 같은 대표 태그(good_tags 첫 번째)는 최대 3개. 넘는 옷은 상위권에서 빠진다. good_tags가 비면 제한 없음
-- 방법: 점수순 후보에서 두 규칙을 지키는 가장 높은 옷을 하나씩 고른다. 둘 다 지키는 옷이 없으면 category 규칙만 포기
-- 점수가 같으면 id 오름차순 (결과가 항상 같아야 테스트할 수 있다)
+- 방법: 점수순 후보에서 두 규칙을 지키는 가장 높은 옷을 하나씩 고른다. 둘 다 지키는 옷이 없으면 종류 연속 규칙만 포기
+- 점수가 같으면 product_id 오름차순 (결과가 항상 같아야 테스트할 수 있다)
 
 ### 4-4. 홈 섹션 `home_feed(body, items, pref=None, season="fall")` (4단계, 완료)
 - 섹션 순서: "오늘의 추천" → "상의" → "하의" → "아우터" → "원피스" → "추천 코디"
@@ -142,8 +143,8 @@ match_score(body, item) -> {
   - 비율 합이 1이 아니면 1로 맞추고, kind·primary는 classify_kind로 계산
   - season을 안 보내면 오늘 날짜의 계절. user_id가 있으면 저장된 pref를 쓰고, 비율을 안 보내면 저장된 체형을 재사용
   - 응답: `{"body", "season", "sections"}`. 모든 옷(코디의 top·bottom 포함)에 `reason` 추가
-- `POST /api/feed/event` `{"user_id", "item_id", "event"}` → `{"pref", "need_rediagnosis", "message"}`
-- 잘못된 입력은 400 + `{"ok": false, "error": 한국어 메시지}` (B와 같은 모양). 본문이 JSON 객체가 아니거나, body·answers·measurements·user_id·item_id 모양이 틀려도 400 (500이 나지 않게 막음)
+- `POST /api/feed/event` `{"user_id", "product_id", "event"}` → `{"pref", "need_rediagnosis", "message"}`
+- 잘못된 입력은 400 + `{"ok": false, "error": 한국어 메시지}` (B와 같은 모양). 본문이 JSON 객체가 아니거나, body·answers·measurements·user_id·product_id 모양이 틀려도 400 (500이 나지 않게 막음)
 - app.py가 404·405·예상 못 한 500도 JSON으로 돌려준다 (안드로이드 앱이 HTML 오류 화면을 받지 않게)
 - GET에서 S·W·N 중 빠진 값은 0 (POST와 같음)
 - 사용자 데이터(USERS)는 서버 메모리에만 저장 → 서버를 끄면 사라짐 (시연용. 실제 서비스는 DB 필요)
@@ -155,11 +156,12 @@ match_score(body, item) -> {
 ### 4-8. 홈 화면 무한 스크롤 (8단계, 완료)
 - 요구사항: 홈 화면(친구들이 만드는 중, 아직 저장소에 없음)에서 스크롤하면 알고리즘 순서대로 상품이 계속 나와야 한다
 - `feed_order(scored, page_size=10)`: 제외 안 된 옷 전체를 순서대로. rank와 같은 규칙을 10개 묶음마다 적용
-  - 같은 category 연속 최대 2개는 전체에 걸쳐 적용, 대표 태그 최대 3개는 묶음마다 다시 셈
+  - 같은 종류 연속 최대 2개는 전체에 걸쳐 적용, 대표 태그 최대 3개는 묶음마다 다시 셈
   - 태그 제한에 걸린 옷은 버리지 않고 다음 묶음으로 미룸. 미룰 곳이 없으면 그냥 보여 줌
   - 첫 묶음 = rank(scored) = "오늘의 추천"
   - rank와 feed_order는 내부 함수 `_pick_in_order`를 같이 쓴다
 - `GET/POST /api/feed/scroll` (`/api/feed`와 같은 체형·user_id 입력 + `page`(0~), `size`(1~50, 기본 10))
+  - 다양성 묶음은 size와 상관없이 항상 10개(SCROLL_PAGE_SIZE). size는 한 번에 보낼 개수만 정한다 → 몇 개씩 받든 이어 붙인 순서가 같다
   → `{"body", "season", "page", "size", "total", "has_more", "items"}` (items에 reason 포함)
 - `/feed-demo`: 연습 화면. 친구들 홈 화면이 오면 그 화면에서 `/api/feed/scroll`을 부르게 연결하고, 연습 화면은 지워도 된다
 
@@ -179,7 +181,7 @@ match_score(body, item) -> {
 `python -m pytest` (맨 위에서) — B 테스트 240개 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 38개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 18개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_api.py` — 현재 19개 통과 (Flask 필요: `pip install -r requirements.txt`).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
 
