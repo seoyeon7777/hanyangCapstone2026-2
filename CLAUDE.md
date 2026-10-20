@@ -252,7 +252,8 @@ match_score(body, item) -> {
 - [x] 8단계: 홈 화면 무한 스크롤 (feed_order, /api/feed/scroll, /feed-demo) + 테스트 7개
 - [x] 안드로이드 연결 준비: app.py가 같은 네트워크에서 접속 허용, 오류 전부 JSON, 잘못된 입력 500 → 400, 안드로이드_연결가이드.md
 - [x] 앱(안드로이드) 홈을 /api/feed/scroll·/api/feed/event에 연결 (4-10, feature/seoyeon-android-connect)
-- [ ] Android Studio 에뮬레이터에서 실제 실행 확인
+- [x] Android Studio 에뮬레이터에서 실제 실행 확인 (Pixel 6 API 35: 홈에 서버 상품·추천 이유·토글 표시)
+  - API 37 에뮬레이터는 친구들 3D 라이브러리(Filament)가 16KB 페이지를 지원하지 않아 앱이 꺼진다 → API 35(16KB 아닌 이미지)로 실행
 - [ ] 서버 상품의 가격·브랜드·사진, 상세·장바구니·찜 목록 연결 (DB 상품 연결 뒤)
 - [ ] 데이터 저장: 지금은 사용자 기록(USERS)·B 상품 저장소가 메모리, 상품은 JSON 파일 → 서버를 끄면 기록이 사라짐
 - [x] A·B·C 통합 (feature/integration): matching_b.py로 B 연결, app.py 통합 서버, /api/feed에 설문 answers 입력, 상품 태그를 B 이름으로, test_integration.py 8개
