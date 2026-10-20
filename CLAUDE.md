@@ -160,6 +160,7 @@ match_score(body, item) -> {
   - 첫 묶음 = rank(scored) = "오늘의 추천"
   - rank와 feed_order는 내부 함수 `_pick_in_order`를 같이 쓴다
 - `GET/POST /api/feed/scroll` (`/api/feed`와 같은 체형·user_id 입력 + `page`(0~), `size`(1~50, 기본 10))
+  - 다양성 묶음은 size와 상관없이 항상 10개(SCROLL_PAGE_SIZE). size는 한 번에 보낼 개수만 정한다 → 몇 개씩 받든 이어 붙인 순서가 같다
   → `{"body", "season", "page", "size", "total", "has_more", "items"}` (items에 reason 포함)
 - `/feed-demo`: 연습 화면. 친구들 홈 화면이 오면 그 화면에서 `/api/feed/scroll`을 부르게 연결하고, 연습 화면은 지워도 된다
 
@@ -179,7 +180,7 @@ match_score(body, item) -> {
 `python -m pytest` (맨 위에서) — B 테스트 240개 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 38개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 18개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_api.py` — 현재 19개 통과 (Flask 필요: `pip install -r requirements.txt`).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
 
