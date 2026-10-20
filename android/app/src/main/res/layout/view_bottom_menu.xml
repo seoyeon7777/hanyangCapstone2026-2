@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="68dp"
+    android:background="#FFFFFF"
+    android:elevation="10dp"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/menuHome"
+        style="@style/BottomMenuItem"
+        android:drawableTop="@drawable/ic_nav_home"
+        android:text="홈" />
+
+    <TextView
+        android:id="@+id/menuCategory"
+        style="@style/BottomMenuItem"
+        android:drawableTop="@drawable/ic_nav_category"
+        android:text="카테고리" />
+
+    <TextView
+        android:id="@+id/menuWish"
+        style="@style/BottomMenuItem"
+        android:drawableTop="@drawable/ic_nav_wish"
+        android:text="찜" />
+
+    <TextView
+        android:id="@+id/menuFitting"
+        style="@style/BottomMenuItem"
+        android:drawableTop="@drawable/ic_nav_fitting"
+        android:text="피팅" />
+
+    <TextView
+        android:id="@+id/menuCart"
+        style="@style/BottomMenuItem"
+        android:drawableTop="@drawable/ic_nav_cart"
+        android:text="장바구니" />
+
+    <TextView
+        android:id="@+id/menuMy"
+        style="@style/BottomMenuItem"
+        android:drawableTop="@drawable/ic_nav_my"
+        android:text="마이" />
+
+</LinearLayout>

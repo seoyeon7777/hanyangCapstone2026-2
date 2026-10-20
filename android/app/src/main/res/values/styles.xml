@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="MyPageMenuItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingBottom">14dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <!-- 공통 하단 메뉴 한 칸 (view_bottom_menu.xml) -->
+    <style name="BottomMenuItem">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center_horizontal|top</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">#888888</item>
+        <item name="android:drawablePadding">4dp</item>
+        <item name="android:drawableTint">#888888</item>
+    </style>
+
+    <!-- ============ 마이페이지 하위 화면 공통 ============ -->
+
+    <!-- 입력 폼 라벨 -->
+    <style name="MyPageFormLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">6dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <!-- 한 줄 입력칸 -->
+    <style name="MyPageEdit">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_marginBottom">18dp</item>
+        <item name="android:background">@drawable/bg_edit</item>
+        <item name="android:paddingHorizontal">16dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:inputType">text</item>
+    </style>
+
+    <!-- 하단 검정 버튼 -->
+    <style name="MyPageButtonPrimary">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">52dp</item>
+        <item name="android:background">@drawable/bg_button</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 카드 안 작은 테두리 버튼 -->
+    <style name="MyPageButtonSmall">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">34dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:paddingHorizontal">14dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:background">@drawable/bg_button_small_outline</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- 상단 탭 글자 -->
+    <style name="MyPageTab">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">#AAAAAA</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!-- 상태 필터 칩 -->
+    <style name="MyPageChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">34dp</item>
+        <item name="android:layout_marginEnd">8dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingHorizontal">14dp</item>
+        <item name="android:background">@drawable/bg_chip_state</item>
+        <item name="android:textColor">@color/chip_text_state</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!-- 카드 안 회색 보조 글자 -->
+    <style name="MyPageSubText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">#5A5A5A</item>
+    </style>
+
+    <!-- 목록이 비었을 때 안내 -->
+    <style name="MyPageEmpty">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingVertical">60dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#AAAAAA</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="MeasurementCard">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">100dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">#000000</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:background">#F7F7F7</item>
+    </style>
+
+</resources>

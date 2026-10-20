@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- 제목 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="신체 측정 결과"
+            android:textColor="#000000"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="정면·옆면 사진을 분석하여 추정한 신체 치수입니다."
+            android:textColor="#666666"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"/>
+
+
+        <!-- 안내 박스 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="#F5F5F5"
+            android:padding="16dp"
+            android:text="ⓘ  본 결과는 사진 기반으로 추정한 값으로, 실제 치수와 차이가 있을 수 있습니다."
+            android:textColor="#555555"
+            android:textSize="13sp"/>
+
+
+        <!-- 기본 신체 정보 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="기본 신체 정보"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="28dp"
+            android:layout_marginBottom="12dp"/>
+
+
+        <!-- 기본 정보 + 사진 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+
+            <!-- 왼쪽 치수 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingEnd="8dp">
+
+                <TextView
+                    android:id="@+id/textResultHeight"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="키"
+                    android:textColor="#000000"
+                    android:textSize="15sp"
+                    android:paddingVertical="12dp"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#DDDDDD"/>
+
+                <TextView
+                    android:id="@+id/textResultShoulder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="어깨너비"
+                    android:textColor="#000000"
+                    android:textSize="15sp"
+                    android:paddingVertical="12dp"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#DDDDDD"/>
+
+                <TextView
+                    android:id="@+id/textResultArm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="팔 길이"
+                    android:textColor="#000000"
+                    android:textSize="15sp"
+                    android:paddingVertical="12dp"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#DDDDDD"/>
+
+                <TextView
+                    android:id="@+id/textResultTorso"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="상체 길이"
+                    android:textColor="#000000"
+                    android:textSize="15sp"
+                    android:paddingVertical="12dp"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#DDDDDD"/>
+
+                <TextView
+                    android:id="@+id/textResultLeg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="다리 길이"
+                    android:textColor="#000000"
+                    android:textSize="15sp"
+                    android:paddingVertical="12dp"/>
+
+            </LinearLayout>
+
+
+            <!-- 오른쪽 사진 -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.15"
+                android:orientation="horizontal">
+
+
+                <!-- 정면 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="5dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="정면"
+                        android:textColor="#000000"
+                        android:textStyle="bold"
+                        android:textSize="13sp"
+                        android:gravity="center"
+                        android:layout_marginBottom="6dp"/>
+
+                    <ImageView
+                        android:id="@+id/imageResultFront"
+                        android:layout_width="match_parent"
+                        android:layout_height="210dp"
+                        android:background="#F3F3F3"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="정면 사진"/>
+
+                </LinearLayout>
+
+
+                <!-- 옆면 -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="5dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="옆면"
+                        android:textColor="#000000"
+                        android:textStyle="bold"
+                        android:textSize="13sp"
+                        android:gravity="center"
+                        android:layout_marginBottom="6dp"/>
+
+                    <ImageView
+                        android:id="@+id/imageResultSide"
+                        android:layout_width="match_parent"
+                        android:layout_height="210dp"
+                        android:background="#F3F3F3"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="옆면 사진"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+        <!-- 신체 둘레 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="신체 둘레 (추정)"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="34dp"/>
+
+
+        <!-- 1행 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="14dp">
+
+            <TextView
+                android:id="@+id/textResultChest"
+                style="@style/MeasurementCard"
+                android:text="가슴둘레"/>
+
+            <TextView
+                android:id="@+id/textResultWaist"
+                style="@style/MeasurementCard"
+                android:text="허리둘레"/>
+
+        </LinearLayout>
+
+
+        <!-- 2행 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textResultHip"
+                style="@style/MeasurementCard"
+                android:text="골반둘레"/>
+
+            <TextView
+                android:id="@+id/textResultNeck"
+                style="@style/MeasurementCard"
+                android:text="목둘레"/>
+
+        </LinearLayout>
+
+
+        <!-- 3행 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textResultUpperArm"
+                style="@style/MeasurementCard"
+                android:text="상완둘레"/>
+
+            <TextView
+                android:id="@+id/textResultForearm"
+                style="@style/MeasurementCard"
+                android:text="전완둘레"/>
+
+        </LinearLayout>
+
+
+        <!-- 4행 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textResultThigh"
+                style="@style/MeasurementCard"
+                android:text="허벅지둘레"/>
+
+            <TextView
+                android:id="@+id/textResultCalf"
+                style="@style/MeasurementCard"
+                android:text="종아리둘레"/>
+
+        </LinearLayout>
+
+
+        <!-- 비율 분석 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="비율 분석"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="34dp"/>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="14dp">
+
+            <TextView
+                android:id="@+id/textUpperRatio"
+                android:layout_width="0dp"
+                android:layout_height="90dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="상체 비율"
+                android:textColor="#000000"
+                android:textSize="15sp"/>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="70dp"
+                android:layout_gravity="center_vertical"
+                android:background="#DDDDDD"/>
+
+            <TextView
+                android:id="@+id/textLowerRatio"
+                android:layout_width="0dp"
+                android:layout_height="90dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="하체 비율"
+                android:textColor="#000000"
+                android:textSize="15sp"/>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="70dp"
+                android:layout_gravity="center_vertical"
+                android:background="#DDDDDD"/>
+
+            <TextView
+                android:id="@+id/textWhr"
+                android:layout_width="0dp"
+                android:layout_height="90dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="허리-골반 비율"
+                android:textColor="#000000"
+                android:textSize="15sp"/>
+
+        </LinearLayout>
+
+
+        <Button
+            android:id="@+id/btnMeasurementDone"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#000000"
+            android:text="확인"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"/>
+
+    </LinearLayout>
+
+</ScrollView>

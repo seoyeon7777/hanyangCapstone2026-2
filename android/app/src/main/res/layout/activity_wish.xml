@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:text="찜 목록"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#111111"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerWish"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"/>
+
+    <!-- 공통 하단 메뉴 (view_bottom_menu.xml) -->
+    <include layout="@layout/view_bottom_menu" />
+
+</LinearLayout>

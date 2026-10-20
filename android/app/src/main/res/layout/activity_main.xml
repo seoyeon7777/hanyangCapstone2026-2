@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF">
+
+    <!-- 홈 화면 스크롤 -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/homeScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 로고 + 검색 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Capstone"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#111111"
+                    android:layout_marginEnd="16dp"/>
+
+                <LinearLayout
+                    android:id="@+id/editSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="#F4F4F4"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="12dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="검색어를 입력하세요"
+                        android:textColor="#999999"
+                        android:textSize="13sp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⌕"
+                        android:textColor="#222222"
+                        android:textSize="24sp"/>
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 상단 카테고리 메뉴 -->
+            <HorizontalScrollView
+                android:id="@+id/topCategoryScroll"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:scrollbars="none"
+                android:fillViewport="false">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <!-- 홈 -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="bottom"
+                        android:layout_marginEnd="24dp">
+
+                        <TextView
+                            android:id="@+id/tabHome"
+                            android:layout_width="wrap_content"
+                            android:layout_height="45dp"
+                            android:gravity="center"
+                            android:text="홈"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="#111111"/>
+
+                        <View
+                            android:id="@+id/indicatorHome"
+                            android:layout_width="match_parent"
+                            android:layout_height="2dp"
+                            android:background="#111111"/>
+                    </LinearLayout>
+
+                    <!-- 신상 -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="bottom"
+                        android:layout_marginEnd="24dp">
+
+                        <TextView
+                            android:id="@+id/tabNew"
+                            android:layout_width="wrap_content"
+                            android:layout_height="45dp"
+                            android:gravity="center"
+                            android:text="신상"
+                            android:textSize="14sp"
+                            android:textColor="#888888"/>
+
+                        <View
+                            android:id="@+id/indicatorNew"
+                            android:layout_width="match_parent"
+                            android:layout_height="2dp"
+                            android:background="#111111"
+                            android:visibility="invisible"/>
+                    </LinearLayout>
+
+                    <!-- 베스트 -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="bottom"
+                        android:layout_marginEnd="24dp">
+
+                        <TextView
+                            android:id="@+id/tabBest"
+                            android:layout_width="wrap_content"
+                            android:layout_height="45dp"
+                            android:gravity="center"
+                            android:text="베스트"
+                            android:textSize="14sp"
+                            android:textColor="#888888"/>
+
+                        <View
+                            android:id="@+id/indicatorBest"
+                            android:layout_width="match_parent"
+                            android:layout_height="2dp"
+                            android:background="#111111"
+                            android:visibility="invisible"/>
+                    </LinearLayout>
+
+                    <!-- 상의 -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="bottom"
+                        android:layout_marginEnd="24dp">
+
+                        <TextView
+                            android:id="@+id/tabTop"
+                            android:layout_width="wrap_content"
+                            android:layout_height="45dp"
+                            android:gravity="center"
+                            android:text="상의"
+                            android:textSize="14sp"
+                            android:textColor="#888888"/>
+
+                        <View
+                            android:id="@+id/indicatorTop"
+                            android:layout_width="match_parent"
+                            android:layout_height="2dp"
+                            android:background="#111111"
+                            android:visibility="invisible"/>
+                    </LinearLayout>
+
+                    <!-- 아우터 -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="bottom"
+                        android:layout_marginEnd="24dp">
+
+                        <TextView
+                            android:id="@+id/tabOuter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="45dp"
+                            android:gravity="center"
+                            android:text="아우터"
+                            android:textSize="14sp"
+                            android:textColor="#888888"/>
+
+                        <View
+                            android:id="@+id/indicatorOuter"
+                            android:layout_width="match_parent"
+                            android:layout_height="2dp"
+                            android:background="#111111"
+                            android:visibility="invisible"/>
+                    </LinearLayout>
+
+                    <!-- 원피스 -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="bottom"
+                        android:layout_marginEnd="24dp">
+
+                        <TextView
+                            android:id="@+id/tabDress"
+                            android:layout_width="wrap_content"
+                            android:layout_height="45dp"
+                            android:gravity="center"
+                            android:text="원피스"
+                            android:textSize="14sp"
+                            android:textColor="#888888"/>
+
+                        <View
+                            android:id="@+id/indicatorDress"
+                            android:layout_width="match_parent"
+                            android:layout_height="2dp"
+                            android:background="#111111"
+                            android:visibility="invisible"/>
+                    </LinearLayout>
+
+                    <!-- 바지 -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:gravity="bottom">
+
+                        <TextView
+                            android:id="@+id/tabPants"
+                            android:layout_width="wrap_content"
+                            android:layout_height="45dp"
+                            android:gravity="center"
+                            android:text="바지"
+                            android:textSize="14sp"
+                            android:textColor="#888888"/>
+
+                        <View
+                            android:id="@+id/indicatorPants"
+                            android:layout_width="match_parent"
+                            android:layout_height="2dp"
+                            android:background="#111111"
+                            android:visibility="invisible"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- 홈에서만 표시되는 메인 배너 -->
+            <FrameLayout
+                android:id="@+id/homeBanner"
+                android:layout_width="match_parent"
+                android:layout_height="230dp"
+                android:background="#EEEEEE">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="메인 배너 이미지"
+                    android:textSize="13sp"
+                    android:textColor="#AAAAAA"/>
+
+            </FrameLayout>
+
+            <!-- 홈에서만 표시되는 추천 제목 -->
+            <LinearLayout
+                android:id="@+id/homeRecommendationHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginTop="25dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="취향 저격 추천"
+                    android:textSize="19sp"
+                    android:textStyle="bold"
+                    android:textColor="#111111"/>
+
+                <TextView
+                    android:id="@+id/btnSeeAllProducts"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="전체보기 ›"
+                    android:textSize="12sp"
+                    android:textColor="#777777"
+                    android:padding="6dp"/>
+
+            </LinearLayout>
+
+            <!-- 카테고리 선택 시 표시되는 제목 -->
+            <LinearLayout
+                android:id="@+id/categoryResultHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="14dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/textSelectedCategory"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="상의 14개"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#111111"/>
+
+                <TextView
+                    android:id="@+id/btnHomeFilter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="필터 · 정렬 ›"
+                    android:textSize="12sp"
+                    android:textColor="#333333"
+                    android:background="@drawable/bg_home_filter_button"
+                    android:paddingStart="13dp"
+                    android:paddingEnd="13dp"
+                    android:paddingTop="9dp"
+                    android:paddingBottom="9dp"/>
+
+            </LinearLayout>
+
+            <!-- 상품 목록 -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerProducts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:paddingBottom="24dp"
+                android:nestedScrollingEnabled="false"/>
+
+            <!-- 검색 결과가 아닌 빈 카테고리 안내 -->
+            <TextView
+                android:id="@+id/textHomeEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="70dp"
+                android:paddingBottom="70dp"
+                android:text="해당 카테고리의 상품이 없습니다."
+                android:textSize="13sp"
+                android:textColor="#999999"
+                android:visibility="gone"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- 기존 하단 메뉴 유지 -->
+    <include layout="@layout/view_bottom_menu"/>
+
+</LinearLayout>

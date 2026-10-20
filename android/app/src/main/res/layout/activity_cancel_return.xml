@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <include layout="@layout/view_mypage_toolbar" />
+
+    <!-- ============ 유형 필터 ============ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp">
+
+        <TextView
+            android:id="@+id/chipAll"
+            style="@style/MyPageChip"
+            android:text="전체" />
+
+        <TextView
+            android:id="@+id/chipCancel"
+            style="@style/MyPageChip"
+            android:text="취소" />
+
+        <TextView
+            android:id="@+id/chipReturn"
+            style="@style/MyPageChip"
+            android:text="반품" />
+
+        <TextView
+            android:id="@+id/chipExchange"
+            style="@style/MyPageChip"
+            android:text="교환" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvClaimCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="4dp"
+        android:text="0건"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <ScrollView
+        android:id="@+id/scrollClaims"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="24dp">
+
+            <!-- item_claim.xml 카드가 Java에서 채워진다 -->
+            <LinearLayout
+                android:id="@+id/containerClaims"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/tvEmpty"
+                style="@style/MyPageEmpty"
+                android:text="취소/반품/교환 내역이 없습니다." />
+
+            <!-- 안내 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_info_box"
+                android:lineSpacingExtra="4dp"
+                android:padding="16dp"
+                android:text="· 주문취소는 주문접수/결제완료 상태에서만 가능합니다.\n· 반품/교환은 배송완료 후 7일 이내에 신청할 수 있습니다.\n· 단순 변심에 의한 반품/교환은 왕복 배송비가 부과됩니다."
+                android:textColor="#5A5A5A"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
