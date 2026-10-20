@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    android:padding="20dp">
+
+    <!-- ============ 상단 툴바 ============ -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@null"
+            android:src="@drawable/ic_back"
+            app:tint="@color/black"/>
+
+        <ImageButton
+            android:id="@+id/btnHome"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@null"
+            android:src="@drawable/ic_home"
+            android:scaleType="fitCenter"/>
+    </RelativeLayout>
+
+    <!-- ============ 타이틀 ============ -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="비밀번호 재설정"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="본인확인 후 새 비밀번호를 설정할 수 있습니다."
+        android:textSize="13sp"
+        android:textColor="@color/black"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="40dp"/>
+
+    <!-- ============ 이메일주소 ============ -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="이메일주소"
+        android:textSize="12sp"
+        android:textColor="@color/black"
+        android:layout_marginBottom="6dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <EditText
+            android:id="@+id/etEmail"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:hint="example@gmail.com"
+            android:inputType="textEmailAddress"
+            android:background="@drawable/bg_edit"
+            android:paddingHorizontal="16dp"
+            android:textSize="14sp"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btnRequestAuth"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="인증받기"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:paddingHorizontal="16dp"
+            android:background="@drawable/bg_button"
+            app:backgroundTint="@null"/>
+    </LinearLayout>
+
+    <!-- ============ 인증번호 ============ -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="인증번호"
+        android:textSize="12sp"
+        android:textColor="@color/black"
+        android:layout_marginBottom="6dp"/>
+
+    <EditText
+        android:id="@+id/etAuthCode"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="인증번호를 입력해주세요."
+        android:inputType="number"
+        android:maxLength="4"
+        android:background="@drawable/bg_edit"
+        android:paddingHorizontal="16dp"
+        android:textSize="14sp"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- ============ 인증확인 버튼 (인증번호 입력 시 표시) ============ -->
+    <Button
+        android:id="@+id/btnVerifyCode"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="인증확인"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:background="@drawable/bg_button"
+        app:backgroundTint="@null"
+        android:visibility="gone"/>
+
+    <!-- ============ 새 비밀번호 (인증 완료 후 표시) ============ -->
+    <LinearLayout
+        android:id="@+id/containerNewPw"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="새 비밀번호"
+            android:textSize="12sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="6dp"/>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <EditText
+                android:id="@+id/etPassword"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="영문, 숫자, 특수문자포함 8자 이상"
+                android:inputType="textPassword"
+                android:background="@drawable/bg_edit"
+                android:paddingStart="16dp"
+                android:paddingEnd="48dp"
+                android:textSize="14sp"/>
+
+            <ImageButton
+                android:id="@+id/btnTogglePw1"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="12dp"
+                android:background="@null"
+                android:src="@drawable/ic_eye_off"
+                android:scaleType="fitCenter"/>
+
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="새 비밀번호 확인"
+            android:textSize="12sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="6dp"/>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/etPasswordConfirm"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="비밀번호를 한 번 더 입력해주세요"
+                android:inputType="textPassword"
+                android:background="@drawable/bg_edit"
+                android:paddingStart="16dp"
+                android:paddingEnd="48dp"
+                android:textSize="14sp"/>
+
+            <ImageButton
+                android:id="@+id/btnTogglePw2"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="12dp"
+                android:background="@null"
+                android:src="@drawable/ic_eye_off"
+                android:scaleType="fitCenter"/>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- 남는 공간 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <!-- ============ 변경 버튼 ============ -->
+    <Button
+        android:id="@+id/btnConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="비밀번호 변경"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:background="@drawable/bg_button"
+        app:backgroundTint="@null"/>
+</LinearLayout>

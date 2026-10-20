@@ -1,0 +1,102 @@
+{
+  "lut": "C:\\DataSet\\Capstone\\avatar_input_info\\app\\src\\main\\assets\\models\\morph_cm_lut.json",
+  "heightCm": 166.0,
+  "note": "Commercial body swap required for fashion QA; this reports LUT coverage only.",
+  "parts": [
+    {
+      "part": "CHEST",
+      "heightCm": 166.0,
+      "anthroBase": 86.3,
+      "chart": [
+        85.0,
+        100.0
+      ],
+      "safeUiCm": [
+        85.5,
+        87.2
+      ],
+      "ratioSafe": [
+        0.9909,
+        1.01
+      ],
+      "chartCoverPct": 11.0,
+      "status": "WEAK"
+    },
+    {
+      "part": "WAIST",
+      "heightCm": 166.0,
+      "anthroBase": 74.7,
+      "chart": [
+        61.0,
+        79.0
+      ],
+      "safeUiCm": [
+        69.9,
+        79.6
+      ],
+      "ratioSafe": [
+        0.9361,
+        1.0662
+      ],
+      "chartCoverPct": 50.4,
+      "status": "OK"
+    },
+    {
+      "part": "HIP",
+      "heightCm": 166.0,
+      "anthroBase": 91.3,
+      "chart": [
+        86.0,
+        102.0
+      ],
+      "safeUiCm": [
+        85.3,
+        97.3
+      ],
+      "ratioSafe": [
+        0.9347,
+        1.0662
+      ],
+      "chartCoverPct": 70.9,
+      "status": "OK"
+    },
+    {
+      "part": "SHOULDER",
+      "heightCm": 166.0,
+      "anthroBase": 37.4,
+      "chart": [
+        35.0,
+        40.0
+      ],
+      "safeUiCm": [
+        34.8,
+        39.9
+      ],
+      "ratioSafe": [
+        0.9323,
+        1.0677
+      ],
+      "chartCoverPct": 97.6,
+      "status": "OK"
+    },
+    {
+      "part": "THIGH",
+      "heightCm": 166.0,
+      "anthroBase": 53.1,
+      "chart": [
+        50.5,
+        64.0
+      ],
+      "safeUiCm": [
+        49.2,
+        56.4
+      ],
+      "ratioSafe": [
+        0.9254,
+        1.0625
+      ],
+      "chartCoverPct": 44.0,
+      "status": "PARTIAL"
+    }
+  ]
+}

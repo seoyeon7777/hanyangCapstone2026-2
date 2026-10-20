@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 취소/반품/교환 내역 카드 1건 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:background="@drawable/bg_card"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvClaimType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_badge_black"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="3dp"
+            android:text="취소"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvRequestDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="2026.10.08 신청"
+            android:textColor="@color/black"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvClaimState"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="처리중"
+            android:textColor="#E53935"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_thumb" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvProductName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="상품명"
+                android:textColor="@color/black"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvOption"
+                style="@style/MyPageSubText"
+                android:layout_marginTop="2dp"
+                android:text="옵션"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="10,000원"
+                android:textColor="@color/black"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvReason"
+        style="@style/MyPageSubText"
+        android:layout_width="match_parent"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_info_box"
+        android:padding="10dp"
+        android:text="사유: 단순 변심"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tvOrderNo"
+        style="@style/MyPageSubText"
+        android:layout_marginTop="8dp"
+        android:text="주문번호 20261008-0001"
+        android:textSize="11sp" />
+
+    <!-- 처리중인 반품/교환만 철회할 수 있다 -->
+    <Button
+        android:id="@+id/btnWithdraw"
+        style="@style/MyPageButtonSmall"
+        android:layout_gravity="end"
+        android:layout_marginTop="10dp"
+        android:text="신청 철회"
+        android:visibility="gone" />
+
+</LinearLayout>

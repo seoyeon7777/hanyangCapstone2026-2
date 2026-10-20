@@ -17,13 +17,15 @@ AI 코딩 도구가 이 파일만 읽고 작업을 이어갈 수 있게 정리�
 | C 추천·홈 피드 | feature/seoyeon | `recommend/` |
 
 세 파트는 feature/integration 브랜치에서 처음 통합했다. 통합 서버는 맨 위 `app.py`다.
-**화면은 친구들이 안드로이드 스튜디오(안드로이드 앱)로 만든다.** 이 저장소는 앱이 부르는 서버(API)만 제공한다. 앱 연결법은 `recommend/안드로이드_연결가이드.md`.
+**화면은 친구들이 안드로이드 스튜디오(안드로이드 앱)로 만든다.** 앱 프로젝트는 `android/`(Java)에 있다. 앱 코드는 친구들 몫이라 C 작업에서 건드리지 않는다. 앱 연결법은 `recommend/안드로이드_연결가이드.md`.
+앱은 아직 서버에 연결되지 않았다 (상품은 앱 안 DummyData, INTERNET 권한 없음, 홈 토글 없음).
 C 파트는 원래 hanyangCapstone2026 저장소에서 만들었고, 이 저장소로 복사해 왔다.
 
 ## 2. 폴더 구조
 
 ```
 README.md               저장소 소개
+android/                안드로이드 앱 (Android Studio로 이 폴더를 연다. 친구들 담당)
 requirements.txt        flask (API·서버용. 알고리즘과 테스트 대부분은 표준 라이브러리만)
 app.py                  ★ 통합 서버 (B server.create_app + C feed_bp). python app.py → 0.0.0.0:5000 (에뮬레이터 10.0.2.2, 폰은 PC IP)
                         모든 오류를 JSON {"ok": false, "error"}로. HOST·PORT·FLASK_DEBUG 환경변수

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "unit": "real_cm",
+  "shapeKeysTouched": false,
+  "note": "Slider cm is stored real cm: mesh-tape change scaled so w=0 is the AI Hub female height-bin median.",
+  "parts": {
+    "NECK": "목둘레 실측 cm",
+    "NECK_LENGTH": "목 구간 세로 길이",
+    "SHOULDER": "어깨사이너비 실측 cm",
+    "CHEST": "가슴둘레 실측 cm",
+    "BACK_LENGTH": "상체길이 실측 cm (목뒤–허리, 카메라 TORSO)",
+    "WAIST": "허리둘레 실측 cm",
+    "UPPER_ARM": "상완둘레 실측 cm (어깨–팔꿈치)",
+    "UPPER_ARM_LENGTH": "위팔길이 실측 cm",
+    "FOREARM": "전완둘레 실측 cm (편팔꿈치둘레 기준)",
+    "FOREARM_LENGTH": "전완길이 실측 cm",
+    "PELVIS": "장골능 가로 너비 (둘레 아님)",
+    "HIP": "엉덩이둘레 실측 cm",
+    "RISE": "허리↔가랑이 길이",
+    "THIGH": "넙다리둘레 실측 cm",
+    "THIGH_LENGTH": "허벅지 구간 길이 (다리길이에 포함)",
+    "CALF": "장딴지둘레 실측 cm",
+    "CALF_LENGTH": "종아리 구간 길이 (다리길이에 포함)"
+  }
+}

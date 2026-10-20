@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 주문취소 / 반품·교환 신청 다이얼로그 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="8dp">
+
+    <TextView
+        android:id="@+id/tvClaimProduct"
+        style="@style/MyPageSubText"
+        android:layout_marginBottom="16dp"
+        android:text="상품명 / 옵션" />
+
+    <!-- 반품/교환일 때만 보인다 -->
+    <RadioGroup
+        android:id="@+id/rgClaimType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <RadioButton
+            android:id="@+id/rbReturn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:checked="true"
+            android:text="반품" />
+
+        <RadioButton
+            android:id="@+id/rbExchange"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="교환" />
+    </RadioGroup>
+
+    <TextView
+        style="@style/MyPageFormLabel"
+        android:text="사유" />
+
+    <Spinner
+        android:id="@+id/spReason"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_edit"
+        android:paddingHorizontal="16dp" />
+
+    <EditText
+        android:id="@+id/etReasonDetail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_edit"
+        android:gravity="top|start"
+        android:hint="상세 사유 (선택)"
+        android:inputType="textMultiLine"
+        android:maxLength="200"
+        android:minHeight="90dp"
+        android:padding="14dp"
+        android:textSize="13sp" />
+
+</LinearLayout>

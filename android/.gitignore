@@ -1,0 +1,42 @@
+# Gradle / build
+.gradle/
+build/
+**/build/
+
+# Local SDK path (machine-specific)
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+.kotlin/
+
+# Built artifacts
+*.apk
+*.aar
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Native / profiling / captures
+.externalNativeBuild/
+.cxx/
+captures/
+*.hprof
+.navigation/
+
+# Keystores (do not commit signing keys)
+*.jks
+*.keystore
+key.properties
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Large avatar candidates (keep README only)
+incoming/avatar_candidates/**
+!incoming/avatar_candidates/README.md
+*.glb.qa.json

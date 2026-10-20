@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature
+        android:glEsVersion="0x00030000"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Capstone">
+
+        <activity android:name=".ui.WishActivity" />
+        <activity android:name=".ui.CartActivity" />
+        <activity
+            android:name=".ui.FittingActivity"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.AvatarPreviewActivity"
+            android:exported="true" />
+        <activity android:name=".ui.BodyTypeActivity" />
+        <activity android:name=".ui.BodyTypeResultActivity" />
+        <activity android:name=".ui.BodyMeasurementActivity" />
+        <activity android:name=".ui.PhotoMeasurementActivity" />
+        <activity android:name=".ui.MeasurementResultActivity" />
+        <activity android:name=".ui.DemoSampleActivity" />
+        <activity android:name=".ui.ProductDetailActivity" />
+        <activity android:name=".login.LoginMainActivity" />
+        <activity android:name=".login.LoginPhoneActivity" />
+        <activity android:name=".login.LoginEmailActivity" />
+        <activity android:name=".login.SigninMainActivity" />
+        <activity android:name=".login.PhoneVerifyActivity" />
+        <activity android:name=".login.SigninActivity" />
+        <activity android:name=".login.SigninCompleteActivity" />
+        <activity android:name=".ui.OrderActivity" />
+        <activity android:name=".ui.OrderCompleteActivity" />
+        <activity android:name=".ui.ReviewActivity" />
+
+
+        <!-- 팀원 merged_capstone 추가 화면 -->
+        <activity android:name=".login.MyPageActivity" android:exported="false" />
+        <activity android:name=".login.CouponActivity" android:exported="false" />
+        <activity android:name=".login.ResetPwActivity" android:exported="false" />
+        <activity android:name=".login.FindIdActivity" android:exported="false" />
+        <activity android:name=".login.InquiryActivity" android:exported="false" />
+        <activity android:name=".ui.CategoryActivity" android:exported="false" />
+        <activity android:name=".ui.CategoryMenuActivity" android:exported="false" />
+
+        <!-- 마이페이지 하위 화면 -->
+        <activity android:name=".mypage.EditProfileActivity" android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".mypage.ChangePasswordActivity" android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".mypage.OrderListActivity" android:exported="false" />
+        <activity android:name=".mypage.CancelReturnActivity" android:exported="false" />
+        <activity android:name=".mypage.DeliveryAddressActivity" android:exported="false" />
+        <activity android:name=".mypage.AddressEditActivity" android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".mypage.MyReviewActivity" android:exported="false" />
+        <activity android:name=".mypage.ReviewWriteActivity" android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".mypage.PaymentMethodActivity" android:exported="false" />
+        <activity android:name=".mypage.RefundAccountActivity" android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".mypage.NoticeActivity" android:exported="false" />
+        <activity android:name=".mypage.MyBodyActivity" android:exported="false" />
+        <activity android:name=".ui.BodySaveCompleteActivity" android:exported="false" />
+        <activity android:name=".ui.BodyFeedbackActivity" android:exported="false" />
+
+        <activity
+            android:name=".ui.SearchActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

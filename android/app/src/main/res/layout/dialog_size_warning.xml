@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- ========================= -->
+<!-- 사이즈 주의 팝업 -->
+<!-- 장바구니 담기 / 주문하기 전에 표시 -->
+<!-- ========================= -->
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_card"
+    android:padding="24dp">
+
+
+    <!-- ========================= -->
+    <!-- 경고 아이콘 -->
+    <!-- ========================= -->
+
+    <TextView
+        android:id="@+id/textWarningIcon"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="⚠"
+        android:textColor="#E5542F"
+        android:textSize="34sp" />
+
+
+    <!-- ========================= -->
+    <!-- 제목 -->
+    <!-- ========================= -->
+
+    <TextView
+        android:id="@+id/textWarningTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="사이즈가 맞지 않습니다"
+        android:textColor="#111111"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+
+    <!-- ========================= -->
+    <!-- 안내 문구 -->
+    <!-- ========================= -->
+
+    <TextView
+        android:id="@+id/textWarningMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:lineSpacingExtra="4dp"
+        android:text="고르신 M 사이즈는 회원님의 체형과 옷이 맞지 않습니다.&#10;그래도 장바구니에 담으시겠습니까?"
+        android:textColor="#555555"
+        android:textSize="14sp" />
+
+
+    <!-- ========================= -->
+    <!-- 상세 사유 -->
+    <!-- 부위별 비교 결과 -->
+    <!-- ========================= -->
+
+    <TextView
+        android:id="@+id/textWarningDetail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_dialog_detail"
+        android:lineSpacingExtra="5dp"
+        android:padding="14dp"
+        android:text="가슴둘레 102.0cm / M 권장 90.0~98.0cm"
+        android:textColor="#333333"
+        android:textSize="13sp" />
+
+
+    <!-- ========================= -->
+    <!-- 추천 사이즈 -->
+    <!-- ========================= -->
+
+    <TextView
+        android:id="@+id/textWarningRecommend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:gravity="center"
+        android:text="추천 사이즈: L"
+        android:textColor="#111111"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+
+    <!-- ========================= -->
+    <!-- 버튼 영역 -->
+    <!-- ========================= -->
+
+    <LinearLayout
+        android:id="@+id/layoutWarningButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="22dp"
+        android:orientation="horizontal">
+
+
+        <!-- 취소 / 사이즈 다시 선택 -->
+
+        <TextView
+            android:id="@+id/btnWarningCancel"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_dialog_btn_light"
+            android:gravity="center"
+            android:text="사이즈 다시 선택"
+            android:textColor="#111111"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+
+        <!-- 그래도 진행 -->
+
+        <TextView
+            android:id="@+id/btnWarningConfirm"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_dialog_btn_dark"
+            android:gravity="center"
+            android:text="그래도 담기"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</LinearLayout>

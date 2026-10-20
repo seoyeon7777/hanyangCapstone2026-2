@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    android:padding="20dp">
+
+    <!-- ============ 상단 툴바 ============ -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@null"
+            android:src="@drawable/ic_back"
+            app:tint="@color/black"/>
+
+        <ImageButton
+            android:id="@+id/btnHome"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@null"
+            android:src="@drawable/ic_home"
+            android:scaleType="fitCenter"/>
+    </RelativeLayout>
+
+    <!-- ============ 타이틀 ============ -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="계정 찾기"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginTop="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="가입할 때 등록한 정보로 계정을 찾을 수 있습니다."
+        android:textSize="13sp"
+        android:textColor="@color/black"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="40dp"/>
+
+    <!-- ============ 이름 ============ -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="이름"
+        android:textSize="12sp"
+        android:textColor="@color/black"
+        android:layout_marginBottom="6dp"/>
+
+    <EditText
+        android:id="@+id/etName"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="가입자 본인의 이름"
+        android:inputType="textPersonName"
+        android:background="@drawable/bg_edit"
+        android:paddingHorizontal="16dp"
+        android:textSize="14sp"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- ============ 휴대폰 번호 ============ -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="휴대폰 번호"
+        android:textSize="12sp"
+        android:textColor="@color/black"
+        android:layout_marginBottom="6dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <EditText
+            android:id="@+id/etPhone"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:hint="010-0000-0000"
+            android:inputType="phone"
+            android:background="@drawable/bg_edit"
+            android:paddingHorizontal="16dp"
+            android:textSize="14sp"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btnRequestAuth"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="인증받기"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:paddingHorizontal="16dp"
+            android:background="@drawable/bg_button"
+            app:backgroundTint="@null"/>
+    </LinearLayout>
+
+    <!-- ============ 인증번호 ============ -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="인증번호"
+        android:textSize="12sp"
+        android:textColor="@color/black"
+        android:layout_marginBottom="6dp"/>
+
+    <EditText
+        android:id="@+id/etAuthCode"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="인증번호를 입력해주세요."
+        android:inputType="number"
+        android:maxLength="4"
+        android:background="@drawable/bg_edit"
+        android:paddingHorizontal="16dp"
+        android:textSize="14sp"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- ============ 인증확인 버튼 (인증번호 입력 시 표시) ============ -->
+    <Button
+        android:id="@+id/btnVerifyCode"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="인증확인"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:background="@drawable/bg_button"
+        app:backgroundTint="@null"
+        android:visibility="gone"/>
+
+    <!-- ============ 찾은 계정 (확인 후 표시) ============ -->
+    <LinearLayout
+        android:id="@+id/containerResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_button_outlin"
+        android:padding="16dp"
+        android:layout_marginTop="20dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="회원님의 계정입니다"
+            android:textSize="13sp"
+            android:textColor="#5A5A5A"/>
+
+        <TextView
+            android:id="@+id/tvFoundAccount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginTop="6dp"/>
+
+    </LinearLayout>
+
+    <!-- 남는 공간 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <!-- ============ 확인 버튼 ============ -->
+    <Button
+        android:id="@+id/btnConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="계정 찾기"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:background="@drawable/bg_button"
+        app:backgroundTint="@null"/>
+</LinearLayout>

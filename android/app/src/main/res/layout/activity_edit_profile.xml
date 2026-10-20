@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <include layout="@layout/view_mypage_toolbar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingBottom="24dp">
+
+            <!-- ============ 프로필 이미지 ============ -->
+            <ImageView
+                android:id="@+id/imgProfile"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_circle_gray"
+                android:contentDescription="프로필 이미지"
+                android:padding="16dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_profile" />
+
+            <TextView
+                android:id="@+id/tvChangePhoto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                android:padding="4dp"
+                android:text="사진 변경"
+                android:textColor="#5A5A5A"
+                android:textSize="12sp" />
+
+            <!-- ============ 기본 정보 (users) ============ -->
+            <TextView
+                style="@style/MyPageFormLabel"
+                android:text="이름" />
+
+            <EditText
+                android:id="@+id/etName"
+                style="@style/MyPageEdit"
+                android:hint="이름을 입력해주세요"
+                android:maxLength="20" />
+
+            <TextView
+                style="@style/MyPageFormLabel"
+                android:text="이메일" />
+
+            <EditText
+                android:id="@+id/etEmail"
+                style="@style/MyPageEdit"
+                android:hint="example@gmail.com"
+                android:inputType="textEmailAddress" />
+
+            <TextView
+                style="@style/MyPageFormLabel"
+                android:text="휴대폰 번호" />
+
+            <EditText
+                android:id="@+id/etPhone"
+                style="@style/MyPageEdit"
+                android:hint="010-0000-0000"
+                android:inputType="phone"
+                android:maxLength="13" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginHorizontal="-20dp"
+                android:layout_marginTop="8dp"
+                android:background="#F5F5F5" />
+
+            <!-- ============ 계정 관리 (마이페이지 메뉴와 같은 형식) ============ -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp"
+                android:text="계정 관리"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/menuChangePw"
+                style="@style/MyPageMenuItem"
+                android:text="비밀번호 변경 (회원정보변경 등)" />
+
+            <TextView
+                android:id="@+id/tvWithdraw"
+                style="@style/MyPageMenuItem"
+                android:text="회원 탈퇴" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btnSave"
+        style="@style/MyPageButtonPrimary"
+        android:layout_margin="20dp"
+        android:text="저장하기" />
+
+</LinearLayout>
