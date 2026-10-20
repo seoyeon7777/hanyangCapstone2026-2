@@ -126,14 +126,11 @@ public class ProductAdapter
                     !currentProduct.isLiked()
             );
 
-            // 찜을 누르면 추천 서버가 취향을 배운다 (찜 해제는 보내지 않음)
-            if (currentProduct.isLiked()) {
-                RecommendApi.sendEvent(
-                        v.getContext(),
-                        currentProduct,
-                        "like"
-                );
-            }
+            // 서버 상품이면 찜 상태를 저장하고, 찜할 때 추천 서버가 취향을 배운다
+            RecommendApi.saveLike(
+                    v.getContext(),
+                    currentProduct
+            );
 
             if (isWishMode && !currentProduct.isLiked()) {
 
@@ -196,6 +193,12 @@ public class ProductAdapter
             intent.putExtra(
                     "product_price",
                     selectedProduct.getPrice()
+            );
+
+            // 서버 상품이면 상세 화면에서 찜할 수 있게 서버 id도 넘긴다
+            intent.putExtra(
+                    "server_product_id",
+                    selectedProduct.getServerId()
             );
 
             v.getContext().startActivity(intent);

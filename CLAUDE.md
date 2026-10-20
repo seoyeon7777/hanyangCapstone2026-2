@@ -193,6 +193,8 @@ match_score(body, item) -> {
   - 설문을 새로 하고 돌아오면(`lastSurveyTime` 변화) 다시 부름
 - `ProductAdapter`: 서버 상품 클릭 → click, 찜 → like. 카드에 추천 이유(`textReason`), 가격 0이면 숨김
 - `Product`: `serverId`·`reason` 추가 (서버 상품은 id −1)
+- 찜(서버 상품): `RecommendApi.saveLike` — 찜 상태를 기기(SharedPreferences "recommend"의 liked_products)에 저장 + 찜할 때 like 전송. 서버 상품 Product는 product_id마다 하나만 만들어 다시 불러와도 하트 유지
+  - 찜 탭(`WishActivity`)은 DummyData + `RecommendApi.likedServerProducts`를 보여 줌. 상세 화면은 `server_product_id`로 서버 상품을 찾아 하트만 동작 (옵션·장바구니는 아직 DummyData 상품만)
 - 확인: 여기서는 Android SDK를 받을 수 없어 androidx 대체 클래스로 javac 컴파일 검사 + 같은 요청을 curl로 서버에 보내 응답 확인까지만 했다. 실제 실행은 Android Studio에서 확인할 것
 
 ### 4-11. DB 저장 (Supabase, 11단계)
@@ -274,7 +276,7 @@ match_score(body, item) -> {
 - [x] 앱(안드로이드) 홈을 /api/feed/scroll·/api/feed/event에 연결 (4-10, feature/seoyeon-android-connect)
 - [x] Android Studio 에뮬레이터에서 실제 실행 확인 (Pixel 6 API 35: 홈에 서버 상품·추천 이유·토글 표시)
   - API 37 에뮬레이터는 친구들 3D 라이브러리(Filament)가 16KB 페이지를 지원하지 않아 앱이 꺼진다 → API 35(16KB 아닌 이미지)로 실행
-- [ ] 서버 상품의 사진(image_url) 표시, 상세·장바구니·찜 목록 연결
+- [ ] 서버 상품의 사진(image_url) 표시, 상세 화면의 옵션·장바구니 (찜 탭·상세 하트는 연결됨)
 - [x] 11단계: DB 저장 (store.py, Supabase) — 상품을 DB에서, 체형·반응을 body_profiles·user_events에. test_db.py 8개
 - [ ] DB 담당이 Supabase 프로젝트 만들고 db.sql 실행, 접속 주소 공유 → seed_db.py로 시연 상품 넣기 (DB_연결가이드.md)
 - [ ] 실제 상품 데이터(products + product_tags) 넣기, popularity 산식 정하기

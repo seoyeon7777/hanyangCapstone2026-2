@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
 import com.example.capstone.data.DummyData;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.Product;
 import com.example.capstone.data.SizeFitChecker;
@@ -34,6 +35,9 @@ public class ProductDetailActivity extends AppCompatActivity {
     private TextView textOptionSummary;
 
     private Product currentProduct;
+
+    // 추천 서버 상품 (DummyData에 없음). 찜만 된다 — 옵션·장바구니는 아직 DummyData 상품만
+    private Product serverProduct;
 
     private String selectedSize = "";
     private String selectedColor = "";
@@ -127,6 +131,12 @@ public class ProductDetailActivity extends AppCompatActivity {
             }
         }
 
+        if (currentProduct == null) {
+            serverProduct = RecommendApi.serverProduct(
+                    getIntent().getStringExtra("server_product_id")
+            );
+        }
+
 
         // =========================
         // 이미 장바구니 옵션이 있으면
@@ -180,6 +190,18 @@ public class ProductDetailActivity extends AppCompatActivity {
         // =========================
 
         btnDetailHeart.setOnClickListener(v -> {
+
+            // 서버 상품: 찜 상태 저장 + 추천 서버에 like
+            if (currentProduct == null && serverProduct != null) {
+
+                serverProduct.setLiked(
+                        !serverProduct.isLiked()
+                );
+
+                RecommendApi.saveLike(this, serverProduct);
+                updateHeart();
+                return;
+            }
 
             if (currentProduct == null) {
                 return;
@@ -538,14 +560,16 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private void updateHeart() {
 
-        if (currentProduct == null) {
+        Product product = currentProduct != null ? currentProduct : serverProduct;
+
+        if (product == null) {
 
             btnDetailHeart.setImageResource(R.drawable.ic_heart_outline);
             return;
         }
 
 
-        if (currentProduct.isLiked()) {
+        if (product.isLiked()) {
 
             btnDetailHeart.setImageResource(R.drawable.ic_heart_filled);
 
