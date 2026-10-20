@@ -17,8 +17,7 @@ AI 코딩 도구가 이 파일만 읽고 작업을 이어갈 수 있게 정리�
 | C 추천·홈 피드 | feature/seoyeon | `recommend/` |
 
 세 파트는 feature/integration 브랜치에서 처음 통합했다. 통합 서버는 맨 위 `app.py`다.
-**화면은 친구들이 안드로이드 스튜디오(안드로이드 앱)로 만든다.** 앱 프로젝트는 `android/`(Java)에 있다. 앱 코드는 친구들 몫이라 C 작업에서 건드리지 않는다. 앱 연결법은 `recommend/안드로이드_연결가이드.md`.
-앱은 아직 서버에 연결되지 않았다 (상품은 앱 안 DummyData, INTERNET 권한 없음, 홈 토글 없음).
+**화면은 친구들이 안드로이드 스튜디오(안드로이드 앱)로 만든다.** 앱 프로젝트는 `android/`(Java)에 있다. 화면 대부분은 친구들 몫이고, 홈 피드 서버 연결(아래 4-10)만 C(서연)가 맡았다. 앱 연결법은 `recommend/안드로이드_연결가이드.md`.
 C 파트는 원래 hanyangCapstone2026 저장소에서 만들었고, 이 저장소로 복사해 왔다.
 
 ## 2. 폴더 구조
@@ -184,6 +183,18 @@ match_score(body, item) -> {
 - API: `/api/feed`, `/api/feed/scroll`에 `mode` 추가, 응답에 `"mode"`. `mode=general`이면 체형 없이도 된다 (`mode=body`는 여전히 체형 필요 → 400)
 - `/feed-demo`에 토글 스위치
 
+### 4-10. 안드로이드 앱 홈 연결 (10단계)
+- `android/app/src/main/java/com/example/capstone/data/RecommendApi.java`: `BASE_URL`(에뮬레이터 `http://10.0.2.2:5000`, 폰은 PC IP), `loadFeed(context, mode, page, callback)` → `POST /api/feed/scroll`, `sendEvent(context, product, event)` → `POST /api/feed/event`
+  - 외부 라이브러리 없이 `HttpURLConnection` + `org.json`. 백그라운드 스레드에서 보내고 결과는 메인 스레드
+  - user_id = 기기마다 만든 `app-<UUID>` (SharedPreferences "recommend")
+  - 설문 답(`BodyTypeActivity.lastSurveyAnswers`)을 매 요청에 `answers`로 같이 보냄 → 서버를 다시 켜도 진단이 바로 됨
+- `MainActivity` 홈: DummyData 대신 서버 순서. 바닥 600dp 전에 다음 묶음, 토글 `switchBodyMode`(ON body / OFF general), 제목 "○○ 체형 맞춤 추천"
+  - 토글 ON인데 400(진단 없음) → 안내 후 OFF로 바꿔 다시 부름. 서버 연결 실패 → DummyData를 보여 줌
+  - 설문을 새로 하고 돌아오면(`lastSurveyTime` 변화) 다시 부름
+- `ProductAdapter`: 서버 상품 클릭 → click, 찜 → like. 카드에 추천 이유(`textReason`), 가격 0이면 숨김
+- `Product`: `serverId`·`reason` 추가 (서버 상품은 id −1)
+- 확인: 여기서는 Android SDK를 받을 수 없어 androidx 대체 클래스로 javac 컴파일 검사 + 같은 요청을 curl로 서버에 보내 응답 확인까지만 했다. 실제 실행은 Android Studio에서 확인할 것
+
 ### 4-11. DB 저장 (Supabase, 11단계)
 - 팀 결정: DB는 Supabase(무료 PostgreSQL). 표는 DB 담당의 `db/db.sql` 그대로. 연결 방법은 `recommend/DB_연결가이드.md`
 - `store.make_store()`: `DATABASE_URL` 환경 변수 → 맨 위 `database_url.txt` 순으로 주소를 찾고, 없으면 MemoryStore (지금까지와 같음)
@@ -195,7 +206,7 @@ match_score(body, item) -> {
   - 반응: user_events에 쌓기만. pref는 저장하지 않고 기록을 update_pref로 다시 계산 → 메모리 저장소와 결과가 같다
   - 연결 실패 → StoreError → API 503 `{"ok": false, "error"}`. psycopg는 `prepare_threshold=None`(Supabase 풀러 대응), 연결 하나를 lock으로 차례로 사용, 끊기면 한 번 다시 연결
 - 응답 상품에 DB의 `price`, `brand`, `image_url`을 더해 보낸다 (`feed_api.for_screen`). feed.py 결과 모양은 그대로
-- 앱 홈 화면은 아직 price·brand·image_url을 쓰지 않는다 (feature/seoyeon-android-connect의 RecommendApi.toProduct에서 읽게 바꿀 것)
+- 앱(RecommendApi.toProduct)은 응답의 price·brand를 카드에 쓴다 (없으면 가격 숨김·브랜드 자리에 종류). image_url은 아직 안 씀 (사진 불러오기 라이브러리 필요)
 
 ## 5. 정답 테스트 (반드시 통과)
 
@@ -260,7 +271,10 @@ match_score(body, item) -> {
 - [x] 7단계: Flask API (/api/feed, /api/feed/event) + test_api.py 6개
 - [x] 8단계: 홈 화면 무한 스크롤 (feed_order, /api/feed/scroll, /feed-demo) + 테스트 7개
 - [x] 안드로이드 연결 준비: app.py가 같은 네트워크에서 접속 허용, 오류 전부 JSON, 잘못된 입력 500 → 400, 안드로이드_연결가이드.md
-- [ ] 앱(안드로이드) 담당이 /api/feed/scroll·/api/feed/event 연결 — 안드로이드_연결가이드.md
+- [x] 앱(안드로이드) 홈을 /api/feed/scroll·/api/feed/event에 연결 (4-10, feature/seoyeon-android-connect)
+- [x] Android Studio 에뮬레이터에서 실제 실행 확인 (Pixel 6 API 35: 홈에 서버 상품·추천 이유·토글 표시)
+  - API 37 에뮬레이터는 친구들 3D 라이브러리(Filament)가 16KB 페이지를 지원하지 않아 앱이 꺼진다 → API 35(16KB 아닌 이미지)로 실행
+- [ ] 서버 상품의 사진(image_url) 표시, 상세·장바구니·찜 목록 연결
 - [x] 11단계: DB 저장 (store.py, Supabase) — 상품을 DB에서, 체형·반응을 body_profiles·user_events에. test_db.py 8개
 - [ ] DB 담당이 Supabase 프로젝트 만들고 db.sql 실행, 접속 주소 공유 → seed_db.py로 시연 상품 넣기 (DB_연결가이드.md)
 - [ ] 실제 상품 데이터(products + product_tags) 넣기, popularity 산식 정하기

@@ -25,6 +25,10 @@ public class Product {
     private final List<String> styles = new ArrayList<>();
     private final List<String> seasons = new ArrayList<>();
 
+    // 추천 서버에서 받은 상품만 채워진다 (DummyData 상품은 빈 문자열)
+    private String serverId = "";
+    private String reason = "";
+
     public Product(int id, String brand, String name, int price) {
         this.id = id;
         this.brand = brand;
@@ -109,6 +113,25 @@ public class Product {
 
     public List<String> getSeasons() {
         return new ArrayList<>(seasons);
+    }
+
+    public String getServerId() {
+        return serverId;
+    }
+
+    /** 추천 서버가 붙여 준 추천 이유 문장 */
+    public String getReason() {
+        return reason;
+    }
+
+    public boolean isFromServer() {
+        return !serverId.isEmpty();
+    }
+
+    // 추천 서버 상품 정보 설정 (RecommendApi가 호출)
+    public void setServerInfo(String serverId, String reason) {
+        this.serverId = serverId == null ? "" : serverId;
+        this.reason = reason == null ? "" : reason;
     }
 
     // 상품 필터 정보 설정

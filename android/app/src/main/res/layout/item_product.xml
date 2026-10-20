@@ -95,4 +95,17 @@
         android:textSize="15sp"
         android:textStyle="bold"/>
 
+    <!-- 추천 이유 (추천 서버 상품만 표시) -->
+    <TextView
+        android:id="@+id/textReason"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="#777777"
+        android:textSize="11sp"
+        android:lineSpacingExtra="2dp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:visibility="gone"/>
+
 </LinearLayout>
