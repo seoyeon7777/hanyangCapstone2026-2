@@ -9,12 +9,16 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from app import app  # noqa: E402
 import feed_api  # noqa: E402
+from feed import load_items  # noqa: E402
+from store import MemoryStore  # noqa: E402
 
+# database_url.txt가 있어도 팀 DB(Supabase)를 건드리지 않게 테스트는 항상 메모리 저장소로
+feed_api.STORE = MemoryStore(load_items())
 client = app.test_client()
 
 
 def reset():
-    feed_api.USERS.clear()
+    feed_api.STORE.reset()
 
 
 def test_get_feed_with_query():
