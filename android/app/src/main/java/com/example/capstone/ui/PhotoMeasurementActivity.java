@@ -16,16 +16,14 @@ import com.example.capstone.R;
 import com.example.capstone.camera.BodyMeasurementCalculator;
 import com.example.capstone.camera.BodySilhouetteAnalyzer;
 import com.example.capstone.camera.CircumferenceCalculator;
+import com.example.capstone.camera.MediaPipePoseDetector;
+import com.example.capstone.camera.Pose;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 
 import com.google.mlkit.vision.common.InputImage;
 
-import com.google.mlkit.vision.pose.Pose;
-import com.google.mlkit.vision.pose.PoseDetection;
-import com.google.mlkit.vision.pose.PoseDetector;
-import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions;
 
 import com.google.mlkit.vision.segmentation.Segmentation;
 import com.google.mlkit.vision.segmentation.SegmentationMask;
@@ -67,7 +65,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
     // ML Kit
     // =====================================================
 
-    private PoseDetector poseDetector;
+    private MediaPipePoseDetector poseDetector;
     private Segmenter segmenter;
 
 
@@ -301,22 +299,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         // Pose Detector
         // =================================================
 
-        PoseDetectorOptions poseOptions =
-                new PoseDetectorOptions
-                        .Builder()
-
-                        .setDetectorMode(
-                                PoseDetectorOptions
-                                        .SINGLE_IMAGE_MODE
-                        )
-
-                        .build();
-
-
-        poseDetector =
-                PoseDetection.getClient(
-                        poseOptions
-                );
+        poseDetector = new MediaPipePoseDetector(this, false);
 
 
         // =================================================

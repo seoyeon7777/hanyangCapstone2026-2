@@ -34,14 +34,12 @@ import com.example.capstone.R;
 import com.example.capstone.camera.BodyGuideOverlayView;
 import com.example.capstone.camera.BodyMeasurementCalculator;
 import com.example.capstone.camera.CircumferenceCalculator;
+import com.example.capstone.camera.MediaPipePoseDetector;
+import com.example.capstone.camera.Pose;
+import com.example.capstone.camera.PoseLandmark;
 import com.example.capstone.camera.PoseOverlayView;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.pose.Pose;
-import com.google.mlkit.vision.pose.PoseDetection;
-import com.google.mlkit.vision.pose.PoseDetector;
-import com.google.mlkit.vision.pose.PoseLandmark;
-import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions;
 import com.google.mlkit.vision.segmentation.Segmentation;
 import com.google.mlkit.vision.segmentation.SegmentationMask;
 import com.google.mlkit.vision.segmentation.Segmenter;
@@ -62,7 +60,7 @@ public class BodyMeasurementActivity extends AppCompatActivity {
     private TextView textHeight;
     private TextView textStatus;
 
-    private PoseDetector poseDetector;
+    private MediaPipePoseDetector poseDetector;
     private Segmenter segmenter;
     private ExecutorService cameraExecutor;
     private ImageCapture imageCapture;
@@ -92,8 +90,11 @@ public class BodyMeasurementActivity extends AppCompatActivity {
     private long countdownStartTime = 0L;
     private long lastAlignedTime = 0L;
 
-    private static final long STABLE_DURATION_MS = 700L;
-    private static final long COUNTDOWN_MS = 3000L;
+    // 신분증 촬영처럼: 가이드에 맞는 프레임이 연속으로 잡히면 바로 촬영 (카운트다운 없음)
+    private static final long STABLE_DURATION_MS = 150L;
+    // 측면 촬영 안내창을 닫은 뒤 몸을 돌릴 시간
+    private static final long POSE_READY_DELAY_MS = 3000L;
+    private long captureReadyTime = 0L;
     private static final long GRACE_DURATION_MS = 650L;
 
     // 화면 크기를 기준으로 한 허용 오차
@@ -185,12 +186,8 @@ public class BodyMeasurementActivity extends AppCompatActivity {
 
         cameraExecutor = Executors.newSingleThreadExecutor();
 
-        PoseDetectorOptions poseOptions =
-                new PoseDetectorOptions.Builder()
-                        .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
-                        .build();
-
-        poseDetector = PoseDetection.getClient(poseOptions);
+        // 카메라 프레임용(STREAM)으로 만든다. 촬영한 사진 분석도 같은 인스턴스를 쓴다
+        poseDetector = new MediaPipePoseDetector(this, true);
 
         SelfieSegmenterOptions segmentOptions =
                 new SelfieSegmenterOptions.Builder()
@@ -283,11 +280,6 @@ public class BodyMeasurementActivity extends AppCompatActivity {
             int rotationDegrees =
                     imageProxy.getImageInfo().getRotationDegrees();
 
-            InputImage image = InputImage.fromMediaImage(
-                    imageProxy.getImage(),
-                    rotationDegrees
-            );
-
             int width = imageProxy.getWidth();
             int height = imageProxy.getHeight();
 
@@ -300,7 +292,7 @@ public class BodyMeasurementActivity extends AppCompatActivity {
             final int imageWidth = width;
             final int imageHeight = height;
 
-            poseDetector.process(image)
+            poseDetector.process(imageProxy)
                     .addOnSuccessListener(pose -> {
                         if (isCapturing || photoAccepted || isSwitchingMode) {
                             return;
@@ -371,30 +363,19 @@ public class BodyMeasurementActivity extends AppCompatActivity {
             stableStartTime = now;
         }
 
+        if (now < captureReadyTime) {
+            textStatus.setText("자세를 잡아주세요...");
+            stableStartTime = 0L;
+            return;
+        }
+
         if (now - stableStartTime < STABLE_DURATION_MS) {
-            textStatus.setText("자세 인식 중... 잠시 유지해주세요.");
+            textStatus.setText("자세 인식 중...");
             return;
         }
 
-        if (countdownStartTime == 0L) {
-            countdownStartTime = now;
-        }
-
-        long elapsed = now - countdownStartTime;
-
-        if (elapsed >= COUNTDOWN_MS) {
-            textStatus.setText("자동 촬영 중...");
-            capturePhoto();
-            return;
-        }
-
-        int secondsLeft = (int) Math.ceil(
-                (COUNTDOWN_MS - elapsed) / 1000.0
-        );
-
-        textStatus.setText(
-                "자세 인식 완료! " + secondsLeft + "초 후 촬영"
-        );
+        textStatus.setText("촬영 중...");
+        capturePhoto();
     }
 
     private void handleTemporaryMisalignment(String message) {
@@ -403,11 +384,6 @@ public class BodyMeasurementActivity extends AppCompatActivity {
         if (lastAlignedTime != 0L &&
                 now - lastAlignedTime <= GRACE_DURATION_MS) {
 
-            if (countdownStartTime != 0L) {
-                textStatus.setText(
-                        "자세를 조금만 더 유지해주세요."
-                );
-            }
             return;
         }
 
@@ -977,6 +953,8 @@ public class BodyMeasurementActivity extends AppCompatActivity {
                             isSwitchingMode = false;
 
                             resetCountdown();
+                            captureReadyTime = SystemClock.elapsedRealtime()
+                                    + POSE_READY_DELAY_MS;
 
                             textStatus.setText(
                                     "측면: 옆으로 서서 전신을 보여주세요."

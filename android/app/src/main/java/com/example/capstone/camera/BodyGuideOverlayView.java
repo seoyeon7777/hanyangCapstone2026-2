@@ -10,7 +10,6 @@ import android.view.View;
 
 import androidx.annotation.Nullable;
 
-import com.google.mlkit.vision.pose.PoseLandmark;
 
 import java.util.HashMap;
 import java.util.Map;

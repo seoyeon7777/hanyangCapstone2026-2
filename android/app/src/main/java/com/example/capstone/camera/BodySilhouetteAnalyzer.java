@@ -2,8 +2,6 @@ package com.example.capstone.camera;
 
 import android.graphics.PointF;
 
-import com.google.mlkit.vision.pose.Pose;
-import com.google.mlkit.vision.pose.PoseLandmark;
 import com.google.mlkit.vision.segmentation.SegmentationMask;
 
 import java.nio.ByteBuffer;

@@ -26,6 +26,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    androidResources {
+        noCompress += "task"
+    }
+
     buildFeatures {
         buildConfig = true
     }
@@ -45,7 +49,8 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.4.2")
     implementation("androidx.camera:camera-lifecycle:1.4.2")
     implementation("androidx.camera:camera-view:1.4.2")
-    implementation("com.google.mlkit:pose-detection:18.0.0-beta5")
+    // 관절 인식: MediaPipe Pose Landmarker (모델은 assets/models/pose_landmarker_full.task)
+    implementation("com.google.mediapipe:tasks-vision:0.10.21")
     implementation("com.google.mlkit:segmentation-selfie:16.0.0-beta6")
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
