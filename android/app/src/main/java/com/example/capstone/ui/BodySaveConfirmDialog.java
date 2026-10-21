@@ -28,11 +28,12 @@ public final class BodySaveConfirmDialog {
     private BodySaveConfirmDialog() {
     }
 
-    public static void show(Context context, float heightCm, String bodyType, JSONObject parts,
-                            String defaultName, Listener listener) {
+    public static TextView show(Context context, float heightCm, String bodyType, JSONObject parts,
+                                String defaultName, Listener listener) {
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_body_save_confirm, null, false);
 
-        ((TextView) view.findViewById(R.id.tvSaveBodyType)).setText(bodyType);
+        TextView tvBodyType = view.findViewById(R.id.tvSaveBodyType);
+        tvBodyType.setText(bodyType);
         // 옷 구매 시 중요한 치수는 위, 나머지는 아래
         BodyValueTable.fill(view.findViewById(R.id.layoutSaveValues),
                 BodyValueTable.rows(heightCm, parts, true));
@@ -63,6 +64,7 @@ public final class BodySaveConfirmDialog {
         });
 
         dialog.show();
+        return tvBodyType;
     }
 
     private static void showRemeasureChoice(Context context, Listener listener) {

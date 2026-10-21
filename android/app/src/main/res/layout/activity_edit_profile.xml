@@ -17,8 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="20dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="32dp">
 
             <!-- ============ 프로필 이미지 ============ -->
             <ImageView
@@ -45,51 +44,176 @@
                 android:textColor="#5A5A5A"
                 android:textSize="12sp" />
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:background="#F5F5F5" />
+
             <!-- ============ 기본 정보 (users) ============ -->
             <TextView
-                style="@style/MyPageFormLabel"
-                android:text="이름" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="22dp"
+                android:layout_marginBottom="6dp"
+                android:text="회원 정보"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
-            <EditText
-                android:id="@+id/etName"
-                style="@style/MyPageEdit"
-                android:hint="이름을 입력해주세요"
-                android:maxLength="20" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp">
 
-            <TextView
-                style="@style/MyPageFormLabel"
-                android:text="이메일" />
+                <TextView
+                    android:layout_width="96dp"
+                    android:layout_height="wrap_content"
+                    android:text="아이디"
+                    android:textColor="#777777"
+                    android:textSize="14sp" />
 
-            <EditText
-                android:id="@+id/etEmail"
-                style="@style/MyPageEdit"
-                android:hint="example@gmail.com"
-                android:inputType="textEmailAddress" />
+                <TextView
+                    android:id="@+id/tvUserId"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="#111111"
+                    android:textSize="14sp" />
 
-            <TextView
-                style="@style/MyPageFormLabel"
-                android:text="휴대폰 번호" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="변경 불가"
+                    android:textColor="#AAAAAA"
+                    android:textSize="12sp" />
+            </LinearLayout>
 
-            <EditText
-                android:id="@+id/etPhone"
-                style="@style/MyPageEdit"
-                android:hint="010-0000-0000"
-                android:inputType="phone"
-                android:maxLength="13" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp">
+
+                <TextView
+                    android:layout_width="96dp"
+                    android:layout_height="wrap_content"
+                    android:text="이름"
+                    android:textColor="#777777"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="#111111"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/btnEditName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_button_small_outline"
+                    android:gravity="center"
+                    android:paddingHorizontal="12dp"
+                    android:text="변경"
+                    android:textColor="#111111"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp">
+
+                <TextView
+                    android:layout_width="96dp"
+                    android:layout_height="wrap_content"
+                    android:text="이메일"
+                    android:textColor="#777777"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvEmail"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="#111111"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/btnEditEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_button_small_outline"
+                    android:gravity="center"
+                    android:paddingHorizontal="12dp"
+                    android:text="변경"
+                    android:textColor="#111111"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="20dp">
+
+                <TextView
+                    android:layout_width="96dp"
+                    android:layout_height="wrap_content"
+                    android:text="휴대폰 번호"
+                    android:textColor="#777777"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvPhone"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="#111111"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/btnEditPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_button_small_outline"
+                    android:gravity="center"
+                    android:paddingHorizontal="12dp"
+                    android:text="변경"
+                    android:textColor="#111111"
+                    android:textSize="12sp" />
+            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="8dp"
-                android:layout_marginHorizontal="-20dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="14dp"
                 android:background="#F5F5F5" />
 
             <!-- ============ 계정 관리 (마이페이지 메뉴와 같은 형식) ============ -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="22dp"
+                android:layout_marginBottom="4dp"
                 android:text="계정 관리"
                 android:textColor="@color/black"
                 android:textSize="16sp"
@@ -98,20 +222,71 @@
             <TextView
                 android:id="@+id/menuChangePw"
                 style="@style/MyPageMenuItem"
-                android:text="비밀번호 변경 (회원정보변경 등)" />
+                android:paddingHorizontal="20dp"
+                android:text="비밀번호 변경" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="14dp"
+                android:background="#F5F5F5" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="22dp"
+                android:layout_marginBottom="4dp"
+                android:text="알림 설정"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchMarketingSms"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:paddingHorizontal="20dp"
+                android:text="마케팅 정보 문자(SMS) 수신"
+                android:textColor="#111111"
+                android:textSize="14sp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchMarketingEmail"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:paddingHorizontal="20dp"
+                android:text="마케팅 정보 이메일 수신"
+                android:textColor="#111111"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:paddingHorizontal="20dp"
+                android:text="주문·배송 안내는 수신 동의와 상관없이 보내드려요."
+                android:textColor="#999999"
+                android:textSize="12sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="22dp"
+                android:background="#F5F5F5" />
 
             <TextView
                 android:id="@+id/tvWithdraw"
-                style="@style/MyPageMenuItem"
-                android:text="회원 탈퇴" />
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_marginTop="20dp"
+                android:padding="6dp"
+                android:text="회원 탈퇴"
+                android:textColor="#999999"
+                android:textSize="13sp" />
 
         </LinearLayout>
     </ScrollView>
-
-    <Button
-        android:id="@+id/btnSave"
-        style="@style/MyPageButtonPrimary"
-        android:layout_margin="20dp"
-        android:text="저장하기" />
 
 </LinearLayout>

@@ -53,6 +53,8 @@ public final class RecommendApi {
     // Supabase(싱가포르)를 쓰면 첫 요청이 느릴 수 있어서 넉넉하게
     private static final int TIMEOUT_MS = 10000;
 
+    private static final int DIAGNOSE_TIMEOUT_MS = 3000;
+
     private static final String PREF_NAME = "recommend";
     private static final String KEY_USER_ID = "user_id";
 
@@ -221,6 +223,67 @@ public final class RecommendApi {
         }
     }
 
+    public static void finalBodyType(
+            Context context,
+            float heightCm,
+            float shoulderCm,
+            float armCm,
+            float upperBodyCm,
+            float legCm,
+            Callback<String> callback
+    ) {
+        int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
+
+        if (answers == null) {
+            callback.onError(0, "설문 기록이 없어요");
+            return;
+        }
+
+        JSONObject body = new JSONObject();
+
+        try {
+            JSONObject answerJson = new JSONObject();
+
+            for (int i = 0; i < answers.length; i++) {
+                answerJson.put("q" + (i + 1), answers[i]);
+            }
+
+            JSONObject measurements = new JSONObject();
+            measurements.put("height", heightCm);
+            measurements.put("shoulder_width", shoulderCm);
+            measurements.put("arm_length", armCm);
+            measurements.put("upper_body_length", upperBodyCm);
+            measurements.put("leg_length", legCm);
+
+            body.put("answers", answerJson);
+            body.put("measurements", measurements);
+            body.put("mode", MODE_BODY);
+            body.put("size", 1);
+        } catch (JSONException e) {
+            callback.onError(0, "요청을 만들지 못했어요");
+            return;
+        }
+
+        post("/api/feed/scroll", body, DIAGNOSE_TIMEOUT_MS, new Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                JSONObject resultBody = result.optJSONObject("body");
+                String primary = resultBody == null ? "" : resultBody.optString("primary", "");
+
+                if (primary.isEmpty()) {
+                    callback.onError(0, "서버 응답을 읽지 못했어요");
+                } else {
+                    callback.onSuccess(primary);
+                }
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                callback.onError(code, message);
+            }
+        });
+    }
+
     // =========================
     // 찜 (서버 상품)
     // =========================
@@ -387,14 +450,18 @@ public final class RecommendApi {
     // =========================
 
     private static void post(String path, JSONObject body, Callback<JSONObject> callback) {
+        post(path, body, TIMEOUT_MS, callback);
+    }
+
+    private static void post(String path, JSONObject body, int timeoutMs, Callback<JSONObject> callback) {
 
         IO.execute(() -> {
             HttpURLConnection connection = null;
 
             try {
                 connection = (HttpURLConnection) new URL(BASE_URL + path).openConnection();
-                connection.setConnectTimeout(TIMEOUT_MS);
-                connection.setReadTimeout(TIMEOUT_MS);
+                connection.setConnectTimeout(timeoutMs);
+                connection.setReadTimeout(timeoutMs);
                 connection.setRequestMethod("POST");
                 connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
                 connection.setDoOutput(true);

@@ -67,6 +67,17 @@
                         android:textSize="24sp"/>
 
                 </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/btnHomeCart"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_shopping_bag"
+                    android:tint="#111111"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="장바구니"/>
             </LinearLayout>
 
             <!-- 상단 카테고리 메뉴 -->

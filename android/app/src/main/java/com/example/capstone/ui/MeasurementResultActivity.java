@@ -11,12 +11,21 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
 import com.example.capstone.avatar.BodyMeasurementContract;
+import com.example.capstone.data.BodyProfileStore;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.UserBodyProfile;
+import com.example.capstone.login.LoginMainActivity;
+import com.example.capstone.login.LoginSession;
+
+import org.json.JSONObject;
 
 import java.io.File;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public class MeasurementResultActivity extends AppCompatActivity {
+
+    private static final String UNKNOWN_BODY_TYPE = "미진단";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -400,76 +409,155 @@ public class MeasurementResultActivity extends AppCompatActivity {
             );
         }
 
-        // =========================================
-        // 확인 버튼 → 3D 아바타 미리보기
-        // 기존 기능 유지
-        // =========================================
-
         final float outHeight = height;
-        final float outShoulder = shoulder;
-        final float outArm = armLength;
-        final float outChest = chest;
-        final float outWaist = waist;
-        final float outHip = hip;
-        final float outUpperArm = upperArm;
-        final float outForearm = forearm;
-        final float outThigh = thigh;
-        final float outCalf = calf;
-        final float outNeck = neck;
-        final float outTorso = torso;
-        final float outLeg = legLength;
+
+        JSONObject parts = new JSONObject();
+        putPart(parts, "SHOULDER", shoulder);
+        putPart(parts, "CHEST", chest);
+        putPart(parts, "WAIST", waist);
+        putPart(parts, "HIP", hip);
+        putPart(parts, "ARM_LENGTH", armLength);
+        putPart(parts, "LEG_LENGTH", legLength);
+        putPart(parts, "NECK", neck);
+        putPart(parts, "BACK_LENGTH", torso);
+        putPart(parts, "UPPER_ARM", upperArm);
+        putPart(parts, "FOREARM", forearm);
+        putPart(parts, "THIGH", thigh);
+        putPart(parts, "CALF", calf);
+
+        final float[] typeMeasures = {
+                height, shoulder, armLength, torso, legLength
+        };
 
         findViewById(R.id.btnMeasurementDone)
-                .setOnClickListener(v -> {
+                .setOnClickListener(v ->
+                        onSaveBodyClicked(outHeight, parts, typeMeasures));
+    }
 
-                    Intent intent =
-                            BodyMeasurementContract
-                                    .avatarPreviewIntent(
-                                            this,
-                                            outHeight,
-                                            positiveOrNull(outShoulder),
-                                            positiveOrNull(outArm),
-                                            positiveOrNull(outChest),
-                                            positiveOrNull(outWaist),
-                                            positiveOrNull(outHip),
-                                            positiveOrNull(outUpperArm),
-                                            positiveOrNull(outForearm),
-                                            positiveOrNull(outThigh),
-                                            positiveOrNull(outCalf),
-                                            positiveOrNull(outNeck),
-                                            positiveOrNull(outTorso),
-                                            positiveOrNull(outLeg)
-                                    );
+    private void requestFinalBodyType(
+            float[] m,
+            Consumer<String> onFinal
+    ) {
 
-                    String sampleId =
-                            getIntent().getStringExtra(
-                                    AvatarPreviewActivity.EXTRA_SAMPLE_ID
-                            );
+        for (float value : m) {
+            if (value <= 0f) {
+                return;
+            }
+        }
 
-                    String sampleLabel =
-                            getIntent().getStringExtra(
-                                    AvatarPreviewActivity.EXTRA_SAMPLE_LABEL
-                            );
-
-                    if (sampleId != null &&
-                            !sampleId.isEmpty()) {
-
-                        intent.putExtra(
-                                AvatarPreviewActivity.EXTRA_SAMPLE_ID,
-                                sampleId
-                        );
+        RecommendApi.finalBodyType(this, m[0], m[1], m[2], m[3], m[4],
+                new RecommendApi.Callback<String>() {
+                    @Override
+                    public void onSuccess(String primary) {
+                        onFinal.accept(typeLabel(primary));
                     }
 
-                    intent.putExtra(
-                            AvatarPreviewActivity.EXTRA_SAMPLE_LABEL,
-                            sampleLabel != null &&
-                                    !sampleLabel.isEmpty()
-                                    ? sampleLabel
-                                    : "카메라/사진 측정"
-                    );
-
-                    startActivity(intent);
+                    @Override
+                    public void onError(int code, String message) {
+                    }
                 });
+    }
+
+    private String surveyTypeLabel() {
+
+        switch (BodyTypeActivity.lastSurveyType(this)) {
+            case BodyTypeActivity.TYPE_STRAIGHT:
+                return "스트레이트";
+            case BodyTypeActivity.TYPE_WAVE:
+                return "웨이브";
+            case BodyTypeActivity.TYPE_NATURAL:
+                return "내추럴";
+            default:
+                return UNKNOWN_BODY_TYPE;
+        }
+    }
+
+    private String typeLabel(String primary) {
+
+        switch (primary) {
+            case "S":
+                return "스트레이트";
+            case "W":
+                return "웨이브";
+            case "N":
+                return "내추럴";
+            default:
+                return surveyTypeLabel();
+        }
+    }
+
+    private void onSaveBodyClicked(
+            float heightCm,
+            JSONObject parts,
+            float[] typeMeasures
+    ) {
+
+        if (!LoginSession.isLoggedIn(this)) {
+            AppDialog.show(this, false,
+                    "로그인이 필요해요",
+                    "체형 정보는 로그인 후 내 계정에 저장할 수 있어요.",
+                    "취소", null,
+                    "로그인하기", () ->
+                            startActivity(new Intent(this, LoginMainActivity.class)));
+            return;
+        }
+
+        String[] bodyType = {surveyTypeLabel()};
+
+        String defaultName =
+                BodyProfileStore.nextDefaultName(this);
+
+        TextView tvBodyType = BodySaveConfirmDialog.show(this, heightCm, bodyType[0], parts, defaultName,
+                new BodySaveConfirmDialog.Listener() {
+                    @Override
+                    public void onSave(String name) {
+                        BodyProfileStore.Profile saved = BodyProfileStore.save(
+                                MeasurementResultActivity.this,
+                                null,
+                                name, heightCm, 0f, bodyType[0], parts);
+                        startActivity(BodySaveCompleteActivity.newIntent(
+                                MeasurementResultActivity.this, saved.name));
+                        finish();
+                    }
+
+                    @Override
+                    public void onRestartAll() {
+                        Intent intent = new Intent(MeasurementResultActivity.this, FittingActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+                        finish();
+                    }
+
+                    @Override
+                    public void onRetakeCamera() {
+                        Intent intent = new Intent(MeasurementResultActivity.this, BodyMeasurementActivity.class);
+                        intent.putExtra(BodyMeasurementContract.EXTRA_USER_HEIGHT_CM, heightCm);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(intent);
+                        finish();
+                    }
+                });
+
+        requestFinalBodyType(typeMeasures, finalType -> {
+            bodyType[0] = finalType;
+            tvBodyType.setText(finalType);
+        });
+    }
+
+    private static void putPart(
+            JSONObject parts,
+            String key,
+            float value
+    ) {
+
+        if (value <= 0f) {
+            return;
+        }
+
+        try {
+            parts.put(key, Math.round(value * 10f) / 10d);
+        } catch (Exception ignored) {
+        }
     }
 
     // =========================================
@@ -551,17 +639,6 @@ public class MeasurementResultActivity extends AppCompatActivity {
         }
 
         return -1f;
-    }
-
-    // =========================================
-    // 유효한 측정값만 3D 아바타에 전달
-    // =========================================
-
-    private static Float positiveOrNull(
-            float value
-    ) {
-
-        return value > 0f ? value : null;
     }
 
     // =========================================

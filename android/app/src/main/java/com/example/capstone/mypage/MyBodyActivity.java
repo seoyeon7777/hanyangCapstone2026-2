@@ -5,13 +5,13 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.FrameLayout;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
@@ -19,7 +19,8 @@ import com.example.capstone.R;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.login.LoginMainActivity;
 import com.example.capstone.login.LoginSession;
-import com.example.capstone.ui.AvatarPreviewActivity;
+import com.example.capstone.ui.AppDialog;
+import com.example.capstone.ui.BodyFeedbackActivity;
 import com.example.capstone.ui.BodyValueTable;
 import com.example.capstone.ui.FittingActivity;
 
@@ -39,6 +40,13 @@ public class MyBodyActivity extends AppCompatActivity {
 
     private final Set<String> expandedIds = new HashSet<>();
 
+    private TextView tvSelectMode;
+    private TextView tvSelectAll;
+    private TextView tvNewMeasure;
+    private Button btnMeasureNew;
+    private boolean selectMode;
+    private final Set<String> selectedIds = new HashSet<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,10 +64,85 @@ public class MyBodyActivity extends AppCompatActivity {
         tvProfileCount = findViewById(R.id.tvProfileCount);
         tvEmptyProfiles = findViewById(R.id.tvEmptyProfiles);
 
-        findViewById(R.id.tvNewMeasure).setOnClickListener(v -> openFitting());
-        findViewById(R.id.btnMeasureNew).setOnClickListener(v -> openFitting());
+        tvSelectMode = findViewById(R.id.tvSelectMode);
+        tvSelectAll = findViewById(R.id.tvSelectAll);
+        tvNewMeasure = findViewById(R.id.tvNewMeasure);
+        btnMeasureNew = findViewById(R.id.btnMeasureNew);
+
+        tvNewMeasure.setOnClickListener(v -> openFitting());
+        btnMeasureNew.setOnClickListener(v -> {
+            if (selectMode) {
+                deleteSelected();
+            }
+        });
+
+        tvSelectMode.setOnClickListener(v -> setSelectMode(!selectMode));
+        tvSelectAll.setOnClickListener(v -> toggleSelectAll());
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (selectMode) {
+                    setSelectMode(false);
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
 
         setupSettings();
+    }
+
+    private void setSelectMode(boolean on) {
+        selectMode = on;
+        selectedIds.clear();
+        loadProfiles();
+    }
+
+    private void toggleSelectAll() {
+        List<BodyProfileStore.Profile> profiles = BodyProfileStore.getProfiles(this);
+        if (selectedIds.size() == profiles.size()) {
+            selectedIds.clear();
+        } else {
+            for (BodyProfileStore.Profile p : profiles) {
+                selectedIds.add(p.id);
+            }
+        }
+        loadProfiles();
+    }
+
+    private void deleteSelected() {
+        if (selectedIds.isEmpty()) {
+            return;
+        }
+        MyPageUi.confirm(this, "선택 삭제",
+                "선택한 체형 " + selectedIds.size() + "개를 삭제하시겠습니까?", () -> {
+                    for (String id : selectedIds) {
+                        BodyProfileStore.delete(this, id);
+                    }
+                    Toast.makeText(this, "체형 " + selectedIds.size() + "개를 삭제했어요.",
+                            Toast.LENGTH_SHORT).show();
+                    setSelectMode(false);
+                });
+    }
+
+    private void updateSelectBar(int profileCount) {
+        if (selectMode && profileCount == 0) {
+            selectMode = false;
+            selectedIds.clear();
+        }
+
+        tvSelectMode.setVisibility(profileCount == 0 ? View.GONE : View.VISIBLE);
+        tvSelectMode.setText(selectMode ? "취소" : "선택삭제");
+        tvSelectAll.setVisibility(selectMode ? View.VISIBLE : View.GONE);
+        tvSelectAll.setText(selectedIds.size() == profileCount ? "전체 해제" : "전체 선택");
+        tvNewMeasure.setVisibility(selectMode ? View.GONE : View.VISIBLE);
+
+        btnMeasureNew.setVisibility(selectMode ? View.VISIBLE : View.GONE);
+        btnMeasureNew.setText("선택 삭제 (" + selectedIds.size() + ")");
+        btnMeasureNew.setEnabled(!selectedIds.isEmpty());
+        btnMeasureNew.setAlpha(selectedIds.isEmpty() ? 0.4f : 1f);
     }
 
     @Override
@@ -76,6 +159,7 @@ public class MyBodyActivity extends AppCompatActivity {
 
         tvProfileCount.setText("저장된 체형 " + profiles.size() + "개");
         tvEmptyProfiles.setVisibility(profiles.isEmpty() ? View.VISIBLE : View.GONE);
+        updateSelectBar(profiles.size());
 
         layoutProfiles.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -121,7 +205,22 @@ public class MyBodyActivity extends AppCompatActivity {
             loadProfiles();
         });
 
-        card.findViewById(R.id.btnEditProfile).setOnClickListener(v -> openInPreview(profile));
+        CheckBox cbSelect = card.findViewById(R.id.cbSelect);
+        cbSelect.setVisibility(selectMode ? View.VISIBLE : View.GONE);
+        cbSelect.setChecked(selectedIds.contains(profile.id));
+        card.findViewById(R.id.tvRename).setVisibility(selectMode ? View.GONE : View.VISIBLE);
+        card.findViewById(R.id.tvDelete).setVisibility(selectMode ? View.GONE : View.VISIBLE);
+        card.findViewById(R.id.layoutProfileActions).setVisibility(selectMode ? View.GONE : View.VISIBLE);
+        if (selectMode) {
+            card.setOnClickListener(v -> {
+                if (!selectedIds.remove(profile.id)) {
+                    selectedIds.add(profile.id);
+                }
+                loadProfiles();
+            });
+        }
+
+        card.findViewById(R.id.btnEditProfile).setOnClickListener(v -> openFeedback(profile));
         card.findViewById(R.id.tvRename).setOnClickListener(v -> showRename(profile));
         card.findViewById(R.id.tvDelete).setOnClickListener(v ->
                 MyPageUi.confirm(this, "체형 삭제", "'" + profile.name + "'을(를) 삭제하시겠습니까?", () -> {
@@ -130,40 +229,22 @@ public class MyBodyActivity extends AppCompatActivity {
                 }));
     }
 
-    private void openInPreview(BodyProfileStore.Profile profile) {
-        Intent intent = new Intent(this, AvatarPreviewActivity.class);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_HEIGHT_CM, profile.heightCm);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_PARTS_JSON, profile.parts.toString());
-        intent.putExtra(AvatarPreviewActivity.EXTRA_BODY_FAT, profile.bodyFat);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_SAMPLE_LABEL, profile.name);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_EDIT_PROFILE_ID, profile.id);
-        startActivity(intent);
+    private void openFeedback(BodyProfileStore.Profile profile) {
+        startActivity(BodyFeedbackActivity.profileIntent(this, profile));
     }
 
     private void showRename(BodyProfileStore.Profile profile) {
-        EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        input.setText(profile.name);
-        input.setSelection(input.length());
-
-        FrameLayout box = new FrameLayout(this);
-        int pad = Math.round(20 * getResources().getDisplayMetrics().density);
-        box.setPadding(pad, pad / 2, pad, 0);
-        box.addView(input);
-
-        new AlertDialog.Builder(this)
-                .setTitle("이름 변경")
-                .setView(box)
-                .setPositiveButton("확인", (d, w) -> {
-                    String name = input.getText().toString().trim();
+        AppDialog.input(this, "이름 변경", null,
+                profile.name, "체형 이름", InputType.TYPE_CLASS_TEXT,
+                "변경", name -> {
                     if (name.isEmpty()) {
-                        return;
+                        Toast.makeText(this, "이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
+                        return false;
                     }
                     BodyProfileStore.rename(this, profile.id, name);
                     loadProfiles();
-                })
-                .setNegativeButton("취소", null)
-                .show();
+                    return true;
+                });
     }
 
     private void setupSettings() {

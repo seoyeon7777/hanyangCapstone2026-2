@@ -3,6 +3,7 @@ package com.example.capstone.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -11,13 +12,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
 
-import java.util.Locale;
-
 public class BodyTypeResultActivity extends AppCompatActivity {
 
     private TextView resultTitle;
     private TextView resultDescription;
-    private TextView resultScore;
+    private TextView resultFeatures;
 
     private float userHeightCm;
 
@@ -29,11 +28,11 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
         resultTitle = findViewById(R.id.resultTitle);
         resultDescription = findViewById(R.id.resultDescription);
-        resultScore = findViewById(R.id.resultScore);
+        resultFeatures = findViewById(R.id.resultFeatures);
 
         Button btnYes = findViewById(R.id.btnYes);
         Button btnNo = findViewById(R.id.btnNo);
-        Button btnRetry = findViewById(R.id.btnRetry);
+        View btnRetry = findViewById(R.id.btnRetry);
 
         // 설문 결과 가져오기
         Intent receivedIntent = getIntent();
@@ -41,10 +40,6 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         int resultType = receivedIntent.getIntExtra(
                 BodyTypeActivity.EXTRA_RESULT_TYPE,
                 BodyTypeActivity.TYPE_STRAIGHT
-        );
-
-        int[] scores = receivedIntent.getIntArrayExtra(
-                BodyTypeActivity.EXTRA_SCORES
         );
 
         userHeightCm = receivedIntent.getFloatExtra(
@@ -60,13 +55,10 @@ public class BodyTypeResultActivity extends AppCompatActivity {
             ).getFloat("height_cm", 0f);
         }
 
-        if (scores == null || scores.length < 3) {
-            scores = new int[]{0, 0, 0};
-        }
-
         // 체형별 결과 표시
         String typeName;
-        String description;
+        String summary;
+        String features;
 
         switch (resultType) {
 
@@ -74,15 +66,12 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
                 typeName = "웨이브 체형";
 
-                description =
-                        "자가진단 결과, 웨이브 체형의 특징과 "
-                                + "가장 가까운 것으로 나타났어요.\n\n"
-                                + "웨이브 체형은 일반적으로 부드러운 "
-                                + "신체 윤곽과 하체 중심의 비율 등이 "
-                                + "특징으로 설명됩니다.\n\n"
-                                + "다만 이는 설문 응답을 기반으로 한 "
-                                + "참고용 분류이며, 실제 신체 치수나 "
-                                + "체형을 확정하는 결과는 아닙니다.";
+                summary = "부드러운 곡선이 돋보이는 체형이에요.";
+
+                features =
+                        "• 부드럽고 곡선적인 신체 윤곽\n"
+                                + "• 하체 중심의 비율\n"
+                                + "• 허리선을 살린 스타일이 잘 어울려요";
 
                 break;
 
@@ -90,15 +79,12 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
                 typeName = "내추럴 체형";
 
-                description =
-                        "자가진단 결과, 내추럴 체형의 특징과 "
-                                + "가장 가까운 것으로 나타났어요.\n\n"
-                                + "내추럴 체형은 일반적으로 뼈대와 "
-                                + "관절의 존재감, 비교적 자연스러운 "
-                                + "신체 윤곽 등이 특징으로 설명됩니다.\n\n"
-                                + "다만 이는 설문 응답을 기반으로 한 "
-                                + "참고용 분류이며, 실제 신체 치수나 "
-                                + "체형을 확정하는 결과는 아닙니다.";
+                summary = "뼈대와 관절의 존재감이 느껴지는 체형이에요.";
+
+                features =
+                        "• 뼈대와 관절의 존재감\n"
+                                + "• 자연스러운 신체 윤곽\n"
+                                + "• 여유 있는 실루엣이 잘 어울려요";
 
                 break;
 
@@ -107,34 +93,21 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
                 typeName = "스트레이트 체형";
 
-                description =
-                        "자가진단 결과, 스트레이트 체형의 "
-                                + "특징과 가장 가까운 것으로 나타났어요.\n\n"
-                                + "스트레이트 체형은 일반적으로 "
-                                + "상체의 입체감과 비교적 탄탄한 "
-                                + "신체 윤곽 등이 특징으로 설명됩니다.\n\n"
-                                + "다만 이는 설문 응답을 기반으로 한 "
-                                + "참고용 분류이며, 실제 신체 치수나 "
-                                + "체형을 확정하는 결과는 아닙니다.";
+                summary = "입체감 있고 탄탄한 실루엣의 체형이에요.";
+
+                features =
+                        "• 상체의 입체감\n"
+                                + "• 탄탄하고 곧은 신체 윤곽\n"
+                                + "• 깔끔하고 정돈된 스타일이 잘 어울려요";
 
                 break;
         }
 
         resultTitle.setText(typeName);
-        resultDescription.setText(description);
 
-        // 설문 점수 표시
-        resultScore.setText(
-                String.format(
-                        Locale.KOREA,
-                        "스트레이트  %d점\n"
-                                + "웨이브  %d점\n"
-                                + "내추럴  %d점",
-                        scores[0],
-                        scores[1],
-                        scores[2]
-                )
-        );
+        resultDescription.setText(KoreanLineBreak.keepWords(summary));
+        resultFeatures.setText(KoreanLineBreak.keepWords(features));
+        KoreanLineBreak.apply(findViewById(R.id.resultNotice));
 
         // 자세한 신체 분석 → 카메라 실행
         btnYes.setOnClickListener(v -> {

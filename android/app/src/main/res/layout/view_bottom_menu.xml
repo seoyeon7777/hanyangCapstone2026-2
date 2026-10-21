@@ -19,22 +19,16 @@
         android:text="카테고리" />
 
     <TextView
+        android:id="@+id/menuFitting"
+        style="@style/BottomMenuItem"
+        android:drawableTop="@drawable/ic_nav_fitting"
+        android:text="체형분석" />
+
+    <TextView
         android:id="@+id/menuWish"
         style="@style/BottomMenuItem"
         android:drawableTop="@drawable/ic_nav_wish"
         android:text="찜" />
-
-    <TextView
-        android:id="@+id/menuFitting"
-        style="@style/BottomMenuItem"
-        android:drawableTop="@drawable/ic_nav_fitting"
-        android:text="피팅" />
-
-    <TextView
-        android:id="@+id/menuCart"
-        style="@style/BottomMenuItem"
-        android:drawableTop="@drawable/ic_nav_cart"
-        android:text="장바구니" />
 
     <TextView
         android:id="@+id/menuMy"

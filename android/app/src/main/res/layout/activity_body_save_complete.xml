@@ -41,14 +41,34 @@
             android:textSize="15sp"
             android:gravity="center" />
 
-        <TextView
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:id="@+id/btnGoMyBody"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="저장한 체형 정보는 마이페이지에서 확인할 수 있어요."
-            android:textSize="13sp"
-            android:textColor="#888888"
-            android:gravity="center" />
+            android:layout_marginTop="10dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="6dp">
+
+            <TextView
+                android:id="@+id/tvGoMyBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="저장한 체형 정보는 마이페이지에서 확인할 수 있어요"
+                android:textColor="#666666"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="4dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_arrow_right"
+                android:tint="#666666" />
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -71,18 +91,6 @@
         android:background="@drawable/bg_dialog_btn_light"
         android:gravity="center"
         android:text="메인 홈 가기"
-        android:textColor="#111111"
-        android:textSize="15sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/btnGoMyBody"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/bg_dialog_btn_light"
-        android:gravity="center"
-        android:text="내 체형정보 보러가기"
         android:textColor="#111111"
         android:textSize="15sp"
         android:textStyle="bold" />

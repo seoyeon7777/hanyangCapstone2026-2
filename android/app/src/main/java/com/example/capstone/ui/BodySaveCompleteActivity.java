@@ -2,6 +2,7 @@ package com.example.capstone.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -45,6 +46,10 @@ public class BodySaveCompleteActivity extends AppCompatActivity {
 
         findViewById(R.id.btnGoHome)
                 .setOnClickListener(v -> goHome(null));
+
+        TextView tvGoMyBody = findViewById(R.id.tvGoMyBody);
+        tvGoMyBody.setPaintFlags(
+                tvGoMyBody.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
 
         findViewById(R.id.btnGoMyBody)
                 .setOnClickListener(v ->

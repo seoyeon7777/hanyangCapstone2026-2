@@ -97,13 +97,41 @@ public final class BodyProfileStore {
     }
 
     private static String account(Context context) {
-        // 이 부분에 서버 회원번호(user_id) 넣기
+        return accountKey(context);
+    }
+
+    // 이 부분에 서버 회원번호(user_id) 넣기
+    public static String accountKey(Context context) {
         String email = LoginSession.getEmail(context);
         if (!email.isEmpty()) {
             return email;
         }
         String phone = LoginSession.getPhone(context);
         return phone.isEmpty() ? "guest" : phone;
+    }
+
+    public static void moveAccount(Context context, String from, String to) {
+        if (from.equals(to)) {
+            return;
+        }
+        SharedPreferences p = prefs(context);
+        SharedPreferences.Editor e = p.edit();
+
+        String profiles = p.getString("profiles_" + from, null);
+        if (profiles != null) {
+            e.putString("profiles_" + to, profiles).remove("profiles_" + from);
+        }
+        String active = p.getString("active_" + from, null);
+        if (active != null) {
+            e.putString("active_" + to, active).remove("active_" + from);
+        }
+        for (String key : SETTING_KEYS) {
+            String name = "setting_" + key + "_";
+            if (p.contains(name + from)) {
+                e.putBoolean(name + to, p.getBoolean(name + from, true)).remove(name + from);
+            }
+        }
+        e.apply();
     }
 
     public static List<Profile> getProfiles(Context context) {

@@ -14,6 +14,7 @@ public final class LoginSession {
 
     private static final String PREF_NAME = "login_session";
     private static final String KEY_LOGGED_IN = "logged_in";
+    private static final String KEY_USER_ID = "user_id";
     private static final String KEY_NAME = "name";
     private static final String KEY_EMAIL = "email";
     private static final String KEY_PHONE = "phone";
@@ -36,6 +37,13 @@ public final class LoginSession {
                 .apply();
     }
 
+    public static void login(Context context, String userId, String name, String email, String phone) {
+        login(context, name, email, phone);
+        prefs(context).edit()
+                .putString(KEY_USER_ID, userId == null ? "" : userId)
+                .apply();
+    }
+
     /** 프로필 수정 후 바뀐 정보를 반영한다. */
     public static void updateProfile(Context context, String name, String email, String phone) {
         prefs(context).edit()
@@ -52,6 +60,10 @@ public final class LoginSession {
 
     public static boolean isLoggedIn(Context context) {
         return prefs(context).getBoolean(KEY_LOGGED_IN, false);
+    }
+
+    public static String getUserId(Context context) {
+        return prefs(context).getString(KEY_USER_ID, "");
     }
 
     public static String getName(Context context) {

@@ -193,6 +193,9 @@ public class MainActivity extends AppCompatActivity {
                     );
                 });
 
+        findViewById(R.id.btnHomeCart)
+                .setOnClickListener(v -> BottomMenu.openCart(this));
+
         // 상단 메뉴
         setupTopMenus();
 

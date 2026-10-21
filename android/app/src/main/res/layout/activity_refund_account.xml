@@ -18,128 +18,89 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingBottom="24dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_info_box"
-                android:lineSpacingExtra="4dp"
-                android:padding="16dp"
-                android:text="무통장 입금 주문을 취소/반품하면 아래 계좌로 환불됩니다.\n예금주는 회원 본인 명의여야 합니다."
-                android:textColor="#5A5A5A"
-                android:textSize="12sp" />
+            android:paddingBottom="32dp">
 
             <!-- ============ 등록된 계좌 (refund_accounts) ============ -->
             <LinearLayout
-                android:id="@+id/containerRegistered"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
-                android:padding="18dp"
-                android:visibility="gone">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
-                    style="@style/MyPageSubText"
-                    android:text="등록된 환불 계좌"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvBank"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="은행명"
+                    android:layout_weight="1"
+                    android:text="환불 계좌"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tvAccountNo"
+                    android:id="@+id/tvAccountCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:letterSpacing="0.05"
-                    android:text="1234****5678"
-                    android:textColor="@color/black"
-                    android:textSize="15sp" />
-
-                <TextView
-                    android:id="@+id/tvHolder"
-                    style="@style/MyPageSubText"
-                    android:layout_marginTop="4dp"
-                    android:text="예금주 홍길동" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:gravity="end"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btnChange"
-                        style="@style/MyPageButtonSmall"
-                        android:layout_marginEnd="8dp"
-                        android:text="변경" />
-
-                    <Button
-                        android:id="@+id/btnDelete"
-                        style="@style/MyPageButtonSmall"
-                        android:text="삭제" />
-                </LinearLayout>
+                    android:text="0 / 5"
+                    android:textColor="#999999"
+                    android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- ============ 계좌 입력 폼 ============ -->
             <LinearLayout
-                android:id="@+id/containerForm"
+                android:id="@+id/containerAccounts"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:orientation="vertical" />
+
+            <LinearLayout
+                android:id="@+id/btnAddAccount"
+                android:layout_width="match_parent"
+                android:layout_height="96dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_add_card_dashed"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"
                 android:orientation="vertical">
 
                 <TextView
-                    style="@style/MyPageFormLabel"
-                    android:text="은행" />
-
-                <Spinner
-                    android:id="@+id/spBank"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginBottom="18dp"
-                    android:background="@drawable/bg_edit"
-                    android:paddingHorizontal="16dp" />
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+"
+                    android:textColor="#111111"
+                    android:textSize="26sp" />
 
                 <TextView
-                    style="@style/MyPageFormLabel"
-                    android:text="계좌번호" />
-
-                <EditText
-                    android:id="@+id/etAccountNo"
-                    style="@style/MyPageEdit"
-                    android:hint="하이픈(-) 없이 숫자만 입력"
-                    android:inputType="number"
-                    android:maxLength="16" />
-
-                <TextView
-                    style="@style/MyPageFormLabel"
-                    android:text="예금주" />
-
-                <EditText
-                    android:id="@+id/etHolder"
-                    style="@style/MyPageEdit"
-                    android:hint="예금주명"
-                    android:maxLength="20" />
-
-                <Button
-                    android:id="@+id/btnSave"
-                    style="@style/MyPageButtonPrimary"
-                    android:layout_marginTop="8dp"
-                    android:text="계좌 등록" />
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="새 계좌 등록"
+                    android:textColor="#111111"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvEmptyAccount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="계좌를 등록하면 취소·반품할 때 빠르게 환불받을 수 있어요."
+                android:textColor="#999999"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvRefundNotice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:background="@drawable/bg_info_box"
+                android:lineSpacingExtra="4dp"
+                android:padding="16dp"
+                android:text="· 무통장 입금 주문을 취소·반품하면 대표 계좌로 환불돼요.\n· 카드·간편결제 주문은 결제한 수단으로 환불돼요.\n· 예금주는 회원 본인 명의여야 해요."
+                android:textColor="#5A5A5A"
+                android:textSize="12sp" />
 
         </LinearLayout>
     </ScrollView>

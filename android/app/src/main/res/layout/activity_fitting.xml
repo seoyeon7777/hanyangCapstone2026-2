@@ -26,7 +26,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="3D 가상 피팅"
+                android:text="체형 분석"
                 android:textColor="#111111"
                 android:textSize="26sp"
                 android:textStyle="bold" />
@@ -37,7 +37,7 @@
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:lineSpacingExtra="3dp"
-                android:text="나의 체형을 분석하고&#10;나에게 맞는 핏을 확인해보세요."
+                android:text="설문과 신체 측정으로 나의 골격 체형을 찾고&#10;체형에 맞는 옷을 추천받아 보세요."
                 android:textColor="#777777"
                 android:textSize="14sp" />
 
@@ -91,7 +91,7 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="26dp"
                 android:backgroundTint="#111111"
-                android:text="가상 피팅 시작하기"
+                android:text="체형 분석 시작하기"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
@@ -119,6 +119,18 @@
                 android:text="아직 저장된 설문이 없어요."
                 android:textColor="#888888"
                 android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btnShowFeedback"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="#EEEEEE"
+                android:text="피드백 보기"
+                android:textAllCaps="false"
+                android:textColor="#111111"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btnDemoSamples"
@@ -152,6 +164,14 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="스트레이트 · 웨이브 · 내추럴 중 나의 골격 체형을 찾아요."
+                    android:textColor="#888888"
+                    android:textSize="12sp" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -160,18 +180,19 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_step_circle"
                         android:gravity="center"
-                        android:text="01"
-                        android:textColor="#000000"
+                        android:text="1"
+                        android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="14dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -203,18 +224,19 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_step_circle"
                         android:gravity="center"
-                        android:text="02"
-                        android:textColor="#000000"
+                        android:text="2"
+                        android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="14dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -230,7 +252,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="간단한 질문으로 체형 특징 분석"
+                            android:text="7가지 질문으로 골격 체형 특징 분석"
                             android:textColor="#888888"
                             android:textSize="12sp" />
 
@@ -246,18 +268,19 @@
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_step_circle"
                         android:gravity="center"
-                        android:text="03"
-                        android:textColor="#000000"
+                        android:text="3"
+                        android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="14dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -274,6 +297,50 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:text="카메라 또는 전신 사진으로 신체 치수 분석"
+                            android:textColor="#888888"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_step_circle"
+                        android:gravity="center"
+                        android:text="4"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="체형 저장 · 맞춤 추천"
+                            android:textColor="#111111"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="최종 체형을 저장하고 홈에서 맞춤 상품 추천"
                             android:textColor="#888888"
                             android:textSize="12sp" />
 

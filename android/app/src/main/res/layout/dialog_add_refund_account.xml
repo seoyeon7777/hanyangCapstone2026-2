@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_card">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="22dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="환불 계좌 등록"
+                android:textColor="#111111"
+                android:textSize="19sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btnCloseSheet"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:text="✕"
+                android:textColor="#111111"
+                android:textSize="20sp" />
+        </LinearLayout>
+
+        <TextView
+            style="@style/MyPageFormLabel"
+            android:layout_marginTop="14dp"
+            android:text="은행" />
+
+        <LinearLayout
+            android:id="@+id/layoutBanks"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <TextView
+            style="@style/MyPageFormLabel"
+            android:layout_marginTop="18dp"
+            android:text="계좌번호" />
+
+        <EditText
+            android:id="@+id/etAccountNo"
+            style="@style/MyPageEdit"
+            android:layout_marginBottom="0dp"
+            android:hint="'-' 없이 숫자만 입력"
+            android:inputType="number"
+            android:maxLength="16" />
+
+        <TextView
+            style="@style/MyPageFormLabel"
+            android:layout_marginTop="18dp"
+            android:text="예금주" />
+
+        <EditText
+            android:id="@+id/etHolder"
+            style="@style/MyPageEdit"
+            android:layout_marginBottom="0dp"
+            android:hint="예금주명"
+            android:maxLength="20" />
+
+        <TextView
+            android:id="@+id/tvHolderNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:paddingHorizontal="4dp"
+            android:text="회원 본인 명의의 계좌만 등록할 수 있어요."
+            android:textColor="#999999"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/btnRegisterAccount"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_dialog_btn_dark"
+            android:gravity="center"
+            android:text="등록하기"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

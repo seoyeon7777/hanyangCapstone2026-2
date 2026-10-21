@@ -44,7 +44,6 @@ public final class BottomMenu {
                 activity.findViewById(R.id.menuCategory),
                 activity.findViewById(R.id.menuWish),
                 activity.findViewById(R.id.menuFitting),
-                activity.findViewById(R.id.menuCart),
                 activity.findViewById(R.id.menuMy)
         };
 
@@ -53,7 +52,6 @@ public final class BottomMenu {
                 TAB_CATEGORY,
                 TAB_WISH,
                 TAB_FITTING,
-                TAB_CART,
                 TAB_MY
         };
 
@@ -93,6 +91,12 @@ public final class BottomMenu {
                 }
             });
         }
+    }
+
+    public static void openCart(Activity activity) {
+        activity.startActivity(
+                new Intent(activity, CartActivity.class)
+        );
     }
 
     private static void moveTo(Activity activity, int tab) {

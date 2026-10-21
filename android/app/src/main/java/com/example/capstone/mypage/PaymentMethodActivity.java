@@ -3,21 +3,24 @@ package com.example.capstone.mypage;
 import com.example.capstone.R;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.MyPageStore.PaymentCard;
+import com.example.capstone.ui.AppDialog;
+import com.example.capstone.ui.KoreanLineBreak;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
+
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.Calendar;
 import java.util.List;
@@ -33,8 +36,6 @@ public class PaymentMethodActivity extends AppCompatActivity {
 
     private TextView tvCardCount, tvEmptyCard;
     private LinearLayout containerCards;
-    private Button btnAddCard;
-    private SwitchCompat switchKakaoPay, switchNaverPay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,40 +47,24 @@ public class PaymentMethodActivity extends AppCompatActivity {
         tvCardCount = findViewById(R.id.tvCardCount);
         tvEmptyCard = findViewById(R.id.tvEmptyCard);
         containerCards = findViewById(R.id.containerCards);
-        btnAddCard = findViewById(R.id.btnAddCard);
-        switchKakaoPay = findViewById(R.id.switchKakaoPay);
-        switchNaverPay = findViewById(R.id.switchNaverPay);
 
-        switchKakaoPay.setChecked(MyPageStore.isKakaoPayLinked());
-        switchNaverPay.setChecked(MyPageStore.isNaverPayLinked());
-
-        btnAddCard.setOnClickListener(v -> {
+        findViewById(R.id.btnAddCard).setOnClickListener(v -> {
             if (MyPageStore.getCards().size() >= MAX_CARD) {
-                Toast.makeText(this, "카드는 최대 " + MAX_CARD + "장까지 등록할 수 있습니다.",
-                        Toast.LENGTH_SHORT).show();
+                toast("카드는 최대 " + MAX_CARD + "장까지 등록할 수 있습니다.");
                 return;
             }
-            showAddCardDialog();
+            showAddCardSheet();
         });
 
-        switchKakaoPay.setOnCheckedChangeListener((b, checked) -> {
-            MyPageStore.setKakaoPayLinked(checked);
-            Toast.makeText(this, checked ? "카카오페이가 연결되었습니다." : "카카오페이 연결이 해제되었습니다.",
-                    Toast.LENGTH_SHORT).show();
-        });
-
-        switchNaverPay.setOnCheckedChangeListener((b, checked) -> {
-            MyPageStore.setNaverPayLinked(checked);
-            Toast.makeText(this, checked ? "네이버페이가 연결되었습니다." : "네이버페이 연결이 해제되었습니다.",
-                    Toast.LENGTH_SHORT).show();
-        });
+        KoreanLineBreak.apply(findViewById(R.id.tvPayNotice));
 
         renderCards();
+        renderEasyPay();
     }
 
     private void renderCards() {
         List<PaymentCard> cards = MyPageStore.getCards();
-        tvCardCount.setText("등록 카드 " + cards.size() + "개");
+        tvCardCount.setText(cards.size() + " / " + MAX_CARD);
         tvEmptyCard.setVisibility(cards.isEmpty() ? View.VISIBLE : View.GONE);
 
         containerCards.removeAllViews();
@@ -89,14 +74,15 @@ public class PaymentMethodActivity extends AppCompatActivity {
 
             ((TextView) view.findViewById(R.id.tvCompany)).setText(card.company);
             ((TextView) view.findViewById(R.id.tvCardNumber)).setText(card.getMaskedNumber());
-            ((TextView) view.findViewById(R.id.tvExpiry)).setText("유효기간 " + card.expiry);
+            ((TextView) view.findViewById(R.id.tvExpiry)).setText("VALID THRU " + card.expiry);
             view.findViewById(R.id.tvDefaultBadge)
                     .setVisibility(card.isDefault ? View.VISIBLE : View.GONE);
 
-            Button btnSetDefault = view.findViewById(R.id.btnSetDefault);
+            TextView btnSetDefault = view.findViewById(R.id.btnSetDefault);
             btnSetDefault.setVisibility(card.isDefault ? View.GONE : View.VISIBLE);
             btnSetDefault.setOnClickListener(v -> {
                 MyPageStore.setDefaultCard(card);
+                toast(card.company + " 카드를 기본 결제 수단으로 설정했어요.");
                 renderCards();
             });
 
@@ -111,50 +97,157 @@ public class PaymentMethodActivity extends AppCompatActivity {
         }
     }
 
-    private void showAddCardDialog() {
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_card, null);
-        Spinner spCompany = dialogView.findViewById(R.id.spCompany);
-        EditText etCardNumber = dialogView.findViewById(R.id.etCardNumber);
-        EditText etExpiry = dialogView.findViewById(R.id.etExpiry);
-        EditText etCardPw = dialogView.findViewById(R.id.etCardPw);
+    private void showAddCardSheet() {
+        BottomSheetDialog sheet = new BottomSheetDialog(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_add_card, null, false);
+        sheet.setContentView(view);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_spinner_item, CARD_COMPANIES);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spCompany.setAdapter(adapter);
+        sheet.getBehavior().setState(BottomSheetBehavior.STATE_EXPANDED);
+        sheet.getBehavior().setSkipCollapsed(true);
+        if (sheet.getWindow() != null) {
+            sheet.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        }
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("카드 등록")
-                .setView(dialogView)
-                .setPositiveButton("등록", null)
-                .setNegativeButton("취소", null)
-                .create();
+        TextView tvPreviewCompany = view.findViewById(R.id.tvPreviewCompany);
+        TextView tvPreviewNumber = view.findViewById(R.id.tvPreviewNumber);
+        TextView tvPreviewExpiry = view.findViewById(R.id.tvPreviewExpiry);
+        EditText etCardNumber = view.findViewById(R.id.etCardNumber);
+        EditText etExpiry = view.findViewById(R.id.etExpiry);
+        EditText etCardPw = view.findViewById(R.id.etCardPw);
+        TextView btnRegister = view.findViewById(R.id.btnRegisterCard);
 
-        // 입력이 틀렸을 때 다이얼로그가 닫히지 않도록 버튼 리스너를 show() 뒤에 직접 단다.
-        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+        String[] company = {null};
+
+        Runnable refresh = () -> {
+            String digits = etCardNumber.getText().toString().replaceAll("[^0-9]", "");
+            boolean ready = company[0] != null
+                    && digits.length() >= 15
+                    && normalizeExpiry(etExpiry.getText().toString()) != null
+                    && etCardPw.length() == 2;
+            btnRegister.setAlpha(ready ? 1f : 0.35f);
+
+            tvPreviewNumber.setText(previewNumber(digits));
+            String expiry = etExpiry.getText().toString();
+            tvPreviewExpiry.setText("VALID THRU " + (expiry.isEmpty() ? "MM/YY" : expiry));
+        };
+
+        MyPageUi.fillChoiceGrid(view.findViewById(R.id.layoutCompanies), CARD_COMPANIES, 3,
+                null, value -> {
+                    company[0] = value;
+                    tvPreviewCompany.setText(value);
+                    refresh.run();
+                });
+
+        etCardNumber.addTextChangedListener(new FormatWatcher(etCardNumber, refresh) {
+            @Override
+            String format(String digits) {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < digits.length() && i < 16; i++) {
+                    if (i > 0 && i % 4 == 0) {
+                        sb.append(' ');
+                    }
+                    sb.append(digits.charAt(i));
+                }
+                return sb.toString();
+            }
+        });
+
+        etExpiry.addTextChangedListener(new FormatWatcher(etExpiry, refresh) {
+            @Override
+            String format(String digits) {
+                if (digits.length() > 4) {
+                    digits = digits.substring(0, 4);
+                }
+                return digits.length() <= 2 ? digits : digits.substring(0, 2) + "/" + digits.substring(2);
+            }
+        });
+
+        etCardPw.addTextChangedListener(new FormatWatcher(etCardPw, refresh) {
+            @Override
+            String format(String digits) {
+                return digits;
+            }
+        });
+
+        view.findViewById(R.id.btnCloseSheet).setOnClickListener(v -> sheet.dismiss());
+
+        btnRegister.setOnClickListener(v -> {
             String number = etCardNumber.getText().toString().replaceAll("[^0-9]", "");
             String expiry = normalizeExpiry(etExpiry.getText().toString());
 
+            if (company[0] == null) {
+                toast("카드사를 선택해주세요.");
+                return;
+            }
             if (number.length() < 15) {
-                Toast.makeText(this, "카드번호를 정확히 입력해주세요.", Toast.LENGTH_SHORT).show();
+                toast("카드번호를 정확히 입력해주세요.");
                 return;
             }
             if (expiry == null) {
-                Toast.makeText(this, "유효기간을 MM/YY 형식으로 정확히 입력해주세요.", Toast.LENGTH_SHORT).show();
+                toast("유효기간을 정확히 입력해주세요. (지난 날짜는 안 돼요)");
                 return;
             }
-            if (etCardPw.getText().length() != 2) {
-                Toast.makeText(this, "카드 비밀번호 앞 2자리를 입력해주세요.", Toast.LENGTH_SHORT).show();
+            if (etCardPw.length() != 2) {
+                toast("카드 비밀번호 앞 2자리를 입력해주세요.");
                 return;
             }
 
-            MyPageStore.addCard(spCompany.getSelectedItem().toString(), number, expiry);
-            Toast.makeText(this, "카드가 등록되었습니다.", Toast.LENGTH_SHORT).show();
+            // [여기에 DB 입력] PG사 카드 등록(빌링키 발급) 후 끝 4자리만 저장 (payments)
+            MyPageStore.addCard(company[0], number, expiry);
+            toast("카드가 등록되었습니다.");
             renderCards();
-            dialog.dismiss();
-        }));
+            sheet.dismiss();
+        });
 
-        dialog.show();
+        refresh.run();
+        sheet.show();
+    }
+
+    private static String previewNumber(String digits) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 16; i++) {
+            if (i > 0 && i % 4 == 0) {
+                sb.append(' ');
+            }
+            sb.append(i < digits.length() ? digits.charAt(i) : '•');
+        }
+        return sb.toString();
+    }
+
+    private abstract static class FormatWatcher implements TextWatcher {
+        private final EditText editText;
+        private final Runnable onChanged;
+        private boolean editing;
+
+        FormatWatcher(EditText editText, Runnable onChanged) {
+            this.editText = editText;
+            this.onChanged = onChanged;
+        }
+
+        abstract String format(String digits);
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            if (editing) {
+                return;
+            }
+            String formatted = format(s.toString().replaceAll("[^0-9]", ""));
+            if (!formatted.equals(s.toString())) {
+                editing = true;
+                editText.setText(formatted);
+                editText.setSelection(formatted.length());
+                editing = false;
+            }
+            onChanged.run();
+        }
     }
 
     /** "1228" 또는 "12/28" 을 "12/28"로 맞춘다. 형식이 틀렸거나 이미 지난 날짜면 null */
@@ -178,5 +271,46 @@ public class PaymentMethodActivity extends AppCompatActivity {
         }
 
         return digits.substring(0, 2) + "/" + digits.substring(2);
+    }
+
+    private void renderEasyPay() {
+        bindEasyPay(findViewById(R.id.tvKakaoStatus), findViewById(R.id.btnKakaoPay),
+                "카카오페이", MyPageStore.isKakaoPayLinked(), linked -> {
+                    // [여기에 DB 입력] 카카오페이 정기결제 연동/해제 (payments)
+                    MyPageStore.setKakaoPayLinked(linked);
+                });
+        bindEasyPay(findViewById(R.id.tvNaverStatus), findViewById(R.id.btnNaverPay),
+                "네이버페이", MyPageStore.isNaverPayLinked(), linked -> {
+                    // [여기에 DB 입력] 네이버페이 연동/해제 (payments)
+                    MyPageStore.setNaverPayLinked(linked);
+                });
+    }
+
+    private void bindEasyPay(TextView tvStatus, TextView btn, String name, boolean linked,
+                             java.util.function.Consumer<Boolean> save) {
+        tvStatus.setText(linked ? "연결됨" : "연결 안 됨");
+        tvStatus.setTextColor(linked ? 0xFF111111 : 0xFF999999);
+        btn.setText(linked ? "연결 해제" : "연결하기");
+
+        btn.setOnClickListener(v -> {
+            if (!linked) {
+                save.accept(true);
+                toast(name + "가 연결되었습니다.");
+                renderEasyPay();
+                return;
+            }
+            AppDialog.show(this, false, name + " 연결 해제",
+                    name + " 연결을 해제하면 주문할 때 " + name + "로 결제할 수 없어요.",
+                    "취소", null,
+                    "연결 해제", () -> {
+                        save.accept(false);
+                        toast(name + " 연결이 해제되었습니다.");
+                        renderEasyPay();
+                    });
+        });
+    }
+
+    private void toast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }

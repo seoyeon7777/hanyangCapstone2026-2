@@ -13,6 +13,18 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
+        <CheckBox
+            android:id="@+id/cbSelect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:buttonTint="#111111"
+            android:clickable="false"
+            android:focusable="false"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/tvProfileName"
             android:layout_width="wrap_content"
@@ -92,6 +104,7 @@
         android:textSize="12sp" />
 
     <LinearLayout
+        android:id="@+id/layoutProfileActions"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -116,7 +129,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_dialog_btn_dark"
             android:gravity="center"
-            android:text="3D로 보기 · 수정"
+            android:text="피드백 보기"
             android:textColor="#FFFFFF"
             android:textSize="13sp"
             android:textStyle="bold" />

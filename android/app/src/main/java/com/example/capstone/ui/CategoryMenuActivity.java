@@ -7,6 +7,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -133,6 +134,19 @@ public class CategoryMenuActivity extends AppCompatActivity {
                         new Intent(this, SearchActivity.class)
                 )
         );
+
+        ImageView cart = new ImageView(this);
+        cart.setImageResource(R.drawable.ic_shopping_bag);
+        cart.setColorFilter(BLACK);
+        cart.setPadding(dp(9), dp(9), dp(9), dp(9));
+        cart.setContentDescription("장바구니");
+
+        toolbar.addView(
+                cart,
+                new LinearLayout.LayoutParams(dp(42), dp(42))
+        );
+
+        cart.setOnClickListener(v -> BottomMenu.openCart(this));
 
         root.addView(divider());
 

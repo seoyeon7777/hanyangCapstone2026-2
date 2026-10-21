@@ -25,19 +25,26 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
-
         <!-- 결과 체형 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="42dp"
+            android:gravity="center"
+            android:text="나의 골격 체형은"
+            android:textColor="#888888"
+            android:textSize="14sp" />
+
         <TextView
             android:id="@+id/resultTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="42dp"
+            android:layout_marginTop="6dp"
             android:gravity="center"
             android:text="스트레이트 체형"
             android:textColor="#000000"
             android:textSize="30sp"
             android:textStyle="bold" />
-
 
         <!-- 구분선 -->
         <View
@@ -47,7 +54,6 @@
             android:layout_marginTop="18dp"
             android:background="#000000" />
 
-
         <!-- 체형 설명 -->
         <TextView
             android:id="@+id/resultDescription"
@@ -55,52 +61,80 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
             android:gravity="center"
-            android:lineSpacingExtra="5dp"
-            android:text="체형 분석 설명"
+            android:lineSpacingExtra="4dp"
+            android:text="체형 요약"
             android:textColor="#333333"
-            android:textSize="15sp" />
+            android:textSize="16sp" />
 
-
-        <!-- 점수 영역 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="36dp"
-            android:background="#F5F5F5"
+            android:layout_marginTop="40dp"
+            android:background="#F7F7F7"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="24dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="분석 점수"
-                android:textColor="#000000"
+                android:text="이런 특징이 있어요"
+                android:textColor="#111111"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/resultScore"
+                android:id="@+id/resultFeatures"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="15dp"
-                android:lineSpacingExtra="7dp"
-                android:text="스트레이트 0점&#10;웨이브 0점&#10;내추럴 0점"
-                android:textColor="#333333"
-                android:textSize="15sp" />
+                android:layout_marginTop="16dp"
+                android:lineSpacingExtra="12dp"
+                android:text="• 특징"
+                android:textColor="#444444"
+                android:textSize="14sp" />
 
         </LinearLayout>
 
-
         <!-- 참고 문구 -->
         <TextView
+            android:id="@+id/resultNotice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center"
-            android:text="자가진단 결과는 신체 특징을 바탕으로 한 참고용 분석입니다."
+            android:lineSpacingExtra="4dp"
+            android:text="설문 응답을 바탕으로 한 참고용 결과예요.&#10;정밀 측정을 하면 더 정확해져요."
             android:textColor="#999999"
             android:textSize="12sp" />
 
+        <!-- 다시 검사하기 -->
+        <LinearLayout
+            android:id="@+id/btnRetry"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/bg_button_outlin"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_refresh" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="다시 검사하기"
+                android:textColor="#333333"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
         <!-- =============================== -->
         <!-- 정밀 체형 분석 -->
@@ -132,7 +166,6 @@
                 android:text="카메라 또는 전신 사진을 이용하면&#10;신체 비율과 치수를 더 자세하게 분석할 수 있습니다."
                 android:textColor="#777777"
                 android:textSize="13sp" />
-
 
             <!-- 예 / 아니오 -->
             <LinearLayout
@@ -172,19 +205,6 @@
             </LinearLayout>
 
         </LinearLayout>
-
-
-        <!-- 다시 검사하기 -->
-        <Button
-            android:id="@+id/btnRetry"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="18dp"
-            android:backgroundTint="#FFFFFF"
-            android:text="다시 검사하기"
-            android:textAllCaps="false"
-            android:textColor="#555555"
-            android:textSize="14sp" />
 
     </LinearLayout>
 

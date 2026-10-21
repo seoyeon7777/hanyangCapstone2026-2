@@ -3,6 +3,7 @@ package com.example.capstone.mypage;
 import com.example.capstone.R;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.MyPageStore.Order;
+import com.example.capstone.ui.AppDialog;
 
 import android.content.Context;
 import android.content.Intent;
@@ -178,11 +179,7 @@ public class OrderListActivity extends AppCompatActivity {
                     + "\n현재 상태: " + order.getStatusLabel();
         }
 
-        new AlertDialog.Builder(this)
-                .setTitle("배송조회")
-                .setMessage(message)
-                .setPositiveButton("확인", null)
-                .show();
+        AppDialog.alert(this, "배송조회", message, "확인");
     }
 
     /**

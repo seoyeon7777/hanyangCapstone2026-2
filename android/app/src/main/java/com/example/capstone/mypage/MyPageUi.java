@@ -1,15 +1,16 @@
 package com.example.capstone.mypage;
 
 import com.example.capstone.R;
+import com.example.capstone.ui.AppDialog;
 
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import androidx.appcompat.app.AlertDialog;
 
 /**
  * 마이페이지 하위 화면에서 반복되는 화면 처리 모음.
@@ -48,14 +49,70 @@ final class MyPageUi {
         }
     }
 
+    static void fillChoiceGrid(LinearLayout container, String[] items, int columns,
+                               String selected, java.util.function.Consumer<String> onPick) {
+        Context context = container.getContext();
+        float density = context.getResources().getDisplayMetrics().density;
+        int gap = Math.round(8 * density);
+
+        container.removeAllViews();
+        java.util.List<TextView> chips = new java.util.ArrayList<>();
+        LinearLayout row = null;
+
+        for (int i = 0; i < items.length; i++) {
+            if (i % columns == 0) {
+                row = new LinearLayout(context);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, Math.round(44 * density));
+                rowLp.topMargin = i == 0 ? 0 : gap;
+                container.addView(row, rowLp);
+            }
+
+            TextView chip = new TextView(context);
+            chip.setText(items[i]);
+            chip.setGravity(Gravity.CENTER);
+            chip.setTextSize(13);
+            chip.setTextColor(Color.parseColor("#111111"));
+            chip.setBackgroundResource(R.drawable.bg_option_chip);
+            chip.setSelected(items[i].equals(selected));
+
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0,
+                    LinearLayout.LayoutParams.MATCH_PARENT, 1f);
+            if (i % columns != columns - 1) {
+                lp.rightMargin = gap;
+            }
+            row.addView(chip, lp);
+            chips.add(chip);
+
+            String value = items[i];
+            chip.setOnClickListener(v -> {
+                for (TextView c : chips) {
+                    c.setSelected(c == chip);
+                    c.setTypeface(null, c == chip ? Typeface.BOLD : Typeface.NORMAL);
+                }
+                onPick.accept(value);
+            });
+        }
+
+        int rest = items.length % columns;
+        if (rest != 0 && row != null) {
+            for (int i = rest; i < columns; i++) {
+                View empty = new View(context);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, 1, 1f);
+                if (i != columns - 1) {
+                    lp.rightMargin = gap;
+                }
+                row.addView(empty, lp);
+            }
+        }
+    }
+
     /** "확인/취소" 확인창. 확인을 누르면 onConfirm 실행 */
     static void confirm(Context context, String title, String message, Runnable onConfirm) {
-        new AlertDialog.Builder(context)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton("확인", (d, w) -> onConfirm.run())
-                .setNegativeButton("취소", null)
-                .show();
+        AppDialog.show(context, true, title, message,
+                "취소", null,
+                "확인", onConfirm);
     }
 
     /** 010-1234-5678 형태로 맞춘다. 숫자 자릿수가 맞지 않으면 null */

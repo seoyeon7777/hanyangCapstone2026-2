@@ -77,6 +77,9 @@ public class WishActivity extends AppCompatActivity {
                 this,
                 BottomMenu.TAB_WISH
         );
+
+        findViewById(R.id.btnWishCart)
+                .setOnClickListener(v -> BottomMenu.openCart(this));
     }
 
     @Override

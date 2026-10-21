@@ -18,18 +18,33 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="20dp"
-            android:paddingBottom="24dp">
+            android:paddingBottom="32dp">
 
             <!-- ============ 등록 카드 (payments) ============ -->
-            <TextView
-                android:id="@+id/tvCardCount"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="등록 카드 0개"
-                android:textColor="@color/black"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="20dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="카드"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvCardCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 / 5"
+                    android:textColor="#999999"
+                    android:textSize="13sp" />
+            </LinearLayout>
 
             <!-- item_payment_card.xml 카드가 Java에서 채워진다 -->
             <LinearLayout
@@ -38,34 +53,57 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
 
+            <LinearLayout
+                android:id="@+id/btnAddCard"
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_add_card_dashed"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+"
+                    android:textColor="#111111"
+                    android:textSize="26sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="새 카드 등록"
+                    android:textColor="#111111"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
             <TextView
                 android:id="@+id/tvEmptyCard"
-                style="@style/MyPageEmpty"
-                android:paddingVertical="32dp"
-                android:text="등록된 카드가 없습니다." />
-
-            <Button
-                android:id="@+id/btnAddCard"
-                style="@style/MyPageButtonSmall"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:text="+ 카드 등록"
-                android:textSize="14sp" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="카드를 등록하면 주문할 때 바로 결제할 수 있어요."
+                android:textColor="#999999"
+                android:textSize="12sp" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="8dp"
                 android:layout_marginHorizontal="-20dp"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="28dp"
                 android:background="#F5F5F5" />
 
             <!-- ============ 간편결제 ============ -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginTop="22dp"
+                android:layout_marginBottom="6dp"
                 android:text="간편결제"
                 android:textColor="@color/black"
                 android:textSize="16sp"
@@ -73,64 +111,107 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="64dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingVertical="10dp">
+                android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:layout_marginEnd="12dp"
                     android:contentDescription="카카오페이"
                     android:src="@drawable/ic_kakao" />
 
-                <TextView
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="카카오페이"
-                    android:textColor="@color/black"
-                    android:textSize="14sp" />
+                    android:orientation="vertical">
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchKakaoPay"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="카카오페이"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvKakaoStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="연결 안 됨"
+                        android:textColor="#999999"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/btnKakaoPay"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="34dp"
+                    android:background="@drawable/bg_button_small_outline"
+                    android:gravity="center"
+                    android:paddingHorizontal="14dp"
+                    android:text="연결하기"
+                    android:textColor="#111111"
+                    android:textSize="12sp" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="64dp"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingVertical="10dp">
+                android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:layout_marginEnd="12dp"
                     android:contentDescription="네이버페이"
                     android:src="@drawable/ic_naver" />
 
-                <TextView
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="네이버페이"
-                    android:textColor="@color/black"
-                    android:textSize="14sp" />
+                    android:orientation="vertical">
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchNaverPay"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="네이버페이"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvNaverStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="연결 안 됨"
+                        android:textColor="#999999"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/btnNaverPay"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="34dp"
+                    android:background="@drawable/bg_button_small_outline"
+                    android:gravity="center"
+                    android:paddingHorizontal="14dp"
+                    android:text="연결하기"
+                    android:textColor="#111111"
+                    android:textSize="12sp" />
             </LinearLayout>
 
             <TextView
+                android:id="@+id/tvPayNotice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="24dp"
                 android:background="@drawable/bg_info_box"
                 android:lineSpacingExtra="4dp"
                 android:padding="16dp"

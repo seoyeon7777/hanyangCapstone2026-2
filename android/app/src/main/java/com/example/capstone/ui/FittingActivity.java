@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.capstone.BuildConfig;
 import com.example.capstone.R;
 import com.example.capstone.avatar.BodyMeasurementContract;
+import com.example.capstone.data.BodyProfileStore;
 
 /** 팀원 피팅 진입: 키 → 체형 자가진단. */
 public class FittingActivity extends AppCompatActivity {
@@ -26,6 +27,7 @@ public class FittingActivity extends AppCompatActivity {
 
         findViewById(R.id.btnStartFitting).setOnClickListener(v -> startFitting());
         findViewById(R.id.btnLoadSurvey).setOnClickListener(v -> loadLastSurvey());
+        findViewById(R.id.btnShowFeedback).setOnClickListener(v -> showFeedback());
 
         View btnDemo = findViewById(R.id.btnDemoSamples);
         if (BuildConfig.DEBUG && btnDemo != null) {
@@ -44,6 +46,19 @@ public class FittingActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.tvLastSurvey)).setText(hasSurvey
                 ? "최근 설문: " + BodyTypeActivity.lastSurveySummary(this)
                 : "아직 저장된 설문이 없어요.");
+    }
+
+    private void showFeedback() {
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(this);
+
+        if (active != null && active.parts != null && active.parts.length() > 0) {
+            startActivity(BodyFeedbackActivity.profileIntent(this, active));
+        } else if (BodyTypeActivity.hasLastSurvey(this)) {
+            startActivity(BodyFeedbackActivity.surveyIntent(this));
+        } else {
+            Toast.makeText(this, "아직 체형 분석 기록이 없어요. '체형 분석 시작하기'로 먼저 분석해 주세요.",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void startFitting() {

@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
@@ -28,6 +29,7 @@ public class BodyTypeActivity extends AppCompatActivity {
     private MaterialButton an2;
     private MaterialButton an3;
     private Button next;
+    private Button prev;
 
     // 체형 종류
     public static final int TYPE_STRAIGHT = 0;
@@ -166,6 +168,7 @@ public class BodyTypeActivity extends AppCompatActivity {
         an3 = findViewById(R.id.an3);
 
         next = findViewById(R.id.next);
+        prev = findViewById(R.id.prev);
 
         // '이전 설문 불러오기'로 들어오면 지난번 답을 미리 선택
         if (getIntent().getBooleanExtra(EXTRA_LOAD_LAST, false)) {
@@ -179,6 +182,30 @@ public class BodyTypeActivity extends AppCompatActivity {
         an3.setOnClickListener(v -> selectAnswer(3));
 
         next.setOnClickListener(v -> goNext());
+        prev.setOnClickListener(v -> goPrev());
+
+        findViewById(R.id.btnCloseSurvey).setOnClickListener(v -> confirmClose());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                confirmClose();
+            }
+        });
+    }
+
+    private void confirmClose() {
+        AppDialog.show(this, true,
+                "자가진단을 그만할까요?",
+                "지금까지 고른 답은 저장되지 않아요.",
+                "그만하기", this::finish,
+                "계속하기", null);
+    }
+
+    private void goPrev() {
+        if (currentQuestion > 0) {
+            currentQuestion--;
+            showQuestion();
+        }
     }
 
     private void showQuestion() {
@@ -196,6 +223,9 @@ public class BodyTypeActivity extends AppCompatActivity {
         } else {
             next.setText("다음");
         }
+
+        prev.setEnabled(currentQuestion > 0);
+        prev.setAlpha(currentQuestion > 0 ? 1f : 0.4f);
 
         resetButtonState();
     }
@@ -477,6 +507,16 @@ public class BodyTypeActivity extends AppCompatActivity {
         }
 
         return answers;
+    }
+
+    public static int lastSurveyType(Context context) {
+
+        SharedPreferences prefs =
+                context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+
+        return prefs.contains(KEY_SURVEY_TYPE)
+                ? prefs.getInt(KEY_SURVEY_TYPE, TYPE_STRAIGHT)
+                : -1;
     }
 
     /** 최근 설문 저장 시각 (없으면 0). 홈 화면이 설문을 새로 했는지 알아챌 때 쓴다 */

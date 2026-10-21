@@ -3,6 +3,7 @@ package com.example.capstone.login;
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.MyPageStore;
+import com.example.capstone.data.ProfilePhotoStore;
 import com.example.capstone.mypage.CancelReturnActivity;
 import com.example.capstone.mypage.DeliveryAddressActivity;
 import com.example.capstone.mypage.EditProfileActivity;
@@ -10,6 +11,7 @@ import com.example.capstone.mypage.MyBodyActivity;
 import com.example.capstone.mypage.MyReviewActivity;
 import com.example.capstone.mypage.NoticeActivity;
 import com.example.capstone.mypage.OrderListActivity;
+import com.example.capstone.ui.AppDialog;
 import com.example.capstone.mypage.PaymentMethodActivity;
 import com.example.capstone.mypage.RefundAccountActivity;
 
@@ -21,7 +23,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MyPageActivity extends AppCompatActivity {
@@ -113,6 +114,9 @@ public class MyPageActivity extends AppCompatActivity {
         MyPageStore.User user = MyPageStore.getUser();
         tvUserName.setText((user.name.isEmpty() ? "회원" : user.name) + "님");
         tvUserEmail.setText(user.email);
+
+        ProfilePhotoStore.showIn(imgProfile,
+                Math.round(12 * getResources().getDisplayMetrics().density));
     }
 
     /** orders + delivery 상태별 개수 반영 */
@@ -159,12 +163,11 @@ public class MyPageActivity extends AppCompatActivity {
         menuNotice.setOnClickListener(v -> open(NoticeActivity.class));
 
         // 로그아웃
-        tvLogout.setOnClickListener(v -> new AlertDialog.Builder(this)
-                .setTitle("로그아웃")
-                .setMessage("로그아웃 하시겠습니까?")
-                .setPositiveButton("로그아웃", (d, w) -> logout())
-                .setNegativeButton("취소", null)
-                .show());
+        tvLogout.setOnClickListener(v -> AppDialog.show(this, false,
+                "로그아웃",
+                "로그아웃 하시겠습니까?",
+                "취소", null,
+                "로그아웃", this::logout));
     }
 
     private void open(Class<?> activityClass) {

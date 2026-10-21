@@ -219,6 +219,7 @@ public class MyPageStore {
         public final String bank;
         public final String accountNo;
         public final String holder;
+        public boolean isDefault;
 
         public RefundAccount(
                 String bank,
@@ -336,7 +337,7 @@ public class MyPageStore {
 
     private static final Set<String> receivedCouponIds = new HashSet<>();
 
-    private static RefundAccount refundAccount = null;
+    private static final List<RefundAccount> refundAccounts = new ArrayList<>();
     private static boolean kakaoPayLinked = false;
     private static boolean naverPayLinked = false;
 
@@ -893,16 +894,47 @@ public class MyPageStore {
     }
 
     // 환불 계좌
+    public static List<RefundAccount> getRefundAccounts() {
+        return new ArrayList<>(refundAccounts);
+    }
+
     public static RefundAccount getRefundAccount() {
-        return refundAccount;
+        for (RefundAccount a : refundAccounts) {
+            if (a.isDefault) {
+                return a;
+            }
+        }
+        return null;
     }
 
-    public static void saveRefundAccount(RefundAccount account) {
-        refundAccount = account;
+    public static void addRefundAccount(RefundAccount account) {
+        account.isDefault = refundAccounts.isEmpty();
+        refundAccounts.add(account);
     }
 
-    public static void deleteRefundAccount() {
-        refundAccount = null;
+    public static boolean hasRefundAccount(String bank, String accountNo) {
+        for (RefundAccount a : refundAccounts) {
+            if (a.bank.equals(bank) && a.accountNo.equals(accountNo)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void setDefaultRefundAccount(RefundAccount account) {
+        for (RefundAccount a : refundAccounts) {
+            a.isDefault = false;
+        }
+
+        account.isDefault = true;
+    }
+
+    public static void deleteRefundAccount(RefundAccount account) {
+        refundAccounts.remove(account);
+
+        if (account.isDefault && !refundAccounts.isEmpty()) {
+            refundAccounts.get(0).isDefault = true;
+        }
     }
 
     // 리뷰
