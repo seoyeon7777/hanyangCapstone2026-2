@@ -278,7 +278,10 @@ match_score(body, item) -> {
   - API 37 에뮬레이터는 친구들 3D 라이브러리(Filament)가 16KB 페이지를 지원하지 않아 앱이 꺼진다 → API 35(16KB 아닌 이미지)로 실행
 - [ ] 서버 상품의 사진(image_url) 표시, 상세 화면의 옵션·장바구니 (찜 탭·상세 하트는 연결됨)
 - [x] 11단계: DB 저장 (store.py, Supabase) — 상품을 DB에서, 체형·반응을 body_profiles·user_events에. test_db.py 8개
-- [ ] DB 담당이 Supabase 프로젝트 만들고 db.sql 실행, 접속 주소 공유 → seed_db.py로 시연 상품 넣기 (DB_연결가이드.md)
+- [x] Supabase 프로젝트(서연 계정, 조직 hanyang-capstone, 싱가포르) 만들고 db.sql 실행, seed_db.py로 시연 상품 30개 → 서버 "데이터 DB" 연결 확인
+  - 접속 주소는 Session pooler(`aws-0-ap-southeast-1.pooler.supabase.com:5432`). 비밀번호는 각자 database_url.txt에만
+- [ ] 앱 상단 탭(신상·베스트·카테고리)·카테고리 화면·검색·장바구니는 아직 DummyData → 서버 상품으로 바꿀지 팀 결정
+- [ ] 로그인 사용자와 추천 user_id(app-…) 연결 (로그인이 서버·DB와 연결된 뒤)
 - [ ] 실제 상품 데이터(products + product_tags) 넣기, popularity 산식 정하기
 - [ ] B 파트 server.py의 상품 저장소는 아직 메모리 (B API를 쓸 때만 해당)
 - [x] A·B·C 통합 (feature/integration): matching_b.py로 B 연결, app.py 통합 서버, /api/feed에 설문 answers 입력, 상품 태그를 B 이름으로, test_integration.py 8개
