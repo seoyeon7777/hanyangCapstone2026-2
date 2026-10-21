@@ -25,7 +25,9 @@ C 파트는 원래 hanyangCapstone2026 저장소에서 만들었고, 이 저장�
 ```
 README.md               저장소 소개
 android/                안드로이드 앱 (Android Studio로 이 폴더를 연다. 친구들 담당)
-requirements.txt        flask (API·서버용. 알고리즘과 테스트 대부분은 표준 라이브러리만)
+requirements.txt        flask (API·서버용), psycopg (DB용. 알고리즘과 테스트 대부분은 표준 라이브러리만)
+db/                     DB 담당: db.sql (PostgreSQL 표 32개, Supabase에 그대로 실행), README.md (표 설명)
+database_url.txt        (깃에 없음) DB 접속 주소 한 줄. 있으면 서버가 Supabase를 쓴다
 app.py                  ★ 통합 서버 (B server.create_app + C feed_bp). python app.py → 0.0.0.0:5000 (에뮬레이터 10.0.2.2, 폰은 PC IP)
                         모든 오류를 JSON {"ok": false, "error"}로. HOST·PORT·FLASK_DEBUG 환경변수
 body_profile.py …       A 파트
@@ -36,12 +38,16 @@ recommend/              ★ C 파트 (추천 피드) — 이 폴더에서 작업
   fake_matching.py      임시 매칭 (match_score, outfit_bonus, classify_kind). 이제 test_feed.py 손계산 테스트에서만 쓴다
   feed.py               C 파트 본체 (final_score, score_all, rank, feed_order, home_feed, outfits, reason, update_pref, need_rediagnosis)
   feed_api.py           7·8단계 API (Flask Blueprint)
+  store.py              11단계 저장소: DB 주소가 있으면 PgStore(PostgreSQL), 없으면 MemoryStore(items.json + 메모리)
+  seed_db.py            시연 상품 30개를 DB에 넣는 스크립트 (여러 번 실행해도 됨)
+  DB_연결가이드.md       Supabase 만들기 → 주소 넣기 → 확인 (팀원용)
   templates/feed_demo.html  8단계 연습용 무한 스크롤 화면 (/feed-demo). 팀 공용 templates/와 분리
   안드로이드_연결가이드.md  앱 담당용: 서버 주소, 요청·응답 모양, Kotlin(Retrofit) 무한 스크롤·토글·찜 예시
   홈화면_연결가이드.md   웹(JavaScript) 버전 사용법 — 연습 화면용
   test_feed.py          C 로직 정답 테스트 (임시 매칭 + items_fake.json, 표준 라이브러리만)
   test_integration.py   A+B+C 연결 테스트 (표준 라이브러리만)
-  test_api.py           API 테스트 (Flask 필요, 맨 위 app.py를 불러옴)
+  test_api.py           API 테스트 (Flask 필요, 맨 위 app.py를 불러옴. 항상 메모리 저장소)
+  test_db.py            DB 저장소 테스트 (로컬 PostgreSQL에 임시 DB를 만들어 확인. TEST_DATABASE_URL 없으면 건너뜀)
   data/items.json       시연용 가짜 상품 30개 — B 태그 이름(fit:slim, sil:IH …)
   data/items_fake.json  같은 30개의 옛 태그 버전 — test_feed.py 전용
 ```
@@ -187,7 +193,22 @@ match_score(body, item) -> {
   - 설문을 새로 하고 돌아오면(`lastSurveyTime` 변화) 다시 부름
 - `ProductAdapter`: 서버 상품 클릭 → click, 찜 → like. 카드에 추천 이유(`textReason`), 가격 0이면 숨김
 - `Product`: `serverId`·`reason` 추가 (서버 상품은 id −1)
+- 찜(서버 상품): `RecommendApi.saveLike` — 찜 상태를 기기(SharedPreferences "recommend"의 liked_products)에 저장 + 찜할 때 like 전송. 서버 상품 Product는 product_id마다 하나만 만들어 다시 불러와도 하트 유지
+  - 찜 탭(`WishActivity`)은 DummyData + `RecommendApi.likedServerProducts`를 보여 줌. 상세 화면은 `server_product_id`로 서버 상품을 찾아 하트만 동작 (옵션·장바구니는 아직 DummyData 상품만)
 - 확인: 여기서는 Android SDK를 받을 수 없어 androidx 대체 클래스로 javac 컴파일 검사 + 같은 요청을 curl로 서버에 보내 응답 확인까지만 했다. 실제 실행은 Android Studio에서 확인할 것
+
+### 4-11. DB 저장 (Supabase, 11단계)
+- 팀 결정: DB는 Supabase(무료 PostgreSQL). 표는 DB 담당의 `db/db.sql` 그대로. 연결 방법은 `recommend/DB_연결가이드.md`
+- `store.make_store()`: `DATABASE_URL` 환경 변수 → 맨 위 `database_url.txt` 순으로 주소를 찾고, 없으면 MemoryStore (지금까지와 같음)
+- 함수: `items()`, `item(id)`, `user(id)` → `{"body","pref","history"}` 또는 None, `ensure_user`, `save_body(id, body, answers)`, `add_event(id, item, event)`
+- PgStore
+  - 상품: products + categories + product_tags (+ brands) 조인. 판매중·삭제 안 됨·태그 있음·`clothing_type`이 OUTFIT_GROUP에 있는 것(jumpsuit 제외). `DB_ITEMS_CACHE_SECONDS`(60초) 캐시
+  - 앱 user_id(`app-…`)가 처음 오면 users 행을 만든다 (이름 `DB_DEMO_USER_NAME`, 비밀번호 빈칸, role user)
+  - 체형: body_profiles. 비율·답이 같으면 새 행 안 만듦(앱이 스크롤마다 같은 답을 보냄), 바뀌면 이전 행 is_current=false. confidence·is_mixed는 A의 MIX_GAP 기준(db.sql 제약과 같음)
+  - 반응: user_events에 쌓기만. pref는 저장하지 않고 기록을 update_pref로 다시 계산 → 메모리 저장소와 결과가 같다
+  - 연결 실패 → StoreError → API 503 `{"ok": false, "error"}`. psycopg는 `prepare_threshold=None`(Supabase 풀러 대응), 연결 하나를 lock으로 차례로 사용, 끊기면 한 번 다시 연결
+- 응답 상품에 DB의 `price`, `brand`, `image_url`을 더해 보낸다 (`feed_api.for_screen`). feed.py 결과 모양은 그대로
+- 앱(RecommendApi.toProduct)은 응답의 price·brand를 카드에 쓴다 (없으면 가격 숨김·브랜드 자리에 종류). image_url은 아직 안 씀 (사진 불러오기 라이브러리 필요)
 
 ## 5. 정답 테스트 (반드시 통과)
 
@@ -195,6 +216,7 @@ match_score(body, item) -> {
 `cd recommend && python test_feed.py` — 현재 38개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
 `cd recommend && python test_api.py` — 현재 19개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 8개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
 
@@ -227,7 +249,7 @@ match_score(body, item) -> {
 - 한 번에 한 단계만 만든다. 끝나면 `python test_feed.py` 통과를 확인한다
 - 3장 함수 모양(이름·입력·출력 키)은 바꾸지 않는다
 - 숫자(비중·보너스·임계값)는 `rec_config.py`에만 둔다
-- 외부 라이브러리 없이 파이썬 표준 라이브러리만 쓴다 (Flask는 7단계 API에서만)
+- 외부 라이브러리 없이 파이썬 표준 라이브러리만 쓴다 (Flask는 7단계 API에서만, psycopg는 store.py PgStore에서만 — DB 주소가 없으면 불러오지 않는다)
 - 주석과 출력 메시지는 한국어
 - 가상 피팅 코드는 다른 저장소에 있다. 이 저장소에서 그쪽 코드를 복사해 오지 않는다
 
@@ -254,8 +276,14 @@ match_score(body, item) -> {
 - [x] 앱(안드로이드) 홈을 /api/feed/scroll·/api/feed/event에 연결 (4-10, feature/seoyeon-android-connect)
 - [x] Android Studio 에뮬레이터에서 실제 실행 확인 (Pixel 6 API 35: 홈에 서버 상품·추천 이유·토글 표시)
   - API 37 에뮬레이터는 친구들 3D 라이브러리(Filament)가 16KB 페이지를 지원하지 않아 앱이 꺼진다 → API 35(16KB 아닌 이미지)로 실행
-- [ ] 서버 상품의 가격·브랜드·사진, 상세·장바구니·찜 목록 연결 (DB 상품 연결 뒤)
-- [ ] 데이터 저장: 지금은 사용자 기록(USERS)·B 상품 저장소가 메모리, 상품은 JSON 파일 → 서버를 끄면 기록이 사라짐
+- [ ] 서버 상품의 사진(image_url) 표시, 상세 화면의 옵션·장바구니 (찜 탭·상세 하트는 연결됨)
+- [x] 11단계: DB 저장 (store.py, Supabase) — 상품을 DB에서, 체형·반응을 body_profiles·user_events에. test_db.py 8개
+- [x] Supabase 프로젝트(서연 계정, 조직 hanyang-capstone, 싱가포르) 만들고 db.sql 실행, seed_db.py로 시연 상품 30개 → 서버 "데이터 DB" 연결 확인
+  - 접속 주소는 Session pooler(`aws-0-ap-southeast-1.pooler.supabase.com:5432`). 비밀번호는 각자 database_url.txt에만
+- [ ] 앱 상단 탭(신상·베스트·카테고리)·카테고리 화면·검색·장바구니는 아직 DummyData → 서버 상품으로 바꿀지 팀 결정
+- [ ] 로그인 사용자와 추천 user_id(app-…) 연결 (로그인이 서버·DB와 연결된 뒤)
+- [ ] 실제 상품 데이터(products + product_tags) 넣기, popularity 산식 정하기
+- [ ] B 파트 server.py의 상품 저장소는 아직 메모리 (B API를 쓸 때만 해당)
 - [x] A·B·C 통합 (feature/integration): matching_b.py로 B 연결, app.py 통합 서버, /api/feed에 설문 answers 입력, 상품 태그를 B 이름으로, test_integration.py 8개
 - [x] 9단계: 홈 화면 토글 ON(골격 맞춤)/OFF(일반 쇼핑몰) — general_score, mode 인자, 테스트 9개
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend

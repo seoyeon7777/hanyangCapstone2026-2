@@ -20,7 +20,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,10 +50,19 @@ public final class RecommendApi {
 
     public static final int PAGE_SIZE = 10;
 
-    private static final int TIMEOUT_MS = 5000;
+    // Supabase(싱가포르)를 쓰면 첫 요청이 느릴 수 있어서 넉넉하게
+    private static final int TIMEOUT_MS = 10000;
 
     private static final String PREF_NAME = "recommend";
     private static final String KEY_USER_ID = "user_id";
+
+    // 찜한 서버 상품 {product_id: {name, brand, price, category}}. 앱을 꺼도 찜 탭에 남게 기기에 저장한다
+    // [여기에 DB 입력] 로그인·찜 목록 API가 생기면 서버(wishlists)에서 받아 오게 바꾼다
+    private static final String KEY_LIKED = "liked_products";
+
+    // 서버 상품은 product_id마다 Product를 하나만 만든다.
+    // 홈을 다시 불러와도 같은 객체를 써서 찜 표시가 유지되고, 찜 탭·상세 화면이 같은 상품을 본다
+    private static final Map<String, Product> SERVER_PRODUCTS = new LinkedHashMap<>();
 
     private static final ExecutorService IO = Executors.newSingleThreadExecutor();
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
@@ -116,11 +128,13 @@ public final class RecommendApi {
             return;
         }
 
+        Context appContext = context.getApplicationContext();
+
         post("/api/feed/scroll", body, new Callback<JSONObject>() {
             @Override
             public void onSuccess(JSONObject result) {
                 try {
-                    callback.onSuccess(parsePage(result));
+                    callback.onSuccess(parsePage(appContext, result));
                 } catch (JSONException e) {
                     callback.onError(0, "서버 응답을 읽지 못했어요");
                 }
@@ -133,13 +147,13 @@ public final class RecommendApi {
         });
     }
 
-    private static FeedPage parsePage(JSONObject result) throws JSONException {
+    private static FeedPage parsePage(Context context, JSONObject result) throws JSONException {
 
         JSONArray array = result.getJSONArray("items");
         List<Product> items = new ArrayList<>();
 
         for (int i = 0; i < array.length(); i++) {
-            items.add(toProduct(array.getJSONObject(i)));
+            items.add(toProduct(context, array.getJSONObject(i)));
         }
 
         JSONObject body = result.optJSONObject("body");
@@ -148,18 +162,29 @@ public final class RecommendApi {
         return new FeedPage(items, result.optBoolean("has_more", false), primary);
     }
 
-    /** 서버 상품 → 앱 Product. 서버 상품에는 아직 가격·브랜드·사진이 없다. */
-    private static Product toProduct(JSONObject item) throws JSONException {
+    /**
+     * 서버 상품 → 앱 Product.
+     * 가격·브랜드는 서버가 DB(Supabase)를 쓸 때만 온다. 없으면 브랜드 자리에 종류, 가격은 0(카드에서 숨김)
+     */
+    private static Product toProduct(Context context, JSONObject item) throws JSONException {
 
+        String serverId = item.getString("product_id");
         String category = categoryName(item.optString("clothing_type"));
+        Product product = SERVER_PRODUCTS.get(serverId);
 
-        // 서버 상품은 DummyData와 번호가 겹치지 않게 id를 -1로 둔다 (상세 화면은 이름만 보여 준다)
-        Product product = new Product(
-                -1,
-                category,
-                item.getString("product_name"),
-                0
-        );
+        if (product == null) {
+            String brand = item.optString("brand", "");
+
+            // 서버 상품은 DummyData와 번호가 겹치지 않게 id를 -1로 둔다 (상세 화면은 이름만 보여 준다)
+            product = new Product(
+                    -1,
+                    brand.isEmpty() ? category : brand,
+                    item.getString("product_name"),
+                    item.optInt("price", 0)
+            );
+            product.setLiked(likedJson(context).has(serverId));
+            SERVER_PRODUCTS.put(serverId, product);
+        }
 
         List<String> seasons = new ArrayList<>();
         JSONArray seasonArray = item.optJSONArray("seasons");
@@ -171,7 +196,8 @@ public final class RecommendApi {
         }
 
         product.setFilterInfo(category, null, null, seasons.toArray(new String[0]));
-        product.setServerInfo(item.getString("product_id"), item.optString("reason", ""));
+        // 추천 이유는 토글(ON/OFF)마다 달라서 받을 때마다 새로 넣는다
+        product.setServerInfo(serverId, item.optString("reason", ""));
 
         return product;
     }
@@ -193,6 +219,100 @@ public final class RecommendApi {
             default:
                 return "기타";
         }
+    }
+
+    // =========================
+    // 찜 (서버 상품)
+    // =========================
+
+    /**
+     * 하트를 누른 뒤 부른다 (product.isLiked()가 바뀐 상태).
+     * 서버 상품이면 찜 상태를 기기에 저장하고, 찜했을 때는 추천 서버에 like를 보낸다 (찜 해제는 서버에 안 보냄).
+     * DummyData 상품이면 아무것도 하지 않는다 (기존 동작 그대로).
+     */
+    public static void saveLike(Context context, Product product) {
+
+        if (product == null || !product.isFromServer()) {
+            return;
+        }
+
+        JSONObject liked = likedJson(context);
+
+        try {
+            if (product.isLiked()) {
+                JSONObject info = new JSONObject();
+                info.put("name", product.getName());
+                info.put("brand", product.getBrand());
+                info.put("price", product.getPrice());
+                info.put("category", product.getCategory());
+                liked.put(product.getServerId(), info);
+            } else {
+                liked.remove(product.getServerId());
+            }
+        } catch (JSONException e) {
+            return;
+        }
+
+        prefs(context).edit().putString(KEY_LIKED, liked.toString()).apply();
+
+        if (product.isLiked()) {
+            sendEvent(context, product, "like");
+        }
+    }
+
+    /** 찜한 서버 상품 목록 (찜 탭용). 홈에서 아직 안 불러온 상품은 저장해 둔 정보로 만든다 */
+    public static List<Product> likedServerProducts(Context context) {
+
+        JSONObject liked = likedJson(context);
+        List<Product> result = new ArrayList<>();
+
+        for (Iterator<String> it = liked.keys(); it.hasNext(); ) {
+            String serverId = it.next();
+            Product product = SERVER_PRODUCTS.get(serverId);
+
+            if (product == null) {
+                JSONObject info = liked.optJSONObject(serverId);
+
+                if (info == null) {
+                    continue;
+                }
+
+                product = new Product(
+                        -1,
+                        info.optString("brand"),
+                        info.optString("name"),
+                        info.optInt("price", 0)
+                );
+                product.setFilterInfo(info.optString("category"), null, null, null);
+                product.setServerInfo(serverId, "");
+                product.setLiked(true);
+                SERVER_PRODUCTS.put(serverId, product);
+            }
+
+            if (product.isLiked()) {
+                result.add(product);
+            }
+        }
+
+        return result;
+    }
+
+    /** 상세 화면용: 홈·찜 탭에서 본 서버 상품 (없으면 null) */
+    public static Product serverProduct(String serverId) {
+        return serverId == null ? null : SERVER_PRODUCTS.get(serverId);
+    }
+
+    private static JSONObject likedJson(Context context) {
+        try {
+            return new JSONObject(prefs(context).getString(KEY_LIKED, "{}"));
+        } catch (JSONException e) {
+            return new JSONObject();
+        }
+    }
+
+    private static SharedPreferences prefs(Context context) {
+        return context.getApplicationContext()
+                .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
     // =========================

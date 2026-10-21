@@ -152,3 +152,10 @@ GENERAL_POPULAR_MIN = 0.75     # 인기도가 이 이상이면 "인기 상품"
 GENERAL_REASON_PREF = "자주 본 스타일과 비슷해요"
 GENERAL_REASON_POPULAR = "요즘 많이 찾는 인기 상품이에요"
 GENERAL_REASON_SEASON = "지금 계절에 입기 좋아요"
+
+# ── 데이터 저장 (DB) ──
+# DATABASE_URL 환경 변수 또는 저장소 맨 위 database_url.txt(깃에 안 올라감)에 주소가 있으면 PostgreSQL(Supabase)을 쓴다.
+# 둘 다 없으면 지금처럼 recommend/data/items.json + 서버 메모리 (시연용, 서버를 끄면 기록이 사라짐)
+DATABASE_URL_FILE = "database_url.txt"
+DB_ITEMS_CACHE_SECONDS = 60    # DB 상품 목록을 다시 읽는 간격(초). 요청마다 상품 전체를 읽지 않게
+DB_DEMO_USER_NAME = "앱 사용자"  # 앱이 처음 보낸 user_id로 users 행을 만들 때 넣는 이름 (회원가입 전 사용자)

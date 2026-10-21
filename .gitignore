@@ -242,3 +242,6 @@ samples/demo_tags.json
 samples/dual_result.json
 samples/validation_after_fix*.txt
 samples/validation_before_fix*.txt
+
+# DB 비밀번호가 들어 있는 접속 주소 (절대 올리지 말 것)
+database_url.txt

@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
 import com.example.capstone.data.DummyData;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.Product;
 import com.example.capstone.data.SizeFitChecker;
@@ -34,6 +35,9 @@ public class ProductDetailActivity extends AppCompatActivity {
     private TextView textOptionSummary;
 
     private Product currentProduct;
+
+    // 추천 서버 상품 (DummyData에 없음). 찜만 된다 — 옵션·장바구니는 아직 DummyData 상품만
+    private Product serverProduct;
 
     private String selectedSize = "";
     private String selectedColor = "";
@@ -127,6 +131,17 @@ public class ProductDetailActivity extends AppCompatActivity {
             }
         }
 
+        if (currentProduct == null) {
+            serverProduct = RecommendApi.serverProduct(
+                    getIntent().getStringExtra("server_product_id")
+            );
+        }
+
+        // 추천 서버 상품은 DB에 가격이 없으면 0으로 온다 → "0원" 대신 안내
+        if (serverProduct != null && price == 0) {
+            textDetailPrice.setText("가격 정보 준비 중");
+        }
+
 
         // =========================
         // 이미 장바구니 옵션이 있으면
@@ -157,6 +172,10 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         layoutOptionSelect.setOnClickListener(v -> {
 
+            if (showServerProductNotice()) {
+                return;
+            }
+
             if (currentProduct == null) {
                 return;
             }
@@ -181,6 +200,18 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         btnDetailHeart.setOnClickListener(v -> {
 
+            // 서버 상품: 찜 상태 저장 + 추천 서버에 like
+            if (currentProduct == null && serverProduct != null) {
+
+                serverProduct.setLiked(
+                        !serverProduct.isLiked()
+                );
+
+                RecommendApi.saveLike(this, serverProduct);
+                updateHeart();
+                return;
+            }
+
             if (currentProduct == null) {
                 return;
             }
@@ -201,6 +232,10 @@ public class ProductDetailActivity extends AppCompatActivity {
         // =========================
 
         btnAddCart.setOnClickListener(v -> {
+
+            if (showServerProductNotice()) {
+                return;
+            }
 
             if (currentProduct == null) {
 
@@ -236,6 +271,10 @@ public class ProductDetailActivity extends AppCompatActivity {
         // =========================
 
         btnFitting.setOnClickListener(v -> {
+
+            if (showServerProductNotice()) {
+                return;
+            }
 
             if (currentProduct == null) {
 
@@ -536,16 +575,34 @@ public class ProductDetailActivity extends AppCompatActivity {
     // 찜 하트 표시
     // =========================
 
+    /** 추천 서버 상품이면 아직 안 되는 기능이라고 알리고 true (옵션·사이즈 정보가 DB에 들어오면 연결) */
+    private boolean showServerProductNotice() {
+
+        if (currentProduct != null || serverProduct == null) {
+            return false;
+        }
+
+        Toast.makeText(
+                this,
+                "추천 상품은 아직 옵션 선택·장바구니·피팅이 안 돼요 (찜은 돼요)",
+                Toast.LENGTH_SHORT
+        ).show();
+
+        return true;
+    }
+
     private void updateHeart() {
 
-        if (currentProduct == null) {
+        Product product = currentProduct != null ? currentProduct : serverProduct;
+
+        if (product == null) {
 
             btnDetailHeart.setImageResource(R.drawable.ic_heart_outline);
             return;
         }
 
 
-        if (currentProduct.isLiked()) {
+        if (product.isLiked()) {
 
             btnDetailHeart.setImageResource(R.drawable.ic_heart_filled);
 

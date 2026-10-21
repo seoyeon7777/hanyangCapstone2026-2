@@ -22,6 +22,7 @@ import com.example.capstone.MainActivity;
 import com.example.capstone.R;
 import com.example.capstone.adapter.ProductAdapter;
 import com.example.capstone.data.DummyData;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.Product;
 
 import java.util.ArrayList;
@@ -53,7 +54,7 @@ public class WishActivity extends AppCompatActivity {
 
     private final String[] categories = {
             "전체", "상의", "아우터",
-            "원피스", "바지"
+            "원피스", "바지", "치마"   // 치마: 추천 서버 상품(skirt)용
     };
 
     @Override
@@ -397,8 +398,7 @@ public class WishActivity extends AppCompatActivity {
 
         int count = 0;
 
-        for (Product product :
-                DummyData.getProducts()) {
+        for (Product product : allProducts()) {
 
             if (!product.isLiked()) {
                 continue;
@@ -413,6 +413,14 @@ public class WishActivity extends AppCompatActivity {
         }
 
         return count;
+    }
+
+    /** 찜 후보: 기존 더미 상품 + 홈(추천 서버)에서 찜한 상품 */
+    private List<Product> allProducts() {
+
+        List<Product> products = new ArrayList<>(DummyData.getProducts());
+        products.addAll(RecommendApi.likedServerProducts(this));
+        return products;
     }
 
     private void showWishProducts() {
@@ -442,8 +450,7 @@ public class WishActivity extends AppCompatActivity {
 
         wishProducts.clear();
 
-        for (Product product :
-                DummyData.getProducts()) {
+        for (Product product : allProducts()) {
 
             if (!product.isLiked()) {
                 continue;

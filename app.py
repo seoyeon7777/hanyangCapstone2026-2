@@ -25,7 +25,7 @@ sys.path.append(os.path.join(ROOT, "recommend"))
 from flask import jsonify  # noqa: E402
 
 from server import create_app  # noqa: E402  B 파트 서버
-from feed_api import feed_bp   # noqa: E402  C 파트 API
+from feed_api import feed_bp, STORE   # noqa: E402  C 파트 API
 
 app = create_app()
 app.register_blueprint(feed_bp)
@@ -58,7 +58,12 @@ if __name__ == "__main__":
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "5000"))
     debug = os.environ.get("FLASK_DEBUG") == "1"
-    print(f"\n  PC 브라우저      http://127.0.0.1:{port}/feed-demo")
+    # 상품·사용자 기록을 어디에 두는지 (recommend/store.py)
+    if STORE.kind == "postgres":
+        print("\n  데이터           DB (database_url.txt 또는 DATABASE_URL) — 서버를 꺼도 기록이 남아요")
+    else:
+        print("\n  데이터           메모리 + recommend/data/items.json — 서버를 끄면 기록이 사라져요")
+    print(f"  PC 브라우저      http://127.0.0.1:{port}/feed-demo")
     print(f"  에뮬레이터       http://10.0.2.2:{port}")
     if host == "0.0.0.0":
         print(f"  같은 와이파이 폰  http://{lan_ip()}:{port}\n")
