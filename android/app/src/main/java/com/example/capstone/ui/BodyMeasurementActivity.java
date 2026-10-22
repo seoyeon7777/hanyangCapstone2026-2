@@ -46,6 +46,10 @@ import com.google.mlkit.vision.segmentation.Segmenter;
 import com.google.mlkit.vision.segmentation.selfie.SelfieSegmenterOptions;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.concurrent.ExecutorService;
@@ -64,6 +68,27 @@ public class BodyMeasurementActivity extends AppCompatActivity {
     private Segmenter segmenter;
     private ExecutorService cameraExecutor;
     private ImageCapture imageCapture;
+
+    private boolean galleryMode = false;
+    private boolean galleryPickerPending = false;
+
+    private final ActivityResultLauncher<String> galleryLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                galleryPickerPending = false;
+                if (uri == null) {
+                    textStatus.setText("사진 선택을 취소했습니다. 다시 선택할 수 있어요.");
+                    return;
+                }
+                try {
+                    File selected = copyGalleryImageToCache(uri);
+                    isCapturing = true;
+                    showPhotoReview(selected);
+                } catch (Exception e) {
+                    isCapturing = false;
+                    textStatus.setText("사진을 불러오지 못했습니다.");
+                    Toast.makeText(this, "사진 열기 실패: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
 
     private int cameraFacing = CameraSelector.LENS_FACING_BACK;
     private ProcessCameraProvider cameraProvider;
@@ -147,6 +172,11 @@ public class BodyMeasurementActivity extends AppCompatActivity {
         textStatus = findViewById(R.id.textStatus);
 
         Button btnCloseCamera = findViewById(R.id.btnCloseCamera);
+        Button btnGallery = findViewById(R.id.btnGallery);
+        btnGallery.setOnClickListener(v -> {
+            if (galleryMode) openGalleryPicker();
+            else startGalleryMode();
+        });
 
         userHeightCm = getIntent().getFloatExtra(
                 "USER_HEIGHT_CM", 0f
@@ -166,7 +196,7 @@ public class BodyMeasurementActivity extends AppCompatActivity {
         Button btnSwitchCamera = findViewById(R.id.btnSwitchCamera);
 
         btnSwitchCamera.setOnClickListener(v -> {
-            if (isCapturing || photoAccepted || isSwitchingMode) {
+            if (galleryMode || isCapturing || photoAccepted || isSwitchingMode) {
                 return;
             }
 
@@ -207,6 +237,40 @@ public class BodyMeasurementActivity extends AppCompatActivity {
         } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
         }
+    }
+
+    private void startGalleryMode() {
+        if (isCapturing || isSwitchingMode || galleryPickerPending) return;
+        galleryMode = true;
+        resetCountdown();
+        poseOverlay.clear();
+        if (cameraProvider != null) cameraProvider.unbindAll();
+        previewView.setVisibility(android.view.View.INVISIBLE);
+        bodyGuideOverlay.setVisibility(android.view.View.INVISIBLE);
+        textStatus.setText(captureMode == BodyGuideOverlayView.MODE_FRONT
+                ? "갤러리에서 정면 전신 사진을 선택해주세요."
+                : "갤러리에서 측면 전신 사진을 선택해주세요.");
+        openGalleryPicker();
+    }
+
+    private void openGalleryPicker() {
+        if (galleryPickerPending || isCapturing) return;
+        galleryPickerPending = true;
+        galleryLauncher.launch("image/*");
+    }
+
+    private File copyGalleryImageToCache(Uri uri) throws IOException {
+        String prefix = captureMode == BodyGuideOverlayView.MODE_FRONT
+                ? "body_front_gallery_" : "body_side_gallery_";
+        File output = new File(getCacheDir(), prefix + System.currentTimeMillis() + ".jpg");
+        try (InputStream input = getContentResolver().openInputStream(uri);
+             OutputStream stream = new FileOutputStream(output)) {
+            if (input == null) throw new IOException("사진 데이터를 열 수 없습니다.");
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) stream.write(buffer, 0, count);
+        }
+        return output;
     }
 
     private void startCamera() {
@@ -263,7 +327,7 @@ public class BodyMeasurementActivity extends AppCompatActivity {
 
     private void analyzeImage(@NonNull ImageProxy imageProxy) {
 
-        if (isProcessing || isCapturing ||
+        if (galleryMode || isProcessing || isCapturing ||
                 photoAccepted || isSwitchingMode) {
             imageProxy.close();
             return;
@@ -612,9 +676,16 @@ public class BodyMeasurementActivity extends AppCompatActivity {
 
     private void showPhotoReview(File photoFile) {
 
-        Bitmap bitmap = BitmapFactory.decodeFile(
-                photoFile.getAbsolutePath()
-        );
+        BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+        bitmapOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(photoFile.getAbsolutePath(), bitmapOptions);
+        bitmapOptions.inSampleSize = 1;
+        while (bitmapOptions.outWidth / bitmapOptions.inSampleSize > 1200
+                || bitmapOptions.outHeight / bitmapOptions.inSampleSize > 1600) {
+            bitmapOptions.inSampleSize *= 2;
+        }
+        bitmapOptions.inJustDecodeBounds = false;
+        Bitmap bitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath(), bitmapOptions);
 
         if (bitmap == null) {
             isCapturing = false;
@@ -646,9 +717,12 @@ public class BodyMeasurementActivity extends AppCompatActivity {
                     resetCountdown();
                     poseOverlay.clear();
 
-                    textStatus.setText(
-                            "자세를 다시 맞춰주세요."
-                    );
+                    if (galleryMode) {
+                        textStatus.setText("사진을 다시 선택해주세요.");
+                        openGalleryPicker();
+                    } else {
+                        textStatus.setText("자세를 다시 맞춰주세요.");
+                    }
                 })
                 .setPositiveButton("사진 사용하기", (dialog, which) -> {
                     photoAccepted = true;
@@ -937,15 +1011,15 @@ public class BodyMeasurementActivity extends AppCompatActivity {
         resetCountdown();
 
         new AlertDialog.Builder(this)
-                .setTitle("정면 촬영 완료")
+                .setTitle(galleryMode ? "정면 사진 분석 완료" : "정면 촬영 완료")
                 .setMessage(
-                        "정면 사진 분석이 완료되었습니다.\n\n"
-                                + "이제 오른쪽을 바라보도록 몸을 돌려주세요.\n"
-                                + "측면 자세가 인식되면 자동 촬영됩니다."
+                        galleryMode
+                                ? "정면 사진 분석이 완료되었습니다.\n\n이제 갤러리에서 측면 전신 사진을 선택해주세요."
+                                : "정면 사진 분석이 완료되었습니다.\n\n이제 오른쪽을 바라보도록 몸을 돌려주세요.\n측면 자세가 인식되면 자동 촬영됩니다."
                 )
                 .setCancelable(false)
                 .setPositiveButton(
-                        "측면 촬영 시작",
+                        galleryMode ? "측면 사진 선택" : "측면 촬영 시작",
                         (dialog, which) -> {
 
                             isCapturing = false;
@@ -956,9 +1030,12 @@ public class BodyMeasurementActivity extends AppCompatActivity {
                             captureReadyTime = SystemClock.elapsedRealtime()
                                     + POSE_READY_DELAY_MS;
 
-                            textStatus.setText(
-                                    "측면: 옆으로 서서 전신을 보여주세요."
-                            );
+                            if (galleryMode) {
+                                textStatus.setText("측면 전신 사진을 선택해주세요.");
+                                openGalleryPicker();
+                            } else {
+                                textStatus.setText("측면: 옆으로 서서 전신을 보여주세요.");
+                            }
                         }
                 )
                 .show();
@@ -1099,6 +1176,14 @@ public class BodyMeasurementActivity extends AppCompatActivity {
         poseOverlay.clear();
 
         textStatus.setText(message);
+        if (galleryMode) {
+            new AlertDialog.Builder(this)
+                    .setTitle("사진 분석 실패")
+                    .setMessage(message + "\n전신이 선명하게 나온 사진으로 다시 선택해주세요.")
+                    .setPositiveButton("다시 선택", (d, w) -> openGalleryPicker())
+                    .setNegativeButton("닫기", null)
+                    .show();
+        }
 
         Toast.makeText(
                 this,
