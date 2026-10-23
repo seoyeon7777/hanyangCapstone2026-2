@@ -26,6 +26,9 @@ TYPES = ("S", "W", "N")   # S=스트레이트, W=웨이브, N=내추럴
 # ─────────────────────────────────────────────
 W_SURVEY, W_AVATAR = 0.6, 0.4   # [작업 2] 설문 / 아바타 비중
 MIX_GAP = 0.10                  # [작업 3] 1·2위 차이가 이보다 작으면 혼합형
+W_CHEST_DEPTH = 0.5             # 카메라 보조 지표 가중치: 가슴두께 (논문 기준)
+W_SHOULDER_SLOPE = 0.5          # 카메라 보조 지표 가중치: 어깨 경사각 (논문 기준)
+DEFAULT_AGE_BAND = "30대"       # 나이를 모를 때 쓰는 연령대 기준
 
 
 # ═════════════════════════════════════════════
@@ -166,6 +169,109 @@ def score_avatar(measurements):
             scores[t] += p * share * weight
         for t, share in low_types.items():
             scores[t] += (1 - p) * share * weight
+    for t, v in score_camera_shape(measurements).items():   # 가슴두께·어깨 경사각 (있을 때만)
+        scores[t] += v
+    return scores
+
+
+# ═════════════════════════════════════════════
+# [작업 1-2b] 카메라 보조 지표 (박선미·정은영 2024, 「신체 유형별 골격진단 요소의 정량화 연구」)
+#   치수에 아래 두 값이 있으면 아바타 점수에 더한다. 없으면 이전 계산과 똑같다.
+#     chest_depth    : 가슴두께(cm). 옆면 사진 윤곽의 몸통 앞뒤 두께    → 논문 Table 6 '몸매의 인상'
+#     shoulder_slope : 어깨 경사각(도). 정면 사진 윤곽의 목옆~어깨 선 기울기 → 논문 Table 6 '어깨 형태'
+#     age            : (선택) 나이. 논문 구간이 20~60대로 나뉘어 있다. 없으면 DEFAULT_AGE_BAND
+#   논문은 여성 20~69세(사이즈코리아 8차) 기준이고 정답 진단과 맞는지는 검증하지 않았다 → 가중치를 작게 둔다.
+# ═════════════════════════════════════════════
+# 가슴두께(mm) 구간: 두께감 얇은 편=W, 적당한 편=N, 두께감 있는 편=S  (연령대별)
+CHEST_DEPTH_BANDS = {
+    "20대": {"W": (140, 187), "N": (188, 211), "S": (212, 285)},
+    "30대": {"W": (144, 192), "N": (193, 217), "S": (218, 292)},
+    "40대": {"W": (143, 196), "N": (197, 223), "S": (224, 304)},
+    "50대": {"W": (153, 202), "N": (203, 226), "S": (227, 302)},
+    "60대": {"W": (159, 200), "N": (201, 221), "S": (222, 285)},
+}
+# 어깨 경사각(도) 구간 (왼쪽, 오른쪽): 일자 어깨=N, 적당한 어깨=S, 쳐진 어깨=W  (연령대별)
+SHOULDER_SLOPE_BANDS = {
+    "20대": {"N": ((9, 26), (15, 23)), "S": ((27, 32), (24, 27)), "W": ((33, 41), (28, 37))},
+    "30대": {"N": ((12, 20), (14, 22)), "S": ((21, 25), (24, 26)), "W": ((26, 40), (27, 37))},
+    "40대": {"N": ((11, 23), (16, 21)), "S": ((24, 27), (22, 26)), "W": ((28, 37), (27, 35))},
+    "50대": {"N": ((12, 22), (16, 24)), "S": ((23, 26), (25, 27)), "W": ((27, 34), (28, 34))},
+    "60대": {"N": ((16, 22), (19, 23)), "S": ((23, 25), (24, 26)), "W": ((26, 35), (27, 35))},
+}
+# 카메라가 줄 수 있는 값의 허용 범위. 벗어나면 잘못 잰 것으로 보고 그 지표만 무시한다 (진단 전체를 막지 않는다)
+CHEST_DEPTH_RANGE = (10.0, 40.0)    # cm
+SHOULDER_SLOPE_RANGE = (5.0, 50.0)  # 도
+AGE_RANGE = (10, 100)
+
+
+def age_band(age):
+    """나이 → 논문 연령대 키. 모르거나 이상하면 DEFAULT_AGE_BAND, 20 미만은 20대, 60 이상은 60대."""
+    if not isinstance(age, (int, float)) or isinstance(age, bool) or not AGE_RANGE[0] <= age <= AGE_RANGE[1]:
+        return DEFAULT_AGE_BAND
+    return f"{int(min(max(age // 10 * 10, 20), 60))}대"
+
+
+def _optional_value(measurements, key, value_range):
+    """있고 숫자이고 허용 범위 안이면 float, 아니면 None."""
+    v = measurements.get(key) if isinstance(measurements, dict) else None
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return None
+    return float(v) if value_range[0] <= v <= value_range[1] else None
+
+
+def _mid(lo_hi):
+    return (lo_hi[0] + lo_hi[1]) / 2
+
+
+def _soft_membership(x, centers):
+    """값 x가 각 유형에 얼마나 속하는지. centers = {유형: 중심값}.
+    중심값 순서대로 이웃한 두 중심 사이는 선형으로 나누고, 양 끝 바깥은 끝 유형이 전부 가진다. 합 = 1."""
+    ordered = sorted(centers.items(), key=lambda kv: kv[1])
+    out = {t: 0.0 for t in TYPES}
+    if x <= ordered[0][1]:
+        out[ordered[0][0]] = 1.0
+    elif x >= ordered[-1][1]:
+        out[ordered[-1][0]] = 1.0
+    else:
+        for (t1, c1), (t2, c2) in zip(ordered, ordered[1:]):
+            if c1 <= x <= c2:
+                out[t2] = (x - c1) / (c2 - c1)
+                out[t1] = 1.0 - out[t2]
+                break
+    return out
+
+
+def chest_depth_membership(depth_cm, age=None):
+    """가슴두께(cm) → {"S","W","N"} 소속 비율. W < N < S 순으로 두꺼워진다. 가운데는 각 구간의 중간값.
+    S 구간은 위쪽이 열려 있어서(212~285mm) 중심을 '아래 경계 + 적당한 편 폭의 절반'으로 둔다."""
+    b = CHEST_DEPTH_BANDS[age_band(age)]
+    centers = {"W": _mid(b["W"]), "N": _mid(b["N"]),
+               "S": b["S"][0] + (b["N"][1] - b["N"][0]) / 2}
+    return _soft_membership(depth_cm * 10, centers)
+
+
+def shoulder_slope_membership(angle_deg, age=None):
+    """어깨 경사각(도) → 소속 비율. N(일자) < S(적당) < W(쳐진) 순으로 각도가 커진다.
+    왼쪽·오른쪽 구간 중간값의 평균을 각 유형의 중심으로 쓴다 (카메라는 좌우 평균 각도 하나를 준다)."""
+    b = SHOULDER_SLOPE_BANDS[age_band(age)]
+    centers = {t: (_mid(b[t][0]) + _mid(b[t][1])) / 2 for t in TYPES}
+    return _soft_membership(angle_deg, centers)
+
+
+def score_camera_shape(measurements):
+    """카메라 보조 지표 점수 {"S":…, "W":…, "N":…}. 두 값이 모두 없으면 전부 0."""
+    scores = {t: 0.0 for t in TYPES}
+    if not measurements:
+        return scores
+    age = measurements.get("age")
+    depth = _optional_value(measurements, "chest_depth", CHEST_DEPTH_RANGE)
+    if depth is not None:
+        for t, share in chest_depth_membership(depth, age).items():
+            scores[t] += share * W_CHEST_DEPTH
+    slope = _optional_value(measurements, "shoulder_slope", SHOULDER_SLOPE_RANGE)
+    if slope is not None:
+        for t, share in shoulder_slope_membership(slope, age).items():
+            scores[t] += share * W_SHOULDER_SLOPE
     return scores
 
 
@@ -296,7 +402,8 @@ def classify(answers, measurements=None):
     answers      : {"q1": 1, "q2": 3, ..., "q7": 2}   (1·2·3)
     measurements : {"height": 165.0, "shoulder_width": 31.5, "arm_length": 53.1,
                     "upper_body_length": 47.0, "leg_length": 86.1}   (cm)
-                   없으면 None → 설문만으로 계산
+                   없으면 None → 설문만으로 계산.
+                   선택 키(있으면 점수에 더함): "chest_depth"(가슴두께 cm), "shoulder_slope"(어깨 경사각 도), "age"(나이)
     """
     validate_answers(answers)                              # 설문 답변 검증
     

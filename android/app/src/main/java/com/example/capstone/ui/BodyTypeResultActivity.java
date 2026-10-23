@@ -199,21 +199,6 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 )
         );
 
-        // 한 문항도 답하지 않아 점수가 모두 0이면 체형을 정할 수 없다
-        if (scores[0] == 0 && scores[1] == 0 && scores[2] == 0) {
-
-            resultTitle.setText("체형을 알 수 없어요");
-
-            resultDescription.setText(
-                    "설문에 답하지 않아 체형을 판단할 수 없었어요.\n\n"
-                            + "아래 '다시 검사하기'로 설문에 답하면 "
-                            + "체형에 맞는 추천을 받을 수 있어요. "
-                            + "카메라·사진 측정은 설문 없이도 할 수 있어요."
-            );
-
-            resultScore.setText("설문 답변이 없어 점수를 계산하지 못했어요.");
-        }
-
         // 자세한 신체 분석 → 카메라 실행
         btnYes.setOnClickListener(v -> {
 

@@ -215,7 +215,10 @@ match_score(body, item) -> {
   - MediaPipe의 회전 옵션은 ML Kit와 방향이 반대라 **비트맵을 직접 돌려서** 넘긴다 (안 그러면 골격이 누워서 나옴)
   - 신뢰도는 `presence`를 쓴다 (`visibility`는 옷·가림으로 낮게 나와 기존 기준 0.4~0.5로 거르면 대부분 탈락)
 - MediaPipe는 `tasks-vision:0.10.33`. 0.10.21은 x86_64 라이브러리가 없고 16KB 페이지 기기에서 `program alignment (4096) cannot be smaller than system page size` 로 앱이 꺼졌다 (에뮬레이터에서 카메라 화면을 열면 홈으로 튕김). 0.10.33은 둘 다 해결
-- 설문(`BodyTypeActivity`)은 답을 고르지 않아도 "건너뛰기"로 넘어간다 (건너뛴 문항은 점수에 안 들어감)
+- **카메라 보조 지표 (논문 기준)**: 박선미·정은영(2024) 「신체 유형별 골격진단 요소의 정량화 연구」(여성 20~60대, 사이즈코리아 8차) Table 6의 두 요소만 쓴다. 가슴두께(cm, 옆면 두께=측정선 조정 화면의 "두께")와 어깨 경사각(도, 정면 윤곽에서 `camera/BodyShapeFeatures`가 추정). 나머지(목길이·목둘레·무릎뼈·쇄골)는 카메라로 못 재서 쓰지 않고, 설문(q2·q3·q4)이 맡는다
+  - A: `body_profile.py`의 `chest_depth`·`shoulder_slope`·`age`(선택) 치수 → `score_camera_shape`가 `score_avatar`에 더한다 (`W_CHEST_DEPTH`·`W_SHOULDER_SLOPE` 각 0.5, 논문 구간 중간값 사이를 선형으로 나눔, 나이 없으면 30대). 값이 없거나 범위 밖(가슴두께 10~40cm, 경사각 5~50도)이면 무시 → 키 없을 땐 이전과 결과가 똑같다 (무작위 6000건 비교로 확인). 테스트 `tests/test_a_camera_shape.py`
+  - 앱: 측정선 조정에서 가슴두께·어깨 경사각을 같이 구해 프로필 `parts`에 `CHEST_DEPTH`·`SHOULDER_SLOPE`로 저장하고(`BodyEditActivity`), `RecommendApi`가 대표 체형의 치수 5개(키·어깨너비·팔길이·상체길이·다리길이) + 두 값을 매 요청에 `measurements`로 보낸다. **이전에는 설문 답만 보냈으므로, 대표 체형이 저장된 사용자는 이제 설문 0.6 + 카메라 0.4로 진단된다.** 앱은 아직 나이를 안 보낸다(가입 생년월일 연결 전)
+  - 한계: 두 값 모두 옷·머리카락·자세에 민감한 추정이고, 논문 구간이 실제 진단과 맞는지는 검증된 적 없다. 어깨 경사각은 어깨 끝이 아니라 어깨 관절을 쓰므로 실제보다 작게 나올 수 있다. `sample.csv`에 이 두 값이 없어 정확도 변화는 아직 못 쟀다
 - 자동 촬영: 3초 카운트다운 없이 가이드에 맞는 프레임이 0.15초 이어지면 바로 촬영. 측면은 안내창을 닫은 뒤 3초 대기
 - `CapstoneApp`이 모든 화면에서 하단 내비게이션 바를 숨긴다
 - **3D 아바타 삭제** (정확도 낮음): `AvatarPreviewActivity`, `avatar/` 패키지, `avatar.glb`·morph json, Filament 의존성 제거. 대신 **`BodyEditActivity`**(치수 12개를 숫자로 직접 수정, ±0.5cm, 미측정 부위는 키 비율로 추정해 "추정" 표시, 보통 범위(0.6~1.6배) 밖이면 경고)에서 저장한다. `BodyMeasurementContract`·`DemoBodySamples`는 `data/`로 옮겼다

@@ -460,6 +460,12 @@ public class MeasurementResultActivity extends AppCompatActivity {
                         );
                     }
 
+                    // 골격 진단 보조 값 (가슴두께 cm, 어깨 경사각 도). 저장하면 추천 서버로 간다
+                    intent.putExtra(BodyEditActivity.EXTRA_CHEST_DEPTH_CM,
+                            getIntent().getFloatExtra("CHEST_DEPTH", -1f));
+                    intent.putExtra(BodyEditActivity.EXTRA_SHOULDER_SLOPE_DEG,
+                            getIntent().getFloatExtra("SHOULDER_SLOPE_DEG", -1f));
+
                     intent.putExtra(
                             BodyEditActivity.EXTRA_SAMPLE_LABEL,
                             sampleLabel != null &&
