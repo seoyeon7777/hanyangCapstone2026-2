@@ -34,6 +34,8 @@ import com.example.capstone.R;
 import com.example.capstone.camera.BodyGuideOverlayView;
 import com.example.capstone.camera.BodyMeasurementCalculator;
 import com.example.capstone.camera.CircumferenceCalculator;
+import com.example.capstone.camera.MeasurementSession;
+import com.example.capstone.camera.SilhouetteBuilder;
 import com.example.capstone.camera.MediaPipePoseDetector;
 import com.example.capstone.camera.Pose;
 import com.example.capstone.camera.PoseLandmark;
@@ -84,6 +86,8 @@ public class BodyMeasurementActivity extends AppCompatActivity {
     private BodyMeasurementCalculator.Result frontResult;
     private SilhouetteWidths frontWidths;
     private SilhouetteWidths sideWidths;
+    private MeasurementSession.Silhouette frontSil;
+    private MeasurementSession.Silhouette sideSil;
 
     // 자세 안정화 및 자동 촬영
     private long stableStartTime = 0L;
@@ -161,6 +165,17 @@ public class BodyMeasurementActivity extends AppCompatActivity {
         );
 
         btnCloseCamera.setOnClickListener(v -> finish());
+
+        // 카메라 대신 앨범의 정면·옆면 사진으로 측정
+        findViewById(R.id.btnPickPhoto).setOnClickListener(v -> {
+            if (isCapturing || photoAccepted || isSwitchingMode) {
+                return;
+            }
+            Intent photoIntent = new Intent(this, PhotoMeasurementActivity.class);
+            photoIntent.putExtra("USER_HEIGHT_CM", userHeightCm);
+            startActivity(photoIntent);
+            finish();
+        });
 
 
         Button btnSwitchCamera = findViewById(R.id.btnSwitchCamera);
@@ -623,10 +638,16 @@ public class BodyMeasurementActivity extends AppCompatActivity {
             return;
         }
 
+        // 세로로 긴 사진이 대화상자를 가득 채워 아래 버튼("사진 사용하기")이 화면 밖으로
+        // 밀려나지 않도록 사진 높이를 화면의 55%로 제한한다
         ImageView imageView = new ImageView(this);
         imageView.setImageBitmap(bitmap);
-        imageView.setAdjustViewBounds(true);
+        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         imageView.setPadding(24, 12, 24, 12);
+        imageView.setLayoutParams(new android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                Math.round(getResources().getDisplayMetrics().heightPixels * 0.55f)
+        ));
 
         String title =
                 captureMode == BodyGuideOverlayView.MODE_FRONT
@@ -749,7 +770,7 @@ public class BodyMeasurementActivity extends AppCompatActivity {
                 .addOnSuccessListener(mask -> {
 
                     SilhouetteWidths widths =
-                            measureSilhouette(mask);
+                            measureSilhouette(mask, isFront);
 
                     if (widths == null || !widths.isValid()) {
                         handleAnalysisFailure(
@@ -774,149 +795,43 @@ public class BodyMeasurementActivity extends AppCompatActivity {
     }
 
     private SilhouetteWidths measureSilhouette(
-            SegmentationMask mask
+            SegmentationMask mask,
+            boolean isFront
     ) {
 
         if (mask == null || userHeightCm <= 0f) {
             return null;
         }
 
-        int width = mask.getWidth();
-        int height = mask.getHeight();
+        MeasurementSession.Silhouette sil = buildSilhouette(mask);
 
-        if (width <= 0 || height <= 0) {
+        if (sil == null) {
             return null;
         }
 
-        ByteBuffer buffer = mask.getBuffer();
-        buffer.order(ByteOrder.nativeOrder());
-        buffer.rewind();
-
-        int top = -1;
-        int bottom = -1;
-
-        for (int y = 0; y < height; y++) {
-
-            boolean hasPerson = false;
-
-            for (int x = 0; x < width; x++) {
-
-                if (confidenceAt(buffer, width, x, y) >= 0.5f) {
-                    hasPerson = true;
-                    break;
-                }
-            }
-
-            if (hasPerson) {
-                if (top == -1) {
-                    top = y;
-                }
-                bottom = y;
-            }
+        if (isFront) {
+            frontSil = sil;
+        } else {
+            sideSil = sil;
         }
 
-        if (top < 0 || bottom <= top) {
-            return null;
-        }
+        return widthsOf(sil);
+    }
 
-        float bodyHeightPixels = bottom - top;
-        float cmPerPixel = userHeightCm / bodyHeightPixels;
-
-        int chestY =
-                top + Math.round(bodyHeightPixels * 0.29f);
-
-        int waistY =
-                top + Math.round(bodyHeightPixels * 0.43f);
-
-        int hipY =
-                top + Math.round(bodyHeightPixels * 0.52f);
-
-        float chestPixels = measureCentralBodyWidth(
-                buffer, width, height, chestY
-        );
-
-        float waistPixels = measureCentralBodyWidth(
-                buffer, width, height, waistY
-        );
-
-        float hipPixels = measureCentralBodyWidth(
-                buffer, width, height, hipY
-        );
-
-        if (chestPixels <= 0 ||
-                waistPixels <= 0 ||
-                hipPixels <= 0) {
-            return null;
-        }
-
+    /** 기본 측정 위치(가슴 29%, 허리 43%, 골반 52%)에서의 폭 */
+    private SilhouetteWidths widthsOf(MeasurementSession.Silhouette sil) {
         return new SilhouetteWidths(
-                chestPixels * cmPerPixel,
-                waistPixels * cmPerPixel,
-                hipPixels * cmPerPixel
+                sil.widthCm(userHeightCm, MeasurementSession.DEFAULT_CHEST),
+                sil.widthCm(userHeightCm, MeasurementSession.DEFAULT_WAIST),
+                sil.widthCm(userHeightCm, MeasurementSession.DEFAULT_HIP)
         );
     }
 
-    private float confidenceAt(
-            ByteBuffer buffer,
-            int width,
-            int x,
-            int y
+    /** 마스크를 가로줄마다의 몸 폭 요약으로 바꾼다. 사람이 없으면 null */
+    private MeasurementSession.Silhouette buildSilhouette(
+            SegmentationMask mask
     ) {
-
-        return buffer.getFloat(
-                (y * width + x) * 4
-        );
-    }
-
-    private float measureCentralBodyWidth(
-            ByteBuffer buffer,
-            int width,
-            int height,
-            int y
-    ) {
-
-        if (y < 0 || y >= height) {
-            return 0f;
-        }
-
-        int bestStart = -1;
-        int bestEnd = -1;
-        int currentStart = -1;
-
-        float centerX = width / 2f;
-        float bestDistance = Float.MAX_VALUE;
-
-        for (int x = 0; x <= width; x++) {
-
-            boolean isPerson =
-                    x < width &&
-                            confidenceAt(buffer, width, x, y) >= 0.5f;
-
-            if (isPerson && currentStart == -1) {
-                currentStart = x;
-            }
-
-            if (!isPerson && currentStart != -1) {
-
-                int end = x - 1;
-                float segmentCenter = (currentStart + end) / 2f;
-                float distance = Math.abs(segmentCenter - centerX);
-
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    bestStart = currentStart;
-                    bestEnd = end;
-                }
-
-                currentStart = -1;
-            }
-        }
-
-        if (bestStart == -1 || bestEnd == -1) {
-            return 0f;
-        }
-
-        return bestEnd - bestStart + 1;
+        return SilhouetteBuilder.build(mask);
     }
 
     // =========================================
@@ -970,118 +885,27 @@ public class BodyMeasurementActivity extends AppCompatActivity {
 
     private void calculateCircumferences() {
 
-        if (frontWidths == null ||
-                sideWidths == null ||
+        if (frontSil == null ||
+                sideSil == null ||
                 frontResult == null) {
 
             handleAnalysisFailure("측정 데이터가 부족합니다.");
             return;
         }
 
-        float chestCircumference =
-                CircumferenceCalculator.calculateEllipseCircumference(
-                        frontWidths.chest,
-                        sideWidths.chest
-                );
+        // 가슴·허리·골반 둘레는 측정 위치를 확인·조정한 뒤 계산한다
+        MeasurementSession.clear();
+        MeasurementSession.heightCm = userHeightCm;
+        MeasurementSession.front = frontSil;
+        MeasurementSession.side = sideSil;
+        MeasurementSession.frontLengths = frontResult;
+        MeasurementSession.frontPhoto = frontPhotoFile;
+        MeasurementSession.sidePhoto = sidePhotoFile;
 
-        float waistCircumference =
-                CircumferenceCalculator.calculateEllipseCircumference(
-                        frontWidths.waist,
-                        sideWidths.waist
-                );
-
-        float hipCircumference =
-                CircumferenceCalculator.calculateEllipseCircumference(
-                        frontWidths.hip,
-                        sideWidths.hip
-                );
-
-        if (chestCircumference <= 0f ||
-                waistCircumference <= 0f ||
-                hipCircumference <= 0f) {
-
-            handleAnalysisFailure("둘레 계산에 실패했습니다.");
-            return;
-        }
-
-        openMeasurementResult(
-                chestCircumference,
-                waistCircumference,
-                hipCircumference
-        );
-    }
-
-    // =========================================
-    // 측정 결과 화면으로 이동
-    // =========================================
-
-    private void openMeasurementResult(
-            float chest,
-            float waist,
-            float hip
-    ) {
-
-        Intent intent = new Intent(
+        startActivity(new Intent(
                 BodyMeasurementActivity.this,
-                MeasurementResultActivity.class
-        );
-
-        intent.putExtra("HEIGHT", userHeightCm);
-        intent.putExtra("SHOULDER", frontResult.shoulderWidth);
-
-        intent.putExtra(
-                "LEFT_ARM",
-                frontResult.leftArmLength
-        );
-
-        intent.putExtra(
-                "RIGHT_ARM",
-                frontResult.rightArmLength
-        );
-
-        intent.putExtra(
-                "TORSO",
-                frontResult.torsoLength
-        );
-
-        intent.putExtra(
-                "LEFT_LEG",
-                frontResult.leftLegLength
-        );
-
-        intent.putExtra(
-                "RIGHT_LEG",
-                frontResult.rightLegLength
-        );
-
-        intent.putExtra("CHEST_CIRCUMFERENCE", chest);
-        intent.putExtra("WAIST_CIRCUMFERENCE", waist);
-        intent.putExtra("HIP_CIRCUMFERENCE", hip);
-
-        intent.putExtra("CHEST_WIDTH", frontWidths.chest);
-        intent.putExtra("CHEST_DEPTH", sideWidths.chest);
-
-        intent.putExtra("WAIST_WIDTH", frontWidths.waist);
-        intent.putExtra("WAIST_DEPTH", sideWidths.waist);
-
-        intent.putExtra("HIP_WIDTH", frontWidths.hip);
-        intent.putExtra("HIP_DEPTH", sideWidths.hip);
-
-        if (frontPhotoFile != null) {
-            intent.putExtra(
-                    "FRONT_PHOTO_PATH",
-                    frontPhotoFile.getAbsolutePath()
-            );
-        }
-
-        if (sidePhotoFile != null) {
-            intent.putExtra(
-                    "SIDE_PHOTO_PATH",
-                    sidePhotoFile.getAbsolutePath()
-            );
-        }
-
-        startActivity(intent);
+                MeasurementAdjustActivity.class
+        ));
         finish();
     }
 

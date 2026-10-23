@@ -191,13 +191,19 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         updateProgress();
 
+        resetButtonState();
+    }
+
+    /** 답을 골랐으면 "다음", 안 골랐으면 "건너뛰기" (마지막 문항은 "결과 확인") */
+    private void updateNextLabel() {
+
+        boolean answered = selectedAnswers[currentQuestion] != 0;
+
         if (currentQuestion == 6) {
             next.setText("결과 확인");
         } else {
-            next.setText("다음");
+            next.setText(answered ? "다음" : "건너뛰기");
         }
-
-        resetButtonState();
     }
 
     private void selectAnswer(int answer) {
@@ -210,6 +216,8 @@ public class BodyTypeActivity extends AppCompatActivity {
     private void resetButtonState() {
 
         int selected = selectedAnswers[currentQuestion];
+
+        updateNextLabel();
 
         styleAnswer(an1, selected, 1);
         styleAnswer(an2, selected, 2);
@@ -248,16 +256,7 @@ public class BodyTypeActivity extends AppCompatActivity {
 
     private void goNext() {
 
-        if (selectedAnswers[currentQuestion] == 0) {
-
-            Toast.makeText(
-                    this,
-                    "답변을 선택해주세요.",
-                    Toast.LENGTH_SHORT
-            ).show();
-
-            return;
-        }
+        // 답을 고르지 않아도 넘어갈 수 있다 (건너뛴 문항은 점수에 넣지 않는다)
 
         if (currentQuestion < 6) {
 
@@ -361,7 +360,20 @@ public class BodyTypeActivity extends AppCompatActivity {
         int resultType =
                 decideBodyType(scores);
 
-        saveLastSurvey(resultType);
+        // 한 문항도 답하지 않았으면 최근 설문을 덮어쓰지 않는다
+        // (지난번에 제대로 한 설문과 거기서 나온 추천 근거를 지키기 위해)
+        boolean answeredAny = false;
+
+        for (int answer : selectedAnswers) {
+            if (answer != 0) {
+                answeredAny = true;
+                break;
+            }
+        }
+
+        if (answeredAny) {
+            saveLastSurvey(resultType);
+        }
 
         Intent intent =
                 new Intent(

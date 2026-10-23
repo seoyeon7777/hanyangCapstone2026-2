@@ -1,4 +1,4 @@
-package com.example.capstone.avatar;
+package com.example.capstone.data;
 
 import android.content.Context;
 import android.content.Intent;
@@ -6,7 +6,7 @@ import android.content.Intent;
 import org.json.JSONObject;
 
 /**
- * 팀원 설문·카메라 결과 → {@link com.example.capstone.ui.AvatarPreviewActivity} 연결 계약.
+ * 팀원 설문·카메라 결과 → {@link com.example.capstone.ui.BodyEditActivity} 연결 계약.
  *
  * <p>MeasurementResultActivity 등에서 아래 extras / parts JSON 으로 넘긴다.
  * 카메라 쪽: NECK_CIRCUMFERENCE→NECK, TORSO→BACK_LENGTH, LEG_LENGTH→LEG_LENGTH.
@@ -36,7 +36,7 @@ public final class BodyMeasurementContract {
     /** 한 JSON으로 넘길 때. BodyPart name 키 사용. */
     public static final String EXTRA_PARTS_JSON = "extra_parts_json";
 
-    public static Intent avatarPreviewIntent(
+    public static Intent editIntent(
             Context context,
             float heightCm,
             Float shoulder,
@@ -53,7 +53,7 @@ public final class BodyMeasurementContract {
             Float legLength
     ) {
         Intent intent = new Intent();
-        intent.setClassName(context, "com.example.capstone.ui.AvatarPreviewActivity");
+        intent.setClassName(context, "com.example.capstone.ui.BodyEditActivity");
         intent.putExtra("extra_height_cm", heightCm);
         try {
             JSONObject parts = new JSONObject();

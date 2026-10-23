@@ -10,7 +10,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
-import com.example.capstone.avatar.BodyMeasurementContract;
+import com.example.capstone.data.BodyMeasurementContract;
 import com.example.capstone.data.UserBodyProfile;
 
 import java.io.File;
@@ -424,7 +424,7 @@ public class MeasurementResultActivity extends AppCompatActivity {
 
                     Intent intent =
                             BodyMeasurementContract
-                                    .avatarPreviewIntent(
+                                    .editIntent(
                                             this,
                                             outHeight,
                                             positiveOrNull(outShoulder),
@@ -443,25 +443,25 @@ public class MeasurementResultActivity extends AppCompatActivity {
 
                     String sampleId =
                             getIntent().getStringExtra(
-                                    AvatarPreviewActivity.EXTRA_SAMPLE_ID
+                                    BodyEditActivity.EXTRA_SAMPLE_ID
                             );
 
                     String sampleLabel =
                             getIntent().getStringExtra(
-                                    AvatarPreviewActivity.EXTRA_SAMPLE_LABEL
+                                    BodyEditActivity.EXTRA_SAMPLE_LABEL
                             );
 
                     if (sampleId != null &&
                             !sampleId.isEmpty()) {
 
                         intent.putExtra(
-                                AvatarPreviewActivity.EXTRA_SAMPLE_ID,
+                                BodyEditActivity.EXTRA_SAMPLE_ID,
                                 sampleId
                         );
                     }
 
                     intent.putExtra(
-                            AvatarPreviewActivity.EXTRA_SAMPLE_LABEL,
+                            BodyEditActivity.EXTRA_SAMPLE_LABEL,
                             sampleLabel != null &&
                                     !sampleLabel.isEmpty()
                                     ? sampleLabel

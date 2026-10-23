@@ -1,9 +1,9 @@
-package com.example.capstone.avatar;
+package com.example.capstone.data;
 
 import android.content.Context;
 import android.content.Intent;
 
-import com.example.capstone.ui.AvatarPreviewActivity;
+import com.example.capstone.ui.BodyEditActivity;
 import com.example.capstone.ui.MeasurementResultActivity;
 
 /**
@@ -175,9 +175,9 @@ public final class DemoBodySamples {
         return intent;
     }
 
-    /** 아바타 미리보기 직행. */
-    public static Intent avatarPreviewIntent(Context context, Sample sample) {
-        Intent intent = BodyMeasurementContract.avatarPreviewIntent(
+    /** 치수 수정 화면 직행. */
+    public static Intent editIntent(Context context, Sample sample) {
+        Intent intent = BodyMeasurementContract.editIntent(
                 context,
                 sample.height,
                 sample.shoulder,
@@ -193,8 +193,8 @@ public final class DemoBodySamples {
                 sample.torso,
                 sample.legLength
         );
-        intent.putExtra(AvatarPreviewActivity.EXTRA_SAMPLE_ID, sample.id);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_SAMPLE_LABEL, sample.label);
+        intent.putExtra(BodyEditActivity.EXTRA_SAMPLE_ID, sample.id);
+        intent.putExtra(BodyEditActivity.EXTRA_SAMPLE_LABEL, sample.label);
         return intent;
     }
 
@@ -212,7 +212,7 @@ public final class DemoBodySamples {
         intent.putExtra("FOREARM_CIRCUMFERENCE", sample.forearm);
         intent.putExtra("THIGH_CIRCUMFERENCE", sample.thigh);
         intent.putExtra("CALF_CIRCUMFERENCE", sample.calf);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_SAMPLE_ID, sample.id);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_SAMPLE_LABEL, "데모 · " + sample.label);
+        intent.putExtra(BodyEditActivity.EXTRA_SAMPLE_ID, sample.id);
+        intent.putExtra(BodyEditActivity.EXTRA_SAMPLE_LABEL, "데모 · " + sample.label);
     }
 }

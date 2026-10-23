@@ -4,9 +4,12 @@ package com.example.capstone.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
@@ -20,6 +23,66 @@ public class BodyTypeResultActivity extends AppCompatActivity {
     private TextView resultScore;
 
     private float userHeightCm;
+
+    private static final String PREF_TIPS = "measure_tips";
+    private static final String KEY_SKIP_CLOTHES_TIP = "skip_clothes_tip";
+
+    private void startMeasurement() {
+
+        Intent intent = new Intent(
+                BodyTypeResultActivity.this,
+                BodyMeasurementActivity.class
+        );
+
+        intent.putExtra(
+                "USER_HEIGHT_CM",
+                userHeightCm
+        );
+
+        startActivity(intent);
+    }
+
+    /** 촬영 전 옷차림 안내. 몸에 붙는 옷이 정확하다는 것을 알려 준다. */
+    private void showClothesTip() {
+
+        float density = getResources().getDisplayMetrics().density;
+        int pad = Math.round(20 * density);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(pad, pad / 2, pad, 0);
+
+        TextView message = new TextView(this);
+        message.setText(
+                "• 몸에 붙는 옷 (레깅스·슬림한 티 등), 가능하면 어두운 단색\n"
+                        + "• 어깨·팔꿈치·무릎이 보이는 옷 (롱코트, 긴 치마, 두꺼운 패딩은 피하기)\n"
+                        + "• 팔은 몸에서 살짝 벌리고, 단색 배경 앞에서 전신이 나오게\n"
+                        + "• 머리를 묶으면 머리 꼭대기가 더 정확히 잡혀요\n"
+                        + "\n옷이 헐렁하면 가슴·허리·골반 둘레가 실제보다 크게 나와요."
+        );
+        message.setTextSize(14f);
+        message.setLineSpacing(0f, 1.2f);
+        box.addView(message);
+
+        CheckBox skip = new CheckBox(this);
+        skip.setText("다시 보지 않기");
+        box.addView(skip);
+
+        new AlertDialog.Builder(this)
+                .setTitle("정확한 측정을 위해")
+                .setView(box)
+                .setPositiveButton("시작하기", (d, w) -> {
+                    if (skip.isChecked()) {
+                        getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
+                                .edit()
+                                .putBoolean(KEY_SKIP_CLOTHES_TIP, true)
+                                .apply();
+                    }
+                    startMeasurement();
+                })
+                .setNegativeButton("다음에 하기", null)
+                .show();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +199,21 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 )
         );
 
+        // 한 문항도 답하지 않아 점수가 모두 0이면 체형을 정할 수 없다
+        if (scores[0] == 0 && scores[1] == 0 && scores[2] == 0) {
+
+            resultTitle.setText("체형을 알 수 없어요");
+
+            resultDescription.setText(
+                    "설문에 답하지 않아 체형을 판단할 수 없었어요.\n\n"
+                            + "아래 '다시 검사하기'로 설문에 답하면 "
+                            + "체형에 맞는 추천을 받을 수 있어요. "
+                            + "카메라·사진 측정은 설문 없이도 할 수 있어요."
+            );
+
+            resultScore.setText("설문 답변이 없어 점수를 계산하지 못했어요.");
+        }
+
         // 자세한 신체 분석 → 카메라 실행
         btnYes.setOnClickListener(v -> {
 
@@ -148,17 +226,13 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 return;
             }
 
-            Intent intent = new Intent(
-                    BodyTypeResultActivity.this,
-                    BodyMeasurementActivity.class
-            );
-
-            intent.putExtra(
-                    "USER_HEIGHT_CM",
-                    userHeightCm
-            );
-
-            startActivity(intent);
+            // 카메라를 켜기 전에 옷차림 안내 (다시 보지 않기를 고르면 건너뜀)
+            if (getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
+                    .getBoolean(KEY_SKIP_CLOTHES_TIP, false)) {
+                startMeasurement();
+            } else {
+                showClothesTip();
+            }
         });
 
         // 아니오: 결과 화면 종료
