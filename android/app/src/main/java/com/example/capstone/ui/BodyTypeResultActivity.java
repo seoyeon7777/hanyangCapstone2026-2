@@ -5,9 +5,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
@@ -19,6 +22,66 @@ public class BodyTypeResultActivity extends AppCompatActivity {
     private TextView resultFeatures;
 
     private float userHeightCm;
+
+    private static final String PREF_TIPS = "measure_tips";
+    private static final String KEY_SKIP_CLOTHES_TIP = "skip_clothes_tip";
+
+    private void startMeasurement() {
+
+        Intent intent = new Intent(
+                BodyTypeResultActivity.this,
+                BodyMeasurementActivity.class
+        );
+
+        intent.putExtra(
+                "USER_HEIGHT_CM",
+                userHeightCm
+        );
+
+        startActivity(intent);
+    }
+
+    /** 촬영 전 옷차림 안내. 몸에 붙는 옷이 정확하다는 것을 알려 준다. */
+    private void showClothesTip() {
+
+        float density = getResources().getDisplayMetrics().density;
+        int pad = Math.round(20 * density);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(pad, pad / 2, pad, 0);
+
+        TextView message = new TextView(this);
+        message.setText(
+                "• 몸에 붙는 옷 (레깅스·슬림한 티 등), 가능하면 어두운 단색\n"
+                        + "• 어깨·팔꿈치·무릎이 보이는 옷 (롱코트, 긴 치마, 두꺼운 패딩은 피하기)\n"
+                        + "• 팔은 몸에서 살짝 벌리고, 단색 배경 앞에서 전신이 나오게\n"
+                        + "• 머리를 묶으면 머리 꼭대기가 더 정확히 잡혀요\n"
+                        + "\n옷이 헐렁하면 가슴·허리·골반 둘레가 실제보다 크게 나와요."
+        );
+        message.setTextSize(14f);
+        message.setLineSpacing(0f, 1.2f);
+        box.addView(message);
+
+        CheckBox skip = new CheckBox(this);
+        skip.setText("다시 보지 않기");
+        box.addView(skip);
+
+        new AlertDialog.Builder(this)
+                .setTitle("정확한 측정을 위해")
+                .setView(box)
+                .setPositiveButton("시작하기", (d, w) -> {
+                    if (skip.isChecked()) {
+                        getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
+                                .edit()
+                                .putBoolean(KEY_SKIP_CLOTHES_TIP, true)
+                                .apply();
+                    }
+                    startMeasurement();
+                })
+                .setNegativeButton("다음에 하기", null)
+                .show();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,17 +184,13 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 return;
             }
 
-            Intent intent = new Intent(
-                    BodyTypeResultActivity.this,
-                    BodyMeasurementActivity.class
-            );
-
-            intent.putExtra(
-                    "USER_HEIGHT_CM",
-                    userHeightCm
-            );
-
-            startActivity(intent);
+            // 카메라를 켜기 전에 옷차림 안내 (다시 보지 않기를 고르면 건너뜀)
+            if (getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
+                    .getBoolean(KEY_SKIP_CLOTHES_TIP, false)) {
+                startMeasurement();
+            } else {
+                showClothesTip();
+            }
         });
 
         // 아니오: 결과 화면 종료

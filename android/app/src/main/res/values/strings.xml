@@ -1,8 +1,4 @@
 <resources>
     <string name="app_name">capstone</string>
 
-    <string name="avatar_info_height">키 %1$scm(입력) · 화면 숫자는 모델 줄자 cm입니다. 부위를 눌러 치수를 수정하세요.</string>
-    <string name="avatar_value_cm">%1$s cm</string>
-    <string name="avatar_hint_default">부위를 누르면 확대됩니다. 드래그하면 회전합니다.</string>
-    <string name="avatar_hint_selected">%1$s을(를) 확대했습니다. 수치를 누르거나 슬라이더로 조절하세요.</string>
 </resources>

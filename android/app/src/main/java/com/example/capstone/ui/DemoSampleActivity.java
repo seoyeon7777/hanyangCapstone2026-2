@@ -10,7 +10,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
-import com.example.capstone.avatar.DemoBodySamples;
+import com.example.capstone.data.DemoBodySamples;
 
 /**
  * 개발용: 설문/카메라 없이 데모 체형 → 측정 결과 → 아바타.
@@ -55,7 +55,7 @@ public class DemoSampleActivity extends AppCompatActivity {
 
             // 길게 누르면 아바타 직행
             card.setOnLongClickListener(v -> {
-                startActivity(DemoBodySamples.avatarPreviewIntent(this, sample));
+                startActivity(DemoBodySamples.editIntent(this, sample));
                 return true;
             });
 

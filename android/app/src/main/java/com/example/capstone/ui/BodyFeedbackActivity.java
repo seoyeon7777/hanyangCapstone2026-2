@@ -16,7 +16,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
-import com.example.capstone.avatar.BodyMeasurementContract;
+import com.example.capstone.data.BodyMeasurementContract;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.login.LoginSession;
 

@@ -210,6 +210,25 @@ match_score(body, item) -> {
 - 응답 상품에 DB의 `price`, `brand`, `image_url`을 더해 보낸다 (`feed_api.for_screen`). feed.py 결과 모양은 그대로
 - 앱(RecommendApi.toProduct)은 응답의 price·brand를 카드에 쓴다 (없으면 가격 숨김·브랜드 자리에 종류). image_url은 아직 안 씀 (사진 불러오기 라이브러리 필요)
 
+### 4-11. 안드로이드 카메라·치수 변경 (10/21)
+- 관절 인식: ML Kit Pose → **MediaPipe Pose Landmarker** (`android/.../camera/MediaPipePoseDetector.java`, 모델 `assets/models/pose_landmarker_full.task` 약 9MB는 저장소에 포함). `camera/Pose`·`PoseLandmark`는 ML Kit와 같은 이름·번호(33개)라 치수 계산 코드는 그대로다. 윤곽 분리(selfie segmentation)는 ML Kit 유지
+  - MediaPipe의 회전 옵션은 ML Kit와 방향이 반대라 **비트맵을 직접 돌려서** 넘긴다 (안 그러면 골격이 누워서 나옴)
+  - 신뢰도는 `presence`를 쓴다 (`visibility`는 옷·가림으로 낮게 나와 기존 기준 0.4~0.5로 거르면 대부분 탈락)
+- MediaPipe는 `tasks-vision:0.10.33`. 0.10.21은 x86_64 라이브러리가 없고 16KB 페이지 기기에서 `program alignment (4096) cannot be smaller than system page size` 로 앱이 꺼졌다 (에뮬레이터에서 카메라 화면을 열면 홈으로 튕김). 0.10.33은 둘 다 해결
+- **카메라 보조 지표 (논문 기준)**: 박선미·정은영(2024) 「신체 유형별 골격진단 요소의 정량화 연구」(여성 20~60대, 사이즈코리아 8차) Table 6의 두 요소만 쓴다. 가슴두께(cm, 옆면 두께=측정선 조정 화면의 "두께")와 어깨 경사각(도, 정면 윤곽에서 `camera/BodyShapeFeatures`가 추정). 나머지(목길이·목둘레·무릎뼈·쇄골)는 카메라로 못 재서 쓰지 않고, 설문(q2·q3·q4)이 맡는다
+  - A: `body_profile.py`의 `chest_depth`·`shoulder_slope`·`age`(선택) 치수 → `score_camera_shape`가 `score_avatar`에 더한다 (`W_CHEST_DEPTH`·`W_SHOULDER_SLOPE` 각 0.5, 논문 구간 중간값 사이를 선형으로 나눔, 나이 없으면 30대). 값이 없거나 범위 밖(가슴두께 10~40cm, 경사각 5~50도)이면 무시 → 키 없을 땐 이전과 결과가 똑같다 (무작위 6000건 비교로 확인). 테스트 `tests/test_a_camera_shape.py`
+  - 앱: 측정선 조정에서 가슴두께·어깨 경사각을 같이 구해 프로필 `parts`에 `CHEST_DEPTH`·`SHOULDER_SLOPE`로 저장하고(`BodyEditActivity`), `RecommendApi`가 대표 체형의 치수 5개(키·어깨너비·팔길이·상체길이·다리길이) + 두 값을 매 요청에 `measurements`로 보낸다. **이전에는 설문 답만 보냈으므로, 대표 체형이 저장된 사용자는 이제 설문 0.6 + 카메라 0.4로 진단된다.** 앱은 아직 나이를 안 보낸다(가입 생년월일 연결 전)
+  - 한계: 두 값 모두 옷·머리카락·자세에 민감한 추정이고, 논문 구간이 실제 진단과 맞는지는 검증된 적 없다. 어깨 경사각은 어깨 끝이 아니라 어깨 관절을 쓰므로 실제보다 작게 나올 수 있다. `sample.csv`에 이 두 값이 없어 정확도 변화는 아직 못 쟀다
+- 자동 촬영: 3초 카운트다운 없이 가이드에 맞는 프레임이 0.15초 이어지면 바로 촬영. 측면은 안내창을 닫은 뒤 3초 대기
+- `CapstoneApp`이 모든 화면에서 하단 내비게이션 바를 숨긴다
+- **3D 아바타 삭제** (정확도 낮음): `AvatarPreviewActivity`, `avatar/` 패키지, `avatar.glb`·morph json, Filament 의존성 제거. 대신 **`BodyEditActivity`**(치수 12개를 숫자로 직접 수정, ±0.5cm, 미측정 부위는 키 비율로 추정해 "추정" 표시, 보통 범위(0.6~1.6배) 밖이면 경고)에서 저장한다. `BodyMeasurementContract`·`DemoBodySamples`는 `data/`로 옮겼다
+- **측정 위치 조정** (`MeasurementAdjustActivity` + `camera/MeasureLineView` + `camera/MeasurementSession`): 정면·측면 촬영 뒤, 사진 위의 가슴·허리·골반 선을 위아래로 끌어 맞추면 폭·두께·둘레가 바로 다시 계산된다. 선 높이는 몸 높이 대비 비율(기본 29/43/52%)이고 정면·옆면이 같은 값을 쓴다. 윤곽 마스크는 줄마다 몸의 좌우 끝만 요약해 메모리(`MeasurementSession`)에 둔다. 카메라 촬영(`BodyMeasurementActivity`)과 앨범 선택(`PhotoMeasurementActivity`, 카메라 화면의 "앨범에서 선택" 버튼) 두 흐름 모두 이 화면을 거친다. 두께÷폭 비율이 0.40~0.95를 벗어나면(다른 사람 사진, 같은 사진 두 번 등) 빨간 경고와 확인창을 띄운다. 목·팔·허벅지·종아리 둘레는 "몸 전체 폭"을 읽는 방식이라 틀려서 더 이상 계산하지 않는다 (`camera/BodySilhouetteAnalyzer`는 쓰이지 않는 옛 코드). 윤곽 요약은 `camera/SilhouetteBuilder`
+- 옷차림 안내: 설문 결과 "예" → 카메라 직전에 안내 창(몸에 붙는 옷·관절이 보이는 옷·팔 벌리기, "다시 보지 않기" 체크 시 `measure_tips/skip_clothes_tip`으로 건너뜀), 카메라 화면 상단에 "몸에 붙는 옷을 입으면 더 정확해요" 한 줄 (`textClothesTip`)
+- `BodyEditActivity`는 측정도 수정도 안 한 "키 비율 추정값"을 저장하지 않는다 (저장하면 장바구니 사이즈 알림 `SizeFitChecker`가 가짜 치수로 판정함). 사이즈 알림이 쓰는 치수: 가슴·어깨·허리·골반·허벅지(허벅지는 직접 입력해야 들어감)
+- 사진 확인 대화상자: 세로 사진이 버튼을 화면 밖으로 밀어내던 문제를 사진 높이를 화면 55%로 제한해 해결
+- 웹 테스트 버전: `web/` (아이폰 Safari용, 같은 계산식). 사용법은 `web/README.md`
+- 알려진 한계(미수정): 길이 환산이 발목 기준이라 약 5% 크게 나올 수 있음, 정면 가슴 폭에 팔이 섞일 수 있음, 측면 사진이 옆모습인지 검사 안 함
+
 ## 5. 정답 테스트 (반드시 통과)
 
 `python -m pytest` (맨 위에서) — B 테스트 240개 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).

@@ -10,7 +10,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
-import com.example.capstone.avatar.BodyMeasurementContract;
+import com.example.capstone.data.BodyMeasurementContract;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.UserBodyProfile;
@@ -424,6 +424,12 @@ public class MeasurementResultActivity extends AppCompatActivity {
         putPart(parts, "FOREARM", forearm);
         putPart(parts, "THIGH", thigh);
         putPart(parts, "CALF", calf);
+
+        // 골격 진단 보조 값 (가슴두께 cm, 어깨 경사각 도). 대표 체형이 되면 추천 서버로 간다
+        putPart(parts, BodyEditActivity.PART_CHEST_DEPTH,
+                getIntent().getFloatExtra("CHEST_DEPTH", -1f));
+        putPart(parts, BodyEditActivity.PART_SHOULDER_SLOPE,
+                getIntent().getFloatExtra("SHOULDER_SLOPE_DEG", -1f));
 
         final float[] typeMeasures = {
                 height, shoulder, armLength, torso, legLength
