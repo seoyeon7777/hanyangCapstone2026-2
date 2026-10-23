@@ -18,6 +18,63 @@ public final class BodyShapeFeatures {
     }
 
     /**
+     * 관절로 구한 몸의 중심선. 어깨·엉덩이 관절 중 보이는 것들의 평균 x와,
+     * (발목 - 코) 길이로 짐작한 몸 키(이미지 높이 대비)를 돌려준다. 관절이 부족하면 null.
+     * 윤곽에서 배경 물건이 아니라 몸 덩어리를 고르는 데 쓴다.
+     */
+    public static SilhouetteBuilder.Axis bodyAxis(Pose pose) {
+
+        if (pose == null || pose.getImageWidth() <= 0 || pose.getImageHeight() <= 0) {
+            return null;
+        }
+
+        int[] torso = {
+                PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER,
+                PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP
+        };
+
+        float sumX = 0f;
+        int count = 0;
+
+        for (int id : torso) {
+            PoseLandmark l = pose.getPoseLandmark(id);
+            if (l != null && l.getInFrameLikelihood() >= 0.3f) {
+                sumX += l.getPosition().x;
+                count++;
+            }
+        }
+
+        if (count < 2) {
+            return null;
+        }
+
+        float x = sumX / count / pose.getImageWidth();
+
+        if (x < 0f || x > 1f) {
+            return null;
+        }
+
+        // 몸 키: 코에서 발목까지가 키의 약 88%
+        float bodyHeight = -1f;
+        PoseLandmark nose = pose.getPoseLandmark(PoseLandmark.NOSE);
+        PoseLandmark la = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
+        PoseLandmark ra = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE);
+
+        if (nose != null && la != null && ra != null
+                && nose.getInFrameLikelihood() >= 0.3f
+                && la.getInFrameLikelihood() >= 0.3f
+                && ra.getInFrameLikelihood() >= 0.3f) {
+            float ankleY = (la.getPosition().y + ra.getPosition().y) / 2f;
+            float span = (ankleY - nose.getPosition().y) / pose.getImageHeight() / 0.88f;
+            if (span > 0.1f && span <= 1.2f) {
+                bodyHeight = span;
+            }
+        }
+
+        return new SilhouetteBuilder.Axis(x, bodyHeight);
+    }
+
+    /**
      * 어깨 경사각(도). 왼쪽·오른쪽 평균.
      * 목옆 점 = 코와 어깨 사이에서 몸이 가장 좁은 줄의 윤곽 끝,
      * 어깨 점 = 어깨 관절 위치 (관절은 어깨 끝보다 조금 안쪽·아래라서 실제보다 약간 작게 나올 수 있다).
