@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 리뷰를 쓸 수 있는 주문 1건 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:background="@drawable/bg_card"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+    <View
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/bg_thumb" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvProductName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="상품명"
+            android:textColor="@color/black"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvOption"
+            style="@style/MyPageSubText"
+            android:layout_marginTop="2dp"
+            android:text="옵션"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvOrderDate"
+            style="@style/MyPageSubText"
+            android:layout_marginTop="2dp"
+            android:text="2026.09.25 구매"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnWrite"
+        style="@style/MyPageButtonSmall"
+        android:background="@drawable/bg_button"
+        android:text="리뷰 쓰기"
+        android:textColor="@color/white" />
+
+</LinearLayout>

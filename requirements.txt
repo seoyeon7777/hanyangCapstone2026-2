@@ -1,0 +1,2 @@
+flask>=3.0
+psycopg[binary]>=3.1   # DB(Supabase) 연결용. DB 주소가 없으면 안 써도 서버가 돈다

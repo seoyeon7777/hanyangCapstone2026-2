@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <include layout="@layout/view_mypage_toolbar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="24dp">
+
+            <TextView
+                style="@style/MyPageFormLabel"
+                android:text="배송지명" />
+
+            <EditText
+                android:id="@+id/etLabel"
+                style="@style/MyPageEdit"
+                android:hint="예) 집, 회사"
+                android:maxLength="10" />
+
+            <TextView
+                style="@style/MyPageFormLabel"
+                android:text="받는 분" />
+
+            <EditText
+                android:id="@+id/etReceiver"
+                style="@style/MyPageEdit"
+                android:hint="이름을 입력해주세요"
+                android:maxLength="20" />
+
+            <TextView
+                style="@style/MyPageFormLabel"
+                android:text="연락처" />
+
+            <EditText
+                android:id="@+id/etPhone"
+                style="@style/MyPageEdit"
+                android:hint="010-0000-0000"
+                android:inputType="phone"
+                android:maxLength="13" />
+
+            <TextView
+                style="@style/MyPageFormLabel"
+                android:text="주소" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etZipCode"
+                    style="@style/MyPageEdit"
+                    android:layout_width="0dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="0dp"
+                    android:layout_weight="1"
+                    android:hint="우편번호"
+                    android:inputType="number"
+                    android:maxLength="5" />
+
+                <Button
+                    android:id="@+id/btnSearchZip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_button"
+                    android:paddingHorizontal="16dp"
+                    android:text="주소 검색"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    app:backgroundTint="@null" />
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/etAddress1"
+                style="@style/MyPageEdit"
+                android:layout_marginBottom="10dp"
+                android:hint="도로명 주소" />
+
+            <EditText
+                android:id="@+id/etAddress2"
+                style="@style/MyPageEdit"
+                android:hint="상세 주소 (동/호수)" />
+
+            <TextView
+                style="@style/MyPageFormLabel"
+                android:text="배송 요청사항" />
+
+            <Spinner
+                android:id="@+id/spRequest"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="18dp"
+                android:background="@drawable/bg_edit"
+                android:paddingHorizontal="16dp" />
+
+            <CheckBox
+                android:id="@+id/cbDefault"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="기본 배송지로 설정"
+                android:textColor="@color/black"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btnSave"
+        style="@style/MyPageButtonPrimary"
+        android:layout_margin="20dp"
+        android:text="저장하기" />
+
+</LinearLayout>

@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingTop="32dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="40dp">
+
+        <!-- 제목 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="신체 정밀 측정"
+            android:textColor="#000000"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <!-- 입력 키 -->
+        <TextView
+            android:id="@+id/textPhotoHeight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="입력 키: 0 cm"
+            android:textColor="#666666"
+            android:textSize="15sp" />
+
+        <!-- 전체 안내 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:background="#F5F5F5"
+            android:lineSpacingExtra="4dp"
+            android:padding="18dp"
+            android:text="정확한 신체 분석을 위해 정면과 옆면 전신 사진이 필요합니다.&#10;&#10;• 머리부터 발끝까지 모두 보이게 촬영&#10;• 몸에 너무 헐렁한 옷은 피하기&#10;• 카메라를 기울이지 않고 촬영"
+            android:textColor="#333333"
+            android:textSize="14sp" />
+
+
+        <!-- ========================= -->
+        <!-- STEP 01 정면 -->
+        <!-- ========================= -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="STEP 01"
+            android:textColor="#888888"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="정면 전신 사진"
+            android:textColor="#000000"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:text="정면을 바라보고 팔을 몸에서 살짝 벌려주세요."
+            android:textColor="#777777"
+            android:textSize="13sp" />
+
+        <!-- 정면 사진 미리보기 -->
+        <ImageView
+            android:id="@+id/imageFrontPreview"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginTop="16dp"
+            android:background="#F3F3F3"
+            android:contentDescription="정면 전신 사진"
+            android:scaleType="centerInside" />
+
+        <TextView
+            android:id="@+id/textFrontStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="정면 사진을 선택해주세요."
+            android:textColor="#777777"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btnSelectFrontPhoto"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="#111111"
+            android:text="정면 사진 선택"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+
+        <!-- ========================= -->
+        <!-- STEP 02 옆면 -->
+        <!-- ========================= -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="38dp"
+            android:text="STEP 02"
+            android:textColor="#888888"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="옆면 전신 사진"
+            android:textColor="#000000"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:text="몸을 옆으로 돌리고 허리를 곧게 편 상태로 촬영해주세요."
+            android:textColor="#777777"
+            android:textSize="13sp" />
+
+        <!-- 옆면 사진 미리보기 -->
+        <ImageView
+            android:id="@+id/imageSidePreview"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginTop="16dp"
+            android:background="#F3F3F3"
+            android:contentDescription="옆면 전신 사진"
+            android:scaleType="centerInside" />
+
+        <TextView
+            android:id="@+id/textSideStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="옆면 사진을 선택해주세요."
+            android:textColor="#777777"
+            android:textSize="13sp" />
+
+        <Button
+            android:id="@+id/btnSelectSidePhoto"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="#111111"
+            android:text="옆면 사진 선택"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+
+        <!-- ========================= -->
+        <!-- 분석 상태 -->
+        <!-- ========================= -->
+
+        <TextView
+            android:id="@+id/textPhotoStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:gravity="center"
+            android:text="정면과 옆면 사진을 모두 선택해주세요."
+            android:textColor="#555555"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+
+        <!-- 최종 분석 버튼 -->
+        <Button
+            android:id="@+id/btnAnalyzePhotos"
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#000000"
+            android:enabled="false"
+            android:text="신체 분석 시작하기"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</ScrollView>

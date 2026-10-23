@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 카드 등록 다이얼로그 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="12dp">
+
+    <TextView
+        style="@style/MyPageFormLabel"
+        android:text="카드사" />
+
+    <Spinner
+        android:id="@+id/spCompany"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="14dp"
+        android:background="@drawable/bg_edit"
+        android:paddingHorizontal="16dp" />
+
+    <TextView
+        style="@style/MyPageFormLabel"
+        android:text="카드번호" />
+
+    <EditText
+        android:id="@+id/etCardNumber"
+        style="@style/MyPageEdit"
+        android:layout_marginBottom="14dp"
+        android:hint="숫자 16자리"
+        android:inputType="number"
+        android:maxLength="16" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/MyPageFormLabel"
+                android:text="유효기간" />
+
+            <EditText
+                android:id="@+id/etExpiry"
+                style="@style/MyPageEdit"
+                android:layout_marginBottom="0dp"
+                android:hint="MM/YY"
+                android:inputType="number"
+                android:digits="0123456789/"
+                android:maxLength="5" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/MyPageFormLabel"
+                android:text="비밀번호 앞 2자리" />
+
+            <EditText
+                android:id="@+id/etCardPw"
+                style="@style/MyPageEdit"
+                android:layout_marginBottom="0dp"
+                android:hint="**"
+                android:inputType="numberPassword"
+                android:maxLength="2" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

@@ -5,7 +5,7 @@
 규칙  : 가중치·키워드·문장·설정은 data/*.json 에서 읽는다. 코드에 숫자를 두지 않는다.
 
 profile = {"ratios": {"S": .54, "W": .17, "N": .29}, "primary": "S", "secondary": "N", "confidence": .25, "is_mixed": False}  # A의 classify() 출력
-item    = {"item_id": 1, "name": "...", "category": "top", "season": "FW", "popularity": .6, "tags": [...]}
+item    = {"product_id": 1, "product_name": "...", "clothing_type": "top", "season": "FW", "popularity": .6, "tags": [...]}
 """
 from __future__ import annotations
 
@@ -365,11 +365,11 @@ def recommend_outfits(tops: list[dict], bottoms: list[dict], profile: dict, rule
     outer = best(outers or [])[:1]
     result, used_tops = [], set()
     for score, t, b, applied in pairs:
-        if t["item_id"] in used_tops:
+        if t["product_id"] in used_tops:
             continue
-        used_tops.add(t["item_id"])
-        result.append({"top": t["item_id"], "bottom": b["item_id"],
-                       "outer": outer[0]["item_id"] if outer else None,
+        used_tops.add(t["product_id"])
+        result.append({"top": t["product_id"], "bottom": b["product_id"],
+                       "outer": outer[0]["product_id"] if outer else None,
                        "score": round(score, 4), "balance": applied})
         if len(result) == top_n:
             break
@@ -415,23 +415,23 @@ def _text_fill_tags(attrs_stored: dict, name: str, desc: str, rules: Rules) -> l
 
 
 def match_item(item: dict, profile: dict, rules: Rules) -> dict:
-    """상품 하나의 체형 적합도. item = {item_id, name, desc?, tags?, source?, attrs?}.
+    """상품 하나의 체형 적합도. item = {product_id, product_name, description?, tags?, source?, attrs?}.
     review = {"n": 리뷰 수, "mismatch": 등록 정보와 다르다고 한 수}가 있으면 review_agreement를 계산해 출력에 싣는다. config.review_mode가 off(기본)이면 점수에는 반영하지 않는다.
-    source가 direct·manual이면 attrs(등록 양식)가 우선하고, 양식에서 비운 선택 항목만 name/desc로 보충한다(text_added에 따로 적는다).
-    item["text_fill"]=False면 글 보충을 끈다(상품명도 읽으므로 desc를 비우는 것으로는 꺼지지 않는다).
-    아니면 name/desc에서만 태그를 만든다. tags를 직접 주면 그대로 쓴다."""
+    source가 direct·manual이면 attrs(등록 양식)가 우선하고, 양식에서 비운 선택 항목만 product_name/description으로 보충한다(text_added에 따로 적는다).
+    item["text_fill"]=False면 글 보충을 끈다(상품명도 읽으므로 description을 비우는 것으로는 꺼지지 않는다).
+    아니면 product_name/description에서만 태그를 만든다. tags를 직접 주면 그대로 쓴다."""
     source = item.get("source")
     fit_stated, text_added = item.get("fit_stated"), list(item.get("text_added") or [])     # 등록 때 저장된 값이 있으면 그대로 쓴다
     tags = item.get("tags")
     if tags is None and source in FORM_SOURCES:      # 양식 입력 상품: 검증을 통과한 입력만 쓴다(일부만 있으면 오류)
         r = tag_from_attributes(item.get("attrs") or {}, rules)
         tags, fit_stated = r["tags"], r["fit_stated"]
-        text_added = [] if item.get("text_fill") is False else [g for g in _text_fill_tags(r["attributes"], item.get("name", ""), item.get("desc", ""), rules) if g not in tags]
+        text_added = [] if item.get("text_fill") is False else [g for g in _text_fill_tags(r["attributes"], item.get("product_name", ""), item.get("description", ""), rules) if g not in tags]
         tags = tags + text_added
     elif tags is None and item.get("attrs"):
-        raise ValueError('attrs는 양식 입력 상품(source="direct" 또는 "manual")에만 쓴다. 가져온 상품은 name/desc에서 태그를 만든다')
+        raise ValueError('attrs는 양식 입력 상품(source="direct" 또는 "manual")에만 쓴다. 가져온 상품은 product_name/description에서 태그를 만든다')
     if tags is None:
-        r = tag_item_full(item["name"], item.get("desc", ""), rules)
+        r = tag_item_full(item["product_name"], item.get("description", ""), rules)
         tags, fit_stated = r["tags"], r["fit_stated"]
     if fit_stated is None:
         fit_stated = fit_stated_from_tags(tags)
@@ -446,7 +446,7 @@ def match_item(item: dict, profile: dict, rules: Rules) -> dict:
     else:
         no_info = False
     return {
-        "item_id": item["item_id"],
+        "product_id": item["product_id"],
         "tags": tags,
         "text_added": text_added,
         "review_agreement": round(agreement, 4),
@@ -472,7 +472,7 @@ def rank_items(matched: list[dict], profile: dict, rules: Rules, k: int = 10, st
     strategy="quota": 혼합형이면 1·2위 유형의 비율대로 자리를 나눠, 각 유형 기준 점수가 높은 상품을 번갈아 고른다
         (예: S 0.6 / N 0.4, k=10이면 대략 6개는 S 기준 상위, 4개는 N 기준 상위). 한 상품이 두 유형에 다 뽑히면 한 번만 쓴다.
     strategy="quota_safe": quota와 같되, 비율을 나누는 어느 유형에서도 중립보다 낮은 점수를 받는 상품은 후보에서 뺀다(한쪽 몫으로 뽑았는데 다른 쪽에 안 맞는 상품이 섞이는 것을 막는다). 후보가 모자라면 그 자리는 빈 채로 두지 않고 quota 방식으로 채운다.
-    반환: [{item_id, score(섞은 점수), type_score(뽑힌 유형 기준 점수), picked_for(유형 또는 None)}]"""
+    반환: [{product_id, score(섞은 점수), type_score(뽑힌 유형 기준 점수), picked_for(유형 또는 None)}]"""
     profile = normalize_profile(profile)
     strategy = strategy or rules.config.get("mixed_strategy", "blend")
     if strategy not in ("blend", "quota", "quota_safe"):
@@ -480,29 +480,29 @@ def rank_items(matched: list[dict], profile: dict, rules: Rules, k: int = 10, st
     usable = [m for m in matched if m["body_fit"] is not None]
     blend = sorted(usable, key=lambda m: -m["body_fit"])
     if strategy == "blend" or not profile["is_mixed"]:
-        return [{"item_id": m["item_id"], "score": m["body_fit"], "type_score": m["body_fit"], "picked_for": None} for m in blend[:k]]
+        return [{"product_id": m["product_id"], "score": m["body_fit"], "type_score": m["body_fit"], "picked_for": None} for m in blend[:k]]
     shares = _type_shares(profile)
     apply_review = rules.config.get("review_mode", "off") != "off"
-    pure = {t: {m["item_id"]: body_fit(m["tags"], _pure_profile(t), rules, m.get("review_agreement", 1.0) if apply_review else 1.0) for m in usable} for t in shares}
-    order = {m["item_id"]: i for i, m in enumerate(usable)}
+    pure = {t: {m["product_id"]: body_fit(m["tags"], _pure_profile(t), rules, m.get("review_agreement", 1.0) if apply_review else 1.0) for m in usable} for t in shares}
+    order = {m["product_id"]: i for i, m in enumerate(usable)}
     neutral = (0.0 - rules.w_min) / (rules.w_max - rules.w_min)
-    safe = {m["item_id"] for m in usable if all(pure[t][m["item_id"]] >= neutral - 1e-9 for t in shares)}
+    safe = {m["product_id"] for m in usable if all(pure[t][m["product_id"]] >= neutral - 1e-9 for t in shares)}
     def pool(t):
-        ranked = sorted(usable, key=lambda m: (-pure[t][m["item_id"]], order[m["item_id"]]))
+        ranked = sorted(usable, key=lambda m: (-pure[t][m["product_id"]], order[m["product_id"]]))
         if strategy != "quota_safe":
             return ranked
-        return [m for m in ranked if m["item_id"] in safe] + [m for m in ranked if m["item_id"] not in safe]     # 안전한 후보를 먼저, 모자라면 나머지로
+        return [m for m in ranked if m["product_id"] in safe] + [m for m in ranked if m["product_id"] not in safe]     # 안전한 후보를 먼저, 모자라면 나머지로
     lists = {t: pool(t) for t in shares}
     chosen, out, picked = set(), [], {t: 0 for t in shares}
     for n in range(min(k, len(usable))):
         t = max(shares, key=lambda x: (shares[x] * (n + 1) - picked[x], shares[x]))     # 지금까지 부족한 만큼 자리가 많이 남은 유형부터
-        m = next((c for c in lists[t] if c["item_id"] not in chosen), None)
+        m = next((c for c in lists[t] if c["product_id"] not in chosen), None)
         if m is None:
             t = next(x for x in shares if x != t)
-            m = next(c for c in lists[t] if c["item_id"] not in chosen)
-        chosen.add(m["item_id"])
+            m = next(c for c in lists[t] if c["product_id"] not in chosen)
+        chosen.add(m["product_id"])
         picked[t] += 1
-        out.append({"item_id": m["item_id"], "score": m["body_fit"], "type_score": pure[t][m["item_id"]], "picked_for": t})
+        out.append({"product_id": m["product_id"], "score": m["body_fit"], "type_score": pure[t][m["product_id"]], "picked_for": t})
     return out
 
 
@@ -513,41 +513,41 @@ def validate_item(it: dict) -> None:
     """추천에 넣는 상품 한 개의 형식을 검사한다. 잘못되면 ValueError (서버에서는 400)."""
     if not isinstance(it, dict):
         raise ValueError("상품은 객체여야 한다")
-    iid = it.get("item_id")
+    iid = it.get("product_id")
     if iid is None or isinstance(iid, bool) or not isinstance(iid, (str, int)) or iid == "":
-        raise ValueError("item_id는 비어 있지 않은 문자열 또는 정수여야 한다")
-    if it.get("category") not in _OUTFIT_GROUP and it.get("category") != "dress":
-        raise ValueError(f'item {iid}: category는 {sorted(set(_OUTFIT_GROUP) | {"dress"})} 중 하나여야 한다 (받은 값: {it.get("category")!r})')
-    for key in ("name", "desc"):
+        raise ValueError("product_id는 비어 있지 않은 문자열 또는 정수여야 한다")
+    if it.get("clothing_type") not in _OUTFIT_GROUP and it.get("clothing_type") != "dress":
+        raise ValueError(f'item {iid}: clothing_type은 {sorted(set(_OUTFIT_GROUP) | {"dress"})} 중 하나여야 한다 (받은 값: {it.get("clothing_type")!r})')
+    for key in ("product_name", "description"):
         if it.get(key) is not None and not isinstance(it[key], str):
             raise ValueError(f"item {iid}: {key}는 문자열이어야 한다")
-    if len(it.get("desc") or "") > MAX_DESC_CHARS:
-        raise ValueError(f"item {iid}: desc는 {MAX_DESC_CHARS}자 이하여야 한다")
+    if len(it.get("description") or "") > MAX_DESC_CHARS:
+        raise ValueError(f"item {iid}: description은 {MAX_DESC_CHARS}자 이하여야 한다")
     tags = it.get("tags")
     if tags is not None and (not isinstance(tags, list) or any(not isinstance(g, str) for g in tags)):
         raise ValueError(f"item {iid}: tags는 문자열 목록이어야 한다")
 
 
 def recommend(profile: dict, items: list[dict], rules: Rules | None = None, top_n: int = 3, list_size: int = 10, mixed_strategy: str | None = None) -> dict:
-    """C에 넘기는 한 번에 호출 함수. items = [{item_id, category, name, desc?, tags?, source?, attrs?}, ...]
-    category: top | bottom | outer | pants | skirt | dress. 양식 입력 상품(source direct·manual)은 attrs의 category를 쓰므로 둘이 같아야 한다.
-    반환: {"items": [match_item 결과 + category], "ranking": {top|bottom|outer: rank_items 결과}, "outfits": [코디 top_n개], "fit_unknown": 핏 표기를 못 읽은 상품 item_id 목록, "no_info": 태그도 핏도 못 읽어 추천에서 뺀 상품 item_id 목록}
+    """C에 넘기는 한 번에 호출 함수. items = [{product_id, clothing_type, product_name, description?, tags?, source?, attrs?}, ...]
+    clothing_type: top | bottom | outer | pants | skirt | dress. 양식 입력 상품(source direct·manual)은 attrs의 category를 쓰므로 둘이 같아야 한다.
+    반환: {"items": [match_item 결과 + clothing_type], "ranking": {top|bottom|outer: rank_items 결과}, "outfits": [코디 top_n개], "fit_unknown": 핏 표기를 못 읽은 상품 product_id 목록, "no_info": 태그도 핏도 못 읽어 추천에서 뺀 상품 product_id 목록}
     ranking의 k는 list_size(기본 10), 혼합형 방식은 config.mixed_strategy(blend|quota) 또는 mixed_strategy 인자."""
     rules = rules or load_rules()
     normalize_profile(profile)      # 상품이 없어도 잘못된 체형 입력은 오류로 알린다
     matched, seen = [], set()
     for it in items:
         validate_item(it)
-        if it["item_id"] in seen:
-            raise ValueError(f'item_id {it["item_id"]!r}가 중복되었다')
-        seen.add(it["item_id"])
-        cat = it.get("category")
+        if it["product_id"] in seen:
+            raise ValueError(f'product_id {it["product_id"]!r}가 중복되었다')
+        seen.add(it["product_id"])
+        cat = it.get("clothing_type")
         if it.get("source") in FORM_SOURCES and it.get("attrs", {}).get("category", cat) != cat:
-            raise ValueError(f'item {it.get("item_id")}: category={cat!r}와 attrs.category가 다르다')
-        matched.append({**match_item(it, profile, rules), "category": cat})
-    group = lambda g: [m for m in matched if _OUTFIT_GROUP.get(m["category"]) == g]
+            raise ValueError(f'item {it.get("product_id")}: clothing_type={cat!r}와 attrs.category가 다르다')
+        matched.append({**match_item(it, profile, rules), "clothing_type": cat})
+    group = lambda g: [m for m in matched if _OUTFIT_GROUP.get(m["clothing_type"]) == g]
     outfits = recommend_outfits(group("top"), group("bottom"), profile, rules, outers=group("outer"), top_n=top_n)
     ranking = {g: rank_items(group(g), profile, rules, list_size, mixed_strategy) for g in ("top", "bottom", "outer")}
     return {"items": matched, "ranking": ranking, "outfits": outfits,
-            "fit_unknown": [m["item_id"] for m in matched if m["fit_stated"] == "unknown"],
-            "no_info": [m["item_id"] for m in matched if m["no_info"]]}
+            "fit_unknown": [m["product_id"] for m in matched if m["fit_stated"] == "unknown"],
+            "no_info": [m["product_id"] for m in matched if m["no_info"]]}

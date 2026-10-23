@@ -22,7 +22,7 @@ def items():
     def reg(cat, attrs, fib):
         nonlocal n
         n += 1
-        r = c.post("/api/items", json={"item_id": n, "category": cat, "name": f"{cat}{n}", "source": "direct",
+        r = c.post("/api/items", json={"product_id": n, "clothing_type": cat, "product_name": f"{cat}{n}", "source": "direct",
                                        "attrs": {"category": cat, **attrs}, "composition_percent": [{"fiber": fib, "percent": 100}]})
         assert r.status_code == 201, r.get_json()
 
@@ -59,25 +59,25 @@ def test_every_product_is_scored_for_every_type(items):
 @pytest.mark.parametrize("share", [0.5, 0.55, 0.7])
 def test_blend_is_the_ratio_mix_of_pure_scores(items, a, b, share):
     p = mixed(a, b, share)
-    base = {t: {m["item_id"]: m["body_fit"] for m in matching.recommend(pure(t), items, RULES)["items"]} for t in (a, b)}
+    base = {t: {m["product_id"]: m["body_fit"] for m in matching.recommend(pure(t), items, RULES)["items"]} for t in (a, b)}
     for m in matching.recommend(p, items, RULES)["items"]:
-        want = p["ratios"][a] * base[a][m["item_id"]] + p["ratios"][b] * base[b][m["item_id"]]
+        want = p["ratios"][a] * base[a][m["product_id"]] + p["ratios"][b] * base[b][m["product_id"]]
         assert m["body_fit"] == pytest.approx(want, abs=1e-6)
 
 
 @pytest.mark.parametrize("t", "SWN")
 def test_pure_type_top_ranks_have_no_negative_tag_for_that_type(items, t):
     out = matching.recommend(pure(t), items, RULES, list_size=10)
-    by = {m["item_id"]: m for m in out["items"]}
+    by = {m["product_id"]: m for m in out["items"]}
     for group, ranked in out["ranking"].items():
         for x in ranked:
-            assert not [g for g in by[x["item_id"]]["tags"] if g in RULES.weights and RULES.weights[g][t] < 0], (t, group, x)
+            assert not [g for g in by[x["product_id"]]["tags"] if g in RULES.weights and RULES.weights[g][t] < 0], (t, group, x)
 
 
 @pytest.mark.parametrize("a,b", PAIRS)
 def test_mixed_rankings_differ_from_each_pure_type(items, a, b):
     """혼합형 1위가 한쪽 단일형 1위를 그대로 따라가면 안 된다 (섞은 의미가 없다). 최소한 단일형 둘의 1위가 서로 달라야 한다."""
-    tops = {t: matching.recommend(pure(t), items, RULES)["ranking"]["top"][0]["item_id"] for t in (a, b)}
+    tops = {t: matching.recommend(pure(t), items, RULES)["ranking"]["top"][0]["product_id"] for t in (a, b)}
     assert tops[a] != tops[b]
 
 
@@ -86,6 +86,6 @@ def test_mixed_rankings_differ_from_each_pure_type(items, a, b):
 def test_strategies_return_full_lists_without_duplicates(items, strategy, a, b):
     out = matching.recommend(mixed(a, b, 0.52), items, RULES, list_size=10, mixed_strategy=strategy)
     for group, ranked in out["ranking"].items():
-        ids = [x["item_id"] for x in ranked]
+        ids = [x["product_id"] for x in ranked]
         assert len(ids) == 10 and len(set(ids)) == 10, (group, ids)
     assert len(out["outfits"]) == 3

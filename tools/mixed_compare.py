@@ -22,19 +22,19 @@ def main():
     client = server.create_app(rules).test_client()
     data = json.load(open(ROOT / "samples" / "synthetic_sellers.json", encoding="utf-8"))["items"]
     stored = [r.get_json()["item"] for r in (client.post("/api/items", json=it["body"]) for it in data) if r.status_code == 201]
-    names = {b["item_id"]: b["name"] for b in stored}
+    names = {b["product_id"]: b["product_name"] for b in stored}
     for pname, prof in PROFILES.items():
         shares = matching._type_shares(matching.normalize_profile(prof))
         print(f"=== {pname}  (자리 나눔 대상 {({t: round(v, 2) for t, v in shares.items()})}), 상의 묶음 상위 {K}개 ===")
-        matched = [{**matching.match_item(b, prof, rules), "category": b["category"]} for b in stored if b["category"] == "top"]
+        matched = [{**matching.match_item(b, prof, rules), "clothing_type": b["clothing_type"]} for b in stored if b["clothing_type"] == "top"]
         res = {s: matching.rank_items(matched, prof, rules, K, s) for s in ("blend", "quota", "quota_safe")}
         for s, rows in res.items():
             print(f"[{s}]")
             for r in rows:
-                tags = next(m["tags"] for m in matched if m["item_id"] == r["item_id"])
+                tags = next(m["tags"] for m in matched if m["product_id"] == r["product_id"])
                 ps = {t: matching.body_fit(tags, matching._pure_profile(t), rules) for t in shares}
-                print(f"  {names[r['item_id']][:26]:<28} 섞은 점수 {r['score']:.3f}  " + "  ".join(f"{t}기준 {v:.3f}" for t, v in ps.items()) + (f"  <- {r['picked_for']} 몫" if r["picked_for"] else ""))
-        ids = {s: {r["item_id"] for r in rows} for s, rows in res.items()}
+                print(f"  {names[r['product_id']][:26]:<28} 섞은 점수 {r['score']:.3f}  " + "  ".join(f"{t}기준 {v:.3f}" for t, v in ps.items()) + (f"  <- {r['picked_for']} 몫" if r["picked_for"] else ""))
+        ids = {s: {r["product_id"] for r in rows} for s, rows in res.items()}
         print(f"  겹친 상품: blend-quota {len(ids['blend'] & ids['quota'])}/{K}, blend-quota_safe {len(ids['blend'] & ids['quota_safe'])}/{K}, quota-quota_safe {len(ids['quota'] & ids['quota_safe'])}/{K}\n")
 
 

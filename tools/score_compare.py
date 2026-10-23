@@ -55,7 +55,7 @@ for t in "SWN":
     p = profile(t)
     avg = [matching.body_fit(x["tags"], p, rules) for x in items]
     tot = [total_score(x["tags"], t) for x in items]
-    top = lambda sc: {items[i]["item_id"] for i in sorted(range(len(items)), key=lambda i: -sc[i])[:8]}
+    top = lambda sc: {items[i]["product_id"] for i in sorted(range(len(items)), key=lambda i: -sc[i])[:8]}
     print(f"{t}: 순위 상관 {spearman(avg, tot):.2f}, 상위 8개 겹침 {len(top(avg) & top(tot))}/8, "
           f"서로 다른 점수 평균 {len(set(round(a, 4) for a in avg))}종 / 합산 {len(set(round(a, 4) for a in tot))}종")
     for x in items:

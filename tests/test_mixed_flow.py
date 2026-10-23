@@ -27,7 +27,7 @@ PRODUCTS = [   # (id, category, name, attrs, 혼용률)
 def client():
     c = server.create_app(matching.load_rules()).test_client()
     for i, cat, name, attrs, comp in PRODUCTS:
-        r = c.post("/api/items", json={"item_id": i, "category": cat, "name": name, "source": "direct",
+        r = c.post("/api/items", json={"product_id": i, "clothing_type": cat, "product_name": name, "source": "direct",
                                        "attrs": {"category": cat, **attrs}, "composition_percent": comp})
         assert r.status_code == 201, r.get_json()
     return c
@@ -40,11 +40,11 @@ def recommend(c, name, **kw):
 
 
 def ids(out, group):
-    return [x["item_id"] for x in out["ranking"][group]]
+    return [x["product_id"] for x in out["ranking"][group]]
 
 
 def test_tags_are_stored_at_registration(client):
-    stored = {it["item_id"]: it for it in client.get("/api/items").get_json()["items"]}
+    stored = {it["product_id"]: it for it in client.get("/api/items").get_json()["items"]}
     assert stored["T1"]["tags"] == ["fit:slim", "mat:cotton"] and stored["T1"]["fit_stated"] == "slim"
     assert stored["B1"]["tags"] == ["fit:over", "sil:wide", "mat:cotton"]
     assert stored["T4"]["fit_stated"] == "regular"          # 레귤러는 점수 태그가 없어도 '밝힘'으로 남는다
@@ -70,10 +70,10 @@ def test_pure_types_pick_their_own_items(client, name, top, bottom, outer):
 def test_mixed_profile_is_between_the_pure_scores(client, name):
     """혼합형 점수는 각 유형 점수를 비율로 섞은 값이라, 어떤 상품이든 구성 유형 점수의 최솟값~최댓값 사이에 있다."""
     prof = PROFILES[name]["result"]
-    mixed = {m["item_id"]: m["body_fit"] for m in recommend(client, name)["items"]}
+    mixed = {m["product_id"]: m["body_fit"] for m in recommend(client, name)["items"]}
     for t in "SWN":
         assert prof["ratios"][t] >= 0
-    pure = {t: {m["item_id"]: m["body_fit"] for m in recommend(client, f"pure_{t}")["items"]} for t in "SWN"}
+    pure = {t: {m["product_id"]: m["body_fit"] for m in recommend(client, f"pure_{t}")["items"]} for t in "SWN"}
     used = [t for t in "SWN" if prof["ratios"][t] > 0.05]
     for i, v in mixed.items():
         lo, hi = min(pure[t][i] for t in used), max(pure[t][i] for t in used)
@@ -85,12 +85,12 @@ def test_mixed_quota_serves_both_types(client):
     picked = {x["picked_for"] for g in out["ranking"].values() for x in g}
     assert picked == {"S", "N"}
     top = out["ranking"]["top"]
-    assert {x["item_id"] for x in top[:2]} >= {"T1", "T2"}        # S 몫 1위(슬림)와 N 몫 1위(오버·롱)가 둘 다 앞에 든다
+    assert {x["product_id"] for x in top[:2]} >= {"T1", "T2"}        # S 몫 1위(슬림)와 N 몫 1위(오버·롱)가 둘 다 앞에 든다
 
 
 def test_quota_safe_never_puts_item_bad_for_either_type_first(client):
     out = recommend(client, "S_N", mixed_strategy="quota_safe")
-    assert out["ranking"]["top"][0]["item_id"] != "T3"            # 러플·크롭은 S -1, N -1(크롭)이라 안전 후보가 아니다
+    assert out["ranking"]["top"][0]["product_id"] != "T3"            # 러플·크롭은 S -1, N -1(크롭)이라 안전 후보가 아니다
 
 
 def test_unknown_strategy_and_bad_profile_are_400(client):
@@ -100,7 +100,7 @@ def test_unknown_strategy_and_bad_profile_are_400(client):
 
 
 def test_reasons_follow_mixed_profile(client):
-    items = {m["item_id"]: m for m in recommend(client, "S_N")["items"]}
+    items = {m["product_id"]: m for m in recommend(client, "S_N")["items"]}
     assert any("슬림" in r for r in items["T1"]["reasons"])        # S 몫
     assert any("넉넉" in r or "여유" in r for r in items["B1"]["reasons"])     # N 몫
 
