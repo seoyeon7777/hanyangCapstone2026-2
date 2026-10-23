@@ -124,7 +124,7 @@ public class MediaPipePoseDetector implements Closeable {
                 out[i] = new PoseLandmark(
                         i, new PointF(l.x() * w, l.y() * h), presence);
             }
-            return new Pose(out);
+            return new Pose(out, upright.getWidth(), upright.getHeight());
         });
     }
 

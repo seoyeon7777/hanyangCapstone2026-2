@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
 import com.example.capstone.camera.BodyMeasurementCalculator;
+import com.example.capstone.camera.BodyShapeFeatures;
 import com.example.capstone.camera.CircumferenceCalculator;
 import com.example.capstone.camera.MeasureLineView;
 import com.example.capstone.camera.MeasurementSession;
@@ -207,6 +208,10 @@ public class MeasurementAdjustActivity extends AppCompatActivity {
         intent.putExtra("CHEST_CIRCUMFERENCE", circ[MeasurementSession.CHEST]);
         intent.putExtra("WAIST_CIRCUMFERENCE", circ[MeasurementSession.WAIST]);
         intent.putExtra("HIP_CIRCUMFERENCE", circ[MeasurementSession.HIP]);
+
+        // 어깨 경사각(도, 정면 윤곽에서 추정). 못 구하면 -1
+        intent.putExtra("SHOULDER_SLOPE_DEG",
+                BodyShapeFeatures.shoulderSlopeDeg(MeasurementSession.front, lengths));
 
         intent.putExtra("CHEST_WIDTH", width[MeasurementSession.CHEST]);
         intent.putExtra("CHEST_DEPTH", depth[MeasurementSession.CHEST]);

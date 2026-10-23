@@ -96,6 +96,54 @@ public final class RecommendApi {
     // 홈 피드 (무한 스크롤)
     // =========================
 
+    /**
+     * 대표 체형(BodyProfileStore)에서 서버 A 파트가 받는 치수(cm)를 꺼낸다.
+     * height·shoulder_width·arm_length·upper_body_length·leg_length 5개가 모두 있어야 하고,
+     * 가슴두께(chest_depth)와 어깨 경사각(shoulder_slope)은 있으면 같이 보낸다. 없으면 null.
+     */
+    static JSONObject cameraMeasurements(Context context) {
+
+        BodyProfileStore.Profile profile = BodyProfileStore.getActive(context);
+
+        if (profile == null) {
+            return null;
+        }
+
+        float shoulder = profile.part("SHOULDER");
+        float arm = profile.part("ARM_LENGTH");
+        float torso = profile.part("BACK_LENGTH");
+        float leg = profile.part("LEG_LENGTH");
+
+        if (profile.heightCm <= 0f || shoulder <= 0f || arm <= 0f || torso <= 0f || leg <= 0f) {
+            return null;
+        }
+
+        try {
+            JSONObject m = new JSONObject();
+            m.put("height", profile.heightCm);
+            m.put("shoulder_width", shoulder);
+            m.put("arm_length", arm);
+            m.put("upper_body_length", torso);
+            m.put("leg_length", leg);
+
+            float chestDepth = profile.part("CHEST_DEPTH");
+            float slope = profile.part("SHOULDER_SLOPE");
+
+            if (chestDepth > 0f) {
+                m.put("chest_depth", chestDepth);
+            }
+
+            if (slope > 0f) {
+                m.put("shoulder_slope", slope);
+            }
+
+            return m;
+
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
     public static void loadFeed(
             Context context,
             String mode,
@@ -122,6 +170,14 @@ public final class RecommendApi {
                 }
 
                 body.put("answers", answerJson);
+            }
+
+            // 저장해 둔 대표 체형의 카메라 치수도 같이 보낸다 (설문을 잘 모르는 사용자의 보조 근거).
+            // 필수 치수 5개가 모두 있을 때만 보내고, 서버가 이상한 값이면 설문만으로 진단한다.
+            JSONObject measurements = cameraMeasurements(context);
+
+            if (measurements != null) {
+                body.put("measurements", measurements);
             }
         } catch (JSONException e) {
             callback.onError(0, "요청을 만들지 못했어요");

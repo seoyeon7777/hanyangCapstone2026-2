@@ -44,6 +44,12 @@ public class BodyEditActivity extends AppCompatActivity {
     public static final String EXTRA_SAMPLE_ID = "extra_sample_id";
     public static final String EXTRA_BODY_FAT = "extra_body_fat";
     public static final String EXTRA_EDIT_PROFILE_ID = "extra_edit_profile_id";
+    /** 가슴두께(cm)·어깨 경사각(도): 화면에는 안 보이지만 프로필에 같이 저장돼 골격 진단 보조 값으로 쓰인다 */
+    public static final String EXTRA_CHEST_DEPTH_CM = "extra_chest_depth_cm";
+    public static final String EXTRA_SHOULDER_SLOPE_DEG = "extra_shoulder_slope_deg";
+    /** 프로필 parts JSON 안에서의 이름 */
+    public static final String PART_CHEST_DEPTH = "CHEST_DEPTH";
+    public static final String PART_SHOULDER_SLOPE = "SHOULDER_SLOPE";
 
     private static final float STEP_CM = 0.5f;
     private static final float DEFAULT_HEIGHT_CM = 170f;
@@ -94,6 +100,9 @@ public class BodyEditActivity extends AppCompatActivity {
     private final Map<String, EditText> editViews = new HashMap<>();
     private final Map<BodyType, TextView> bodyTypeChips = new HashMap<>();
     private boolean updatingText;
+    /** 가슴두께(cm), 어깨 경사각(도). 없으면 -1 */
+    private float chestDepthCm = -1f;
+    private float shoulderSlopeDeg = -1f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,6 +152,15 @@ public class BodyEditActivity extends AppCompatActivity {
                 given = new JSONObject(json);
             } catch (Exception ignored) {
             }
+        }
+        // 이미 저장된 프로필을 고치는 경우 JSON에서, 새 측정이면 intent에서
+        chestDepthCm = given == null ? -1f : (float) given.optDouble(PART_CHEST_DEPTH, -1d);
+        shoulderSlopeDeg = given == null ? -1f : (float) given.optDouble(PART_SHOULDER_SLOPE, -1d);
+        if (getIntent().getFloatExtra(EXTRA_CHEST_DEPTH_CM, -1f) > 0f) {
+            chestDepthCm = getIntent().getFloatExtra(EXTRA_CHEST_DEPTH_CM, -1f);
+        }
+        if (getIntent().getFloatExtra(EXTRA_SHOULDER_SLOPE_DEG, -1f) > 0f) {
+            shoulderSlopeDeg = getIntent().getFloatExtra(EXTRA_SHOULDER_SLOPE_DEG, -1f);
         }
         for (String key : BodyProfileStore.PART_KEYS) {
             float v = given == null ? -1f : (float) given.optDouble(key, -1d);
@@ -329,6 +347,15 @@ public class BodyEditActivity extends AppCompatActivity {
                 parts.put(key, Math.round(values.get(key) * 10f) / 10d);
             } catch (Exception ignored) {
             }
+        }
+        try {
+            if (chestDepthCm > 0f) {
+                parts.put(PART_CHEST_DEPTH, Math.round(chestDepthCm * 10f) / 10d);
+            }
+            if (shoulderSlopeDeg > 0f) {
+                parts.put(PART_SHOULDER_SLOPE, Math.round(shoulderSlopeDeg * 10f) / 10d);
+            }
+        } catch (Exception ignored) {
         }
         String typeLabel = bodyType.label;
 

@@ -14,6 +14,13 @@ public class BodyMeasurementCalculator {
         public float leftLegLength;
         public float rightLegLength;
 
+        /** 이미지 안의 위치(0~1, 왼쪽 위 기준). 어깨 경사각 계산에 쓴다. 모르면 -1 */
+        public float noseY = -1f;
+        public float leftShoulderX = -1f;
+        public float leftShoulderY = -1f;
+        public float rightShoulderX = -1f;
+        public float rightShoulderY = -1f;
+
         public Result(
                 float shoulderWidth,
                 float leftArmLength,
@@ -240,7 +247,7 @@ public class BodyMeasurementCalculator {
         float rightLegLength =
                 rightLegPixels * cmPerPixel;
 
-        return new Result(
+        Result result = new Result(
                 shoulderWidth,
                 leftArmLength,
                 rightArmLength,
@@ -248,6 +255,18 @@ public class BodyMeasurementCalculator {
                 leftLegLength,
                 rightLegLength
         );
+
+        if (pose.getImageWidth() > 0 && pose.getImageHeight() > 0) {
+            float w = pose.getImageWidth();
+            float h = pose.getImageHeight();
+            result.noseY = nose.getPosition().y / h;
+            result.leftShoulderX = leftShoulder.getPosition().x / w;
+            result.leftShoulderY = leftShoulder.getPosition().y / h;
+            result.rightShoulderX = rightShoulder.getPosition().x / w;
+            result.rightShoulderY = rightShoulder.getPosition().y / h;
+        }
+
+        return result;
     }
 
     private static boolean valid(
