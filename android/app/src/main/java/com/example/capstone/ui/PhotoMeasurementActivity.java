@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
 import com.example.capstone.camera.BodyMeasurementCalculator;
+import com.example.capstone.camera.BodyShapeFeatures;
 import com.example.capstone.camera.MeasurementSession;
 import com.example.capstone.camera.SilhouetteBuilder;
 import com.example.capstone.camera.MediaPipePoseDetector;
@@ -458,7 +459,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                             return;
                         }
 
-                        frontSilhouette = SilhouetteBuilder.build(mask);
+                        frontSilhouette = SilhouetteBuilder.build(mask, BodyShapeFeatures.bodyAxis(pose));
 
                         if (frontSilhouette == null) {
                             analysisError(
@@ -497,41 +498,14 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     InputImage.fromFilePath(this, sidePhotoUri);
 
             segmenter.process(image)
-                    .addOnSuccessListener(mask -> {
-
-                        MeasurementSession.Silhouette sideSilhouette =
-                                SilhouetteBuilder.build(mask);
-
-                        if (sideSilhouette == null) {
-                            analysisError(
-                                    "옆면 사진에서 신체 외곽선을 인식하지 못했습니다."
-                            );
-                            return;
-                        }
-
-                        textSideStatus.setText("✓ 옆면 신체 분석 완료");
-                        textPhotoStatus.setText(
-                                "측정 위치를 확인해주세요.");
-
-                        // 가슴·허리·골반 둘레는 측정 위치를 확인·조정한 뒤 계산한다
-                        // (카메라 촬영 흐름과 같은 화면)
-                        MeasurementSession.clear();
-                        MeasurementSession.heightCm = userHeightCm;
-                        MeasurementSession.front = frontSilhouette;
-                        MeasurementSession.side = sideSilhouette;
-                        MeasurementSession.frontLengths = basicResult;
-                        MeasurementSession.frontUri = frontPhotoUri;
-                        MeasurementSession.sideUri = sidePhotoUri;
-
-                        btnAnalyzePhotos.setEnabled(true);
-
-                        Intent intent = new Intent(
-                                PhotoMeasurementActivity.this,
-                                MeasurementAdjustActivity.class
-                        );
-                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        startActivity(intent);
-                    })
+                    .addOnSuccessListener(mask ->
+                            // 옆면도 관절로 몸의 중심선을 구해 몸 덩어리를 고른다 (실패하면 화면 가운데 기준)
+                            poseDetector.process(image)
+                                    .addOnCompleteListener(poseTask -> finishSide(
+                                            mask,
+                                            poseTask.isSuccessful()
+                                                    ? BodyShapeFeatures.bodyAxis(poseTask.getResult())
+                                                    : null)))
                     .addOnFailureListener(e ->
                             analysisError(
                                     "옆면 사진 분석 오류: " + e.getMessage()
@@ -541,6 +515,40 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         } catch (IOException e) {
             analysisError("옆면 사진을 불러올 수 없습니다.");
         }
+    }
+
+    /** 옆면 윤곽을 만들고 측정 위치 확인 화면으로 간다 */
+    private void finishSide(SegmentationMask mask, SilhouetteBuilder.Axis axis) {
+
+        MeasurementSession.Silhouette sideSilhouette =
+                SilhouetteBuilder.build(mask, axis);
+
+        if (sideSilhouette == null) {
+            analysisError("옆면 사진에서 신체 외곽선을 인식하지 못했습니다.");
+            return;
+        }
+
+        textSideStatus.setText("✓ 옆면 신체 분석 완료");
+        textPhotoStatus.setText("측정 위치를 확인해주세요.");
+
+        // 가슴·허리·골반 둘레는 측정 위치를 확인·조정한 뒤 계산한다
+        // (카메라 촬영 흐름과 같은 화면)
+        MeasurementSession.clear();
+        MeasurementSession.heightCm = userHeightCm;
+        MeasurementSession.front = frontSilhouette;
+        MeasurementSession.side = sideSilhouette;
+        MeasurementSession.frontLengths = basicResult;
+        MeasurementSession.frontUri = frontPhotoUri;
+        MeasurementSession.sideUri = sidePhotoUri;
+
+        btnAnalyzePhotos.setEnabled(true);
+
+        Intent intent = new Intent(
+                PhotoMeasurementActivity.this,
+                MeasurementAdjustActivity.class
+        );
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(intent);
     }
 
     // =====================================================

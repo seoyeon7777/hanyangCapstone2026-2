@@ -23,6 +23,7 @@ const TOLERANCE_X = 0.16;
 const TOLERANCE_Y = 0.13;
 const MIN_LIKELIHOOD = 0.4;         // 정렬 판단용
 const VALID_LIKELIHOOD = 0.5;       // 치수 계산용 (앱과 같음)
+const MIN_BODY_HEIGHT_RATIO = 0.62; // 전신(코~발목)이 화면 높이에서 차지해야 하는 최소 비율 (가이드 안 사람은 약 0.72)
 const FRONT_REQUIRED_MATCHES = 5;
 const SIDE_REQUIRED_MATCHES = 3;
 
@@ -57,6 +58,7 @@ let stableStart = 0;
 let lastAligned = 0;
 let captureReadyTime = 0;
 let lastVideoTime = -1;
+let bodyTooSmall = false;
 
 let frontCanvas = null;
 let sideCanvas = null;
@@ -360,13 +362,19 @@ function isPoseAligned(lms) {
     if (Math.abs(p.x - gp.x) <= tolX && Math.abs(p.y - gp.y) <= tolY) matched++;
   }
   if (detected < requiredMatches || matched < requiredMatches) return false;
-  return maxY - minY >= H * 0.48;
+  // 전신이 화면에서 너무 작으면 윤곽 분리가 거칠어져 폭·두께가 크게 틀린다
+  bodyTooSmall = maxY - minY < H * MIN_BODY_HEIGHT_RATIO;
+  return !bodyTooSmall;
 }
 
 function checkStability(lms) {
   if (!isPoseAligned(lms)) {
     handleMisalignment(
-      mode === "front" ? "정면: 어깨와 골반을 가이드에 맞춰주세요." : "측면: 옆으로 서서 전신을 보여주세요."
+      bodyTooSmall
+        ? "조금 더 가까이 와서 전신이 가이드를 채우게 서주세요."
+        : mode === "front"
+          ? "정면: 어깨와 골반을 가이드에 맞춰주세요."
+          : "측면: 옆으로 서서 전신을 보여주세요."
     );
     return;
   }
@@ -482,7 +490,7 @@ async function analyzeFront(canvas) {
     frontResult = calcLengths(px, userHeightCm);
     if (!frontResult) return failAnalysis("정면 관절 분석 실패. 다시 촬영해주세요.");
 
-    const widths = measureSilhouette(canvas, userHeightCm);
+    const widths = measureSilhouette(canvas, userHeightCm, bodyAxis(lms));
     if (!widths) return failAnalysis("신체 윤곽 분석 실패. 다시 촬영해주세요.");
     frontWidths = widths;
     frontCanvas = canvas;
@@ -499,7 +507,16 @@ async function analyzeSide(canvas) {
   setBusy(true, "측면 사진 분석 중...");
   await nextFrame();
   try {
-    const widths = measureSilhouette(canvas, userHeightCm);
+    // 옆면도 관절(어깨·엉덩이 위치)로 몸의 중심선을 구한다. 못 찾으면 화면 가운데 기준
+    let axis = null;
+    try {
+      await setRunningMode("IMAGE");
+      const res = poseLandmarker.detect(canvas);
+      axis = bodyAxis(res.landmarks && res.landmarks[0]);
+    } catch (e) {
+      console.warn("옆면 관절 인식 실패, 화면 가운데 기준으로 윤곽을 고릅니다", e);
+    }
+    const widths = measureSilhouette(canvas, userHeightCm, axis);
     if (!widths) return failAnalysis("신체 윤곽 분석 실패. 다시 촬영해주세요.");
     sideWidths = widths;
     sideCanvas = canvas;
@@ -561,8 +578,26 @@ function calcLengths(p, heightCm) {
   };
 }
 
+// ---- 몸의 중심선 (앱의 BodyShapeFeatures.bodyAxis) ---------------------------
+// 마스크에는 배경 물건(선반·침대·옷더미)도 사람처럼 잡힌다. 어깨·엉덩이 관절의 평균 x(0~1)와
+// 몸 키(코~발목 ÷ 0.88, 이미지 높이 대비)를 구해서 그 중심선이 지나는 덩어리를 몸으로 고른다.
+function bodyAxis(lms) {
+  if (!lms) return null;
+  const vis = (i) => lms[i] && (lms[i].visibility ?? 1) >= 0.3;
+  const torso = [L.L_SHOULDER, L.R_SHOULDER, L.L_HIP, L.R_HIP].filter(vis);
+  if (torso.length < 2) return null;
+  const x = torso.reduce((sum, i) => sum + lms[i].x, 0) / torso.length;
+  if (x < 0 || x > 1) return null;
+  let bodyHeight = -1;
+  if (vis(L.NOSE) && vis(L.L_ANKLE) && vis(L.R_ANKLE)) {
+    const span = ((lms[L.L_ANKLE].y + lms[L.R_ANKLE].y) / 2 - lms[L.NOSE].y) / 0.88;
+    if (span > 0.1 && span <= 1.2) bodyHeight = span;
+  }
+  return { x, bodyHeight };
+}
+
 // ---- 계산: 실루엣 폭 (BodyMeasurementActivity.measureSilhouette) ------------
-function measureSilhouette(canvas, heightCm) {
+function measureSilhouette(canvas, heightCm, axis = null) {
   if (heightCm <= 0) return null;
   const result = segmenter.segment(canvas);
   const masks = result.confidenceMasks;
@@ -573,55 +608,72 @@ function measureSilhouette(canvas, heightCm) {
   const data = mask.getAsFloat32Array();
   let out = null;
   try {
-    out = silhouetteWidths(data, width, height, heightCm);
+    out = silhouetteWidths(data, width, height, heightCm, axis);
   } finally {
     result.close ? result.close() : masks.forEach((m) => m.close && m.close());
   }
   return out;
 }
 
-function silhouetteWidths(data, width, height, heightCm) {
-  if (!width || !height) return null;
+// 앱 SilhouetteBuilder와 같은 값
+const MAX_HALF_WIDTH_RATIO = 0.16; // 중심선 좌우로 몸 키의 이 비율까지만 몸으로 본다 (160cm 기준 ±26cm)
+const MAX_GAP_RATIO = 0.12;        // 중심선에서 이보다 먼 덩어리는 배경 물건 (160cm 기준 19cm)
+const DEFAULT_BODY_FRACTION = 0.8; // 몸 키를 모를 때: 화면 높이의 이 비율
+
+// 마스크 → 가로줄마다 몸으로 고른 덩어리의 양 끝 (없으면 -1)
+function buildSilhouette(data, width, height, axis) {
+  const axisX = axis ? axis.x * width : width / 2;
+  const bodyRows = axis && axis.bodyHeight > 0 ? axis.bodyHeight * height : DEFAULT_BODY_FRACTION * height;
+  let from = 0, to = width - 1, maxGap = Infinity;
+  if (axis) {
+    const half = Math.round(MAX_HALF_WIDTH_RATIO * bodyRows);
+    from = Math.max(0, Math.round(axisX) - half);
+    to = Math.min(width - 1, Math.round(axisX) + half);
+    maxGap = MAX_GAP_RATIO * bodyRows;
+  }
+  const left = new Int32Array(height).fill(-1);
+  const right = new Int32Array(height).fill(-1);
   let top = -1, bottom = -1;
   for (let y = 0; y < height; y++) {
-    let has = false;
-    for (let x = 0; x < width; x++) {
-      if (data[y * width + x] >= 0.5) { has = true; break; }
+    let bestStart = -1, bestEnd = -1, curStart = -1, bestDist = Infinity;
+    for (let x = from; x <= to + 1; x++) {
+      const isPerson = x <= to && data[y * width + x] >= 0.5;
+      if (isPerson && curStart === -1) curStart = x;
+      if (!isPerson && curStart !== -1) {
+        const end = x - 1;
+        const d = axisX < curStart ? curStart - axisX : axisX > end ? axisX - end : 0;
+        if (d < bestDist) { bestDist = d; bestStart = curStart; bestEnd = end; }
+        curStart = -1;
+      }
     }
-    if (has) {
+    if (bestDist > maxGap) { bestStart = -1; bestEnd = -1; }
+    left[y] = bestStart;
+    right[y] = bestEnd;
+    if (bestStart >= 0) {
       if (top === -1) top = y;
       bottom = y;
     }
   }
   if (top < 0 || bottom <= top) return null;
-
-  const bodyPx = bottom - top;
-  const cm = heightCm / bodyPx;
-  const chestPx = centralWidth(data, width, height, top + Math.round(bodyPx * 0.29));
-  const waistPx = centralWidth(data, width, height, top + Math.round(bodyPx * 0.43));
-  const hipPx = centralWidth(data, width, height, top + Math.round(bodyPx * 0.52));
-  if (chestPx <= 0 || waistPx <= 0 || hipPx <= 0) return null;
-  return { chest: chestPx * cm, waist: waistPx * cm, hip: hipPx * cm };
+  return { width, height, top, bottom, left, right };
 }
 
-// 가로줄에서 화면 가운데에 가장 가까운 사람 덩어리의 폭
-function centralWidth(data, width, height, y) {
-  if (y < 0 || y >= height) return 0;
-  let bestStart = -1, bestEnd = -1, curStart = -1;
-  const centerX = width / 2;
-  let bestDist = Infinity;
-  for (let x = 0; x <= width; x++) {
-    const isPerson = x < width && data[y * width + x] >= 0.5;
-    if (isPerson && curStart === -1) curStart = x;
-    if (!isPerson && curStart !== -1) {
-      const end = x - 1;
-      const d = Math.abs((curStart + end) / 2 - centerX);
-      if (d < bestDist) { bestDist = d; bestStart = curStart; bestEnd = end; }
-      curStart = -1;
-    }
-  }
-  if (bestStart === -1) return 0;
-  return bestEnd - bestStart + 1;
+function silhouetteWidths(data, width, height, heightCm, axis = null) {
+  if (!width || !height) return null;
+  const sil = buildSilhouette(data, width, height, axis);
+  if (!sil) return null;
+
+  const bodyPx = sil.bottom - sil.top;
+  const cm = heightCm / bodyPx;
+  const rowWidth = (ratio) => {
+    const y = Math.min(height - 1, Math.max(0, sil.top + Math.round(bodyPx * ratio)));
+    return sil.left[y] < 0 ? 0 : sil.right[y] - sil.left[y] + 1;
+  };
+  const chestPx = rowWidth(0.29);
+  const waistPx = rowWidth(0.43);
+  const hipPx = rowWidth(0.52);
+  if (chestPx <= 0 || waistPx <= 0 || hipPx <= 0) return null;
+  return { chest: chestPx * cm, waist: waistPx * cm, hip: hipPx * cm };
 }
 
 // ---- 계산: CircumferenceCalculator (라마누잔 타원 둘레) -------------------
@@ -683,4 +735,4 @@ function showResult() {
 $("btn-again").addEventListener("click", () => show("setup"));
 
 // 디버그용 (콘솔에서 사진 한 장으로 계산을 확인할 때)
-window.__dbg = { get poseLandmarker() { return poseLandmarker; }, calcLengths, measureSilhouette, setRunningMode };
+window.__dbg = { get poseLandmarker() { return poseLandmarker; }, calcLengths, measureSilhouette, buildSilhouette, bodyAxis, setRunningMode };

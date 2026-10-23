@@ -33,6 +33,7 @@ import androidx.core.content.ContextCompat;
 import com.example.capstone.R;
 import com.example.capstone.camera.BodyGuideOverlayView;
 import com.example.capstone.camera.BodyMeasurementCalculator;
+import com.example.capstone.camera.BodyShapeFeatures;
 import com.example.capstone.camera.CircumferenceCalculator;
 import com.example.capstone.camera.MeasurementSession;
 import com.example.capstone.camera.SilhouetteBuilder;
@@ -106,6 +107,10 @@ public class BodyMeasurementActivity extends AppCompatActivity {
     private static final float TOLERANCE_Y = 0.13f;
 
     private static final float MIN_LIKELIHOOD = 0.40f;
+
+    // 전신(코~발목)이 화면 높이에서 차지해야 하는 최소 비율
+    private static final float MIN_BODY_HEIGHT_RATIO = 0.62f;
+    private boolean bodyTooSmall = false;
 
     private static final int FRONT_REQUIRED_MATCHES = 5;
     private static final int SIDE_REQUIRED_MATCHES = 3;
@@ -364,7 +369,9 @@ public class BodyMeasurementActivity extends AppCompatActivity {
 
         if (!aligned) {
             handleTemporaryMisalignment(
-                    captureMode == BodyGuideOverlayView.MODE_FRONT
+                    bodyTooSmall
+                            ? "조금 더 가까이 와서 전신이 가이드를 채우게 서주세요."
+                            : captureMode == BodyGuideOverlayView.MODE_FRONT
                             ? "정면: 어깨와 골반을 가이드에 맞춰주세요."
                             : "측면: 옆으로 서서 전신을 보여주세요."
             );
@@ -556,9 +563,13 @@ public class BodyMeasurementActivity extends AppCompatActivity {
 
         // 화면에 신체가 너무 작게 잡히거나
         // 한 지점에 몰려 인식되는 경우 방지
+        // 전신이 화면에서 너무 작으면 윤곽 분리가 거칠어져 폭·두께가 크게 틀린다.
+        // 가이드 안 사람(코~발목)이 화면 높이의 약 72%이므로 그 86% 정도는 되어야 한다.
         float bodyHeight = maxY - minY;
 
-        return bodyHeight >= viewHeight * 0.48f;
+        bodyTooSmall = bodyHeight < viewHeight * MIN_BODY_HEIGHT_RATIO;
+
+        return !bodyTooSmall;
     }
 
     private void resetCountdown() {
@@ -719,7 +730,7 @@ public class BodyMeasurementActivity extends AppCompatActivity {
                             return;
                         }
 
-                        analyzeSilhouette(image, true);
+                        analyzeSilhouette(image, true, BodyShapeFeatures.bodyAxis(pose));
                     })
                     .addOnFailureListener(e ->
                             handleAnalysisFailure(
@@ -748,7 +759,15 @@ public class BodyMeasurementActivity extends AppCompatActivity {
                     Uri.fromFile(sidePhotoFile)
             );
 
-            analyzeSilhouette(image, false);
+            // 옆면도 관절(어깨·엉덩이 위치)로 몸의 중심선을 구한다. 못 찾으면 화면 가운데 기준
+            poseDetector.process(image)
+                    .addOnCompleteListener(task -> analyzeSilhouette(
+                            image,
+                            false,
+                            task.isSuccessful()
+                                    ? BodyShapeFeatures.bodyAxis(task.getResult())
+                                    : null
+                    ));
 
         } catch (Exception e) {
             handleAnalysisFailure(
@@ -763,14 +782,15 @@ public class BodyMeasurementActivity extends AppCompatActivity {
 
     private void analyzeSilhouette(
             InputImage image,
-            boolean isFront
+            boolean isFront,
+            SilhouetteBuilder.Axis axis
     ) {
 
         segmenter.process(image)
                 .addOnSuccessListener(mask -> {
 
                     SilhouetteWidths widths =
-                            measureSilhouette(mask, isFront);
+                            measureSilhouette(mask, isFront, axis);
 
                     if (widths == null || !widths.isValid()) {
                         handleAnalysisFailure(
@@ -796,14 +816,15 @@ public class BodyMeasurementActivity extends AppCompatActivity {
 
     private SilhouetteWidths measureSilhouette(
             SegmentationMask mask,
-            boolean isFront
+            boolean isFront,
+            SilhouetteBuilder.Axis axis
     ) {
 
         if (mask == null || userHeightCm <= 0f) {
             return null;
         }
 
-        MeasurementSession.Silhouette sil = buildSilhouette(mask);
+        MeasurementSession.Silhouette sil = SilhouetteBuilder.build(mask, axis);
 
         if (sil == null) {
             return null;
@@ -825,13 +846,6 @@ public class BodyMeasurementActivity extends AppCompatActivity {
                 sil.widthCm(userHeightCm, MeasurementSession.DEFAULT_WAIST),
                 sil.widthCm(userHeightCm, MeasurementSession.DEFAULT_HIP)
         );
-    }
-
-    /** 마스크를 가로줄마다의 몸 폭 요약으로 바꾼다. 사람이 없으면 null */
-    private MeasurementSession.Silhouette buildSilhouette(
-            SegmentationMask mask
-    ) {
-        return SilhouetteBuilder.build(mask);
     }
 
     // =========================================
