@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Q1 보기 카드: 그림 칸 배경 (그림 배경색과 같게) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#FBF0E8" />
+    <corners android:radius="10dp" />
+</shape>

@@ -95,6 +95,49 @@ public final class RecommendApi {
     }
 
     // =========================
+    // 홈 피드 체형 (대표 체형 / 최근 설문)
+    // =========================
+
+    /** 내 체형관리의 대표 체형 → S / W / N. 대표 체형이 없거나 골격 체형이 아니면 null */
+    public static String activeBodyType(Context context) {
+
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
+
+        return active == null ? null : typeCode(active.bodyType);
+    }
+
+    private static String typeCode(String label) {
+
+        if (label == null) {
+            return null;
+        }
+
+        switch (label) {
+            case "스트레이트":
+                return "S";
+            case "웨이브":
+                return "W";
+            case "내추럴":
+                return "N";
+            default:
+                return null;
+        }
+    }
+
+    /** 골격 맞춤 추천에 쓸 체형 정보가 있는지 (대표 체형 또는 설문) */
+    public static boolean hasBodyInput(Context context) {
+
+        return activeBodyType(context) != null
+                || BodyTypeActivity.lastSurveyAnswers(context) != null;
+    }
+
+    /** 홈이 체형이 바뀌었는지 알아챌 때 쓰는 값 (설문 시각 + 대표 체형) */
+    public static String bodyInputKey(Context context) {
+
+        return BodyTypeActivity.lastSurveyTime(context) + "/" + activeBodyType(context);
+    }
+
+    // =========================
     // 홈 피드 (무한 스크롤)
     // =========================
 
@@ -114,9 +157,22 @@ public final class RecommendApi {
 
             // 설문 답을 매번 같이 보낸다.
             // 서버는 기록을 메모리에만 두므로, 서버를 다시 켜도 체형을 바로 다시 진단할 수 있다.
+            // 단, 내 체형관리에 대표 체형이 있으면 항상 대표 체형을 따른다.
+            // (앱 설문 점수와 서버(A 파트) 진단은 계산법이 달라서, 같은 답이라도 결과가 다를 수 있다)
             int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
+            String activeType = activeBodyType(context);
 
-            if (answers != null) {
+            if (activeType != null) {
+
+                JSONObject ratio = new JSONObject();
+                ratio.put(activeType, 1.0);
+
+                JSONObject bodyJson = new JSONObject();
+                bodyJson.put("ratio", ratio);
+
+                body.put("body", bodyJson);
+
+            } else if (answers != null) {
                 JSONObject answerJson = new JSONObject();
 
                 for (int i = 0; i < answers.length; i++) {

@@ -126,7 +126,7 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="10dp"
                 android:backgroundTint="#EEEEEE"
-                android:text="피드백 보기"
+                android:text="내 체형 피드백 보기"
                 android:textAllCaps="false"
                 android:textColor="#111111"
                 android:textSize="16sp"

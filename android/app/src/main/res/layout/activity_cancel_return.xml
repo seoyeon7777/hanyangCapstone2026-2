@@ -74,11 +74,18 @@
                 style="@style/MyPageEmpty"
                 android:text="취소/반품/교환 내역이 없습니다." />
 
+            <!-- 내용이 적으면 남는 높이를 채워 안내 박스를 화면 맨 아래로 (ScrollView fillViewport) -->
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
             <!-- 안내 -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp"
                 android:background="@drawable/bg_info_box"
                 android:lineSpacingExtra="4dp"
                 android:padding="16dp"

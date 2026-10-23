@@ -90,11 +90,18 @@
                 android:textColor="#999999"
                 android:textSize="12sp" />
 
+            <!-- 내용이 적으면 남는 높이를 채워 안내 박스를 화면 맨 아래로 (ScrollView fillViewport) -->
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
             <TextView
                 android:id="@+id/tvRefundNotice"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="28dp"
+                android:layout_marginBottom="20dp"
                 android:background="@drawable/bg_info_box"
                 android:lineSpacingExtra="4dp"
                 android:padding="16dp"

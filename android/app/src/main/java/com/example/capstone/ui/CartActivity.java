@@ -63,6 +63,8 @@ public class CartActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cart);
 
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
         recyclerCart = findViewById(R.id.recyclerCart);
         btnGoOrder = findViewById(R.id.btnGoOrder);
 

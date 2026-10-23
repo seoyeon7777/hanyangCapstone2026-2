@@ -118,7 +118,7 @@
                     android:id="@+id/switchAll"
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
-                    android:text="전체 설정 한 번에 켜기/끄기"
+                    android:text="전체 사용"
                     android:textColor="#111111"
                     android:textSize="14sp"
                     android:textStyle="bold"
@@ -130,35 +130,97 @@
                     android:layout_height="1dp"
                     android:background="#EEEEEE" />
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchSizeWarning"
+                <!-- 제목 + 회색 설명. 줄 어디를 눌러도 스위치가 바뀜 (MyBodyActivity) -->
+                <LinearLayout
+                    android:id="@+id/rowSizeWarning"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="사이즈 경고 팝업 켜기"
-                    android:textColor="#333333"
-                    android:textSize="13sp"
-                    app:thumbTint="#000000"
-                    app:trackTint="#BBBBBB" />
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:minHeight="48dp"
+                    android:orientation="horizontal"
+                    android:paddingVertical="8dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="사이즈 경고 팝업"
+                            android:textColor="#333333"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="선택한 사이즈가 체형과 맞지 않을 때 알려드려요"
+                            android:textColor="#999999"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switchSizeWarning"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:thumbTint="#000000"
+                        app:trackTint="#BBBBBB" />
+                </LinearLayout>
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/switchMeasureNotice"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="측정 권유 팝업 켜기"
+                    android:text="측정 권유 팝업"
                     android:textColor="#333333"
                     android:textSize="13sp"
                     app:thumbTint="#000000"
                     app:trackTint="#BBBBBB" />
 
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/switchAutoActive"
+                <!-- 제목 + 회색 설명. 줄 어디를 눌러도 스위치가 바뀜 (MyBodyActivity) -->
+                <LinearLayout
+                    android:id="@+id/rowAutoActive"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="새 체형 대표 자동 설정 켜기"
-                    android:textColor="#333333"
-                    android:textSize="13sp"
-                    app:thumbTint="#000000"
-                    app:trackTint="#BBBBBB" />
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:minHeight="48dp"
+                    android:orientation="horizontal"
+                    android:paddingVertical="8dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="새 체형 대표로 자동 설정"
+                            android:textColor="#333333"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="체형을 추가하면 자동으로 대표 체형이 바뀌어요"
+                            android:textColor="#999999"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switchAutoActive"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:thumbTint="#000000"
+                        app:trackTint="#BBBBBB" />
+                </LinearLayout>
 
             </LinearLayout>
 

@@ -268,6 +268,12 @@ public class MyBodyActivity extends AppCompatActivity {
         }
         syncAllSwitch();
 
+        // 설명이 붙은 줄은 글자 부분을 눌러도 스위치가 바뀌게
+        SwitchCompat sizeWarning = findViewById(R.id.switchSizeWarning);
+        SwitchCompat autoActive = findViewById(R.id.switchAutoActive);
+        findViewById(R.id.rowSizeWarning).setOnClickListener(v -> sizeWarning.toggle());
+        findViewById(R.id.rowAutoActive).setOnClickListener(v -> autoActive.toggle());
+
         switchAll.setOnCheckedChangeListener((b, checked) -> {
             if (syncingSwitches) {
                 return;

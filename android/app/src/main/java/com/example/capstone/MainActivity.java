@@ -97,7 +97,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean homeHasMore = true;
     private boolean homeLoading = false;
     private int homeRequestId = 0;
-    private long loadedSurveyTime = 0L;
+    // 홈을 불러올 때의 체형 정보 (설문 시각 + 대표 체형). 바뀌면 다시 불러온다
+    private String loadedBodyKey = "";
 
     private final CompoundButton.OnCheckedChangeListener modeListener =
             (button, isChecked) -> reloadHomeFeed();
@@ -136,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         setModeSilently(
-                BodyTypeActivity.lastSurveyAnswers(this) != null
+                RecommendApi.hasBodyInput(this)
         );
 
         homeScrollView.setOnScrollChangeListener(
@@ -428,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
         homeHasMore = true;
         homeLoading = false;
 
-        loadedSurveyTime = BodyTypeActivity.lastSurveyTime(this);
+        loadedBodyKey = RecommendApi.bodyInputKey(this);
 
         productAdapter = new ProductAdapter(homeProducts);
         recyclerProducts.setAdapter(productAdapter);
@@ -576,7 +577,10 @@ public class MainActivity extends AppCompatActivity {
                 typeName = "";
         }
 
-        textHomeRecTitle.setText(typeName + "체형 맞춤 추천");
+        // 체형 이름이 있으면 "○○ 체형" / "맞춤 추천" 두 줄로
+        textHomeRecTitle.setText(typeName.isEmpty()
+                ? "체형 맞춤 추천"
+                : typeName + "체형\n맞춤 추천");
     }
 
     private void setModeSilently(boolean bodyMode) {
@@ -640,10 +644,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if ("홈".equals(selectedMenu)
-                && BodyTypeActivity.lastSurveyTime(this) != loadedSurveyTime) {
+                && !RecommendApi.bodyInputKey(this).equals(loadedBodyKey)) {
 
             setModeSilently(
-                    BodyTypeActivity.lastSurveyAnswers(this) != null
+                    RecommendApi.hasBodyInput(this)
             );
 
             reloadHomeFeed();
