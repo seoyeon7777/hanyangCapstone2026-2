@@ -1,17 +1,19 @@
 package com.example.capstone;
 
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.CompoundButton;
-import androidx.core.widget.NestedScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -84,11 +86,6 @@ public class MainActivity extends AppCompatActivity {
     private String selectedWeight = "";
     private String selectedBodyType = "";
 
-    // ====================================
-    // 홈 추천 피드 (추천 서버 연결)
-    // ====================================
-
-    // 바닥까지 이만큼 남으면 다음 묶음을 미리 불러온다
     private static final int LOAD_MORE_DISTANCE_DP = 600;
 
     private SwitchCompat switchBodyMode;
@@ -99,11 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private int homePage = 0;
     private boolean homeHasMore = true;
     private boolean homeLoading = false;
-
-    // 토글을 바꾸거나 다시 불러오면 1씩 올린다. 이전 요청의 응답은 버린다
     private int homeRequestId = 0;
-
-    // 홈 피드를 불러올 때의 설문 저장 시각. 설문을 새로 하면 다시 불러온다
     private long loadedSurveyTime = 0L;
 
     private final CompoundButton.OnCheckedChangeListener modeListener =
@@ -117,53 +110,35 @@ public class MainActivity extends AppCompatActivity {
 
         BodyProfileStore.syncActiveProfile(this);
 
-        // XML 연결
-        recyclerProducts = findViewById(
-                R.id.recyclerProducts
-        );
-
-        homeScrollView = findViewById(
-                R.id.homeScrollView
-        );
-
-        homeBanner = findViewById(
-                R.id.homeBanner
-        );
-
+        recyclerProducts = findViewById(R.id.recyclerProducts);
+        homeScrollView = findViewById(R.id.homeScrollView);
+        homeBanner = findViewById(R.id.homeBanner);
         homeRecommendationHeader = findViewById(
                 R.id.homeRecommendationHeader
         );
-
         categoryResultHeader = findViewById(
                 R.id.categoryResultHeader
         );
-
         textSelectedCategory = findViewById(
                 R.id.textSelectedCategory
         );
+        btnHomeFilter = findViewById(R.id.btnHomeFilter);
+        textHomeEmpty = findViewById(R.id.textHomeEmpty);
+        switchBodyMode = findViewById(R.id.switchBodyMode);
+        textHomeRecTitle = findViewById(R.id.textHomeRecTitle);
 
-        btnHomeFilter = findViewById(
-                R.id.btnHomeFilter
+        // 홈 체형 맞춤 토글을 검정색으로 변경
+        switchBodyMode.setThumbTintList(
+                ColorStateList.valueOf(Color.BLACK)
+        );
+        switchBodyMode.setTrackTintList(
+                ColorStateList.valueOf(Color.LTGRAY)
         );
 
-        textHomeEmpty = findViewById(
-                R.id.textHomeEmpty
-        );
-
-        switchBodyMode = findViewById(
-                R.id.switchBodyMode
-        );
-
-        textHomeRecTitle = findViewById(
-                R.id.textHomeRecTitle
-        );
-
-        // 설문을 한 적이 있으면 체형 맞춤(ON)으로 시작
         setModeSilently(
                 BodyTypeActivity.lastSurveyAnswers(this) != null
         );
 
-        // 홈 무한 스크롤: 바닥 근처에 오면 다음 묶음
         homeScrollView.setOnScrollChangeListener(
                 (NestedScrollView.OnScrollChangeListener)
                         (v, scrollX, scrollY, oldScrollX, oldScrollY) ->
@@ -176,13 +151,11 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerProducts.setNestedScrollingEnabled(false);
 
-        // 하단 메뉴
         BottomMenu.setup(
                 this,
                 BottomMenu.TAB_HOME
         );
 
-        // 검색창
         findViewById(R.id.editSearch)
                 .setOnClickListener(v -> {
                     startActivity(
@@ -196,15 +169,30 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnHomeCart)
                 .setOnClickListener(v -> BottomMenu.openCart(this));
 
-        // 상단 메뉴
+        // CAPSTONE 로고를 누르면 홈 화면으로 이동
+        TextView capstoneLogo = findTextViewByText(
+                findViewById(android.R.id.content),
+                "Capstone"
+        );
+
+        if (capstoneLogo != null) {
+            capstoneLogo.setClickable(true);
+            capstoneLogo.setFocusable(true);
+
+            capstoneLogo.setOnClickListener(v -> {
+                selectedMenu = "홈";
+                resetFilters();
+                updateScreen();
+                homeScrollView.smoothScrollTo(0, 0);
+            });
+        }
+
         setupTopMenus();
 
-        // 필터 버튼
         btnHomeFilter.setOnClickListener(
                 v -> showFilterDialog()
         );
 
-        // 전체보기: 홈 안에서 전체 상품 보기
         findViewById(R.id.btnSeeAllProducts)
                 .setOnClickListener(v -> {
                     selectedMenu = "베스트";
@@ -216,9 +204,34 @@ public class MainActivity extends AppCompatActivity {
         updateScreen();
     }
 
-    // ====================================
-    // 상단 메뉴 연결
-    // ====================================
+    // XML을 수정하지 않고 Capstone 로고 찾기
+    private TextView findTextViewByText(View root, String text) {
+
+        if (root instanceof TextView) {
+            TextView textView = (TextView) root;
+
+            if (text.contentEquals(textView.getText())) {
+                return textView;
+            }
+        }
+
+        if (root instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) root;
+
+            for (int i = 0; i < group.getChildCount(); i++) {
+                TextView found = findTextViewByText(
+                        group.getChildAt(i),
+                        text
+                );
+
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+
+        return null;
+    }
 
     private void setupTopMenus() {
 
@@ -230,27 +243,19 @@ public class MainActivity extends AppCompatActivity {
 
             tab.setOnClickListener(v -> {
                 selectedMenu = menu;
-
                 resetFilters();
                 updateScreen();
-
                 homeScrollView.smoothScrollTo(0, 0);
             });
         }
     }
 
-    // ====================================
-    // 전체 화면 갱신
-    // ====================================
-
     private void updateScreen() {
-
         updateTabStyles();
         updateSections();
         updateProducts();
     }
 
-    // 선택한 메뉴 검정 글씨 + 밑줄
     private void updateTabStyles() {
 
         for (int i = 0; i < MENUS.length; i++) {
@@ -282,7 +287,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 홈 / 카테고리 화면 전환
     private void updateSections() {
 
         boolean isHome = "홈".equals(selectedMenu);
@@ -300,13 +304,8 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    // ====================================
-    // 상품 목록
-    // ====================================
-
     private void updateProducts() {
 
-        // 홈은 추천 서버가 고른 순서대로 보여 준다
         if ("홈".equals(selectedMenu)) {
             reloadHomeFeed();
             return;
@@ -327,9 +326,7 @@ public class MainActivity extends AppCompatActivity {
             products.add(product);
         }
 
-        // 신상은 ID가 높은 상품부터
         if ("신상".equals(selectedMenu)) {
-
             Collections.sort(
                     products,
                     (a, b) -> Integer.compare(
@@ -339,23 +336,16 @@ public class MainActivity extends AppCompatActivity {
             );
         }
 
-        // 베스트는 현재 더미 데이터 순서 사용
-        // 실제 판매량 데이터 연결 시 변경 가능
-
         productAdapter = new ProductAdapter(products);
-
         recyclerProducts.setAdapter(productAdapter);
 
-        // 카테고리 제목
         if (!"홈".equals(selectedMenu)) {
-
             textSelectedCategory.setText(
                     selectedMenu + "  " +
                             products.size() + "개"
             );
         }
 
-        // 상품 없을 때 안내
         boolean isEmpty = products.isEmpty();
 
         textHomeEmpty.setVisibility(
@@ -380,13 +370,8 @@ public class MainActivity extends AppCompatActivity {
         return selectedMenu.equals(productCategory);
     }
 
-    // ====================================
-    // 필터 적용
-    // ====================================
-
     private boolean matchesFilters(Product product) {
 
-        // 가격
         if (minPrice > 0
                 && product.getPrice() < minPrice) {
             return false;
@@ -397,7 +382,6 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        // 색상
         if (!selectedColor.isEmpty()) {
 
             List<String> colors = product.getColors();
@@ -408,7 +392,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // 스타일
         if (!selectedStyles.isEmpty()) {
 
             List<String> styles = product.getStyles();
@@ -433,17 +416,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // 키 / 몸무게 / 체형은 현재 입력값만 저장
-        // 상품별 적합도 데이터 연결 후 적용
-
         return true;
     }
 
-    // ====================================
-    // 홈 추천 피드
-    // ====================================
-
-    /** 처음부터 다시 불러온다 (홈 진입, 토글 변경, 설문 변경) */
     private void reloadHomeFeed() {
 
         homeRequestId++;
@@ -514,7 +489,6 @@ public class MainActivity extends AppCompatActivity {
                                 isEmpty ? View.VISIBLE : View.GONE
                         );
 
-                        // 화면이 아직 안 찼으면 한 묶음 더
                         homeScrollView.post(
                                 MainActivity.this::loadMoreIfNearBottom
                         );
@@ -530,7 +504,6 @@ public class MainActivity extends AppCompatActivity {
                         homeLoading = false;
                         homeHasMore = false;
 
-                        // 체형 진단 전에 토글 ON → 일반 추천으로 바꿔서 보여 준다
                         if (code == 400 && bodyMode) {
 
                             Toast.makeText(
@@ -544,7 +517,6 @@ public class MainActivity extends AppCompatActivity {
                             return;
                         }
 
-                        // 서버가 꺼져 있으면 기존 더미 상품이라도 보여 준다
                         if (homeProducts.isEmpty()) {
 
                             homeProducts.addAll(DummyData.getProducts());
@@ -581,7 +553,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /** 토글 ON이면 "스트레이트 체형 맞춤 추천"처럼, OFF면 원래 제목 */
     private void updateHomeTitle(String primary) {
 
         if (!switchBodyMode.isChecked()) {
@@ -608,17 +579,12 @@ public class MainActivity extends AppCompatActivity {
         textHomeRecTitle.setText(typeName + "체형 맞춤 추천");
     }
 
-    /** 리스너를 잠깐 떼고 토글 상태만 바꾼다 (바꾸면서 다시 불러오지 않게) */
     private void setModeSilently(boolean bodyMode) {
 
         switchBodyMode.setOnCheckedChangeListener(null);
         switchBodyMode.setChecked(bodyMode);
         switchBodyMode.setOnCheckedChangeListener(modeListener);
     }
-
-    // ====================================
-    // 새 필터 팝업
-    // ====================================
 
     private void showFilterDialog() {
 
@@ -673,7 +639,6 @@ public class MainActivity extends AppCompatActivity {
             productAdapter.notifyDataSetChanged();
         }
 
-        // 설문을 새로 하고 돌아왔으면 새 체형으로 홈을 다시 불러온다
         if ("홈".equals(selectedMenu)
                 && BodyTypeActivity.lastSurveyTime(this) != loadedSurveyTime) {
 

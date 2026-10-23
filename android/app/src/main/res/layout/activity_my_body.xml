@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
@@ -120,7 +121,9 @@
                     android:text="전체 설정 한 번에 켜기/끄기"
                     android:textColor="#111111"
                     android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    app:thumbTint="#000000"
+                    app:trackTint="#BBBBBB" />
 
                 <View
                     android:layout_width="match_parent"
@@ -133,7 +136,9 @@
                     android:layout_height="48dp"
                     android:text="사이즈 경고 팝업 켜기"
                     android:textColor="#333333"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    app:thumbTint="#000000"
+                    app:trackTint="#BBBBBB" />
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/switchMeasureNotice"
@@ -141,7 +146,9 @@
                     android:layout_height="48dp"
                     android:text="측정 권유 팝업 켜기"
                     android:textColor="#333333"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    app:thumbTint="#000000"
+                    app:trackTint="#BBBBBB" />
 
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/switchAutoActive"
@@ -149,7 +156,9 @@
                     android:layout_height="48dp"
                     android:text="새 체형 대표 자동 설정 켜기"
                     android:textColor="#333333"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    app:thumbTint="#000000"
+                    app:trackTint="#BBBBBB" />
 
             </LinearLayout>
 
