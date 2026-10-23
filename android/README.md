@@ -1,3 +1,8 @@
+> **2026-10-21 변경:** 3D 아바타(Filament)를 없앴다. 정확도가 낮아서다.
+> 이제 카메라/사진 측정 → `MeasurementResultActivity` → **`BodyEditActivity`(치수 확인·수정: 숫자 직접 입력, ±0.5cm)** → 저장 순서다.
+> 아래 아바타·morph 설명과 `docs/AVATAR_*.md`는 옛 기록이며 코드는 삭제됐다.
+> 관절 인식은 ML Kit Pose 대신 **MediaPipe Pose Landmarker**(`camera/MediaPipePoseDetector`, 모델 `assets/models/pose_landmarker_full.task`)를 쓴다.
+
 # avatar_input_info
 
 캡스톤 **금박이주방** — 3D 아바타 기반 가상피팅을 위한 Android 클라이언트  

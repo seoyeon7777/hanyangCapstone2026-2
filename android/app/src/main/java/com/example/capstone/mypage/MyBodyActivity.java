@@ -19,7 +19,7 @@ import com.example.capstone.R;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.login.LoginMainActivity;
 import com.example.capstone.login.LoginSession;
-import com.example.capstone.ui.AvatarPreviewActivity;
+import com.example.capstone.ui.BodyEditActivity;
 import com.example.capstone.ui.BodyValueTable;
 import com.example.capstone.ui.FittingActivity;
 
@@ -131,12 +131,12 @@ public class MyBodyActivity extends AppCompatActivity {
     }
 
     private void openInPreview(BodyProfileStore.Profile profile) {
-        Intent intent = new Intent(this, AvatarPreviewActivity.class);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_HEIGHT_CM, profile.heightCm);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_PARTS_JSON, profile.parts.toString());
-        intent.putExtra(AvatarPreviewActivity.EXTRA_BODY_FAT, profile.bodyFat);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_SAMPLE_LABEL, profile.name);
-        intent.putExtra(AvatarPreviewActivity.EXTRA_EDIT_PROFILE_ID, profile.id);
+        Intent intent = new Intent(this, BodyEditActivity.class);
+        intent.putExtra(BodyEditActivity.EXTRA_HEIGHT_CM, profile.heightCm);
+        intent.putExtra(BodyEditActivity.EXTRA_PARTS_JSON, profile.parts.toString());
+        intent.putExtra(BodyEditActivity.EXTRA_BODY_FAT, profile.bodyFat);
+        intent.putExtra(BodyEditActivity.EXTRA_SAMPLE_LABEL, profile.name);
+        intent.putExtra(BodyEditActivity.EXTRA_EDIT_PROFILE_ID, profile.id);
         startActivity(intent);
     }
 

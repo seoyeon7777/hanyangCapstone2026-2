@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.BuildConfig;
 import com.example.capstone.R;
-import com.example.capstone.avatar.BodyMeasurementContract;
+import com.example.capstone.data.BodyMeasurementContract;
 
 /** 팀원 피팅 진입: 키 → 체형 자가진단. */
 public class FittingActivity extends AppCompatActivity {
