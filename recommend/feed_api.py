@@ -26,6 +26,7 @@ from flask import Blueprint, jsonify, render_template, request
 from rec_config import (
     SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE, MODES,
 )
+import rec_config
 from fake_matching import classify_kind
 from feed import score_by_mode, home_feed, feed_order, reason, need_rediagnosis
 from store import make_store, StoreError
@@ -171,7 +172,8 @@ def resolve_request():
 def diagnose(answers, measurements=None):
     """A 파트로 체형 진단 → (classify 결과, 치수를 썼는지, 안내 문장).
 
-    치수가 이상하면(사진 인식 실패로 빠지거나 범위 밖) 진단 전체를 실패시키지 않고 설문만으로 진단한다.
+    지금은 설문만 쓴다 (rec_config.DIAGNOSIS_USE_MEASUREMENTS = False, 팀 결정). 치수가 와도 무시한다.
+    치수를 쓰도록 켜도, 치수가 이상하면(사진 인식 실패로 빠지거나 범위 밖) 진단 전체를 실패시키지 않고 설문만으로 진단한다.
     설문 답이 틀린 경우만 400.
     """
     if not isinstance(answers, dict):
@@ -182,7 +184,7 @@ def diagnose(answers, measurements=None):
         survey_only = classify(answers)
     except InputError as e:
         raise BadRequest(str(e))
-    if measurements is None:
+    if measurements is None or not rec_config.DIAGNOSIS_USE_MEASUREMENTS:
         return survey_only, False, ""
     try:
         return classify(answers, measurements), True, ""

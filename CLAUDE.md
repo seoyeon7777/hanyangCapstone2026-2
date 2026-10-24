@@ -237,6 +237,9 @@ match_score(body, item) -> {
 - `feed_api.diagnose()`: /api/diagnose와 /api/feed·/api/feed/scroll이 같이 쓴다. **치수가 이상하면(범위 밖·빠짐) 400 대신 설문만으로 진단**하고 notice에 이유. 설문 답이 틀린 경우만 400. 치수가 객체가 아니면 400
 - 앱: 설문 마지막 "결과 확인" → `RecommendApi.diagnose`(답 + `cameraMeasurements`) → 서버 결과로 `BodyTypeResultActivity` (체형 + 비율 % + 혼합형 안내). 서버에 못 붙으면 답만 저장하고 "다시 시도/나중에" 창
   - `lastSurveyType`은 이제 서버 진단 결과만 저장 (진단 전이면 없음 → `lastSurveySummary`는 "진단 전"). `MeasurementResultActivity`의 `finalBodyType`도 `/api/diagnose`를 쓴다
+- **팀 결정(10/24): 카메라 치수는 진단에 섞지 않고 설문만** — `rec_config.DIAGNOSIS_USE_MEASUREMENTS = False`. 서버는 치수가 와도 무시하고(`used_measurements` false), 앱도 안 보낸다(`loadFeed`·`diagnose`·`finalBodyType`). `RecommendApi.cameraMeasurements`는 다시 켤 때를 위해 남김
+  - 이유(10/24 분석): 치수 점수만으로는 sample.csv 내추럴 1/10, 애매한 설문에 치수를 더하면 웨이브 32→49%·내추럴 33→19%로 쏠림. 내추럴용 치수 지표가 약하고(최대점 N 1.1 / W 2.25), 기준 구간이 좁아(상체÷다리 0.5511~0.5639) 1cm 오차로 뒤집힘
+  - 설문만 정확도(sample.csv 30명): 튜닝 21명 81.0%, 테스트 9명 88.9%, 전체 83.3% (S 8/10 · W 9/10 · N 8/10). 답 습관에 따른 쏠림은 아래 '보기 순서' 참고
 - 남은 것: 홈(`loadFeed`)은 대표 체형이 있으면 그 이름을 100%로 보낸다(지현 설계). 대표 체형 이름도 서버 진단에서 온 것이라 채점은 하나지만, 혼합형 비율은 홈에 안 쓰인다
 
 ## 5. 정답 테스트 (반드시 통과)
@@ -315,6 +318,7 @@ match_score(body, item) -> {
 - [ ] B 파트 server.py의 상품 저장소는 아직 메모리 (B API를 쓸 때만 해당)
 - [x] A·B·C 통합 (feature/integration): matching_b.py로 B 연결, app.py 통합 서버, /api/feed에 설문 answers 입력, 상품 태그를 B 이름으로, test_integration.py 8개
 - [x] 9단계: 홈 화면 토글 ON(골격 맞춤)/OFF(일반 쇼핑몰) — general_score, mode 인자, 테스트 9개
-- [x] 12단계: 체형 채점을 서버 하나로 (/api/diagnose, 앱 채점 삭제, 치수 이상 시 설문만) — test_api 3개 추가
+- [x] 12단계: 체형 채점을 서버 하나로 (/api/diagnose, 앱 채점 삭제) + 카메라 치수는 진단에 안 씀(설문만) — test_api 3개 추가
+- [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend

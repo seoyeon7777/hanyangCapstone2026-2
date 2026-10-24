@@ -159,3 +159,9 @@ GENERAL_REASON_SEASON = "지금 계절에 입기 좋아요"
 DATABASE_URL_FILE = "database_url.txt"
 DB_ITEMS_CACHE_SECONDS = 60    # DB 상품 목록을 다시 읽는 간격(초). 요청마다 상품 전체를 읽지 않게
 DB_DEMO_USER_NAME = "앱 사용자"  # 앱이 처음 보낸 user_id로 users 행을 만들 때 넣는 이름 (회원가입 전 사용자)
+
+# ── 12단계: 체형 진단 ──
+# 팀 결정(10/24): 카메라 치수는 진단에 섞지 않고 설문만 쓴다.
+# (치수 점수가 내추럴을 거의 못 맞히고 웨이브로 쏠림 — sample.csv 치수만 내추럴 1/10, 기준 구간이 1cm 오차보다 좁음)
+# True로 바꾸면 설문 0.6 + 치수 0.4 (A 파트 classify) — 치수가 이상하면 그때도 설문만
+DIAGNOSIS_USE_MEASUREMENTS = False

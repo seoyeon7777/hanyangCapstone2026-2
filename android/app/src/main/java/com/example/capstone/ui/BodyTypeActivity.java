@@ -394,7 +394,7 @@ public class BodyTypeActivity extends AppCompatActivity {
         RecommendApi.diagnose(
                 this,
                 selectedAnswers.clone(),
-                RecommendApi.cameraMeasurements(this),
+                null,   // 카메라 치수는 진단에 안 쓴다 (팀 결정: 설문만)
                 new RecommendApi.Callback<RecommendApi.Diagnosis>() {
 
                     @Override

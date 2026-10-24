@@ -94,13 +94,13 @@ MEASURES = {"height": 165.0, "shoulder_width": 31.5, "arm_length": 53.1,
 
 
 def test_feed_from_survey_answers():
-    # A(설문 진단) → B(적합도) → C(피드)가 한 번에 이어지는지
+    # A(설문 진단) → B(적합도) → C(피드)가 한 번에 이어지는지. 치수는 보내도 진단에 안 쓴다 (설문만, 팀 결정)
     reset()
     res = client.post("/api/feed", json={"user_id": "a1", "answers": ANSWERS, "measurements": MEASURES})
     assert res.status_code == 200
     data = res.get_json()
     from body_profile import classify
-    expected = classify(ANSWERS, MEASURES)
+    expected = classify(ANSWERS)
     assert data["body"]["primary"] == expected["primary"] == "S"
     assert data["body"]["kind"] == ("mixed" if expected["is_mixed"] else "single")
     assert abs(data["body"]["ratio"]["S"] - expected["ratios"]["S"]) < 1e-9
@@ -118,31 +118,37 @@ def test_feed_from_profile():
 
 
 def test_diagnose_same_as_home_feed():
-    # 앱 설문 결과 화면(/api/diagnose)과 홈 추천(/api/feed)이 같은 계산(A 파트)을 쓴다
+    # 앱 설문 결과 화면(/api/diagnose)과 홈 추천(/api/feed)이 같은 계산(A 파트, 설문만)을 쓴다
     reset()
     from body_profile import classify
-    for measures in (None, MEASURES):
-        body = {"answers": ANSWERS} if measures is None else {"answers": ANSWERS, "measurements": measures}
+    expected = classify(ANSWERS)
+    for body in ({"answers": ANSWERS}, {"answers": ANSWERS, "measurements": MEASURES}):
         d = client.post("/api/diagnose", json=body).get_json()
-        expected = classify(ANSWERS, measures)
         assert d["ok"] and d["primary"] == expected["primary"] and d["is_mixed"] == expected["is_mixed"]
-        assert d["used_measurements"] is (measures is not None) and d["notice"] == ""
+        assert d["ratios"] == expected["ratios"]                       # 치수를 보내도 설문만
+        assert d["used_measurements"] is False and d["notice"] == ""
         feed = client.post("/api/feed", json=body).get_json()
         assert feed["body"]["primary"] == d["primary"]
         assert all(abs(feed["body"]["ratio"][t] - d["ratios"][t]) < 1e-9 for t in "SWN")
 
 
-def test_bad_measurements_fall_back_to_survey():
-    # 사진 인식이 틀려 치수가 범위 밖이거나 빠지면 진단이 실패하지 않고 설문만으로 한다
-    reset()
+def test_measurements_switch_on():
+    # 나중에 치수를 다시 켜면(rec_config) 설문+치수, 치수가 이상하면 그때도 설문만으로
+    import rec_config
     from body_profile import classify
-    survey_only = classify(ANSWERS)
-    for bad in ({**MEASURES, "shoulder_width": 80}, {"height": 165}):
-        d = client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": bad}).get_json()
-        assert d["ok"] and d["used_measurements"] is False and "설문만" in d["notice"]
-        assert d["ratios"] == survey_only["ratios"]
-        res = client.post("/api/feed/scroll", json={"user_id": "m1", "answers": ANSWERS, "measurements": bad})
-        assert res.status_code == 200 and res.get_json()["body"]["primary"] == survey_only["primary"]
+    reset()
+    rec_config.DIAGNOSIS_USE_MEASUREMENTS = True
+    try:
+        d = client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": MEASURES}).get_json()
+        assert d["used_measurements"] is True and d["ratios"] == classify(ANSWERS, MEASURES)["ratios"]
+        for bad in ({**MEASURES, "shoulder_width": 80}, {"height": 165}):
+            d = client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": bad}).get_json()
+            assert d["ok"] and d["used_measurements"] is False and "설문만" in d["notice"]
+            assert d["ratios"] == classify(ANSWERS)["ratios"]
+            res = client.post("/api/feed/scroll", json={"user_id": "m1", "answers": ANSWERS, "measurements": bad})
+            assert res.status_code == 200
+    finally:
+        rec_config.DIAGNOSIS_USE_MEASUREMENTS = False
 
 
 def test_diagnose_bad_input():
