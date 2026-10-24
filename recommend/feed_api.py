@@ -8,6 +8,8 @@ POST /api/feed        체형은 셋 중 하나로 보낸다
                       {"user_id": "u1", "profile": A의 classify() 결과}
                       {"user_id": "u1", "body": {"ratio": {"S":0.6,"W":0.3,"N":0.1}}}
 POST /api/feed/event  {"user_id": "u1", "product_id": "t01", "event": "like"}
+POST /api/diagnose    {"answers": {"q1": 1, ..., "q7": 3}, "measurements": {...} (선택)}  ← 앱 설문 결과 화면용 체형 진단
+                      체형 채점은 서버(A 파트 body_profile.classify) 한 곳에서만 한다. 앱은 결과를 받아 보여 주기만 한다
 GET  /api/feed/scroll?user_id=u1&S=0.6&W=0.3&N=0.1&page=0&size=10   ← 홈 화면 무한 스크롤용
      /api/feed, /api/feed/scroll 둘 다 mode로 홈 화면 토글을 받는다
        mode=body    (기본) 토글 ON: 골격 맞춤 추천 — 체형 필요
@@ -123,10 +125,7 @@ def resolve_request():
             if data.get("measurements") is not None and not isinstance(data["measurements"], dict):
                 raise BadRequest("measurements는 치수 5개를 담은 객체여야 해요")
             answers = data["answers"]
-            try:
-                body = from_profile(classify(answers, data.get("measurements")))
-            except InputError as e:
-                raise BadRequest(str(e))
+            body = from_profile(diagnose(answers, data.get("measurements"))[0])
         elif data.get("profile") is not None:    # 이미 진단한 A 결과
             try:
                 body = make_body(data["profile"]["ratios"])
@@ -167,6 +166,28 @@ def resolve_request():
             STORE.save_body(user_id, body, answers)
         user = STORE.user(user_id)
     return data, user, body, season, mode
+
+
+def diagnose(answers, measurements=None):
+    """A 파트로 체형 진단 → (classify 결과, 치수를 썼는지, 안내 문장).
+
+    치수가 이상하면(사진 인식 실패로 빠지거나 범위 밖) 진단 전체를 실패시키지 않고 설문만으로 진단한다.
+    설문 답이 틀린 경우만 400.
+    """
+    if not isinstance(answers, dict):
+        raise BadRequest('answers는 {"q1": 1, ..., "q7": 3} 모양이어야 해요')
+    if measurements is not None and not isinstance(measurements, dict):
+        raise BadRequest("measurements는 치수 5개를 담은 객체여야 해요")
+    try:
+        survey_only = classify(answers)
+    except InputError as e:
+        raise BadRequest(str(e))
+    if measurements is None:
+        return survey_only, False, ""
+    try:
+        return classify(answers, measurements), True, ""
+    except (InputError, TypeError, ValueError) as e:
+        return survey_only, False, f"치수 값을 쓸 수 없어서 설문만으로 진단했어요 ({e})"
 
 
 def int_arg(data, name, default, low, high):
@@ -212,6 +233,25 @@ def scroll_feed():
         "total": len(ordered),
         "has_more": (page + 1) * size < len(ordered),
         "items": [for_screen(r) for r in chunk],
+    })
+
+
+@feed_bp.route("/api/diagnose", methods=["POST"])
+def post_diagnose():
+    """앱 설문 결과 화면용: 저장하지 않고 진단만 한다 (홈 추천과 같은 계산)."""
+    data = json_body()
+    if data.get("answers") is None:
+        raise BadRequest('answers가 필요해요 ({"q1": 1, ..., "q7": 3})')
+    result, used, notice = diagnose(data["answers"], data.get("measurements"))
+    return jsonify({
+        "ok": True,
+        "primary": result["primary"],
+        "secondary": result["secondary"],
+        "ratios": result["ratios"],
+        "confidence": result["confidence"],
+        "is_mixed": result["is_mixed"],
+        "used_measurements": used,
+        "notice": notice,
     })
 
 

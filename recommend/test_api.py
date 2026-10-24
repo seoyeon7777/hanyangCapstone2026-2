@@ -84,7 +84,7 @@ def test_event_triggers_rediagnosis():
 
 def test_routes_registered():
     rules = {r.rule for r in app.url_map.iter_rules()}
-    assert {"/api/feed", "/api/feed/event", "/api/feed/scroll", "/feed-demo"} <= rules   # C
+    assert {"/api/feed", "/api/feed/event", "/api/feed/scroll", "/api/diagnose", "/feed-demo"} <= rules   # C
     assert {"/api/form", "/api/items", "/api/items/validate", "/api/recommend"} <= rules  # B
 
 
@@ -115,6 +115,42 @@ def test_feed_from_profile():
                "confidence": 0.05, "is_mixed": True}
     data = client.post("/api/feed", json={"profile": profile}).get_json()
     assert data["body"]["kind"] == "mixed" and data["body"]["primary"] == "S"
+
+
+def test_diagnose_same_as_home_feed():
+    # 앱 설문 결과 화면(/api/diagnose)과 홈 추천(/api/feed)이 같은 계산(A 파트)을 쓴다
+    reset()
+    from body_profile import classify
+    for measures in (None, MEASURES):
+        body = {"answers": ANSWERS} if measures is None else {"answers": ANSWERS, "measurements": measures}
+        d = client.post("/api/diagnose", json=body).get_json()
+        expected = classify(ANSWERS, measures)
+        assert d["ok"] and d["primary"] == expected["primary"] and d["is_mixed"] == expected["is_mixed"]
+        assert d["used_measurements"] is (measures is not None) and d["notice"] == ""
+        feed = client.post("/api/feed", json=body).get_json()
+        assert feed["body"]["primary"] == d["primary"]
+        assert all(abs(feed["body"]["ratio"][t] - d["ratios"][t]) < 1e-9 for t in "SWN")
+
+
+def test_bad_measurements_fall_back_to_survey():
+    # 사진 인식이 틀려 치수가 범위 밖이거나 빠지면 진단이 실패하지 않고 설문만으로 한다
+    reset()
+    from body_profile import classify
+    survey_only = classify(ANSWERS)
+    for bad in ({**MEASURES, "shoulder_width": 80}, {"height": 165}):
+        d = client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": bad}).get_json()
+        assert d["ok"] and d["used_measurements"] is False and "설문만" in d["notice"]
+        assert d["ratios"] == survey_only["ratios"]
+        res = client.post("/api/feed/scroll", json={"user_id": "m1", "answers": ANSWERS, "measurements": bad})
+        assert res.status_code == 200 and res.get_json()["body"]["primary"] == survey_only["primary"]
+
+
+def test_diagnose_bad_input():
+    reset()
+    assert client.post("/api/diagnose", json={}).status_code == 400
+    res = client.post("/api/diagnose", json={"answers": {"q1": 1}})
+    assert res.status_code == 400 and "q2" in res.get_json()["error"]
+    assert client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": "abc"}).status_code == 400
 
 
 def test_bad_survey_answers():

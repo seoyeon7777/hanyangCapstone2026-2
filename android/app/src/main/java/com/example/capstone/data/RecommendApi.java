@@ -146,7 +146,7 @@ public final class RecommendApi {
      * height·shoulder_width·arm_length·upper_body_length·leg_length 5개가 모두 있어야 하고,
      * 가슴두께(chest_depth)와 어깨 경사각(shoulder_slope)은 있으면 같이 보낸다. 없으면 null.
      */
-    static JSONObject cameraMeasurements(Context context) {
+    public static JSONObject cameraMeasurements(Context context) {
 
         BodyProfileStore.Profile profile = BodyProfileStore.getActive(context);
 
@@ -370,24 +370,102 @@ public final class RecommendApi {
 
             body.put("answers", answerJson);
             body.put("measurements", measurements);
-            body.put("mode", MODE_BODY);
-            body.put("size", 1);
         } catch (JSONException e) {
             callback.onError(0, "요청을 만들지 못했어요");
             return;
         }
 
-        post("/api/feed/scroll", body, DIAGNOSE_TIMEOUT_MS, new Callback<JSONObject>() {
+        // 설문 결과 화면과 같은 서버 진단 (치수가 이상하면 서버가 설문만으로 진단한다)
+        post("/api/diagnose", body, DIAGNOSE_TIMEOUT_MS, new Callback<JSONObject>() {
             @Override
             public void onSuccess(JSONObject result) {
-                JSONObject resultBody = result.optJSONObject("body");
-                String primary = resultBody == null ? "" : resultBody.optString("primary", "");
+                String primary = result.optString("primary", "");
 
                 if (primary.isEmpty()) {
                     callback.onError(0, "서버 응답을 읽지 못했어요");
                 } else {
                     callback.onSuccess(primary);
                 }
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                callback.onError(code, message);
+            }
+        });
+    }
+
+    // =========================
+    // 설문 결과 화면: 서버 체형 진단
+    // =========================
+
+    /** 서버(A 파트) 체형 진단 결과. 체형 채점은 서버 한 곳에서만 한다 (앱에는 채점 코드 없음) */
+    public static class Diagnosis {
+        public final String primary;   // S / W / N
+        public final float ratioS;
+        public final float ratioW;
+        public final float ratioN;
+        public final boolean mixed;    // 1·2위 차이가 작아 두 체형 특징이 섞임
+        public final String notice;    // 치수를 못 써서 설문만으로 진단했을 때 안내 (없으면 빈 문자열)
+
+        Diagnosis(String primary, float s, float w, float n, boolean mixed, String notice) {
+            this.primary = primary;
+            this.ratioS = s;
+            this.ratioW = w;
+            this.ratioN = n;
+            this.mixed = mixed;
+            this.notice = notice;
+        }
+    }
+
+    /**
+     * POST /api/diagnose — 설문 답(+ 있으면 카메라 치수)으로 체형을 진단한다. 서버에 저장하지는 않는다.
+     * 홈 추천(/api/feed/scroll)과 같은 계산이라 결과 화면과 추천 체형이 어긋나지 않는다.
+     */
+    public static void diagnose(
+            Context context,
+            int[] answers,
+            JSONObject measurements,
+            Callback<Diagnosis> callback
+    ) {
+        JSONObject body = new JSONObject();
+
+        try {
+            JSONObject answerJson = new JSONObject();
+
+            for (int i = 0; i < answers.length; i++) {
+                answerJson.put("q" + (i + 1), answers[i]);
+            }
+
+            body.put("answers", answerJson);
+
+            if (measurements != null) {
+                body.put("measurements", measurements);
+            }
+        } catch (JSONException e) {
+            callback.onError(0, "요청을 만들지 못했어요");
+            return;
+        }
+
+        post("/api/diagnose", body, new Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                JSONObject ratios = result.optJSONObject("ratios");
+                String primary = result.optString("primary", "");
+
+                if (ratios == null || primary.isEmpty()) {
+                    callback.onError(0, "서버 응답을 읽지 못했어요");
+                    return;
+                }
+
+                callback.onSuccess(new Diagnosis(
+                        primary,
+                        (float) ratios.optDouble("S", 0),
+                        (float) ratios.optDouble("W", 0),
+                        (float) ratios.optDouble("N", 0),
+                        result.optBoolean("is_mixed", false),
+                        result.optString("notice", "")
+                ));
             }
 
             @Override
