@@ -166,7 +166,10 @@ def resolve_request():
             STORE.ensure_user(user_id)
         if from_request:  # 이번 요청에서 진단·입력한 체형만 저장 (저장된 체형을 다시 쓸 때는 그대로)
             STORE.save_body(user_id, body, answers)
-        user = STORE.user(user_id)
+        if user is None:
+            user = {"body": body if from_request else None, "pref": {}, "history": []}
+        elif from_request:
+            user = {**user, "body": body}
     return data, user, body, season, mode
 
 
