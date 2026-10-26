@@ -94,18 +94,6 @@ public final class RecommendApi {
         }
     }
 
-    // =========================
-    // 홈 피드 체형 (대표 체형 / 최근 설문)
-    // =========================
-
-    /** 내 체형관리의 대표 체형 → S / W / N. 대표 체형이 없거나 골격 체형이 아니면 null */
-    public static String activeBodyType(Context context) {
-
-        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
-
-        return active == null ? null : typeCode(active.bodyType);
-    }
-
     private static String typeCode(String label) {
 
         if (label == null) {
@@ -124,70 +112,64 @@ public final class RecommendApi {
         }
     }
 
-    /** 골격 맞춤 추천에 쓸 체형 정보가 있는지 (대표 체형 또는 설문) */
-    public static boolean hasBodyInput(Context context) {
+    private static JSONObject bodyInput(Context context) throws JSONException {
 
-        return activeBodyType(context) != null
-                || BodyTypeActivity.lastSurveyAnswers(context) != null;
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
+
+        if (active != null) {
+
+            if (active.surveyAnswers != null) {
+                JSONObject input = new JSONObject();
+                input.put("answers", answersJson(active.surveyAnswers));
+                return input;
+            }
+
+            String activeType = typeCode(active.bodyType);
+
+            if (activeType != null) {
+                JSONObject ratio = new JSONObject();
+                ratio.put(activeType, 1.0);
+
+                JSONObject bodyJson = new JSONObject();
+                bodyJson.put("ratio", ratio);
+
+                JSONObject input = new JSONObject();
+                input.put("body", bodyJson);
+                return input;
+            }
+        }
+
+        int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
+
+        if (answers == null) {
+            return null;
+        }
+
+        JSONObject input = new JSONObject();
+        input.put("answers", answersJson(answers));
+        return input;
     }
 
-    /** 홈이 체형이 바뀌었는지 알아챌 때 쓰는 값 (설문 시각 + 대표 체형) */
+    public static boolean hasBodyInput(Context context) {
+
+        try {
+            return bodyInput(context) != null;
+        } catch (JSONException e) {
+            return false;
+        }
+    }
+
     public static String bodyInputKey(Context context) {
 
-        return BodyTypeActivity.lastSurveyTime(context) + "/" + activeBodyType(context);
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
+
+        return BodyTypeActivity.lastSurveyTime(context)
+                + "/" + (active == null ? "" : active.id + "@" + active.savedAt);
     }
 
     // =========================
     // 홈 피드 (무한 스크롤)
     // =========================
-
-    /**
-     * 대표 체형(BodyProfileStore)에서 서버 A 파트가 받는 치수(cm)를 꺼낸다.
-     * height·shoulder_width·arm_length·upper_body_length·leg_length 5개가 모두 있어야 하고,
-     * 가슴두께(chest_depth)와 어깨 경사각(shoulder_slope)은 있으면 같이 보낸다. 없으면 null.
-     */
-    static JSONObject cameraMeasurements(Context context) {
-
-        BodyProfileStore.Profile profile = BodyProfileStore.getActive(context);
-
-        if (profile == null) {
-            return null;
-        }
-
-        float shoulder = profile.part("SHOULDER");
-        float arm = profile.part("ARM_LENGTH");
-        float torso = profile.part("BACK_LENGTH");
-        float leg = profile.part("LEG_LENGTH");
-
-        if (profile.heightCm <= 0f || shoulder <= 0f || arm <= 0f || torso <= 0f || leg <= 0f) {
-            return null;
-        }
-
-        try {
-            JSONObject m = new JSONObject();
-            m.put("height", profile.heightCm);
-            m.put("shoulder_width", shoulder);
-            m.put("arm_length", arm);
-            m.put("upper_body_length", torso);
-            m.put("leg_length", leg);
-
-            float chestDepth = profile.part("CHEST_DEPTH");
-            float slope = profile.part("SHOULDER_SLOPE");
-
-            if (chestDepth > 0f) {
-                m.put("chest_depth", chestDepth);
-            }
-
-            if (slope > 0f) {
-                m.put("shoulder_slope", slope);
-            }
-
-            return m;
-
-        } catch (JSONException e) {
-            return null;
-        }
-    }
 
     public static void loadFeed(
             Context context,
@@ -203,39 +185,13 @@ public final class RecommendApi {
             body.put("page", page);
             body.put("size", PAGE_SIZE);
 
-            // 설문 답을 매번 같이 보낸다.
-            // 서버는 기록을 메모리에만 두므로, 서버를 다시 켜도 체형을 바로 다시 진단할 수 있다.
-            // 단, 내 체형관리에 대표 체형이 있으면 항상 대표 체형을 따른다.
-            // (앱 설문 점수와 서버(A 파트) 진단은 계산법이 달라서, 같은 답이라도 결과가 다를 수 있다)
-            int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
-            String activeType = activeBodyType(context);
+            JSONObject input = bodyInput(context);
 
-            if (activeType != null) {
-
-                JSONObject ratio = new JSONObject();
-                ratio.put(activeType, 1.0);
-
-                JSONObject bodyJson = new JSONObject();
-                bodyJson.put("ratio", ratio);
-
-                body.put("body", bodyJson);
-
-            } else if (answers != null) {
-                JSONObject answerJson = new JSONObject();
-
-                for (int i = 0; i < answers.length; i++) {
-                    answerJson.put("q" + (i + 1), answers[i]);
-                }
-
-                body.put("answers", answerJson);
-
-                // 저장해 둔 대표 체형의 카메라 치수도 같이 보낸다 (설문을 잘 모르는 사용자의 보조 근거).
-                // 필수 치수 5개가 모두 있을 때만 보내고, 서버가 이상한 값이면 설문만으로 진단한다.
-                // (서버는 치수를 설문 답과 함께 올 때만 쓴다)
-                JSONObject measurements = cameraMeasurements(context);
-
-                if (measurements != null) {
-                    body.put("measurements", measurements);
+            if (input != null) {
+                Iterator<String> keys = input.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    body.put(key, input.get(key));
                 }
             }
         } catch (JSONException e) {
@@ -336,40 +292,23 @@ public final class RecommendApi {
         }
     }
 
-    public static void finalBodyType(
-            Context context,
-            float heightCm,
-            float shoulderCm,
-            float armCm,
-            float upperBodyCm,
-            float legCm,
-            Callback<String> callback
-    ) {
-        int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
+    private static JSONObject answersJson(int[] answers) throws JSONException {
 
-        if (answers == null) {
-            callback.onError(0, "설문 기록이 없어요");
-            return;
+        JSONObject answerJson = new JSONObject();
+
+        for (int i = 0; i < answers.length; i++) {
+            answerJson.put("q" + (i + 1), answers[i]);
         }
+
+        return answerJson;
+    }
+
+    public static void diagnoseSurvey(int[] answers, Callback<String> callback) {
 
         JSONObject body = new JSONObject();
 
         try {
-            JSONObject answerJson = new JSONObject();
-
-            for (int i = 0; i < answers.length; i++) {
-                answerJson.put("q" + (i + 1), answers[i]);
-            }
-
-            JSONObject measurements = new JSONObject();
-            measurements.put("height", heightCm);
-            measurements.put("shoulder_width", shoulderCm);
-            measurements.put("arm_length", armCm);
-            measurements.put("upper_body_length", upperBodyCm);
-            measurements.put("leg_length", legCm);
-
-            body.put("answers", answerJson);
-            body.put("measurements", measurements);
+            body.put("answers", answersJson(answers));
             body.put("mode", MODE_BODY);
             body.put("size", 1);
         } catch (JSONException e) {

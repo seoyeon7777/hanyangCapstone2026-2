@@ -53,6 +53,7 @@ public final class BodyProfileStore {
         public float bodyFat;
         public String bodyType;
         public JSONObject parts;
+        public int[] surveyAnswers;
 
         public float part(String key) {
             return parts == null ? -1f : (float) parts.optDouble(key, -1d);
@@ -73,6 +74,13 @@ public final class BodyProfileStore {
             j.put("bodyFat", bodyFat);
             j.put("bodyType", bodyType);
             j.put("parts", parts == null ? new JSONObject() : parts);
+            if (surveyAnswers != null) {
+                JSONArray answers = new JSONArray();
+                for (int answer : surveyAnswers) {
+                    answers.put(answer);
+                }
+                j.put("surveyAnswers", answers);
+            }
             return j;
         }
 
@@ -88,7 +96,22 @@ public final class BodyProfileStore {
             if (p.parts == null) {
                 p.parts = new JSONObject();
             }
+            p.surveyAnswers = readAnswers(j.optJSONArray("surveyAnswers"));
             return p;
+        }
+
+        private static int[] readAnswers(JSONArray array) {
+            if (array == null || array.length() != 7) {
+                return null;
+            }
+            int[] answers = new int[7];
+            for (int i = 0; i < 7; i++) {
+                answers[i] = array.optInt(i, 0);
+                if (answers[i] < 1 || answers[i] > 3) {
+                    return null;
+                }
+            }
+            return answers;
         }
     }
 
@@ -179,7 +202,8 @@ public final class BodyProfileStore {
     }
 
     public static Profile save(Context context, String editId, String name, float heightCm,
-                               float bodyFat, String bodyType, JSONObject parts) {
+                               float bodyFat, String bodyType, JSONObject parts,
+                               int[] surveyAnswers) {
         List<Profile> list = getProfiles(context);
         Profile target = null;
         if (editId != null) {
@@ -202,6 +226,7 @@ public final class BodyProfileStore {
         target.bodyFat = bodyFat;
         target.bodyType = bodyType;
         target.parts = parts;
+        target.surveyAnswers = surveyAnswers;
         writeProfiles(context, list);
         // 새로 측정한 체형만 자동으로 대표 지정 (기존 체형 수정 시에는 대표 유지)
         // 대표 체형이 하나도 없으면 설정과 상관없이 대표로 지정

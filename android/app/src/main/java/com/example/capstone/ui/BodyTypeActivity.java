@@ -17,6 +17,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.data.RecommendApi;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
@@ -56,6 +57,7 @@ public class BodyTypeActivity extends AppCompatActivity {
 
     // 각 질문에서 선택한 답
     private final int[] selectedAnswers = new int[7];
+    private boolean resultRequested;
 
     /*
      * 각 질문의 답변이 어떤 체형에 해당하는지 설정
@@ -498,10 +500,54 @@ public class BodyTypeActivity extends AppCompatActivity {
 
     private void showResult() {
 
-        int[] scores = calculateScores();
+        if (resultRequested) {
+            return;
+        }
 
-        int resultType =
-                decideBodyType(scores);
+        resultRequested = true;
+
+        int[] scores = calculateScores();
+        int appType = decideBodyType(scores);
+
+        next.setEnabled(false);
+        prev.setEnabled(false);
+        next.setText("결과 계산 중…");
+
+        RecommendApi.diagnoseSurvey(
+                selectedAnswers.clone(),
+                new RecommendApi.Callback<String>() {
+                    @Override
+                    public void onSuccess(String primary) {
+                        openResult(typeIndex(primary, appType), scores);
+                    }
+
+                    @Override
+                    public void onError(int code, String message) {
+                        openResult(appType, scores);
+                    }
+                }
+        );
+    }
+
+    private static int typeIndex(String primary, int fallback) {
+
+        switch (primary) {
+            case "S":
+                return TYPE_STRAIGHT;
+            case "W":
+                return TYPE_WAVE;
+            case "N":
+                return TYPE_NATURAL;
+            default:
+                return fallback;
+        }
+    }
+
+    private void openResult(int resultType, int[] scores) {
+
+        if (isFinishing() || isDestroyed()) {
+            return;
+        }
 
         saveLastSurvey(resultType);
 
