@@ -8,28 +8,14 @@
 </head>
 <body>
 
-<!-- 1. 키 입력 -->
+<!-- 1. 키 입력 + 사진 올리기 -->
 <section id="screen-setup" class="screen">
   <h1>신체 치수 측정</h1>
-  <p class="sub">아이폰 테스트용 웹 버전입니다. 정면·측면 사진을 자동으로 찍어 치수를 추정해요.</p>
+  <p class="sub">정면·옆면 전신 사진을 올리면 신체 치수를 추정해요. 사진은 서버로 보내지 않고 이 기기 안에서만 분석해요.</p>
+
   <label for="height">키 (cm)</label>
   <input id="height" type="number" inputmode="decimal" min="100" max="220" step="0.1" value="160">
-  <button id="btn-start" class="primary" disabled>모델 불러오는 중…</button>
-  <button id="btn-album" class="secondary" disabled>앨범에서 사진 불러오기</button>
-  <p id="setup-msg" class="msg"></p>
-  <ul class="tips">
-    <li>폰을 똑바로 세워 두고(수평계가 초록이 되게), 머리 끝과 발끝이 화면의 가이드선에 오도록 서세요.</li>
-    <li>전신이 화면에 다 보이도록 2~3m 떨어져 서세요.</li>
-    <li>팔은 몸에서 조금 띄우고, 몸에 붙는 옷을 입으세요. 헐렁하거나 어두운 옷은 정확도가 떨어져요.</li>
-    <li>몸에 붙는 옷, 단색 배경이 가장 정확해요.</li>
-    <li>카메라는 HTTPS 주소(또는 localhost)에서만 켜져요.</li>
-  </ul>
-</section>
 
-<!-- 1-2. 앨범 사진 선택 (앱의 PhotoMeasurementActivity) -->
-<section id="screen-album" class="screen hidden">
-  <h1>앨범에서 측정</h1>
-  <p id="album-height" class="sub"></p>
   <div class="photos album-slots">
     <figure>
       <label class="slot" for="file-front"><img id="album-front-img" class="hidden" alt="정면"><span id="album-front-ph">정면 사진 선택</span></label>
@@ -42,49 +28,36 @@
   </div>
   <input id="file-front" type="file" accept="image/*" class="hidden">
   <input id="file-side" type="file" accept="image/*" class="hidden">
+
   <p id="album-status" class="msg">정면과 옆면 사진을 모두 선택해주세요.</p>
   <button id="btn-album-analyze" class="primary" disabled>분석하기</button>
-  <button id="btn-album-back" class="secondary">돌아가기</button>
-</section>
+  <p id="setup-msg" class="msg"></p>
 
-<!-- 2. 카메라 -->
-<section id="screen-camera" class="screen hidden">
-  <video id="video" playsinline muted autoplay></video>
-  <canvas id="overlay"></canvas>
-  <div id="top-height" class="label top"></div>
-  <div id="status" class="label status"></div>
-  <div class="bottom-bar">
-    <button id="btn-close" class="pill">닫기</button>
-    <button id="btn-switch" class="pill">↻ 전환</button>
-  </div>
+  <h3>사진 찍는 방법 (정확도에 큰 영향을 줘요)</h3>
+  <ul class="tips">
+    <li>머리부터 발끝까지 <b>전신</b>이 나오게, 몸이 사진 높이의 70% 이상이 되도록 2~3m 거리에서 찍어요.</li>
+    <li>폰을 <b>세로로 똑바로</b> 세우고, 카메라는 가슴 높이쯤에 두세요. 위나 아래로 기울이지 마세요.</li>
+    <li><b>정면</b>: 팔을 몸에서 조금(약 30°) 띄우고 똑바로 서요.</li>
+    <li><b>옆면</b>: 오른쪽을 보고 서서 팔은 몸 옆에 내려요.</li>
+    <li><b>몸에 붙는 옷</b>을 입고, 단색 배경에서 밝은 곳에서 찍으세요. 헐렁하거나 어두운 옷은 실제보다 크게(특히 허리) 나와요.</li>
+    <li>정면과 옆면은 <b>같은 거리·같은 높이</b>에서 찍으면 더 정확해요.</li>
+  </ul>
 </section>
-
-<!-- 사진 확인 / 안내 모달 -->
-<div id="modal" class="modal hidden">
-  <div class="modal-box">
-    <h2 id="modal-title"></h2>
-    <p id="modal-text"></p>
-    <img id="modal-img" alt="">
-    <div class="modal-actions">
-      <button id="modal-no" class="pill"></button>
-      <button id="modal-yes" class="primary"></button>
-    </div>
-  </div>
-</div>
 
 <!-- 분석 중 -->
 <div id="busy" class="modal hidden"><div class="modal-box"><p id="busy-text">분석 중…</p></div></div>
 
-<!-- 3. 결과 -->
+<!-- 2. 결과 -->
 <section id="screen-result" class="screen hidden">
   <h1>신체 측정 결과</h1>
   <p class="sub">정면·옆면 사진을 분석하여 추정한 신체 치수입니다.</p>
   <p class="notice">ⓘ 사진 기반 추정값이라 실제 치수와 차이가 있을 수 있어요.</p>
+  <ul id="warnings" class="warnings hidden"></ul>
 
   <h3>기본 신체 정보</h3>
   <div id="basic" class="grid"></div>
 
-  <h3>촬영 사진</h3>
+  <h3>올린 사진</h3>
   <div class="photos"><figure><img id="img-front" alt="정면"><figcaption>정면</figcaption></figure>
   <figure><img id="img-side" alt="옆면"><figcaption>옆면</figcaption></figure></div>
 

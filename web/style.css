@@ -19,6 +19,8 @@ button { font:inherit; border:0; cursor:pointer; }
 .primary:disabled { opacity:.5; }
 .pill { padding:12px 22px; border-radius:999px; background:#fff; color:#111; font-weight:700; font-size:16px; }
 .tips { padding-left:18px; line-height:1.7; }
+.tips b { color:var(--fg); }
+.warnings { margin:10px 0; padding:10px 12px 10px 28px; border-radius:10px; background:rgba(255,212,0,.12); border:1px solid rgba(255,212,0,.45); color:var(--fg); font-size:13px; line-height:1.6; }
 
 #screen-camera { position:fixed; inset:0; padding:0; max-width:none; background:#000; }
 #video, #overlay { position:absolute; inset:0; width:100%; height:100%; }
