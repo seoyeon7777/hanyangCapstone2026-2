@@ -3,13 +3,16 @@ package com.example.capstone.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.R;
 import com.example.capstone.data.Product;
+import com.example.capstone.ui.ProductOptionSheet;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -58,6 +61,40 @@ public class CartAdapter
     ) {
 
         Product product = cartList.get(position);
+
+        holder.cbSelect.setChecked(product.isCartSelected());
+
+        holder.cbSelect.setOnClickListener(v -> {
+
+            product.setCartSelected(holder.cbSelect.isChecked());
+            notifyCartChanged();
+        });
+
+        holder.btnChangeOption.setOnClickListener(v ->
+                ProductOptionSheet.show(
+                        v.getContext(),
+                        product,
+                        product.getSelectedSize(),
+                        product.getSelectedColor(),
+                        product.getCartQuantity(),
+                        "옵션 변경",
+                        (size, color, quantity) -> {
+
+                            product.setSelectedSize(size);
+                            product.setSelectedColor(color);
+                            product.setCartQuantity(quantity);
+
+                            Toast.makeText(
+                                    v.getContext(),
+                                    "옵션을 " + size + " / " + color
+                                            + " / " + quantity + "개로 변경했습니다.",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            notifyCartChanged();
+                        }
+                )
+        );
 
         // 브랜드명
         holder.textBrand.setText(
@@ -155,6 +192,7 @@ public class CartAdapter
 
             currentProduct.setInCart(false);
             currentProduct.setCartQuantity(1);
+            currentProduct.setCartSelected(true);
 
             cartList.remove(currentPosition);
 
@@ -207,12 +245,22 @@ public class CartAdapter
         TextView textQuantity;
         TextView btnPlus;
         TextView btnDelete;
+        TextView btnChangeOption;
+        CheckBox cbSelect;
 
         public CartViewHolder(
                 @NonNull View itemView
         ) {
 
             super(itemView);
+
+            cbSelect = itemView.findViewById(
+                    R.id.cbCartSelect
+            );
+
+            btnChangeOption = itemView.findViewById(
+                    R.id.btnChangeOption
+            );
 
             textBrand = itemView.findViewById(
                     R.id.textCartBrand

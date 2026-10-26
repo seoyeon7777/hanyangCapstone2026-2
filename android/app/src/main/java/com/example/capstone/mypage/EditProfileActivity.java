@@ -162,8 +162,10 @@ public class EditProfileActivity extends AppCompatActivity {
                         toast("이름은 20자 이하로 입력해주세요.");
                         return false;
                     }
-                    saveProfile(name, user.email, user.phone);
-                    toast("이름이 변경되었습니다.");
+                    confirmChange("이름 변경", user.name, name, () -> {
+                        saveProfile(name, user.email, user.phone);
+                        toast("이름이 변경되었습니다.");
+                    });
                     return true;
                 });
     }
@@ -181,8 +183,10 @@ public class EditProfileActivity extends AppCompatActivity {
                         return false;
                     }
                     // [여기에 DB 입력] 다른 회원이 쓰는 이메일인지 중복 확인 + 이메일 인증 후 저장 (users)
-                    saveProfile(user.name, email, user.phone);
-                    toast("이메일이 변경되었습니다.");
+                    confirmChange("이메일 변경", user.email, email, () -> {
+                        saveProfile(user.name, email, user.phone);
+                        toast("이메일이 변경되었습니다.");
+                    });
                     return true;
                 });
     }
@@ -199,10 +203,22 @@ public class EditProfileActivity extends AppCompatActivity {
                         return false;
                     }
                     // [여기에 DB 입력] 실제 서비스에서는 바꾼 번호로 본인 인증(문자 인증) 후 저장
-                    saveProfile(user.name, user.email, phone);
-                    toast("휴대폰 번호가 변경되었습니다.");
+                    confirmChange("휴대폰 번호 변경", user.phone, phone, () -> {
+                        saveProfile(user.name, user.email, phone);
+                        toast("휴대폰 번호가 변경되었습니다.");
+                    });
                     return true;
                 });
+    }
+
+    private void confirmChange(String title, String before, String after, Runnable onConfirm) {
+        if (after.equals(before)) {
+            return;
+        }
+        AppDialog.show(this, false, title,
+                "'" + after + "'(으)로 변경하시겠습니까?",
+                "취소", null,
+                "변경", onConfirm);
     }
 
     private void saveProfile(String name, String email, String phone) {
