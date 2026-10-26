@@ -5,6 +5,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -87,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
     private String selectedBodyType = "";
 
     private static final int LOAD_MORE_DISTANCE_DP = 600;
+    private static final long HOME_RETRY_DELAY_MS = 3000L;
 
     private SwitchCompat switchBodyMode;
     private TextView textHomeRecTitle;
@@ -97,6 +99,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean homeHasMore = true;
     private boolean homeLoading = false;
     private int homeRequestId = 0;
+    private long homeRetryAt = 0L;
+    private boolean homeErrorShown = false;
     // 홈을 불러올 때의 체형 정보 (설문 시각 + 대표 체형). 바뀌면 다시 불러온다
     private String loadedBodyKey = "";
 
@@ -428,6 +432,8 @@ public class MainActivity extends AppCompatActivity {
         homePage = 0;
         homeHasMore = true;
         homeLoading = false;
+        homeRetryAt = 0L;
+        homeErrorShown = false;
 
         loadedBodyKey = RecommendApi.bodyInputKey(this);
 
@@ -446,7 +452,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (homeLoading
                 || !homeHasMore
-                || !"홈".equals(selectedMenu)) {
+                || !"홈".equals(selectedMenu)
+                || SystemClock.uptimeMillis() < homeRetryAt) {
             return;
         }
 
@@ -471,6 +478,7 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         homeLoading = false;
+                        homeErrorShown = false;
 
                         int start = homeProducts.size();
                         homeProducts.addAll(page.items);
@@ -503,6 +511,27 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         homeLoading = false;
+
+                        boolean retryable = code == 0 || code >= 500;
+
+                        if (!homeProducts.isEmpty() && retryable) {
+
+                            homeRetryAt = SystemClock.uptimeMillis() + HOME_RETRY_DELAY_MS;
+
+                            if (homeErrorShown) {
+                                return;
+                            }
+
+                            homeErrorShown = true;
+
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    message,
+                                    Toast.LENGTH_LONG
+                            ).show();
+                            return;
+                        }
+
                         homeHasMore = false;
 
                         if (code == 400 && bodyMode) {
