@@ -218,6 +218,18 @@ def test_bad_inputs_return_json_400_not_500():
         assert data["ok"] is False and data["error"], (url, payload)
 
 
+def test_nan_ratio_is_400():
+    reset()
+    for ratio in ({"S": float("nan"), "W": 0.3, "N": 0.1}, {"S": "nan"}, {"S": float("inf")}):
+        res = client.post("/api/feed/scroll", json={"user_id": "n1", "body": {"ratio": ratio}})
+        assert res.status_code == 400, ratio
+        assert res.get_json()["ok"] is False
+        user = feed_api.STORE.user("n1")
+        assert user is None or user["body"] is None, ratio
+    res = client.get("/api/feed?S=nan&W=0.5")
+    assert res.status_code == 400
+
+
 def test_errors_are_json_everywhere():
     res = client.get("/api/없는주소")
     assert res.status_code == 404 and res.get_json()["ok"] is False

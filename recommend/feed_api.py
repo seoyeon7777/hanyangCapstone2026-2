@@ -17,6 +17,7 @@ GET  /feed-demo       연습용 스크롤 화면 (친구들 홈 화면이 오기
 상품·사용자 기록은 store.py가 맡는다: DB 주소(DATABASE_URL 또는 database_url.txt)가 있으면 PostgreSQL(Supabase),
 없으면 items.json + 서버 메모리(서버를 끄면 사라짐 — 시연용).
 """
+import math
 from datetime import date
 
 from flask import Blueprint, current_app, jsonify, render_template, request
@@ -50,6 +51,8 @@ def make_body(ratio):
     try:
         ratio = {t: float(ratio.get(t, 0)) for t in ("S", "W", "N")}
     except (TypeError, ValueError, AttributeError):
+        raise BadRequest("ratio는 S, W, N 숫자여야 해요")
+    if not all(math.isfinite(v) for v in ratio.values()):
         raise BadRequest("ratio는 S, W, N 숫자여야 해요")
     total = sum(ratio.values())
     if total <= 0 or any(v < 0 for v in ratio.values()):
