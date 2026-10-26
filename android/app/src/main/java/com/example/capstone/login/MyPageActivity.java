@@ -12,6 +12,7 @@ import com.example.capstone.mypage.MyReviewActivity;
 import com.example.capstone.mypage.NoticeActivity;
 import com.example.capstone.mypage.OrderListActivity;
 import com.example.capstone.ui.AppDialog;
+import com.example.capstone.ui.BottomMenu;
 import com.example.capstone.mypage.PaymentMethodActivity;
 import com.example.capstone.mypage.RefundAccountActivity;
 
@@ -52,6 +53,8 @@ public class MyPageActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_mypage);
+
+        BottomMenu.setup(this, BottomMenu.TAB_MY);
 
         initViews();
 

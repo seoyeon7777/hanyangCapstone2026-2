@@ -408,4 +408,6 @@
 
     </ScrollView>
 
+    <include layout="@layout/view_bottom_menu" />
+
 </LinearLayout>
