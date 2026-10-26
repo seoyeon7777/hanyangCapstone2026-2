@@ -132,18 +132,6 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <Button
-                android:id="@+id/btnDemoSamples"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="10dp"
-                android:backgroundTint="#EEEEEE"
-                android:text="개발용 · 데모 체형 (설문 건너뛰기)"
-                android:textAllCaps="false"
-                android:textColor="#333333"
-                android:textSize="14sp"
-                android:visibility="gone" />
-
             <!-- ============================= -->
             <!-- 분석 과정 안내 -->
             <!-- ============================= -->

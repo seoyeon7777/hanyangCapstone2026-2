@@ -30,6 +30,9 @@ public final class BodyProfileStore {
 
     public static final int KEY_PART_COUNT = 6;
 
+    public static final String PART_CHEST_DEPTH = "CHEST_DEPTH";
+    public static final String PART_SHOULDER_SLOPE = "SHOULDER_SLOPE";
+
     public static final String SETTING_SIZE_WARNING = "size_warning";
     /** 체형 측정 전 장바구니/주문 시 "아직 체형 측정을 하지 않았습니다" 팝업 */
     public static final String SETTING_MEASURE_NOTICE = "measure_notice";

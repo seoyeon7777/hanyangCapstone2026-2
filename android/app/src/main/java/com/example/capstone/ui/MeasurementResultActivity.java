@@ -426,9 +426,9 @@ public class MeasurementResultActivity extends AppCompatActivity {
         putPart(parts, "CALF", calf);
 
         // 골격 진단 보조 값 (가슴두께 cm, 어깨 경사각 도). 대표 체형이 되면 추천 서버로 간다
-        putPart(parts, BodyEditActivity.PART_CHEST_DEPTH,
+        putPart(parts, BodyProfileStore.PART_CHEST_DEPTH,
                 getIntent().getFloatExtra("CHEST_DEPTH", -1f));
-        putPart(parts, BodyEditActivity.PART_SHOULDER_SLOPE,
+        putPart(parts, BodyProfileStore.PART_SHOULDER_SLOPE,
                 getIntent().getFloatExtra("SHOULDER_SLOPE_DEG", -1f));
 
         final float[] typeMeasures = {

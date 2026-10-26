@@ -28,16 +28,12 @@
         <activity
             android:name=".ui.FittingActivity"
             android:windowSoftInputMode="adjustResize" />
-        <activity
-            android:name=".ui.BodyEditActivity"
-            android:exported="true" />
         <activity android:name=".ui.BodyTypeActivity" />
         <activity android:name=".ui.BodyTypeResultActivity" />
         <activity android:name=".ui.BodyMeasurementActivity" />
         <activity android:name=".ui.PhotoMeasurementActivity" />
         <activity android:name=".ui.MeasurementAdjustActivity" />
         <activity android:name=".ui.MeasurementResultActivity" />
-        <activity android:name=".ui.DemoSampleActivity" />
         <activity android:name=".ui.ProductDetailActivity" />
         <activity android:name=".login.LoginMainActivity" />
         <activity android:name=".login.LoginPhoneActivity" />
