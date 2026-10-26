@@ -1,6 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}
+val recommendBaseUrl: String =
+    localProperties.getProperty("recommend.baseUrl", "http://10.0.2.2:5000").trim()
 
 android {
     namespace = "com.example.capstone"
@@ -14,6 +25,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "RECOMMEND_BASE_URL", "\"$recommendBaseUrl\"")
     }
 
     buildTypes {

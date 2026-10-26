@@ -184,7 +184,7 @@ match_score(body, item) -> {
 - `/feed-demo`에 토글 스위치
 
 ### 4-10. 안드로이드 앱 홈 연결 (10단계)
-- `android/app/src/main/java/com/example/capstone/data/RecommendApi.java`: `BASE_URL`(에뮬레이터 `http://10.0.2.2:5000`, 폰은 PC IP), `loadFeed(context, mode, page, callback)` → `POST /api/feed/scroll`, `sendEvent(context, product, event)` → `POST /api/feed/event`
+- `android/app/src/main/java/com/example/capstone/data/RecommendApi.java`: `BASE_URL`(= `BuildConfig.RECOMMEND_BASE_URL`. `android/local.properties`의 `recommend.baseUrl`, 없으면 에뮬레이터 `http://10.0.2.2:5000`. 폰은 PC IP를 넣고 다시 빌드), `loadFeed(context, mode, page, callback)` → `POST /api/feed/scroll`, `sendEvent(context, product, event)` → `POST /api/feed/event`
   - 외부 라이브러리 없이 `HttpURLConnection` + `org.json`. 백그라운드 스레드에서 보내고 결과는 메인 스레드
   - user_id = 기기마다 만든 `app-<UUID>` (SharedPreferences "recommend")
   - 설문 답(`BodyTypeActivity.lastSurveyAnswers`)을 매 요청에 `answers`로 같이 보냄 → 서버를 다시 켜도 진단이 바로 됨

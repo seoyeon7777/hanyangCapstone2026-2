@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import com.example.capstone.BuildConfig;
 import com.example.capstone.ui.BodyTypeActivity;
 
 import org.json.JSONArray;
@@ -41,9 +42,7 @@ import java.util.concurrent.Executors;
  */
 public final class RecommendApi {
 
-    // 에뮬레이터에서는 10.0.2.2가 PC를 가리킨다.
-    // 실제 휴대폰이면 서버 화면에 찍힌 PC IP로 바꾼다. 예) "http://192.168.0.12:5000"
-    public static final String BASE_URL = "http://10.0.2.2:5000";
+    public static final String BASE_URL = BuildConfig.RECOMMEND_BASE_URL;
 
     public static final String MODE_BODY = "body";        // 토글 ON: 골격 맞춤 추천
     public static final String MODE_GENERAL = "general";  // 토글 OFF: 일반 추천
