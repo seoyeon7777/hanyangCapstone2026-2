@@ -18,7 +18,9 @@
   <button id="btn-album" class="secondary" disabled>앨범에서 사진 불러오기</button>
   <p id="setup-msg" class="msg"></p>
   <ul class="tips">
+    <li>폰을 똑바로 세워 두고(수평계가 초록이 되게), 머리 끝과 발끝이 화면의 가이드선에 오도록 서세요.</li>
     <li>전신이 화면에 다 보이도록 2~3m 떨어져 서세요.</li>
+    <li>팔은 몸에서 조금 띄우고, 몸에 붙는 옷을 입으세요. 헐렁하거나 어두운 옷은 정확도가 떨어져요.</li>
     <li>몸에 붙는 옷, 단색 배경이 가장 정확해요.</li>
     <li>카메라는 HTTPS 주소(또는 localhost)에서만 켜져요.</li>
   </ul>
@@ -85,6 +87,11 @@
   <h3>촬영 사진</h3>
   <div class="photos"><figure><img id="img-front" alt="정면"><figcaption>정면</figcaption></figure>
   <figure><img id="img-side" alt="옆면"><figcaption>옆면</figcaption></figure></div>
+
+  <h3>윤곽·측정 위치 (확인용)</h3>
+  <p class="sub">초록이 몸으로 인식한 부분, 선이 측정한 높이(노랑 가슴·빨강 허리·파랑 골반)예요. 팔이 초록에 섞여 있으면 알려주세요.</p>
+  <div class="photos"><figure><img id="dbg-front" alt="정면 윤곽"></figure>
+  <figure><img id="dbg-side" alt="옆면 윤곽"></figure></div>
 
   <h3>신체 둘레 (추정)</h3>
   <div id="circ" class="grid"></div>
