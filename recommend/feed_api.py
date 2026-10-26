@@ -8,6 +8,7 @@ POST /api/feed        체형은 셋 중 하나로 보낸다
                       {"user_id": "u1", "profile": A의 classify() 결과}
                       {"user_id": "u1", "body": {"ratio": {"S":0.6,"W":0.3,"N":0.1}}}
 POST /api/feed/event  {"user_id": "u1", "product_id": "t01", "event": "like"}
+                      event: click | like | unlike(찜 해제) | purchase | return. 같은 상품 찜은 한 번만 센다
 GET  /api/feed/scroll?user_id=u1&S=0.6&W=0.3&N=0.1&page=0&size=10   ← 홈 화면 무한 스크롤용
      /api/feed, /api/feed/scroll 둘 다 mode로 홈 화면 토글을 받는다
        mode=body    (기본) 토글 ON: 골격 맞춤 추천 — 체형 필요
@@ -22,7 +23,7 @@ from datetime import date
 from flask import Blueprint, jsonify, render_template, request
 
 from rec_config import (
-    SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE, MODES,
+    SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, UNLIKE_EVENT, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE, MODES,
 )
 from fake_matching import classify_kind
 from feed import score_by_mode, home_feed, feed_order, reason, need_rediagnosis
@@ -231,13 +232,18 @@ def post_event():
     item = STORE.item(product_id)
     if not item:
         raise BadRequest("없는 상품이에요")
+    event = data.get("event")
     try:
-        STORE.add_event(user_id, item, data.get("event"))
+        if event == UNLIKE_EVENT:
+            STORE.remove_like(user_id, product_id)   # 찜 해제: 그 상품의 찜 기록을 지워 취향 점수를 되돌린다
+        else:
+            STORE.add_event(user_id, item, event)    # 같은 상품 찜은 한 번만 저장된다
     except ValueError as e:
         raise BadRequest(str(e))
     user = STORE.user(user_id)
 
-    rediag = need_rediagnosis(user["history"], user["body"])
+    # 지금 체형으로 진단된 뒤의 반응만 본다 (다시 진단하면 예전 찜으로 안내가 뜨지 않게)
+    rediag = need_rediagnosis(user["history_since_body"], user["body"])
     return jsonify({
         "pref": user["pref"],
         "need_rediagnosis": rediag,

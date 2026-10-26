@@ -55,8 +55,17 @@ public final class RecommendApi {
 
     private static final int DIAGNOSE_TIMEOUT_MS = 3000;
 
+    // 클릭·찜 기록은 화면과 상관없으니 짧게 기다린다 (주소가 틀려도 기록이 쌓여 늦어지지 않게)
+    private static final int EVENT_TIMEOUT_MS = 3000;
+
+    // 연결 실패 뒤 기록을 쉬는 시간·재진단 안내 쉬는 기간은 RecommendTiming에 있다
+
     private static final String PREF_NAME = "recommend";
     private static final String KEY_USER_ID = "user_id";
+    private static final String KEY_REDIAG_SHOWN_AT = "rediag_notice_shown_at";
+
+    // 주문번호 → 그 주문에 들어 있던 서버 상품 id 목록 (반품할 때 return을 보내려고 기기에 저장)
+    private static final String KEY_ORDER_PRODUCTS = "order_server_products";
 
     // 찜한 서버 상품 {product_id: {name, brand, price, category}}. 앱을 꺼도 찜 탭에 남게 기기에 저장한다
     // [여기에 DB 입력] 로그인·찜 목록 API가 생기면 서버(wishlists)에서 받아 오게 바꾼다
@@ -66,8 +75,13 @@ public final class RecommendApi {
     // 홈을 다시 불러와도 같은 객체를 써서 찜 표시가 유지되고, 찜 탭·상세 화면이 같은 상품을 본다
     private static final Map<String, Product> SERVER_PRODUCTS = new LinkedHashMap<>();
 
-    private static final ExecutorService IO = Executors.newSingleThreadExecutor();
+    // 홈 불러오기와 클릭·찜 기록을 다른 줄로 보낸다 (기록이 밀려도 홈 새로고침이 기다리지 않게)
+    private static final ExecutorService FEED_IO = Executors.newSingleThreadExecutor();
+    private static final ExecutorService EVENT_IO = Executors.newSingleThreadExecutor();
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
+
+    // 마지막으로 서버에 연결하지 못한 시각 (0이면 연결 문제 없음)
+    private static volatile long lastConnectFailAt = 0L;
 
     private RecommendApi() {
     }
@@ -285,20 +299,22 @@ public final class RecommendApi {
 
         String serverId = item.getString("product_id");
         String category = categoryName(item.optString("clothing_type"));
+        String brand = item.optString("brand", "");
+        String shownBrand = brand.isEmpty() ? category : brand;
+        String name = item.getString("product_name");
+        int price = item.optInt("price", 0);
         Product product = SERVER_PRODUCTS.get(serverId);
+        boolean changed = false;
 
         if (product == null) {
-            String brand = item.optString("brand", "");
-
             // 서버 상품은 DummyData와 번호가 겹치지 않게 id를 -1로 둔다 (상세 화면은 이름만 보여 준다)
-            product = new Product(
-                    -1,
-                    brand.isEmpty() ? category : brand,
-                    item.getString("product_name"),
-                    item.optInt("price", 0)
-            );
+            product = new Product(-1, shownBrand, name, price);
             product.setLiked(likedJson(context).has(serverId));
             SERVER_PRODUCTS.put(serverId, product);
+        } else {
+            // 같은 객체를 다시 써서 찜·장바구니 상태는 유지하고, 이름·브랜드·가격은 받은 값으로 바꾼다
+            // (DB에서 가격을 바꾸면 앱을 다시 켜지 않아도 반영되게)
+            changed = product.updateServerDetails(shownBrand, name, price);
         }
 
         List<String> seasons = new ArrayList<>();
@@ -313,6 +329,10 @@ public final class RecommendApi {
         product.setFilterInfo(category, null, null, seasons.toArray(new String[0]));
         // 추천 이유는 토글(ON/OFF)마다 달라서 받을 때마다 새로 넣는다
         product.setServerInfo(serverId, item.optString("reason", ""));
+
+        if (changed && product.isLiked()) {
+            refreshLikedInfo(context, product);   // 찜 탭이 앱을 다시 켠 뒤에도 새 가격을 보여 주게
+        }
 
         return product;
     }
@@ -403,7 +423,8 @@ public final class RecommendApi {
 
     /**
      * 하트를 누른 뒤 부른다 (product.isLiked()가 바뀐 상태).
-     * 서버 상품이면 찜 상태를 기기에 저장하고, 찜했을 때는 추천 서버에 like를 보낸다 (찜 해제는 서버에 안 보냄).
+     * 서버 상품이면 찜 상태를 기기에 저장하고, 찜하면 like, 찜을 풀면 unlike를 보낸다.
+     * 서버는 같은 상품의 찜을 한 번만 세고, unlike가 오면 그 찜을 지워 취향 점수를 되돌린다.
      * DummyData 상품이면 아무것도 하지 않는다 (기존 동작 그대로).
      */
     public static void saveLike(Context context, Product product) {
@@ -431,9 +452,30 @@ public final class RecommendApi {
 
         prefs(context).edit().putString(KEY_LIKED, liked.toString()).apply();
 
-        if (product.isLiked()) {
-            sendEvent(context, product, "like");
+        sendEvent(context, product, product.isLiked() ? "like" : "unlike");
+    }
+
+    /** 찜 탭용으로 저장해 둔 상품 정보를 지금 값으로 바꾼다 (찜한 상품만) */
+    private static void refreshLikedInfo(Context context, Product product) {
+
+        JSONObject liked = likedJson(context);
+
+        if (!liked.has(product.getServerId())) {
+            return;
         }
+
+        try {
+            JSONObject info = new JSONObject();
+            info.put("name", product.getName());
+            info.put("brand", product.getBrand());
+            info.put("price", product.getPrice());
+            info.put("category", product.getCategory());
+            liked.put(product.getServerId(), info);
+        } catch (JSONException e) {
+            return;
+        }
+
+        prefs(context).edit().putString(KEY_LIKED, liked.toString()).apply();
     }
 
     /** 찜한 서버 상품 목록 (찜 탭용). 홈에서 아직 안 불러온 상품은 저장해 둔 정보로 만든다 */
@@ -479,8 +521,12 @@ public final class RecommendApi {
     }
 
     private static JSONObject likedJson(Context context) {
+        return jsonPref(context, KEY_LIKED);
+    }
+
+    private static JSONObject jsonPref(Context context, String key) {
         try {
-            return new JSONObject(prefs(context).getString(KEY_LIKED, "{}"));
+            return new JSONObject(prefs(context).getString(key, "{}"));
         } catch (JSONException e) {
             return new JSONObject();
         }
@@ -498,10 +544,21 @@ public final class RecommendApi {
     /**
      * 반응을 보내고, 서버가 "체형을 다시 진단해 볼까요?"라고 하면 안내를 띄운다.
      * 서버 상품이 아니거나 서버가 꺼져 있으면 조용히 넘어간다 (쇼핑 화면은 그대로 쓸 수 있게).
+     * event: click | like | unlike(찜 해제) | purchase | return
      */
     public static void sendEvent(Context context, Product product, String event) {
 
         if (product == null || !product.isFromServer()) {
+            return;
+        }
+
+        sendEvent(context, product.getServerId(), event);
+    }
+
+    private static void sendEvent(Context context, String serverId, String event) {
+
+        // 방금 서버에 연결하지 못했으면 잠시 기록을 보내지 않는다 (요청이 쌓여 앱이 느려지지 않게)
+        if (RecommendTiming.isOffline(lastConnectFailAt, System.currentTimeMillis())) {
             return;
         }
 
@@ -510,21 +567,17 @@ public final class RecommendApi {
 
         try {
             body.put("user_id", userId(appContext));
-            body.put("product_id", product.getServerId());
+            body.put("product_id", serverId);
             body.put("event", event);
         } catch (JSONException e) {
             return;
         }
 
-        post("/api/feed/event", body, new Callback<JSONObject>() {
+        post("/api/feed/event", body, EVENT_TIMEOUT_MS, EVENT_IO, new Callback<JSONObject>() {
             @Override
             public void onSuccess(JSONObject result) {
                 if (result.optBoolean("need_rediagnosis", false)) {
-                    Toast.makeText(
-                            appContext,
-                            result.optString("message"),
-                            Toast.LENGTH_LONG
-                    ).show();
+                    showRediagNoticeOnce(appContext, result.optString("message"));
                 }
             }
 
@@ -533,6 +586,71 @@ public final class RecommendApi {
                 // 반응 기록이 실패해도 화면 동작에는 영향이 없다
             }
         });
+    }
+
+    /** 재진단 안내: 한 번 보여 주면 쉬는 기간 동안 다시 띄우지 않는다 */
+    private static void showRediagNoticeOnce(Context context, String message) {
+
+        SharedPreferences prefs = prefs(context);
+        long now = System.currentTimeMillis();
+        long shownAt = prefs.getLong(KEY_REDIAG_SHOWN_AT, 0L);
+
+        if (!RecommendTiming.shouldShowRediagNotice(shownAt, BodyTypeActivity.lastSurveyTime(context), now)) {
+            return;
+        }
+
+        prefs.edit().putLong(KEY_REDIAG_SHOWN_AT, now).apply();
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+    }
+
+    // =========================
+    // 구매·반품 (주문 화면이 부른다)
+    // =========================
+
+    /**
+     * 주문을 마쳤을 때 부른다. 장바구니에 담긴 서버 상품마다 purchase를 보내고,
+     * 나중에 반품할 때 쓰려고 주문번호와 상품 id를 기기에 저장한다.
+     * 지금은 서버 상품을 장바구니에 담을 수 없어서(상세 화면 옵션·장바구니는 DummyData만) 보낼 상품이 없다.
+     */
+    public static void recordPurchase(Context context, String orderNo) {
+
+        JSONArray ids = new JSONArray();
+
+        for (Product product : SERVER_PRODUCTS.values()) {
+            if (product.isInCart()) {
+                ids.put(product.getServerId());
+                sendEvent(context, product.getServerId(), "purchase");
+            }
+        }
+
+        if (ids.length() == 0 || orderNo == null) {
+            return;
+        }
+
+        JSONObject orders = jsonPref(context, KEY_ORDER_PRODUCTS);
+
+        try {
+            orders.put(orderNo, ids);
+        } catch (JSONException e) {
+            return;
+        }
+
+        prefs(context).edit().putString(KEY_ORDER_PRODUCTS, orders.toString()).apply();
+    }
+
+    /** 반품을 신청했을 때 부른다. 그 주문의 서버 상품마다 return을 보낸다 */
+    public static void recordReturn(Context context, String orderNo) {
+
+        JSONArray ids = orderNo == null ? null
+                : jsonPref(context, KEY_ORDER_PRODUCTS).optJSONArray(orderNo);
+
+        if (ids == null) {
+            return;
+        }
+
+        for (int i = 0; i < ids.length(); i++) {
+            sendEvent(context, ids.optString(i), "return");
+        }
     }
 
     // =========================
@@ -563,12 +681,22 @@ public final class RecommendApi {
     // =========================
 
     private static void post(String path, JSONObject body, Callback<JSONObject> callback) {
-        post(path, body, TIMEOUT_MS, callback);
+        post(path, body, TIMEOUT_MS, FEED_IO, callback);
     }
 
     private static void post(String path, JSONObject body, int timeoutMs, Callback<JSONObject> callback) {
+        post(path, body, timeoutMs, FEED_IO, callback);
+    }
 
-        IO.execute(() -> {
+    private static void post(
+            String path,
+            JSONObject body,
+            int timeoutMs,
+            ExecutorService line,
+            Callback<JSONObject> callback
+    ) {
+
+        line.execute(() -> {
             HttpURLConnection connection = null;
 
             try {
@@ -584,6 +712,7 @@ public final class RecommendApi {
                 }
 
                 int code = connection.getResponseCode();
+                lastConnectFailAt = 0L;   // 서버가 답했다 (오류 코드여도 연결은 됨)
                 InputStream stream = code < 400
                         ? connection.getInputStream()
                         : connection.getErrorStream();
@@ -599,6 +728,9 @@ public final class RecommendApi {
                 }
 
             } catch (IOException | JSONException e) {
+                if (e instanceof IOException) {
+                    lastConnectFailAt = System.currentTimeMillis();
+                }
                 MAIN.post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
             } finally {
                 if (connection != null) {

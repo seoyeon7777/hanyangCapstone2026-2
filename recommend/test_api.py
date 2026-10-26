@@ -72,14 +72,63 @@ def test_event_learns_and_feed_reflects():
     assert client.post("/api/feed/event", json={"user_id": "u1", "product_id": "zzz", "event": "like"}).status_code == 400
 
 
+# 스트레이트(S 1.0)에게 피해야 할 태그가 있는 상품 8개 / 어울리는 상품 일부
+S_AVOID = ["t06", "t08", "t09", "t10", "t11", "o04", "o06", "d04"]
+S_GOOD = ["t01", "b02"]
+
+
+def like(user_id, product_id, event="like"):
+    return client.post("/api/feed/event",
+                       json={"user_id": user_id, "product_id": product_id, "event": event}).get_json()
+
+
 def test_event_triggers_rediagnosis():
     reset()
     client.post("/api/feed", json={"user_id": "u2", "body": {"ratio": {"S": 1, "W": 0, "N": 0}}})
-    for _ in range(9):
-        r = client.post("/api/feed/event", json={"user_id": "u2", "product_id": "t06", "event": "like"}).get_json()
-        assert r["need_rediagnosis"] is False  # 10개 전까지는 판단 안 함
-    r = client.post("/api/feed/event", json={"user_id": "u2", "product_id": "t06", "event": "like"}).get_json()
+    # 서로 다른 상품 9개 (피해야 할 옷 7 + 어울리는 옷 2) → 10개 전까지는 판단 안 함
+    for pid in S_AVOID[:7] + S_GOOD:
+        assert like("u2", pid)["need_rediagnosis"] is False
+    r = like("u2", S_AVOID[7])  # 10개 중 8개(80%)가 피해야 할 옷
     assert r["need_rediagnosis"] is True and r["message"]
+
+
+def test_like_counted_once_and_unlike_reverts():
+    """1번: 하트를 껐다 켜도 찜이 쌓이지 않고, 끄면 취향 점수가 찜 전으로 돌아간다."""
+    reset()
+    client.post("/api/feed", json={"user_id": "u5", "body": {"ratio": {"S": 1, "W": 0, "N": 0}}})
+    once = like("u5", "t04")["pref"]
+    assert once == {"len:crop": 0.1, "mat:knit": 0.1}
+    for _ in range(10):                       # 같은 상품을 계속 찜해도
+        assert like("u5", "t04")["pref"] == once
+    assert like("u5", "t04", "unlike")["pref"] == {}   # 찜 해제 → 찜 전(기록 없음)으로
+    assert like("u5", "t04")["pref"] == once           # 다시 찜하면 한 번만
+
+    # 예전 버그 재현: 피해야 할 옷 하나를 10번 껐다 켜도 재진단 안내가 뜨지 않는다
+    for _ in range(10):
+        like("u5", "t06", "unlike")
+        r = like("u5", "t06")
+    assert r["need_rediagnosis"] is False
+    user = feed_api.STORE.user("u5")
+    assert sum(1 for h in user["history"] if h["event"] == "like" and h["item"]["product_id"] == "t06") == 1
+
+
+def test_rediagnosis_uses_events_after_new_diagnosis():
+    """3번: 다시 진단하면 예전 찜으로는 재진단 안내가 뜨지 않는다."""
+    reset()
+    client.post("/api/feed", json={"user_id": "u6", "body": {"ratio": {"S": 1, "W": 0, "N": 0}}})
+    for pid in S_AVOID + S_GOOD:
+        r = like("u6", pid)
+    assert r["need_rediagnosis"] is True
+
+    # 같은 체형을 다시 보내는 것(스크롤마다 같은 답)은 재진단이 아니다 → 그대로 True
+    client.get("/api/feed/scroll?user_id=u6&S=1&season=fall")
+    assert like("u6", "t01", "click")["need_rediagnosis"] is True
+
+    # 설문을 다시 해서 진단이 바뀜 → 그 뒤 반응이 아직 없으니 안내 안 함
+    client.post("/api/feed", json={"user_id": "u6", "body": {"ratio": {"S": 0.2, "W": 0.7, "N": 0.1}}})
+    assert like("u6", "t01", "click")["need_rediagnosis"] is False
+    # 예전 찜은 취향 학습에는 그대로 남는다
+    assert len(feed_api.STORE.user("u6")["history"]) == 12
 
 
 def test_routes_registered():

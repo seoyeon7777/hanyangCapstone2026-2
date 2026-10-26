@@ -3,6 +3,7 @@ package com.example.capstone.mypage;
 import com.example.capstone.R;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.MyPageStore.Order;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.ui.AppDialog;
 
 import android.content.Context;
@@ -221,6 +222,10 @@ public class OrderListActivity extends AppCompatActivity {
                     }
 
                     MyPageStore.requestClaim(order, type, reason);
+                    if (MyPageStore.CLAIM_RETURN.equals(type)) {
+                        // 반품은 추천 학습에 반영 (그 주문의 서버 상품 취향 점수를 낮춘다)
+                        RecommendApi.recordReturn(this, order.orderNo);
+                    }
                     Toast.makeText(this, type + " 신청이 완료되었습니다.", Toast.LENGTH_SHORT).show();
                     renderOrders();
                 })

@@ -134,6 +134,18 @@ public class Product {
         this.reason = reason == null ? "" : reason;
     }
 
+    /**
+     * 서버에서 다시 받은 이름·브랜드·가격으로 바꾼다 (RecommendApi가 호출).
+     * 찜·장바구니 상태는 그대로 둔다. 하나라도 바뀌었으면 true
+     */
+    public boolean updateServerDetails(String brand, String name, int price) {
+        boolean changed = !this.brand.equals(brand) || !this.name.equals(name) || this.price != price;
+        this.brand = brand;
+        this.name = name;
+        this.price = price;
+        return changed;
+    }
+
     // 상품 필터 정보 설정
     public void setFilterInfo(
             String category,

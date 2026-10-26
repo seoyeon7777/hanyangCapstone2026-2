@@ -143,6 +143,25 @@ def test_pref_same_as_memory():
     assert results[0] == results[1]
 
 
+def test_like_once_unlike_and_rediag_after_new_diagnosis():
+    """찜은 상품마다 한 줄만, 찜 해제는 그 줄을 지움, 다시 진단하면 그 뒤 반응만으로 재진단 판단."""
+    use_db()
+    scroll_ids({"user_id": "app-5", "answers": ANSWERS_S})
+    ev = lambda pid, event="like": client.post(
+        "/api/feed/event", json={"user_id": "app-5", "product_id": pid, "event": event}).get_json()
+    for _ in range(5):
+        ev("t04")
+    assert sql("SELECT count(*) FROM user_events WHERE user_id = 'app-5' AND event = 'like'") == [(1,)]
+    assert ev("t04", "unlike")["pref"] == {}
+    assert sql("SELECT count(*) FROM user_events WHERE user_id = 'app-5'") == [(0,)]
+
+    for pid in ["t06", "t08", "t09", "t10", "t11", "o04", "o06", "d04", "t01", "b02"]:
+        r = ev(pid)
+    assert r["need_rediagnosis"] is True
+    scroll_ids({"user_id": "app-5", "answers": ANSWERS_W})   # 설문을 다시 해서 진단이 바뀜
+    assert ev("t01", "click")["need_rediagnosis"] is False
+
+
 def test_bad_event_not_saved():
     use_db()
     scroll_ids({"user_id": "app-4", "mode": "general"})
