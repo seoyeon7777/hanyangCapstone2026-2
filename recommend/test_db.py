@@ -156,7 +156,8 @@ def test_db_down_gives_503_json():
     res = client.post("/api/feed/scroll", json={"mode": "general"})
     assert res.status_code == 503
     data = res.get_json()
-    assert data["ok"] is False and "DB" in data["error"]
+    assert data["ok"] is False and "잠시 후 다시" in data["error"]
+    assert "Supabase" not in data["error"]
 
 
 if __name__ == "__main__":

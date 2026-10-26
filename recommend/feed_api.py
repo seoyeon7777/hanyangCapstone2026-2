@@ -19,7 +19,7 @@ GET  /feed-demo       연습용 스크롤 화면 (친구들 홈 화면이 오기
 """
 from datetime import date
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, current_app, jsonify, render_template, request
 
 from rec_config import (
     SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE, MODES,
@@ -90,7 +90,8 @@ def bad_request(e):
 @feed_bp.errorhandler(StoreError)
 def store_error(e):
     # DB(Supabase)가 꺼져 있거나 일시 정지됨 → 앱은 503을 보고 "잠시 후 다시" 안내
-    return jsonify({"ok": False, "error": f"{e}. Supabase 프로젝트가 일시 정지됐는지 확인해 주세요"}), 503
+    current_app.logger.warning("DB 오류: %s. Supabase 프로젝트가 일시 정지됐는지 확인해 주세요", e)
+    return jsonify({"ok": False, "error": "서버에 잠시 연결할 수 없어요. 잠시 후 다시 시도해 주세요"}), 503
 
 
 def json_body():
