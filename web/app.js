@@ -36,7 +36,7 @@ const L = {
 
 // ---- 화면 요소 -------------------------------------------------------------
 const $ = (id) => document.getElementById(id);
-const screens = { setup: $("screen-setup"), camera: $("screen-camera"), result: $("screen-result") };
+const screens = { setup: $("screen-setup"), album: $("screen-album"), camera: $("screen-camera"), result: $("screen-result") };
 const video = $("video");
 const overlay = $("overlay");
 const octx = overlay.getContext("2d");
@@ -89,6 +89,7 @@ const startBtn = $("btn-start");
 loadModels()
   .then(() => {
     startBtn.disabled = false;
+    $("btn-album").disabled = false;
     startBtn.textContent = "측정 시작";
   })
   .catch((e) => {
@@ -731,6 +732,124 @@ function showResult() {
   show("result");
   window.scrollTo(0, 0);
 }
+
+// ---- 앨범 사진으로 측정 (앱 PhotoMeasurementActivity와 같은 흐름) -----------
+const ALBUM_MAX_SIDE = 1600; // 너무 큰 사진은 줄여서 분석 (비율은 그대로)
+let albumFront = null;
+let albumSide = null;
+
+$("btn-album").addEventListener("click", () => {
+  const h = parseFloat($("height").value);
+  if (!(h >= 100 && h <= 220)) {
+    $("setup-msg").textContent = "키를 100~220 사이로 입력해주세요.";
+    return;
+  }
+  $("setup-msg").textContent = "";
+  userHeightCm = h;
+  albumFront = albumSide = null;
+  for (const k of ["front", "side"]) {
+    $("album-" + k + "-img").classList.add("hidden");
+    $("album-" + k + "-ph").classList.remove("hidden");
+    $("file-" + k).value = "";
+  }
+  $("album-front-msg").textContent = "전신이 보이는 정면 사진";
+  $("album-side-msg").textContent = "오른쪽을 본 옆면 사진";
+  $("album-height").textContent = "입력 키: " + h.toFixed(1) + " cm";
+  updateAlbumButton();
+  show("album");
+});
+
+$("btn-album-back").addEventListener("click", () => show("setup"));
+
+function updateAlbumButton() {
+  const ready = !!(albumFront && albumSide);
+  $("btn-album-analyze").disabled = !ready;
+  $("album-status").textContent = ready
+    ? "사진 준비 완료 · 신체 분석을 시작해주세요."
+    : "정면과 옆면 사진을 모두 선택해주세요.";
+}
+
+// 사진 파일 → 캔버스. 폰 사진의 회전 정보(EXIF)를 반영한다.
+async function fileToCanvas(file) {
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const scale = Math.min(1, ALBUM_MAX_SIDE / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(bmp.width * scale);
+  c.height = Math.round(bmp.height * scale);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  if (bmp.close) bmp.close();
+  return c;
+}
+
+function bindAlbumInput(kind) {
+  $("file-" + kind).addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const name = kind === "front" ? "정면" : "옆면";
+    try {
+      const c = await fileToCanvas(file);
+      if (kind === "front") albumFront = c; else albumSide = c;
+      const img = $("album-" + kind + "-img");
+      img.src = c.toDataURL("image/jpeg", 0.8);
+      img.classList.remove("hidden");
+      $("album-" + kind + "-ph").classList.add("hidden");
+      $("album-" + kind + "-msg").textContent = "✓ " + name + " 사진 선택 완료";
+    } catch (err) {
+      console.error(err);
+      if (kind === "front") albumFront = null; else albumSide = null;
+      $("album-" + kind + "-msg").textContent = "사진을 불러올 수 없습니다. 다른 사진을 골라주세요.";
+    }
+    updateAlbumButton();
+  });
+}
+bindAlbumInput("front");
+bindAlbumInput("side");
+
+function albumError(message) {
+  setBusy(false);
+  $("album-status").textContent = message;
+  alert(message);
+}
+
+$("btn-album-analyze").addEventListener("click", async () => {
+  if (!albumFront || !albumSide) return;
+  setBusy(true, "정면 사진을 분석하고 있습니다...");
+  await nextFrame();
+  try {
+    await setRunningMode("IMAGE");
+    const fres = poseLandmarker.detect(albumFront);
+    const flms = fres.landmarks && fres.landmarks[0];
+    if (!flms) return albumError("정면 사진에서 전신을 정확하게 인식하지 못했습니다.");
+    const px = flms.map((l) => ({ x: l.x * albumFront.width, y: l.y * albumFront.height, v: l.visibility ?? 1 }));
+    const lengths = calcLengths(px, userHeightCm);
+    if (!lengths) return albumError("정면 사진에서 전신을 정확하게 인식하지 못했습니다.");
+    const fw = measureSilhouette(albumFront, userHeightCm, bodyAxis(flms));
+    if (!fw) return albumError("정면 사진에서 신체 외곽선을 인식하지 못했습니다.");
+
+    setBusy(true, "옆면 사진을 분석하고 있습니다...");
+    await nextFrame();
+    let axis = null;
+    try {
+      const sres = poseLandmarker.detect(albumSide);
+      axis = bodyAxis(sres.landmarks && sres.landmarks[0]);
+    } catch (e) {
+      console.warn("옆면 관절 인식 실패, 화면 가운데 기준으로 윤곽을 고릅니다", e);
+    }
+    const sw = measureSilhouette(albumSide, userHeightCm, axis);
+    if (!sw) return albumError("옆면 사진에서 신체 외곽선을 인식하지 못했습니다.");
+
+    frontResult = lengths;
+    frontWidths = fw;
+    sideWidths = sw;
+    frontCanvas = albumFront;
+    sideCanvas = albumSide;
+  } catch (e) {
+    console.error(e);
+    return albumError("사진 분석에 실패했습니다: " + e.message);
+  }
+  setBusy(false);
+  showResult();
+});
 
 $("btn-again").addEventListener("click", () => show("setup"));
 

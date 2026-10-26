@@ -15,12 +15,34 @@
   <label for="height">키 (cm)</label>
   <input id="height" type="number" inputmode="decimal" min="100" max="220" step="0.1" value="160">
   <button id="btn-start" class="primary" disabled>모델 불러오는 중…</button>
+  <button id="btn-album" class="secondary" disabled>앨범에서 사진 불러오기</button>
   <p id="setup-msg" class="msg"></p>
   <ul class="tips">
     <li>전신이 화면에 다 보이도록 2~3m 떨어져 서세요.</li>
     <li>몸에 붙는 옷, 단색 배경이 가장 정확해요.</li>
     <li>카메라는 HTTPS 주소(또는 localhost)에서만 켜져요.</li>
   </ul>
+</section>
+
+<!-- 1-2. 앨범 사진 선택 (앱의 PhotoMeasurementActivity) -->
+<section id="screen-album" class="screen hidden">
+  <h1>앨범에서 측정</h1>
+  <p id="album-height" class="sub"></p>
+  <div class="photos album-slots">
+    <figure>
+      <label class="slot" for="file-front"><img id="album-front-img" class="hidden" alt="정면"><span id="album-front-ph">정면 사진 선택</span></label>
+      <figcaption id="album-front-msg">전신이 보이는 정면 사진</figcaption>
+    </figure>
+    <figure>
+      <label class="slot" for="file-side"><img id="album-side-img" class="hidden" alt="옆면"><span id="album-side-ph">옆면 사진 선택</span></label>
+      <figcaption id="album-side-msg">오른쪽을 본 옆면 사진</figcaption>
+    </figure>
+  </div>
+  <input id="file-front" type="file" accept="image/*" class="hidden">
+  <input id="file-side" type="file" accept="image/*" class="hidden">
+  <p id="album-status" class="msg">정면과 옆면 사진을 모두 선택해주세요.</p>
+  <button id="btn-album-analyze" class="primary" disabled>분석하기</button>
+  <button id="btn-album-back" class="secondary">돌아가기</button>
 </section>
 
 <!-- 2. 카메라 -->
