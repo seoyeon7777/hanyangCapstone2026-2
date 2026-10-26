@@ -186,14 +186,14 @@ match_score(body, item) -> {
 ### 4-10. 안드로이드 앱 홈 연결 (10단계)
 - `android/app/src/main/java/com/example/capstone/data/RecommendApi.java`: `BASE_URL`(= `BuildConfig.RECOMMEND_BASE_URL`. `android/local.properties`의 `recommend.baseUrl`, 없으면 에뮬레이터 `http://10.0.2.2:5000`. 폰은 PC IP를 넣고 다시 빌드), `loadFeed(context, mode, page, callback)` → `POST /api/feed/scroll`, `sendEvent(context, product, event)` → `POST /api/feed/event`
   - 외부 라이브러리 없이 `HttpURLConnection` + `org.json`. 백그라운드 스레드에서 보내고 결과는 메인 스레드
-  - user_id = 기기마다 만든 `app-<UUID>` (SharedPreferences "recommend")
+  - user_id = 로그인 계정마다 만든 `app-<UUID>` (SharedPreferences "recommend"). 최근 설문·user_id·찜은 `data/AccountPrefs`가 `키@계정`(계정 = `BodyProfileStore.accountKey`, 비로그인은 guest)으로 나눠 저장한다. 예전 기기 단위 값은 처음 연 계정으로 한 번 옮기고, 로그인하면 guest 기록이 비어 있는 계정으로 넘어가며, 이메일·전화번호를 바꾸면 같이 옮긴다
   - 설문 답(`BodyTypeActivity.lastSurveyAnswers`)을 매 요청에 `answers`로 같이 보냄 → 서버를 다시 켜도 진단이 바로 됨
 - `MainActivity` 홈: DummyData 대신 서버 순서. 바닥 600dp 전에 다음 묶음, 토글 `switchBodyMode`(ON body / OFF general), 제목 "○○ 체형 맞춤 추천"
   - 토글 ON인데 400(진단 없음) → 안내 후 OFF로 바꿔 다시 부름. 서버 연결 실패 → DummyData를 보여 줌
   - 설문을 새로 하고 돌아오면(`lastSurveyTime` 변화) 다시 부름
 - `ProductAdapter`: 서버 상품 클릭 → click, 찜 → like. 카드에 추천 이유(`textReason`), 가격 0이면 숨김
 - `Product`: `serverId`·`reason` 추가 (서버 상품은 id −1)
-- 찜(서버 상품): `RecommendApi.saveLike` — 찜 상태를 기기(SharedPreferences "recommend"의 liked_products)에 저장 + 찜할 때 like 전송. 서버 상품 Product는 product_id마다 하나만 만들어 다시 불러와도 하트 유지
+- 찜(서버 상품): `RecommendApi.saveLike` — 찜 상태를 계정별(SharedPreferences "recommend"의 `liked_products@계정`)로 저장 + 찜할 때 like 전송. 서버 상품 Product는 product_id마다 하나만 만들어 다시 불러와도 하트 유지
   - 찜 탭(`WishActivity`)은 DummyData + `RecommendApi.likedServerProducts`를 보여 줌. 상세 화면은 `server_product_id`로 서버 상품을 찾아 하트만 동작 (옵션·장바구니는 아직 DummyData 상품만)
 - 확인: 여기서는 Android SDK를 받을 수 없어 androidx 대체 클래스로 javac 컴파일 검사 + 같은 요청을 curl로 서버에 보내 응답 확인까지만 했다. 실제 실행은 Android Studio에서 확인할 것
 

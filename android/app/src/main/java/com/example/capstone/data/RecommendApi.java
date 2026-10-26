@@ -54,12 +54,7 @@ public final class RecommendApi {
 
     private static final int DIAGNOSE_TIMEOUT_MS = 3000;
 
-    private static final String PREF_NAME = "recommend";
-    private static final String KEY_USER_ID = "user_id";
-
-    // 찜한 서버 상품 {product_id: {name, brand, price, category}}. 앱을 꺼도 찜 탭에 남게 기기에 저장한다
     // [여기에 DB 입력] 로그인·찜 목록 API가 생기면 서버(wishlists)에서 받아 오게 바꾼다
-    private static final String KEY_LIKED = "liked_products";
 
     // 서버 상품은 product_id마다 Product를 하나만 만든다.
     // 홈을 다시 불러와도 같은 객체를 써서 찜 표시가 유지되고, 찜 탭·상세 화면이 같은 상품을 본다
@@ -162,7 +157,8 @@ public final class RecommendApi {
 
         BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
 
-        return BodyTypeActivity.lastSurveyTime(context)
+        return BodyProfileStore.accountKey(context)
+                + "/" + BodyTypeActivity.lastSurveyTime(context)
                 + "/" + (active == null ? "" : active.id + "@" + active.savedAt);
     }
 
@@ -252,9 +248,10 @@ public final class RecommendApi {
                     item.getString("product_name"),
                     item.optInt("price", 0)
             );
-            product.setLiked(likedJson(context).has(serverId));
             SERVER_PRODUCTS.put(serverId, product);
         }
+
+        product.setLiked(likedJson(context).has(serverId));
 
         List<String> seasons = new ArrayList<>();
         JSONArray seasonArray = item.optJSONArray("seasons");
@@ -367,7 +364,9 @@ public final class RecommendApi {
             return;
         }
 
-        prefs(context).edit().putString(KEY_LIKED, liked.toString()).apply();
+        AccountPrefs.recommend(context).edit()
+                .putString(AccountPrefs.key(context, AccountPrefs.RECOMMEND_LIKED), liked.toString())
+                .apply();
 
         if (product.isLiked()) {
             sendEvent(context, product, "like");
@@ -399,13 +398,11 @@ public final class RecommendApi {
                 );
                 product.setFilterInfo(info.optString("category"), null, null, null);
                 product.setServerInfo(serverId, "");
-                product.setLiked(true);
                 SERVER_PRODUCTS.put(serverId, product);
             }
 
-            if (product.isLiked()) {
-                result.add(product);
-            }
+            product.setLiked(true);
+            result.add(product);
         }
 
         return result;
@@ -418,15 +415,11 @@ public final class RecommendApi {
 
     private static JSONObject likedJson(Context context) {
         try {
-            return new JSONObject(prefs(context).getString(KEY_LIKED, "{}"));
+            return new JSONObject(AccountPrefs.recommend(context)
+                    .getString(AccountPrefs.key(context, AccountPrefs.RECOMMEND_LIKED), "{}"));
         } catch (JSONException e) {
             return new JSONObject();
         }
-    }
-
-    private static SharedPreferences prefs(Context context) {
-        return context.getApplicationContext()
-                .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
     // =========================
@@ -483,14 +476,14 @@ public final class RecommendApi {
      */
     public static String userId(Context context) {
 
-        SharedPreferences prefs = context.getApplicationContext()
-                .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        SharedPreferences prefs = AccountPrefs.recommend(context);
+        String key = AccountPrefs.key(context, AccountPrefs.RECOMMEND_USER_ID);
 
-        String id = prefs.getString(KEY_USER_ID, "");
+        String id = prefs.getString(key, "");
 
         if (id.isEmpty()) {
             id = "app-" + UUID.randomUUID();
-            prefs.edit().putString(KEY_USER_ID, id).apply();
+            prefs.edit().putString(key, id).apply();
         }
 
         return id;
