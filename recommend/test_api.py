@@ -296,6 +296,47 @@ def test_scroll_order_same_for_any_page_size():
         assert whole(size) == base, size
 
 
+def test_scroll_with_shown_never_repeats_or_skips():
+    # 스크롤 사이사이 클릭·찜으로 취향이 바뀌어도, 앱이 이미 받은 상품(shown)을 보내면 겹침·빠짐이 없다
+    for mode in ("body", "general"):
+        reset()
+        answers = {f"q{i}": 1 for i in range(1, 8)}
+        seen = []
+        while True:
+            d = client.post("/api/feed/scroll", json={"user_id": "s1", "answers": answers, "mode": mode,
+                                                      "shown": seen}).get_json()
+            got = [i["product_id"] for i in d["items"]]
+            seen += got
+            for pid in got[:3]:
+                client.post("/api/feed/event", json={"user_id": "s1", "product_id": pid, "event": "click"})
+            if got:
+                client.post("/api/feed/event", json={"user_id": "s1", "product_id": got[-1], "event": "like"})
+            if not d["has_more"]:
+                break
+        assert len(seen) == len(set(seen)) == 30, mode
+
+
+def test_event_response_pref_same_as_saved():
+    reset()
+    client.post("/api/feed/scroll", json={"user_id": "p1", "mode": "general"})
+    for pid, event in (("t01", "like"), ("t04", "click"), ("t01", "return")):
+        res = client.post("/api/feed/event", json={"user_id": "p1", "product_id": pid, "event": event})
+    assert res.get_json()["pref"] == feed_api.STORE.user("p1")["pref"]
+
+
+def test_more_bad_inputs_are_400():
+    reset()
+    assert client.get("/api/feed/scroll?S=nan&W=1&N=0").status_code == 400
+    assert client.get("/api/feed/scroll?user_id=n1&S=inf&W=1&N=0").status_code == 400
+    assert feed_api.STORE.user("n1") is None or feed_api.STORE.user("n1")["body"] is None   # NaN 체형은 저장 안 됨
+    bad = client.post("/api/feed/scroll", json={"profile": {"ratios": {"S": 1, "W": 0, "N": 0}, "is_mixed": "no"}})
+    assert bad.status_code == 400
+    assert client.post("/api/feed/scroll", json={"mode": "general", "page": True}).status_code == 400
+    assert client.post("/api/feed/scroll", json={"mode": "general", "shown": "t01"}).status_code == 200
+    assert client.post("/api/feed/scroll", json={"mode": "general", "shown": [1, 2]}).status_code == 400
+    assert client.post("/api/feed/scroll", json={"mode": "general", "shown": ["t01"] * 5001}).status_code == 400
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     failed = 0

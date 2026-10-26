@@ -190,10 +190,17 @@ public final class RecommendApi {
         }
     }
 
+    /**
+     * 홈 피드 다음 묶음.
+     * shown: 지금 화면에 이미 있는 서버 상품 product_id (위에서부터 순서대로).
+     * 서버는 이 상품들을 그 순서로 고정하고 그 뒤를 이어 준다
+     * → 스크롤 도중 클릭·찜으로 추천 순서가 바뀌어도 같은 상품이 두 번 나오거나 빠지지 않는다.
+     */
     public static void loadFeed(
             Context context,
             String mode,
             int page,
+            List<String> shown,
             Callback<FeedPage> callback
     ) {
         JSONObject body = new JSONObject();
@@ -203,11 +210,11 @@ public final class RecommendApi {
             body.put("mode", mode);
             body.put("page", page);
             body.put("size", PAGE_SIZE);
+            body.put("shown", new JSONArray(shown));
 
             // 설문 답을 매번 같이 보낸다.
-            // 서버는 기록을 메모리에만 두므로, 서버를 다시 켜도 체형을 바로 다시 진단할 수 있다.
+            // 서버가 메모리 저장소로 돌 때 서버를 다시 켜도 체형을 바로 다시 진단할 수 있다.
             // 단, 내 체형관리에 대표 체형이 있으면 항상 대표 체형을 따른다.
-            // (앱 설문 점수와 서버(A 파트) 진단은 계산법이 달라서, 같은 답이라도 결과가 다를 수 있다)
             int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
             String activeType = activeBodyType(context);
 

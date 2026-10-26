@@ -19,16 +19,17 @@ GET  /feed-demo       연습용 스크롤 화면 (친구들 홈 화면이 오기
 상품·사용자 기록은 store.py가 맡는다: DB 주소(DATABASE_URL 또는 database_url.txt)가 있으면 PostgreSQL(Supabase),
 없으면 items.json + 서버 메모리(서버를 끄면 사라짐 — 시연용).
 """
+import math
 from datetime import date
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, current_app, jsonify, render_template, request
 
 from rec_config import (
-    SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE, MODES,
+    SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE, SCROLL_MAX_SHOWN, MODES,
 )
 import rec_config
 from fake_matching import classify_kind
-from feed import score_by_mode, home_feed, feed_order, reason, need_rediagnosis
+from feed import score_by_mode, home_feed, feed_order, reason, need_rediagnosis, pref_from_history
 from store import make_store, StoreError
 from matching_b import from_profile
 from body_profile import classify, InputError  # A 파트 (matching_b가 저장소 맨 위 폴더를 경로에 넣어 둠)
@@ -54,6 +55,8 @@ def make_body(ratio):
         ratio = {t: float(ratio.get(t, 0)) for t in ("S", "W", "N")}
     except (TypeError, ValueError, AttributeError):
         raise BadRequest("ratio는 S, W, N 숫자여야 해요")
+    if not all(math.isfinite(v) for v in ratio.values()):
+        raise BadRequest("ratio에 NaN·무한대는 쓸 수 없어요")
     total = sum(ratio.values())
     if total <= 0 or any(v < 0 for v in ratio.values()):
         raise BadRequest("ratio는 0 이상이고 합이 0보다 커야 해요")
@@ -92,8 +95,10 @@ def bad_request(e):
 
 @feed_bp.errorhandler(StoreError)
 def store_error(e):
-    # DB(Supabase)가 꺼져 있거나 일시 정지됨 → 앱은 503을 보고 "잠시 후 다시" 안내
-    return jsonify({"ok": False, "error": f"{e}. Supabase 프로젝트가 일시 정지됐는지 확인해 주세요"}), 503
+    # DB(Supabase)가 꺼져 있거나 일시 정지됨 → 앱은 503을 보고 "잠시 후 다시" 안내.
+    # 자세한 원인은 서버 화면에만 남긴다 (앱 사용자에게 개발자용 문구가 보이지 않게)
+    current_app.logger.error("DB 오류: %s (Supabase 프로젝트가 일시 정지됐는지 확인)", e)
+    return jsonify({"ok": False, "error": "DB에 잠시 연결할 수 없어요. 잠시 후 다시 시도해 주세요"}), 503
 
 
 def json_body():
@@ -130,9 +135,12 @@ def resolve_request():
         elif data.get("profile") is not None:    # 이미 진단한 A 결과
             try:
                 body = make_body(data["profile"]["ratios"])
-                body["kind"] = "mixed" if data["profile"]["is_mixed"] else "single"
+                is_mixed = data["profile"]["is_mixed"]
             except (KeyError, TypeError):
                 raise BadRequest("profile은 A 파트 classify() 결과 모양이어야 해요 (ratios, is_mixed)")
+            if not isinstance(is_mixed, bool):
+                raise BadRequest("profile.is_mixed는 true 또는 false여야 해요")
+            body["kind"] = "mixed" if is_mixed else "single"
     else:
         data = request.args
         # 빠진 값은 0 (POST와 같게). 예: ?S=1 → S 1, W 0, N 0
@@ -163,10 +171,22 @@ def resolve_request():
     if user_id:
         if user is None:
             STORE.ensure_user(user_id)
-        if from_request:  # 이번 요청에서 진단·입력한 체형만 저장 (저장된 체형을 다시 쓸 때는 그대로)
+            user = {"body": None, "answers": None, "pref": {}, "history": []}
+        # 이번 요청에서 진단·입력한 체형이 저장된 것과 다를 때만 저장 (앱은 스크롤마다 같은 답을 보낸다)
+        if from_request and body_changed(user, body, answers):
             STORE.save_body(user_id, body, answers)
-        user = STORE.user(user_id)
+            user = {**user, "body": body, "answers": answers}
     return data, user, body, season, mode
+
+
+def body_changed(user, body, answers):
+    """저장된 체형(user["body"], user["answers"])과 이번 체형이 다른지. 같으면 DB에 다시 쓰지 않는다."""
+    old = user.get("body")
+    if old is None or old.get("primary") != body["primary"]:
+        return True
+    if any(abs(old["ratio"][t] - body["ratio"][t]) > 1e-9 for t in ("S", "W", "N")):
+        return True
+    return answers is not None and answers != user.get("answers")
 
 
 def diagnose(answers, measurements=None):
@@ -193,8 +213,11 @@ def diagnose(answers, measurements=None):
 
 
 def int_arg(data, name, default, low, high):
+    raw = data.get(name, default)
+    if isinstance(raw, bool):
+        raise BadRequest(f"{name}는 정수여야 해요")
     try:
-        value = int(data.get(name, default))
+        value = int(raw)
     except (TypeError, ValueError):
         raise BadRequest(f"{name}는 정수여야 해요")
     if not low <= value <= high:
@@ -220,12 +243,20 @@ def scroll_feed():
     data, user, body, season, mode = resolve_request()
     page = int_arg(data, "page", 0, 0, 10_000)
     size = int_arg(data, "size", SCROLL_PAGE_SIZE, 1, SCROLL_MAX_PAGE_SIZE)
+    shown = shown_arg(data)
     pref = user["pref"] if user else None
 
     # 다양성 규칙의 묶음은 항상 SCROLL_PAGE_SIZE(10)개다. 요청한 size는 "몇 개를 보낼지"만 정한다.
     # (size로 묶음을 잡으면 앱이 한 번에 받는 개수에 따라 추천 순서가 달라진다)
-    ordered = feed_order(score_by_mode(mode, body, STORE.items(), pref, season))
-    chunk = ordered[page * size:(page + 1) * size]
+    scored = score_by_mode(mode, body, STORE.items(), pref, season)
+    if shown is None:
+        ordered = feed_order(scored)
+        start = page * size
+    else:
+        # 이미 보여 준 옷은 그 순서로 고정하고 그 뒤를 잇는다 (스크롤 도중 취향이 바뀌어도 겹침·빠짐 없음)
+        ordered = feed_order(scored, shown=shown)
+        start = len(set(shown) & {r["product_id"] for r in ordered})
+    chunk = ordered[start:start + size]
     return jsonify({
         "mode": mode,
         "body": body,
@@ -233,9 +264,23 @@ def scroll_feed():
         "page": page,
         "size": size,
         "total": len(ordered),
-        "has_more": (page + 1) * size < len(ordered),
+        "has_more": start + size < len(ordered),
         "items": [for_screen(r) for r in chunk],
     })
+
+
+def shown_arg(data):
+    """이미 화면에 보여 준 product_id 목록 (선택). POST는 목록, GET은 쉼표로 이은 문자열. 없으면 None."""
+    shown = data.get("shown")
+    if shown is None:
+        return None
+    if isinstance(shown, str):
+        shown = [s for s in shown.split(",") if s]
+    if not isinstance(shown, list) or not all(isinstance(s, str) for s in shown):
+        raise BadRequest("shown은 product_id 문자열 목록이어야 해요")
+    if len(shown) > SCROLL_MAX_SHOWN:
+        raise BadRequest(f"shown은 최대 {SCROLL_MAX_SHOWN}개까지 보낼 수 있어요")
+    return shown
 
 
 @feed_bp.route("/api/diagnose", methods=["POST"])
@@ -268,20 +313,23 @@ def post_event():
     user_id, product_id = data.get("user_id"), data.get("product_id")
     if not isinstance(user_id, str) or not isinstance(product_id, str):
         raise BadRequest("user_id와 product_id는 문자열이어야 해요")
-    if not STORE.user(user_id):
+    user = STORE.user(user_id)
+    if not user:
         raise BadRequest("먼저 /api/feed 또는 /api/feed/scroll을 user_id와 함께 불러 주세요")
     item = STORE.item(product_id)
     if not item:
         raise BadRequest("없는 상품이에요")
+    event = data.get("event")
+    # 저장 뒤 사용자를 다시 읽지 않고 여기서 계산한다 (DB 왕복을 줄인다. 저장소도 같은 방식으로 계산)
+    history = list(user["history"]) + [{"item": item, "event": event}]
     try:
-        STORE.add_event(user_id, item, data.get("event"))
+        STORE.add_event(user_id, item, event)
     except ValueError as e:
         raise BadRequest(str(e))
-    user = STORE.user(user_id)
 
-    rediag = need_rediagnosis(user["history"], user["body"])
+    rediag = need_rediagnosis(history, user["body"])
     return jsonify({
-        "pref": user["pref"],
+        "pref": pref_from_history(history),
         "need_rediagnosis": rediag,
         "message": REDIAG_MESSAGE if rediag else "",
     })

@@ -151,6 +151,27 @@ def test_bad_event_not_saved():
     assert sql("SELECT count(*) FROM user_events WHERE user_id = 'app-4'") == [(0,)]
 
 
+def test_many_users_at_once_share_pool():
+    # 여러 명이 동시에 불러도 모두 성공하고, 연결은 DB_POOL_SIZE개를 넘지 않는다
+    import threading
+    from rec_config import DB_POOL_SIZE
+    use_db()
+    codes = []
+
+    def one(i):
+        res = app.test_client().post("/api/feed/scroll", json={"user_id": f"app-c{i}", "answers": ANSWERS_S})
+        codes.append(res.status_code)
+
+    threads = [threading.Thread(target=one, args=(i,)) for i in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert codes == [200] * 8
+    assert 1 <= feed_api.STORE._opened <= DB_POOL_SIZE
+    assert sql("SELECT count(*) FROM body_profiles WHERE user_id LIKE 'app-c%%'") == [(8,)]
+
+
 def test_db_down_gives_503_json():
     feed_api.STORE = PgStore(make_conninfo(ADMIN_URL, port="1", connect_timeout="2"))
     res = client.post("/api/feed/scroll", json={"mode": "general"})

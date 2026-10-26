@@ -5,6 +5,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -87,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
     private String selectedBodyType = "";
 
     private static final int LOAD_MORE_DISTANCE_DP = 600;
+    // 스크롤 도중 다음 묶음을 못 받으면 이만큼 쉬었다가 다시 시도한다
+    private static final long HOME_RETRY_DELAY_MS = 5000;
 
     private SwitchCompat switchBodyMode;
     private TextView textHomeRecTitle;
@@ -96,6 +99,10 @@ public class MainActivity extends AppCompatActivity {
     private int homePage = 0;
     private boolean homeHasMore = true;
     private boolean homeLoading = false;
+    // 다음 묶음을 다시 시도해도 되는 시각 (SystemClock.elapsedRealtime 기준). 0이면 바로
+    private long homeRetryAt = 0;
+    // 연결 실패 안내를 이미 띄웠는지 (다시 시도할 때마다 토스트가 반복되지 않게)
+    private boolean homeErrorShown = false;
     private int homeRequestId = 0;
     // 홈을 불러올 때의 체형 정보 (설문 시각 + 대표 체형). 바뀌면 다시 불러온다
     private String loadedBodyKey = "";
@@ -428,6 +435,8 @@ public class MainActivity extends AppCompatActivity {
         homePage = 0;
         homeHasMore = true;
         homeLoading = false;
+        homeRetryAt = 0;
+        homeErrorShown = false;
 
         loadedBodyKey = RecommendApi.bodyInputKey(this);
 
@@ -446,7 +455,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (homeLoading
                 || !homeHasMore
-                || !"홈".equals(selectedMenu)) {
+                || !"홈".equals(selectedMenu)
+                || SystemClock.elapsedRealtime() < homeRetryAt) {
             return;
         }
 
@@ -455,12 +465,22 @@ public class MainActivity extends AppCompatActivity {
         final int requestId = homeRequestId;
         final boolean bodyMode = switchBodyMode.isChecked();
 
+        // 이미 화면에 있는 서버 상품 (서버가 이 순서를 고정하고 그 뒤를 이어 준다)
+        List<String> shown = new ArrayList<>();
+
+        for (Product product : homeProducts) {
+            if (product.isFromServer()) {
+                shown.add(product.getServerId());
+            }
+        }
+
         RecommendApi.loadFeed(
                 this,
                 bodyMode
                         ? RecommendApi.MODE_BODY
                         : RecommendApi.MODE_GENERAL,
                 homePage,
+                shown,
                 new RecommendApi.Callback<RecommendApi.FeedPage>() {
 
                     @Override
@@ -471,6 +491,8 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         homeLoading = false;
+                        homeRetryAt = 0;
+                        homeErrorShown = false;
 
                         int start = homeProducts.size();
                         homeProducts.addAll(page.items);
@@ -503,6 +525,28 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         homeLoading = false;
+
+                        if (!homeProducts.isEmpty() && code != 400) {
+
+                            // 스크롤 도중 실패(연결 끊김·DB 잠시 멈춤): 멈추지 않고 잠시 뒤 다시 시도한다
+                            homeRetryAt = SystemClock.elapsedRealtime() + HOME_RETRY_DELAY_MS;
+
+                            if (!homeErrorShown) {
+                                homeErrorShown = true;
+                                Toast.makeText(
+                                        MainActivity.this,
+                                        message + " 잠시 뒤 다시 불러올게요",
+                                        Toast.LENGTH_LONG
+                                ).show();
+                            }
+
+                            homeScrollView.postDelayed(
+                                    MainActivity.this::loadMoreIfNearBottom,
+                                    HOME_RETRY_DELAY_MS
+                            );
+                            return;
+                        }
+
                         homeHasMore = false;
 
                         if (code == 400 && bodyMode) {
