@@ -19,6 +19,9 @@ SEG_MODEL = os.environ.get("SEG_MODEL", r"D:\Dataset\Capstone\training_models\se
 VALID_LIKELIHOOD = 0.5
 ARM_RADIUS_RATIO = 0.03
 LEG_Y_OFFSET_RATIO = 0.02
+# 가슴 단면은 타원보다 각져서 타원 둘레가 작게 나온다. 사이즈코리아 8차 20대 가슴 중앙값 기준
+# 실측÷타원: 여성 1.073~1.074 (남성 1.089~1.090). 서비스는 여성만 받아서 여성 값을 쓴다. 허리·엉덩이(1.02~1.03)는 보정하지 않는다
+CHEST_ELLIPSE_FACTOR = 1.075
 MAX_HALF_WIDTH_RATIO = 0.16
 MAX_GAP_RATIO = 0.12
 DEFAULT_BODY_FRACTION = 0.8
@@ -73,7 +76,8 @@ class Measurer:
         return arr.reshape(arr.shape[0], arr.shape[1])      # (높이, 너비, 1)로 나오는 경우가 있다
 
     # ---- 정면 ----
-    def measure_front(self, rgb, height_cm):
+    def measure_front(self, rgb, height_cm, erase=True):
+        """erase=False면 팔을 지우지 않은 윤곽으로 잰다 (팔 제외 효과 비교용)"""
         if rgb is None:                       # 샘플에 없는 사진
             return None
         lms = self.landmarks(rgb)
@@ -89,7 +93,8 @@ class Measurer:
         p = [((x * W - x0) / cw * mw, (y * H - y0) / ch * mh, v) for x, y, v in lms]
         axis = body_axis([((x * W - x0) / cw, (y * H - y0) / ch, v) for x, y, v in lms])
         body_rows = axis["bodyHeight"] * mh if axis and axis["bodyHeight"] > 0 else DEFAULT_BODY_FRACTION * mh
-        erase_arms(data, p, body_rows)
+        if erase:
+            erase_arms(data, p, body_rows)
         sil = build_silhouette(data, axis)
         if sil is None:
             return None
@@ -109,7 +114,8 @@ class Measurer:
             leg = (sil.bottom - hip_y) * cm_mask - LEG_Y_OFFSET_RATIO * height_cm
             if leg > 0:
                 lengths["leg"] = leg
-        return {"sil": sil, "ratios": ratios, "widths": widths, "lengths": lengths, "cm_mask": cm_mask}
+        return {"sil": sil, "ratios": ratios, "widths": widths, "lengths": lengths, "cm_mask": cm_mask,
+                "crop": (x0, y0, cw, ch, mw, mh), "landmarks": lms}
 
     # ---- 옆면 ----
     def measure_side(self, rgb, height_cm):

@@ -9,7 +9,7 @@ import sys
 
 import numpy as np
 
-from features import Measurer, ellipse, pair_thickness
+from features import CHEST_ELLIPSE_FACTOR, Measurer, ellipse, pair_thickness
 from sample_baseline_data import CODES, FRONT_CAMS, SIDE_CAMS, SampleZip
 
 ZIP, OUT = sys.argv[1], sys.argv[2]
@@ -33,6 +33,7 @@ for subject in sz.subjects():
                 if not t:
                     continue
                 est = {k: ellipse(f["widths"][k], t[k]) for k in ("chest", "waist", "hip")}
+                est["chest"] *= CHEST_ELLIPSE_FACTOR
                 est.update(arm=f["lengths"]["arm"], shoulder=f["lengths"]["shoulder"], leg=f["lengths"]["leg"])
                 row = {"subject": subject, "code": code, "front": fc, "side": sc}
                 for k in GT_NAMES:
