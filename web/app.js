@@ -38,6 +38,8 @@ let poseLandmarker = null;
 let segmenter = null;
 let modelsReady = false;
 let userHeightCm = 0;
+let userWeightKg = 0;        // 선택 입력 (없으면 0)
+let userAge = 0;
 
 let frontCanvas = null;
 let sideCanvas = null;
@@ -181,6 +183,30 @@ function buildSilhouette(data, width, height, axis) {
 // 4) 길이와 폭 모두 윤곽의 머리 꼭대기~발바닥으로 한 가지 스케일을 쓴다
 const ARM_RADIUS_RATIO = 0.03;   // 팔 반쪽 굵기 / 몸 키
 const LEG_Y_OFFSET_RATIO = 0.02; // 엉덩이 관절보다 Y존이 조금 아래라서 키의 이만큼을 뺀다 (샘플 1명 기준, 더 모아서 맞출 것)
+// 가슴 단면은 타원보다 각져서 타원 둘레가 실제보다 작게 나온다.
+// 사이즈코리아 8차 20대 가슴 중앙값 기준 실측÷타원: 여성 1.073~1.074, 남성 1.089~1.090 → 성별을 모르니 중간값
+// (허리 1.02~1.03, 엉덩이 1.02~1.03은 타원 그대로 써도 맞아서 보정하지 않는다)
+// 서비스는 여성만 받으므로 여성 값(1.073~1.074)을 쓴다
+const CHEST_ELLIPSE_FACTOR = 1.075;
+
+// 키·몸무게(·나이) → 치수 일차식 (여성 499명, AI Hub 「한국인 전신 형상 및 치수 측정」 실측으로 맞춤: training/export_prior_coef.py)
+// 값 = [절편, 키 계수, 몸무게 계수(, 나이 계수)]. 정답 정의는 사이즈코리아 표준 항목(젖가슴둘레·허리둘레(허리옆점)·엉덩이둘레·어깨사이너비·팔길이·샅높이)
+const PRIOR_COEF = {"hw": {"chest": [107.673, -0.4234, 0.8501], "waist": [117.329, -0.6373, 1.0475], "hip": [59.1332, 0.0013, 0.5914], "shoulder": [13.3707, 0.1091, 0.0649], "arm": [1.4402, 0.2992, 0.0513], "leg": [-19.3446, 0.5905, -0.0853]}, "hwa": {"chest": [92.106, -0.3316, 0.8172, 0.059], "waist": [80.0505, -0.4175, 0.9688, 0.1413], "hip": [67.6433, -0.0488, 0.6094, -0.0323], "shoulder": [13.0271, 0.1111, 0.0642, 0.0013], "arm": [-1.4133, 0.316, 0.0453, 0.0108], "leg": [-19.726, 0.5927, -0.0861, 0.0014]}};
+// 5겹 교차검증 평균 절대 오차(cm, 키+몸무게+나이)
+const PRIOR_MAE = {"chest": 2.4, "waist": 2.6, "hip": 1.8, "shoulder": 1.1, "arm": 1.1, "leg": 1.6};
+const PRIOR_RANGE = { height: [130, 200], weight: [30, 150], age: [18, 90] }; // 계수를 맞춘 데이터의 범위. 밖은 계산하지 않는다
+
+// 키·몸무게(·나이)로 평균 체형의 치수를 어림한다. 사진과 따로 계산한 참고값이다. 입력이 없거나 범위 밖이면 null
+function priorEstimate(heightCm, weightKg, age) {
+  const inR = (v, [lo, hi]) => v >= lo && v <= hi;
+  if (!inR(heightCm, PRIOR_RANGE.height) || !inR(weightKg, PRIOR_RANGE.weight)) return null;
+  const useAge = inR(age, PRIOR_RANGE.age);
+  const coef = useAge ? PRIOR_COEF.hwa : PRIOR_COEF.hw;
+  const x = useAge ? [heightCm, weightKg, age] : [heightCm, weightKg];
+  const out = { useAge };
+  for (const [key, c] of Object.entries(coef)) out[key] = c[0] + c.slice(1).reduce((s, v, i) => s + v * x[i], 0);
+  return out;
+}
 const FIXED_RATIOS = { chest: 0.29, waist: 0.43, hip: 0.52 }; // 관절을 못 찾을 때 (옛 방식)
 
 function detectPose(canvas) {
@@ -417,9 +443,11 @@ function photoWarnings(lms, W, H, view) {
   if (!lms) return [label + ": 사람의 관절이 잘 안 잡혔어요. 전신이 보이게 찍은 사진인지 확인해 주세요."];
   const ok = (i) => lms[i] && (lms[i].visibility ?? 1) >= 0.3;
   const out = [];
-  if (ok(L.NOSE) && ok(L.L_ANKLE) && ok(L.R_ANKLE)) {
+  // 옆모습은 반대쪽 발목이 몸에 가려져 인식 점수가 낮게 나오므로 한쪽만 보여도 통과시킨다
+  const ankles = [L.L_ANKLE, L.R_ANKLE].filter(ok);
+  if (ok(L.NOSE) && (view === "side" ? ankles.length >= 1 : ankles.length === 2)) {
     const noseY = lms[L.NOSE].y;
-    const ankleY = (lms[L.L_ANKLE].y + lms[L.R_ANKLE].y) / 2;
+    const ankleY = ankles.reduce((s, i) => s + lms[i].y, 0) / ankles.length;
     const base = ankleY - noseY;
     const headY = noseY - 0.075 * base;
     const feet = [L.L_HEEL, L.R_HEEL, L.L_FOOT, L.R_FOOT].filter(ok).map((i) => lms[i].y);
@@ -453,10 +481,37 @@ function ellipse(widthCm, depthCm) {
   return Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)));
 }
 
+// ---- 키·몸무게 기반 추정을 사진 결과와 나란히 보여 준다 (비교용, 사진 계산은 건드리지 않는다) ----
+function renderPrior(photo) {
+  const box = $("prior-box");
+  const est = priorEstimate(userHeightCm, userWeightKg, userAge);
+  box.classList.toggle("hidden", !est);
+  if (!est) return;
+  const rows = [
+    ["가슴둘레", "chest"], ["허리둘레", "waist"], ["골반(엉덩이)둘레", "hip"],
+    ["어깨너비", "shoulder"], ["팔 길이", "arm"], ["다리 길이(샅높이)", "leg"],
+  ];
+  const f = (v) => (v > 0 ? v.toFixed(1) : "-");
+  $("prior-note").textContent =
+    "평균 체형을 가정한 계산이라 사람마다 달라요. 20~79세 여성 499명 실측으로 검증한 평균 오차는 " +
+    "가슴 " + PRIOR_MAE.chest + "·허리 " + PRIOR_MAE.waist + "·엉덩이 " + PRIOR_MAE.hip + "cm 안팎이에요" +
+    (est.useAge ? "." : " (나이를 넣으면 허리가 조금 더 정확해져요).") +
+    " 차이가 큰 항목(주황색)은 사진 측정이 옷이나 자세 때문에 흔들렸을 수 있어요.";
+  $("prior").innerHTML =
+    "<tr><th></th><th>사진 추정</th><th>키·몸무게 추정</th><th>차이</th></tr>" +
+    rows.map(([label, key]) => {
+      const p = photo[key], e = est[key];
+      const diff = p > 0 ? p - e : null;
+      const big = diff !== null && Math.abs(diff) >= (PRIOR_MAE[key] || 2) * 2.5;
+      return "<tr><td>" + label + "</td><td>" + f(p) + "</td><td>" + f(e) + "</td>" +
+        "<td class=\"" + (big ? "diff-big" : "") + "\">" + (diff === null ? "-" : (diff > 0 ? "+" : "") + diff.toFixed(1)) + "</td></tr>";
+    }).join("");
+}
+
 // ---- 결과 ------------------------------------------------------------------
 function showResult() {
   const r = frontResult;
-  const chest = ellipse(frontWidths.chest, sideWidths.chest);
+  const chest = ellipse(frontWidths.chest, sideWidths.chest) * CHEST_ELLIPSE_FACTOR;
   const waist = ellipse(frontWidths.waist, sideWidths.waist);
   const hip = ellipse(frontWidths.hip, sideWidths.hip);
   if (chest <= 0 || waist <= 0 || hip <= 0) {
@@ -494,6 +549,8 @@ function showResult() {
     cell("하체 비율", leg > 0 ? ((leg / userHeightCm) * 100).toFixed(1) : "-", "%"),
     cell("허리-골반 비율 (WHR)", (waist / hip).toFixed(2), ""),
   ].join("");
+
+  renderPrior({ chest, waist, hip, shoulder: r.shoulderWidth, arm, leg });
 
   $("img-front").src = frontCanvas.toDataURL("image/jpeg", 0.8);
   $("img-side").src = sideCanvas.toDataURL("image/jpeg", 0.8);
@@ -576,6 +633,8 @@ $("btn-album-analyze").addEventListener("click", async () => {
   const h = readHeight();
   if (!h) return;
   userHeightCm = h;
+  userWeightKg = parseFloat($("weight").value) || 0;
+  userAge = parseFloat($("age").value) || 0;
   setBusy(true, "정면 사진을 분석하고 있습니다...");
   await nextFrame();
   try {
