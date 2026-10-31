@@ -3,6 +3,8 @@ package com.example.capstone.login;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.example.capstone.data.AccountPrefs;
+
 /**
  * 로그인 상태를 기기에 기억해 둔다. (앱을 껐다 켜도 유지)
  *
@@ -35,6 +37,7 @@ public final class LoginSession {
                 .putString(KEY_EMAIL, email == null ? "" : email)
                 .putString(KEY_PHONE, phone == null ? "" : phone)
                 .apply();
+        AccountPrefs.adoptGuest(context);
     }
 
     public static void login(Context context, String userId, String name, String email, String phone) {
