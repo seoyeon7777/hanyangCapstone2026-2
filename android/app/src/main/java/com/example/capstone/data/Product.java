@@ -14,6 +14,7 @@ public class Product {
     private boolean liked;
     private boolean inCart;
     private int cartQuantity;
+    private boolean cartSelected = true;
 
     // 장바구니에서 고객이 선택한 옵션
     private String selectedSize;
@@ -81,6 +82,14 @@ public class Product {
 
     public void setCartQuantity(int cartQuantity) {
         this.cartQuantity = cartQuantity;
+    }
+
+    public boolean isCartSelected() {
+        return cartSelected;
+    }
+
+    public void setCartSelected(boolean cartSelected) {
+        this.cartSelected = cartSelected;
     }
 
     public String getSelectedSize() {

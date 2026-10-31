@@ -182,15 +182,26 @@ def _pick_in_order(scored, limit, block, shown=()):
     while candidates and (limit is None or len(result) < limit):
         if result and len(result) % block == 0:
             tag_count = {}  # 새 묶음 시작
-        allowed = [r for r in candidates if tag_ok(r)]
-        if not allowed:
+        first_tag_ok = None
+        pick_index = None
+        for i, r in enumerate(candidates):
+            if not tag_ok(r):
+                continue
+            if first_tag_ok is None:
+                first_tag_ok = i
+            if category_ok(r):
+                pick_index = i
+                break
+        if pick_index is None and first_tag_ok is not None:
+            pick_index = first_tag_ok
+        if pick_index is None:
             if limit is not None and block >= limit:
                 break  # rank: 남은 옷이 모두 대표 태그 제한에 걸림
-            allowed = candidates  # 스크롤: 뒤로 미룰 곳이 없으면 그냥 보여 줌
+            # 스크롤: 뒤로 미룰 곳이 없으면 그냥 보여 줌
+            pick_index = next((i for i, r in enumerate(candidates) if category_ok(r)), 0)
         # 두 규칙을 모두 지키는 옷이 없으면 category 규칙만 포기
-        pick = next((r for r in allowed if category_ok(r)), allowed[0])
+        pick = candidates.pop(pick_index)
         result.append(pick)
-        candidates.remove(pick)
         tag = _rep_tag(pick)
         if tag is not None:
             tag_count[tag] = tag_count.get(tag, 0) + 1

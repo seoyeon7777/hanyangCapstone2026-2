@@ -526,7 +526,10 @@ public class MainActivity extends AppCompatActivity {
 
                         homeLoading = false;
 
-                        if (!homeProducts.isEmpty() && code != 400) {
+                        // 연결 실패(0)·서버 오류(5xx)만 다시 시도한다. 400 같은 요청 오류는 다시 보내도 같으므로 아래에서 처리
+                        boolean retryable = code == 0 || code >= 500;
+
+                        if (!homeProducts.isEmpty() && retryable) {
 
                             // 스크롤 도중 실패(연결 끊김·DB 잠시 멈춤): 멈추지 않고 잠시 뒤 다시 시도한다
                             homeRetryAt = SystemClock.elapsedRealtime() + HOME_RETRY_DELAY_MS;

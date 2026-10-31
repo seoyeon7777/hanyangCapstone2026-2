@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import com.example.capstone.BuildConfig;
 import com.example.capstone.ui.BodyTypeActivity;
 
 import org.json.JSONArray;
@@ -43,7 +44,8 @@ public final class RecommendApi {
 
     // 에뮬레이터에서는 10.0.2.2가 PC를 가리킨다.
     // 실제 휴대폰이면 서버 화면에 찍힌 PC IP로 바꾼다. 예) "http://192.168.0.12:5000"
-    public static final String BASE_URL = "http://10.0.2.2:5000";
+    // 서버 주소는 android/local.properties의 recommend.baseUrl에서 읽는다 (없으면 에뮬레이터 주소 http://10.0.2.2:5000)
+    public static final String BASE_URL = BuildConfig.RECOMMEND_BASE_URL;
 
     public static final String MODE_BODY = "body";        // 토글 ON: 골격 맞춤 추천
     public static final String MODE_GENERAL = "general";  // 토글 OFF: 일반 추천
@@ -53,23 +55,19 @@ public final class RecommendApi {
     // Supabase(싱가포르)를 쓰면 첫 요청이 느릴 수 있어서 넉넉하게
     private static final int TIMEOUT_MS = 10000;
 
-    private static final int DIAGNOSE_TIMEOUT_MS = 3000;
-
     // 클릭·찜 기록은 화면과 상관없으니 짧게 기다린다 (주소가 틀려도 기록이 쌓여 늦어지지 않게)
     private static final int EVENT_TIMEOUT_MS = 3000;
 
     // 연결 실패 뒤 기록을 쉬는 시간·재진단 안내 쉬는 기간은 RecommendTiming에 있다
 
     private static final String PREF_NAME = "recommend";
-    private static final String KEY_USER_ID = "user_id";
     private static final String KEY_REDIAG_SHOWN_AT = "rediag_notice_shown_at";
 
     // 주문번호 → 그 주문에 들어 있던 서버 상품 id 목록 (반품할 때 return을 보내려고 기기에 저장)
     private static final String KEY_ORDER_PRODUCTS = "order_server_products";
 
-    // 찜한 서버 상품 {product_id: {name, brand, price, category}}. 앱을 꺼도 찜 탭에 남게 기기에 저장한다
+    // 찜한 서버 상품 {product_id: {name, brand, price, category}}은 로그인 계정별로 기기에 저장한다 (AccountPrefs)
     // [여기에 DB 입력] 로그인·찜 목록 API가 생기면 서버(wishlists)에서 받아 오게 바꾼다
-    private static final String KEY_LIKED = "liked_products";
 
     // 서버 상품은 product_id마다 Product를 하나만 만든다.
     // 홈을 다시 불러와도 같은 객체를 써서 찜 표시가 유지되고, 찜 탭·상세 화면이 같은 상품을 본다
@@ -112,14 +110,6 @@ public final class RecommendApi {
     // 홈 피드 체형 (대표 체형 / 최근 설문)
     // =========================
 
-    /** 내 체형관리의 대표 체형 → S / W / N. 대표 체형이 없거나 골격 체형이 아니면 null */
-    public static String activeBodyType(Context context) {
-
-        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
-
-        return active == null ? null : typeCode(active.bodyType);
-    }
-
     private static String typeCode(String label) {
 
         if (label == null) {
@@ -138,17 +128,79 @@ public final class RecommendApi {
         }
     }
 
+    /**
+     * 홈 추천에 보낼 체형 입력. 순서:
+     * 1) 대표 체형 카드에 저장한 설문 답 → 서버가 진단 (설문을 다시 하면 결과 화면과 홈 체형이 같아진다)
+     * 2) 옛 카드라 설문 답이 없으면 카드의 체형 이름을 100%로
+     * 3) 대표 체형이 없으면 최근 설문 답. 아무것도 없으면 null
+     */
+    private static JSONObject bodyInput(Context context) throws JSONException {
+
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
+
+        if (active != null) {
+
+            if (active.surveyAnswers != null) {
+                JSONObject input = new JSONObject();
+                input.put("answers", answersJson(active.surveyAnswers));
+                return input;
+            }
+
+            String activeType = typeCode(active.bodyType);
+
+            if (activeType != null) {
+                JSONObject ratio = new JSONObject();
+                ratio.put(activeType, 1.0);
+
+                JSONObject bodyJson = new JSONObject();
+                bodyJson.put("ratio", ratio);
+
+                JSONObject input = new JSONObject();
+                input.put("body", bodyJson);
+                return input;
+            }
+        }
+
+        int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
+
+        if (answers == null) {
+            return null;
+        }
+
+        JSONObject input = new JSONObject();
+        input.put("answers", answersJson(answers));
+        return input;
+    }
+
+    private static JSONObject answersJson(int[] answers) throws JSONException {
+
+        JSONObject answerJson = new JSONObject();
+
+        for (int i = 0; i < answers.length; i++) {
+            answerJson.put("q" + (i + 1), answers[i]);
+        }
+
+        return answerJson;
+    }
+
     /** 골격 맞춤 추천에 쓸 체형 정보가 있는지 (대표 체형 또는 설문) */
     public static boolean hasBodyInput(Context context) {
 
-        return activeBodyType(context) != null
-                || BodyTypeActivity.lastSurveyAnswers(context) != null;
+        try {
+            return bodyInput(context) != null;
+        } catch (JSONException e) {
+            return false;
+        }
     }
 
-    /** 홈이 체형이 바뀌었는지 알아챌 때 쓰는 값 (설문 시각 + 대표 체형) */
+    /** 홈이 체형이 바뀌었는지 알아챌 때 쓰는 값 (계정 + 설문 시각 + 대표 체형 카드) */
     public static String bodyInputKey(Context context) {
 
-        return BodyTypeActivity.lastSurveyTime(context) + "/" + activeBodyType(context);
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
+
+        return BodyProfileStore.accountKey(context)
+                + "/" + BodyTypeActivity.lastSurveyTime(context)
+                + "/" + (active == null ? "" : active.id + "@" + active.savedAt);
     }
 
     // =========================
@@ -226,32 +278,16 @@ public final class RecommendApi {
             body.put("size", PAGE_SIZE);
             body.put("shown", new JSONArray(shown));
 
-            // 설문 답을 매번 같이 보낸다.
+            // 체형(설문 답 또는 대표 체형)을 매번 같이 보낸다.
             // 서버가 메모리 저장소로 돌 때 서버를 다시 켜도 체형을 바로 다시 진단할 수 있다.
-            // 단, 내 체형관리에 대표 체형이 있으면 항상 대표 체형을 따른다.
-            int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
-            String activeType = activeBodyType(context);
+            // 카메라 치수는 보내지 않는다 (팀 결정: 체형 진단은 설문만. 서버 rec_config.DIAGNOSIS_USE_MEASUREMENTS)
+            JSONObject input = bodyInput(context);
 
-            if (activeType != null) {
-
-                JSONObject ratio = new JSONObject();
-                ratio.put(activeType, 1.0);
-
-                JSONObject bodyJson = new JSONObject();
-                bodyJson.put("ratio", ratio);
-
-                body.put("body", bodyJson);
-
-            } else if (answers != null) {
-                JSONObject answerJson = new JSONObject();
-
-                for (int i = 0; i < answers.length; i++) {
-                    answerJson.put("q" + (i + 1), answers[i]);
+            if (input != null) {
+                for (Iterator<String> keys = input.keys(); keys.hasNext(); ) {
+                    String key = keys.next();
+                    body.put(key, input.get(key));
                 }
-
-                body.put("answers", answerJson);
-
-                // 카메라 치수는 보내지 않는다 (팀 결정: 체형 진단은 설문만. 서버 rec_config.DIAGNOSIS_USE_MEASUREMENTS)
             }
         } catch (JSONException e) {
             callback.onError(0, "요청을 만들지 못했어요");
@@ -355,59 +391,6 @@ public final class RecommendApi {
             default:
                 return "기타";
         }
-    }
-
-    public static void finalBodyType(
-            Context context,
-            float heightCm,
-            float shoulderCm,
-            float armCm,
-            float upperBodyCm,
-            float legCm,
-            Callback<String> callback
-    ) {
-        int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
-
-        if (answers == null) {
-            callback.onError(0, "설문 기록이 없어요");
-            return;
-        }
-
-        JSONObject body = new JSONObject();
-
-        try {
-            JSONObject answerJson = new JSONObject();
-
-            for (int i = 0; i < answers.length; i++) {
-                answerJson.put("q" + (i + 1), answers[i]);
-            }
-
-            // 치수(heightCm 등)는 받지만 보내지 않는다 (팀 결정: 체형 진단은 설문만).
-            // 다시 쓰기로 하면 여기서 measurements를 같이 보내고 서버 DIAGNOSIS_USE_MEASUREMENTS를 켠다
-            body.put("answers", answerJson);
-        } catch (JSONException e) {
-            callback.onError(0, "요청을 만들지 못했어요");
-            return;
-        }
-
-        // 설문 결과 화면과 같은 서버 진단 (치수가 이상하면 서버가 설문만으로 진단한다)
-        post("/api/diagnose", body, DIAGNOSE_TIMEOUT_MS, new Callback<JSONObject>() {
-            @Override
-            public void onSuccess(JSONObject result) {
-                String primary = result.optString("primary", "");
-
-                if (primary.isEmpty()) {
-                    callback.onError(0, "서버 응답을 읽지 못했어요");
-                } else {
-                    callback.onSuccess(primary);
-                }
-            }
-
-            @Override
-            public void onError(int code, String message) {
-                callback.onError(code, message);
-            }
-        });
     }
 
     // =========================
@@ -523,7 +506,7 @@ public final class RecommendApi {
             return;
         }
 
-        prefs(context).edit().putString(KEY_LIKED, liked.toString()).apply();
+        saveLikedJson(context, liked);
 
         sendEvent(context, product, product.isLiked() ? "like" : "unlike");
     }
@@ -548,7 +531,7 @@ public final class RecommendApi {
             return;
         }
 
-        prefs(context).edit().putString(KEY_LIKED, liked.toString()).apply();
+        saveLikedJson(context, liked);
     }
 
     /** 찜한 서버 상품 목록 (찜 탭용). 홈에서 아직 안 불러온 상품은 저장해 둔 정보로 만든다 */
@@ -593,8 +576,20 @@ public final class RecommendApi {
         return serverId == null ? null : SERVER_PRODUCTS.get(serverId);
     }
 
+    // 찜 목록은 로그인 계정별로 저장한다 (AccountPrefs)
     private static JSONObject likedJson(Context context) {
-        return jsonPref(context, KEY_LIKED);
+        try {
+            return new JSONObject(AccountPrefs.recommend(context)
+                    .getString(AccountPrefs.key(context, AccountPrefs.RECOMMEND_LIKED), "{}"));
+        } catch (JSONException e) {
+            return new JSONObject();
+        }
+    }
+
+    private static void saveLikedJson(Context context, JSONObject liked) {
+        AccountPrefs.recommend(context).edit()
+                .putString(AccountPrefs.key(context, AccountPrefs.RECOMMEND_LIKED), liked.toString())
+                .apply();
     }
 
     private static JSONObject jsonPref(Context context, String key) {
@@ -731,19 +726,18 @@ public final class RecommendApi {
     // =========================
 
     /**
-     * 기기마다 한 번 만든 아이디. 같은 아이디면 서버가 찜·클릭 기록을 이어서 쓴다.
+     * 로그인 계정(로그인 전이면 guest)마다 한 번 만든 아이디. 같은 아이디면 서버가 찜·클릭 기록을 이어서 쓴다.
      * [여기에 DB 입력] 로그인 회원번호가 생기면 그 값으로 바꾼다.
      */
     public static String userId(Context context) {
 
-        SharedPreferences prefs = context.getApplicationContext()
-                .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-
-        String id = prefs.getString(KEY_USER_ID, "");
+        SharedPreferences prefs = AccountPrefs.recommend(context);
+        String key = AccountPrefs.key(context, AccountPrefs.RECOMMEND_USER_ID);
+        String id = prefs.getString(key, "");
 
         if (id.isEmpty()) {
             id = "app-" + UUID.randomUUID();
-            prefs.edit().putString(KEY_USER_ID, id).apply();
+            prefs.edit().putString(key, id).apply();
         }
 
         return id;

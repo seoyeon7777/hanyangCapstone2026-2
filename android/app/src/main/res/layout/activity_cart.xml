@@ -25,6 +25,16 @@
             android:src="@drawable/ic_back"
             app:tint="@color/black" />
 
+        <TextView
+            android:id="@+id/textCartTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="장바구니 0"
+            android:textColor="#111111"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
     </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView
