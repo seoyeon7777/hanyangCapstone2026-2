@@ -5,23 +5,24 @@ feed_api.py는 어느 쪽이든 같은 함수만 부른다.
 
     items()                      추천 후보 상품 목록 (C의 item 모양)
     item(product_id)             상품 하나 (없으면 None)
-    user(user_id)                {"body", "pref", "history"} (처음 보는 사용자면 None)
+    user(user_id)                {"body", "answers", "pref", "history"} (처음 보는 사용자면 None)
     ensure_user(user_id)         사용자가 없으면 만든다
     save_body(user_id, body, answers)   체형 저장 (DB에서는 body_profiles, 바뀐 경우만 새 행)
     add_event(user_id, item, event)     반응 기록 (DB에서는 user_events)
 
-DB에서는 취향(pref)을 따로 저장하지 않는다. user_events를 순서대로 update_pref에 다시 넣어 매번 계산한다
-(가중치를 바꿔도 기록과 어긋나지 않게 — db/db.sql의 user_events 설명과 같다).
+취향(pref)은 따로 저장하지 않는다. 반응 기록(history)에서 feed.pref_from_history로 매번 계산한다
+(최근 PREF_WINDOW개만. 가중치를 바꿔도 기록과 어긋나지 않게 — db/db.sql의 user_events 설명과 같다).
 """
 import json
 import os
+import queue
 import threading
 import time
 
 from rec_config import (
-    OUTFIT_GROUP, DATABASE_URL_FILE, DB_ITEMS_CACHE_SECONDS, DB_DEMO_USER_NAME,
+    OUTFIT_GROUP, DATABASE_URL_FILE, DB_ITEMS_CACHE_SECONDS, DB_DEMO_USER_NAME, DB_POOL_SIZE,
 )
-from feed import load_items, update_pref
+from feed import load_items, update_pref, pref_from_history
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -51,7 +52,7 @@ def make_store():
 
 
 def _new_user():
-    return {"body": None, "pref": {}, "history": []}
+    return {"body": None, "answers": None, "pref": {}, "history": []}
 
 
 class MemoryStore:
@@ -77,12 +78,15 @@ class MemoryStore:
         self._users.setdefault(user_id, _new_user())
 
     def save_body(self, user_id, body, answers=None):
-        self._users.setdefault(user_id, _new_user())["body"] = body
+        user = self._users.setdefault(user_id, _new_user())
+        user["body"] = body
+        user["answers"] = answers
 
     def add_event(self, user_id, item, event):
+        update_pref({}, item, event)  # 모르는 event면 저장하기 전에 ValueError
         user = self._users.setdefault(user_id, _new_user())
-        user["pref"] = update_pref(user["pref"], item, event)  # 모르는 event면 여기서 ValueError
         user["history"].append({"item": item, "event": event})
+        user["pref"] = pref_from_history(user["history"])
 
     def reset(self):
         """테스트용: 사용자 기록을 모두 지운다."""
@@ -96,8 +100,11 @@ class PgStore:
 
     def __init__(self, url):
         self.url = url
-        self._conn = None
-        self._lock = threading.Lock()   # Flask가 요청을 여러 스레드로 받아도 연결 하나를 차례로 쓴다
+        # 연결을 최대 DB_POOL_SIZE개까지 열어 두고 요청마다 하나씩 빌려 쓴다.
+        # (연결 하나를 모두가 돌아가며 쓰면, 여러 사람이 동시에 쓸 때 차례를 기다리느라 느려진다)
+        self._idle = queue.LifoQueue()
+        self._opened = 0
+        self._opened_lock = threading.Lock()
         self._items = None
         self._by_id = {}
         self._loaded_at = 0.0
@@ -114,22 +121,68 @@ class PgStore:
         except psycopg.Error as e:
             raise StoreError(f"DB에 연결할 수 없어요 ({type(e).__name__})")
 
-    def _run(self, work):
-        """work(cursor)를 실행한다. 연결이 끊겼으면 한 번 다시 연결한다."""
+    def _borrow(self):
+        """쉬는 연결을 빌린다. 없으면 새로 열고, 이미 DB_POOL_SIZE개가 열려 있으면 하나가 돌아올 때까지 기다린다."""
+        try:
+            return self._idle.get_nowait()
+        except queue.Empty:
+            pass
+        with self._opened_lock:
+            can_open = self._opened < DB_POOL_SIZE
+            if can_open:
+                self._opened += 1
+        if not can_open:
+            try:
+                return self._idle.get(timeout=30)
+            except queue.Empty:
+                raise StoreError("DB 연결을 기다리다 시간이 초과됐어요")
+        try:
+            return self._connect()
+        except StoreError:
+            with self._opened_lock:
+                self._opened -= 1
+            raise
+
+    def _give_back(self, conn, broken=False):
+        if broken or conn.closed:
+            with self._opened_lock:
+                self._opened -= 1
+            try:
+                conn.close()
+            except Exception:
+                pass
+        else:
+            self._idle.put(conn)
+
+    def _run(self, work, write=False):
+        """빌린 연결로 work(cursor)를 실행한다. 연결이 끊겼으면 새 연결로 한 번 더 한다.
+
+        write=True면 트랜잭션으로 묶는다 (여러 문장이 다 되거나 다 안 되게).
+        읽기만 하면 트랜잭션 없이 보낸다 → 시작·끝 신호만큼 DB 왕복이 줄어든다.
+        """
         import psycopg
-        with self._lock:
-            for attempt in (1, 2):
-                if self._conn is None or self._conn.closed:
-                    self._conn = self._connect()
-                try:
-                    with self._conn.transaction(), self._conn.cursor() as cur:
-                        return work(cur)
-                except psycopg.OperationalError as e:
-                    self._conn = None
-                    if attempt == 2:
-                        raise StoreError(f"DB 작업이 실패했어요 ({type(e).__name__})")
-                except psycopg.Error as e:
-                    raise StoreError(f"DB 작업이 실패했어요 ({type(e).__name__}: {e})")
+        for attempt in (1, 2):
+            conn = self._borrow()
+            try:
+                if write:
+                    with conn.transaction(), conn.cursor() as cur:
+                        result = work(cur)
+                else:
+                    with conn.cursor() as cur:
+                        result = work(cur)
+            except psycopg.OperationalError as e:
+                self._give_back(conn, broken=True)
+                if attempt == 2:
+                    raise StoreError(f"DB 작업이 실패했어요 ({type(e).__name__})")
+                continue
+            except psycopg.Error as e:
+                self._give_back(conn)
+                raise StoreError(f"DB 작업이 실패했어요 ({type(e).__name__}: {e})")
+            except BaseException:
+                self._give_back(conn, broken=True)
+                raise
+            self._give_back(conn)
+            return result
 
     # ── 상품 ──
     def items(self):
@@ -164,8 +217,8 @@ class PgStore:
             "tags": list(tags), "seasons": list(seasons), "popularity": float(popularity),
             "price": price, "brand": brand or "", "image_url": image or "",
         } for pid, name, ctype, tags, seasons, popularity, price, brand, image in self._run(work)]
-        self._items = items
         self._by_id = {i["product_id"]: i for i in items}
+        self._items = items
         self._loaded_at = time.monotonic()
 
     # ── 사용자 ──
@@ -174,15 +227,17 @@ class PgStore:
         items_by_id = self._by_id
 
         def work(cur):
-            cur.execute("SELECT 1 FROM users WHERE user_id = %s", (user_id,))
-            if cur.fetchone() is None:
-                return None
+            # 사용자 확인과 지금 체형을 한 번에 읽는다 (없는 사용자면 행이 없음)
             cur.execute(
-                """SELECT ratio_s, ratio_w, ratio_n, primary_type, is_mixed FROM body_profiles
-                   WHERE user_id = %s AND is_current""",
+                """SELECT b.ratio_s, b.ratio_w, b.ratio_n, b.primary_type, b.is_mixed, b.answers
+                   FROM users u
+                   LEFT JOIN body_profiles b ON b.user_id = u.user_id AND b.is_current
+                   WHERE u.user_id = %s""",
                 (user_id,),
             )
             body_row = cur.fetchone()
+            if body_row is None:
+                return None
             cur.execute("SELECT product_id, event FROM user_events WHERE user_id = %s ORDER BY event_id",
                         (user_id,))
             return body_row, cur.fetchall()
@@ -190,18 +245,18 @@ class PgStore:
         found = self._run(work)
         if found is None:
             return None
-        body_row, events = found
+        (s, w, n, primary, is_mixed, answers), events = found
         user = _new_user()
-        if body_row:
-            s, w, n, primary, is_mixed = body_row
+        if primary is not None:
             user["body"] = {"ratio": {"S": s, "W": w, "N": n}, "primary": primary,
                             "kind": "mixed" if is_mixed else "single"}
+            user["answers"] = answers
         for product_id, event in events:
             item = items_by_id.get(product_id)
             if item is None:          # 지금은 판매하지 않는 상품의 기록은 건너뛴다
                 continue
-            user["pref"] = update_pref(user["pref"], item, event)
             user["history"].append({"item": item, "event": event})
+        user["pref"] = pref_from_history(user["history"])
         return user
 
     def ensure_user(self, user_id):
@@ -242,7 +297,7 @@ class PgStore:
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)""",
                 (user_id, *row),
             )
-        self._run(work)
+        self._run(work, write=True)
 
     def add_event(self, user_id, item, event):
         update_pref({}, item, event)  # 모르는 event면 저장하기 전에 ValueError

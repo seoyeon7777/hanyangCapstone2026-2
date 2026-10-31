@@ -14,7 +14,7 @@ from rec_config import (
     CATEGORY_TOP_N, CATEGORY_TITLES, OUTFIT_GROUP,
     OUTFIT_TOP_N,
     REASON_TEXT, REASON_MAX_TAGS, REASON_FALLBACK, REASON_EXCLUDED,
-    EVENT_WEIGHTS, POSITIVE_EVENTS,
+    EVENT_WEIGHTS, POSITIVE_EVENTS, PREF_WINDOW,
     REDIAG_WINDOW, REDIAG_RATIO, REDIAG_MIN_EVENTS,
     SCROLL_PAGE_SIZE,
     MODES, GENERAL_W_POPULARITY, GENERAL_W_PREF, GENERAL_W_SEASON,
@@ -150,16 +150,25 @@ def _rep_tag(r):
     return r["good_tags"][0] if r["good_tags"] else None
 
 
-def _pick_in_order(scored, limit, block):
+def _pick_in_order(scored, limit, block, shown=()):
     """rank·feed_order 공통: 다양성 규칙을 지키며 점수 높은 옷부터 하나씩 고른다.
 
     block: 대표 태그 개수를 세는 묶음 크기. 이 개수만큼 고를 때마다 태그 개수를 다시 0부터 센다.
     limit: 최대 몇 개를 고를지. None이면 끝까지.
+    shown: 이미 화면에 보여 준 product_id 순서. 이 옷들은 그 순서 그대로 맨 앞에 두고, 나머지만 새로 고른다.
+           (지금 점수에서 빠졌거나 제외된 옷은 건너뛴다)
     태그 규칙을 지키는 옷이 없을 때: block이 limit 이상(rank)이면 멈추고, 아니면(스크롤) 태그 규칙도 포기.
     """
     candidates = _by_score(scored)
-    result = []
+    by_id = {r["product_id"]: r for r in candidates}
+    result = [by_id[pid] for pid in dict.fromkeys(shown) if pid in by_id]
+    fixed = {r["product_id"] for r in result}
+    candidates = [r for r in candidates if r["product_id"] not in fixed]
     tag_count = {}
+    for r in result[len(result) - len(result) % block:]:  # 지금 묶음에 이미 나온 옷의 대표 태그
+        tag = _rep_tag(r)
+        if tag is not None:
+            tag_count[tag] = tag_count.get(tag, 0) + 1
 
     def tag_ok(r):
         tag = _rep_tag(r)
@@ -201,15 +210,17 @@ def rank(scored, top_n=TOP_N):
     return _pick_in_order(scored, limit=top_n, block=top_n)
 
 
-def feed_order(scored, page_size=SCROLL_PAGE_SIZE):
+def feed_order(scored, page_size=SCROLL_PAGE_SIZE, shown=()):
     """스크롤 피드용 전체 순서. 제외 안 된 옷이 전부 한 번씩 나온다.
 
     rank와 같은 규칙을 page_size개 묶음마다 적용한다.
     (같은 category 연속 최대 2개는 전체에 걸쳐, 대표 태그 최대 3개는 묶음마다)
     첫 묶음은 rank(scored, page_size)와 같다 → 홈 첫 화면 = "오늘의 추천".
     태그 제한 때문에 밀린 옷은 버리지 않고 다음 묶음으로 넘어간다.
+    shown(이미 보여 준 product_id 순서)을 주면 그 옷들을 그대로 맨 앞에 두고 나머지를 고른다.
+    → 스크롤 도중 클릭·찜으로 취향이 바뀌어도 이미 본 옷이 다시 나오거나 아직 못 본 옷이 빠지지 않는다.
     """
-    return _pick_in_order(scored, limit=None, block=page_size)
+    return _pick_in_order(scored, limit=None, block=page_size, shown=shown)
 
 
 def home_feed(body, items, pref=None, season="fall", mode="body"):
@@ -294,6 +305,18 @@ def update_pref(pref, item, event):
         value = new.get(tag, 0.0) + EVENT_WEIGHTS[event]
         new[tag] = round(min(1.0, max(-1.0, value)), 4)
     return new
+
+
+def pref_from_history(history):
+    """반응 기록 → 태그 선호도. 최근 PREF_WINDOW개 반응만 차례로 update_pref에 넣는다.
+
+    오래된 반응은 빠지므로, 관심이 바뀌면 예전 취향이 점점 사라진다.
+    메모리·DB 저장소가 둘 다 이 함수로 계산해서 결과가 같다.
+    """
+    pref = {}
+    for h in history[-PREF_WINDOW:]:
+        pref = update_pref(pref, h["item"], h["event"])
+    return pref
 
 
 def need_rediagnosis(history, body):

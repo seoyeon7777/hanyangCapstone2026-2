@@ -141,6 +141,7 @@ match_score(body, item) -> {
 ### 4-6. 추천 이유 + 피드백 학습 (6단계, 완료)
 - `reason(r)`: good_tags 앞 2개를 한국어 문장으로. 예: "칼라가 목선을 세워 주고, 몸에 맞는 핏이 라인을 정돈해 줘요." (태그→문장 표는 rec_config.REASON_TEXT, 어울림 태그 전부 있음). good_tags가 없으면 기본 문장, 제외된 옷은 제외 문장
 - `update_pref(pref, item, event)`: 아이템 태그마다 click +0.05, like +0.10, purchase +0.20, return −0.20 더하고 −1~1로 자른다. 새 dict를 돌려주고 원본은 안 바꾼다. 모르는 event는 ValueError
+- `pref_from_history(history)`: 사용자 취향 = **최근 반응 PREF_WINDOW(50)개**만 차례로 update_pref에 넣은 값. 메모리·DB 저장소 둘 다 이걸로 계산한다 (예전 관심이 영원히 남아 추천이 한쪽에 고정되던 문제 수정)
 - `need_rediagnosis(history, body)`: 최근 긍정 반응(like·purchase) 20개 중 1위 타입 피해야 함 태그가 붙은 옷이 50% 이상이면 True → "체형을 다시 진단해 볼까요?" 안내
   - history 형식: `[{"item": 상품, "event": "like"}, ...]` (오래된 것 → 최근 순)
   - 추가 규칙: 긍정 반응이 10개(REDIAG_MIN_EVENTS) 미만이면 판단하지 않고 False (찜 1~2개로 안내가 뜨는 것 방지)
@@ -167,8 +168,11 @@ match_score(body, item) -> {
   - 태그 제한에 걸린 옷은 버리지 않고 다음 묶음으로 미룸. 미룰 곳이 없으면 그냥 보여 줌
   - 첫 묶음 = rank(scored) = "오늘의 추천"
   - rank와 feed_order는 내부 함수 `_pick_in_order`를 같이 쓴다
-- `GET/POST /api/feed/scroll` (`/api/feed`와 같은 체형·user_id 입력 + `page`(0~), `size`(1~50, 기본 10))
+- `GET/POST /api/feed/scroll` (`/api/feed`와 같은 체형·user_id 입력 + `page`(0~), `size`(1~50, 기본 10), `shown`(선택))
   - 다양성 묶음은 size와 상관없이 항상 10개(SCROLL_PAGE_SIZE). size는 한 번에 보낼 개수만 정한다 → 몇 개씩 받든 이어 붙인 순서가 같다
+  - `shown` = 앱이 이미 보여 준 product_id 순서(최대 SCROLL_MAX_SHOWN). 주면 `feed_order(scored, shown=...)`가 그 옷들을 그대로 맨 앞에 두고(다양성 개수도 이어서 셈) 나머지를 고르고, 응답은 그 다음 size개. page는 순서에 안 쓴다
+    - 이유: page만 쓰면 스크롤 사이에 클릭·찜으로 취향이 바뀔 때 순서가 바뀌어, 이미 본 상품이 또 나오거나 못 본 상품이 빠졌다 (가상 사용자 40명 중 29~34명). shown을 쓰면 0명
+    - 앱(`RecommendApi.loadFeed`)은 홈에 있는 서버 상품 id를 항상 shown으로 보낸다. 스크롤 도중 실패하면 멈추지 않고 5초 뒤 다시 시도(안내 토스트는 한 번만)
   → `{"body", "season", "page", "size", "total", "has_more", "items"}` (items에 reason 포함)
 - `/feed-demo`: 연습 화면. 친구들 홈 화면이 오면 그 화면에서 `/api/feed/scroll`을 부르게 연결하고, 연습 화면은 지워도 된다
 
@@ -177,14 +181,14 @@ match_score(body, item) -> {
 - `mode` = `"body"`(ON, 기본) | `"general"`(OFF) — `rec_config.MODES`
 - `general_score(item, pref, season)`: 체형을 안 본다. 점수 = 인기 0.5 + 취향(pref_score) 0.3 + 계절 0.2
   - final_score와 같은 모양(body는 None, excluded False, good_tags 빈 목록)이라 rank·feed_order를 그대로 쓴다
-  - 이유 문장: 취향 ≥ 0.55 → "자주 본 스타일과 비슷해요", 인기 ≥ 0.75 → "요즘 많이 찾는 인기 상품이에요", 제철 → "지금 계절에 입기 좋아요" (앞에서 2개)
+  - 이유 문장: 취향 ≥ 0.65(GENERAL_PREF_MIN, 찜 3번·클릭 6번쯤. 0.55일 때는 찜 1번에도 붙었음) → "자주 본 스타일과 비슷해요", 인기 ≥ 0.75 → "요즘 많이 찾는 인기 상품이에요", 제철 → "지금 계절에 입기 좋아요" (앞에서 2개)
 - `score_by_mode(mode, body, items, pref, season)`: 토글에 맞는 점수 목록. home_feed·outfits에 `mode` 인자 추가 (OFF면 코디 보정 0)
 - 취향(pref)과 반응 기록은 두 모드가 같이 쓴다. need_rediagnosis는 body가 None이면 False
 - API: `/api/feed`, `/api/feed/scroll`에 `mode` 추가, 응답에 `"mode"`. `mode=general`이면 체형 없이도 된다 (`mode=body`는 여전히 체형 필요 → 400)
 - `/feed-demo`에 토글 스위치
 
 ### 4-10. 안드로이드 앱 홈 연결 (10단계)
-- `android/app/src/main/java/com/example/capstone/data/RecommendApi.java`: `BASE_URL`(에뮬레이터 `http://10.0.2.2:5000`, 폰은 PC IP), `loadFeed(context, mode, page, callback)` → `POST /api/feed/scroll`, `sendEvent(context, product, event)` → `POST /api/feed/event`
+- `android/app/src/main/java/com/example/capstone/data/RecommendApi.java`: `BASE_URL`(에뮬레이터 `http://10.0.2.2:5000`, 폰은 PC IP), `loadFeed(context, mode, page, shown, callback)` → `POST /api/feed/scroll` (shown = 홈에 이미 있는 서버 상품 id), `sendEvent(context, product, event)` → `POST /api/feed/event`
   - 외부 라이브러리 없이 `HttpURLConnection` + `org.json`. 백그라운드 스레드에서 보내고 결과는 메인 스레드
   - user_id = 기기마다 만든 `app-<UUID>` (SharedPreferences "recommend")
   - 설문 답(`BodyTypeActivity.lastSurveyAnswers`)을 매 요청에 `answers`로 같이 보냄 → 서버를 다시 켜도 진단이 바로 됨
@@ -200,13 +204,15 @@ match_score(body, item) -> {
 ### 4-11. DB 저장 (Supabase, 11단계)
 - 팀 결정: DB는 Supabase(무료 PostgreSQL). 표는 DB 담당의 `db/db.sql` 그대로. 연결 방법은 `recommend/DB_연결가이드.md`
 - `store.make_store()`: `DATABASE_URL` 환경 변수 → 맨 위 `database_url.txt` 순으로 주소를 찾고, 없으면 MemoryStore (지금까지와 같음)
-- 함수: `items()`, `item(id)`, `user(id)` → `{"body","pref","history"}` 또는 None, `ensure_user`, `save_body(id, body, answers)`, `add_event(id, item, event)`
+- 함수: `items()`, `item(id)`, `user(id)` → `{"body","answers","pref","history"}` 또는 None, `ensure_user`, `save_body(id, body, answers)`, `add_event(id, item, event)`
 - PgStore
   - 상품: products + categories + product_tags (+ brands) 조인. 판매중·삭제 안 됨·태그 있음·`clothing_type`이 OUTFIT_GROUP에 있는 것(jumpsuit 제외). `DB_ITEMS_CACHE_SECONDS`(60초) 캐시
   - 앱 user_id(`app-…`)가 처음 오면 users 행을 만든다 (이름 `DB_DEMO_USER_NAME`, 비밀번호 빈칸, role user)
   - 체형: body_profiles. 비율·답이 같으면 새 행 안 만듦(앱이 스크롤마다 같은 답을 보냄), 바뀌면 이전 행 is_current=false. confidence·is_mixed는 A의 MIX_GAP 기준(db.sql 제약과 같음)
-  - 반응: user_events에 쌓기만. pref는 저장하지 않고 기록을 update_pref로 다시 계산 → 메모리 저장소와 결과가 같다
-  - 연결 실패 → StoreError → API 503 `{"ok": false, "error"}`. psycopg는 `prepare_threshold=None`(Supabase 풀러 대응), 연결 하나를 lock으로 차례로 사용, 끊기면 한 번 다시 연결
+  - 반응: user_events에 쌓기만. pref는 저장하지 않고 기록을 pref_from_history(최근 50개)로 다시 계산 → 메모리 저장소와 결과가 같다
+  - 연결 실패 → StoreError → API 503 `{"ok": false, "error": "DB에 잠시 연결할 수 없어요. 잠시 후 다시 시도해 주세요"}` (자세한 원인은 서버 로그에만). psycopg는 `prepare_threshold=None`(Supabase 풀러 대응)
+  - 연결 풀: 연결을 최대 `DB_POOL_SIZE`(4)개 열어 두고 요청마다 빌려 씀 (예전에는 하나를 모두가 차례로 써서 동시 6명이면 3.4초 → 지금 0.3초, 왕복 80ms 가정). 끊긴 연결은 버리고 새 연결로 한 번 다시
+  - DB 왕복 줄이기: 읽기는 트랜잭션 없이, 사용자+현재 체형은 한 쿼리. API는 체형이 바뀌었을 때만 save_body하고 저장 뒤 사용자를 다시 읽지 않는다(event도 응답 pref를 직접 계산) → 스크롤 13번 → 2번, 찜 13번 → 3번 (PostgreSQL 로그로 셈)
 - 응답 상품에 DB의 `price`, `brand`, `image_url`을 더해 보낸다 (`feed_api.for_screen`). feed.py 결과 모양은 그대로
 - 앱(RecommendApi.toProduct)은 응답의 price·brand를 카드에 쓴다 (없으면 가격 숨김·브랜드 자리에 종류). image_url은 아직 안 씀 (사진 불러오기 라이브러리 필요)
 
@@ -230,13 +236,25 @@ match_score(body, item) -> {
 - 웹 테스트 버전: `web/` (아이폰 Safari용, 같은 계산식). 사용법은 `web/README.md`
 - 알려진 한계(미수정): 길이 환산이 발목 기준이라 약 5% 크게 나올 수 있음, 정면 가슴 폭에 팔이 섞일 수 있음, 측면 사진이 옆모습인지 검사 안 함
 
+### 4-12. 체형 채점은 서버 한 곳 (12단계)
+- 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
+  - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)
+- `POST /api/diagnose` `{"answers", "measurements"(선택)}` → `{"ok", "primary", "secondary", "ratios", "confidence", "is_mixed", "used_measurements", "notice"}`. 저장하지 않는다
+- `feed_api.diagnose()`: /api/diagnose와 /api/feed·/api/feed/scroll이 같이 쓴다. **치수가 이상하면(범위 밖·빠짐) 400 대신 설문만으로 진단**하고 notice에 이유. 설문 답이 틀린 경우만 400. 치수가 객체가 아니면 400
+- 앱: 설문 마지막 "결과 확인" → `RecommendApi.diagnose`(답 + `cameraMeasurements`) → 서버 결과로 `BodyTypeResultActivity` (체형 + 비율 % + 혼합형 안내). 서버에 못 붙으면 답만 저장하고 "다시 시도/나중에" 창
+  - `lastSurveyType`은 이제 서버 진단 결과만 저장 (진단 전이면 없음 → `lastSurveySummary`는 "진단 전"). `MeasurementResultActivity`의 `finalBodyType`도 `/api/diagnose`를 쓴다
+- **팀 결정(10/24): 카메라 치수는 진단에 섞지 않고 설문만** — `rec_config.DIAGNOSIS_USE_MEASUREMENTS = False`. 서버는 치수가 와도 무시하고(`used_measurements` false), 앱도 안 보낸다(`loadFeed`·`diagnose`·`finalBodyType`). `RecommendApi.cameraMeasurements`는 다시 켤 때를 위해 남김
+  - 이유(10/24 분석): 치수 점수만으로는 sample.csv 내추럴 1/10, 애매한 설문에 치수를 더하면 웨이브 32→49%·내추럴 33→19%로 쏠림. 내추럴용 치수 지표가 약하고(최대점 N 1.1 / W 2.25), 기준 구간이 좁아(상체÷다리 0.5511~0.5639) 1cm 오차로 뒤집힘
+  - 설문만 정확도(sample.csv 30명): 튜닝 21명 81.0%, 테스트 9명 88.9%, 전체 83.3% (S 8/10 · W 9/10 · N 8/10). 답 습관에 따른 쏠림은 아래 '보기 순서' 참고
+- 남은 것: 홈(`loadFeed`)은 대표 체형이 있으면 그 이름을 100%로 보낸다(지현 설계). 대표 체형 이름도 서버 진단에서 온 것이라 채점은 하나지만, 혼합형 비율은 홈에 안 쓰인다
+
 ## 5. 정답 테스트 (반드시 통과)
 
 `python -m pytest` (맨 위에서) — B 테스트 240개 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
-`cd recommend && python test_feed.py` — 현재 38개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
+`cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 19개 통과 (Flask 필요: `pip install -r requirements.txt`).
-`TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 8개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
+`cd recommend && python test_api.py` — 현재 25개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 9개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
 
@@ -261,6 +279,9 @@ match_score(body, item) -> {
 | 토글 OFF 칼라 셔츠, 가을, 기록 없음 | 0.5×0.8 + 0.3×0.5 + 0.2×1 = **0.75** |
 | 토글 OFF + pref {"collar": 1.0} | **0.9** |
 | 토글 OFF 순서 (가을, 기록 없음) | b03, t08, b06, t01, t11 … 30개 전부 (제외 없음) |
+| 스크롤 shown = [c2, nope, c1] (collar 5개 + z, 묶음 4) | c2 c1 c3 z / c4 c5 (보여 준 순서 고정, 없는 id 무시) |
+| 취향 창: 찜 10번(a) + 클릭 40번(b) / 클릭 50번(b) | {a 1.0, b 1.0} / {b 1.0} (a는 창 밖) |
+| 토글 OFF "자주 본 스타일" | 취향 0.55(찜 1번) → 안 붙음, 0.65 → 붙음 |
 
 새 단계를 만들면 그 단계의 정답 테스트를 손으로 계산해 `test_feed.py`에 추가한다. 기존 정답값은 고치지 않는다(사람이 명시적으로 요청한 경우만 예외).
 
@@ -306,4 +327,8 @@ match_score(body, item) -> {
 - [ ] B 파트 server.py의 상품 저장소는 아직 메모리 (B API를 쓸 때만 해당)
 - [x] A·B·C 통합 (feature/integration): matching_b.py로 B 연결, app.py 통합 서버, /api/feed에 설문 answers 입력, 상품 태그를 B 이름으로, test_integration.py 8개
 - [x] 9단계: 홈 화면 토글 ON(골격 맞춤)/OFF(일반 쇼핑몰) — general_score, mode 인자, 테스트 9개
+- [x] 12단계: 체형 채점을 서버 하나로 (/api/diagnose, 앱 채점 삭제) + 카메라 치수는 진단에 안 씀(설문만) — test_api 3개 추가
+- [x] 버그 수정(10/26, feature/seoyeon-bugfix): 스크롤 겹침·빠짐(shown), DB 연결 풀·왕복 줄이기, 취향 최근 50개, "자주 본" 기준 0.65, NaN 비율 400, 503 문구, 스크롤 실패 시 다시 시도, profile.is_mixed·page 입력 검사 — test_feed 3·test_api 3·test_db 1 추가
+- [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
+- [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend

@@ -84,7 +84,7 @@ def test_event_triggers_rediagnosis():
 
 def test_routes_registered():
     rules = {r.rule for r in app.url_map.iter_rules()}
-    assert {"/api/feed", "/api/feed/event", "/api/feed/scroll", "/feed-demo"} <= rules   # C
+    assert {"/api/feed", "/api/feed/event", "/api/feed/scroll", "/api/diagnose", "/feed-demo"} <= rules   # C
     assert {"/api/form", "/api/items", "/api/items/validate", "/api/recommend"} <= rules  # B
 
 
@@ -94,13 +94,13 @@ MEASURES = {"height": 165.0, "shoulder_width": 31.5, "arm_length": 53.1,
 
 
 def test_feed_from_survey_answers():
-    # A(설문 진단) → B(적합도) → C(피드)가 한 번에 이어지는지
+    # A(설문 진단) → B(적합도) → C(피드)가 한 번에 이어지는지. 치수는 보내도 진단에 안 쓴다 (설문만, 팀 결정)
     reset()
     res = client.post("/api/feed", json={"user_id": "a1", "answers": ANSWERS, "measurements": MEASURES})
     assert res.status_code == 200
     data = res.get_json()
     from body_profile import classify
-    expected = classify(ANSWERS, MEASURES)
+    expected = classify(ANSWERS)
     assert data["body"]["primary"] == expected["primary"] == "S"
     assert data["body"]["kind"] == ("mixed" if expected["is_mixed"] else "single")
     assert abs(data["body"]["ratio"]["S"] - expected["ratios"]["S"]) < 1e-9
@@ -115,6 +115,48 @@ def test_feed_from_profile():
                "confidence": 0.05, "is_mixed": True}
     data = client.post("/api/feed", json={"profile": profile}).get_json()
     assert data["body"]["kind"] == "mixed" and data["body"]["primary"] == "S"
+
+
+def test_diagnose_same_as_home_feed():
+    # 앱 설문 결과 화면(/api/diagnose)과 홈 추천(/api/feed)이 같은 계산(A 파트, 설문만)을 쓴다
+    reset()
+    from body_profile import classify
+    expected = classify(ANSWERS)
+    for body in ({"answers": ANSWERS}, {"answers": ANSWERS, "measurements": MEASURES}):
+        d = client.post("/api/diagnose", json=body).get_json()
+        assert d["ok"] and d["primary"] == expected["primary"] and d["is_mixed"] == expected["is_mixed"]
+        assert d["ratios"] == expected["ratios"]                       # 치수를 보내도 설문만
+        assert d["used_measurements"] is False and d["notice"] == ""
+        feed = client.post("/api/feed", json=body).get_json()
+        assert feed["body"]["primary"] == d["primary"]
+        assert all(abs(feed["body"]["ratio"][t] - d["ratios"][t]) < 1e-9 for t in "SWN")
+
+
+def test_measurements_switch_on():
+    # 나중에 치수를 다시 켜면(rec_config) 설문+치수, 치수가 이상하면 그때도 설문만으로
+    import rec_config
+    from body_profile import classify
+    reset()
+    rec_config.DIAGNOSIS_USE_MEASUREMENTS = True
+    try:
+        d = client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": MEASURES}).get_json()
+        assert d["used_measurements"] is True and d["ratios"] == classify(ANSWERS, MEASURES)["ratios"]
+        for bad in ({**MEASURES, "shoulder_width": 80}, {"height": 165}):
+            d = client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": bad}).get_json()
+            assert d["ok"] and d["used_measurements"] is False and "설문만" in d["notice"]
+            assert d["ratios"] == classify(ANSWERS)["ratios"]
+            res = client.post("/api/feed/scroll", json={"user_id": "m1", "answers": ANSWERS, "measurements": bad})
+            assert res.status_code == 200
+    finally:
+        rec_config.DIAGNOSIS_USE_MEASUREMENTS = False
+
+
+def test_diagnose_bad_input():
+    reset()
+    assert client.post("/api/diagnose", json={}).status_code == 400
+    res = client.post("/api/diagnose", json={"answers": {"q1": 1}})
+    assert res.status_code == 400 and "q2" in res.get_json()["error"]
+    assert client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": "abc"}).status_code == 400
 
 
 def test_bad_survey_answers():
@@ -252,6 +294,47 @@ def test_scroll_order_same_for_any_page_size():
     assert len(base) == 30
     for size in (5, 7, 30, 50):
         assert whole(size) == base, size
+
+
+def test_scroll_with_shown_never_repeats_or_skips():
+    # 스크롤 사이사이 클릭·찜으로 취향이 바뀌어도, 앱이 이미 받은 상품(shown)을 보내면 겹침·빠짐이 없다
+    for mode in ("body", "general"):
+        reset()
+        answers = {f"q{i}": 1 for i in range(1, 8)}
+        seen = []
+        while True:
+            d = client.post("/api/feed/scroll", json={"user_id": "s1", "answers": answers, "mode": mode,
+                                                      "shown": seen}).get_json()
+            got = [i["product_id"] for i in d["items"]]
+            seen += got
+            for pid in got[:3]:
+                client.post("/api/feed/event", json={"user_id": "s1", "product_id": pid, "event": "click"})
+            if got:
+                client.post("/api/feed/event", json={"user_id": "s1", "product_id": got[-1], "event": "like"})
+            if not d["has_more"]:
+                break
+        assert len(seen) == len(set(seen)) == 30, mode
+
+
+def test_event_response_pref_same_as_saved():
+    reset()
+    client.post("/api/feed/scroll", json={"user_id": "p1", "mode": "general"})
+    for pid, event in (("t01", "like"), ("t04", "click"), ("t01", "return")):
+        res = client.post("/api/feed/event", json={"user_id": "p1", "product_id": pid, "event": event})
+    assert res.get_json()["pref"] == feed_api.STORE.user("p1")["pref"]
+
+
+def test_more_bad_inputs_are_400():
+    reset()
+    assert client.get("/api/feed/scroll?S=nan&W=1&N=0").status_code == 400
+    assert client.get("/api/feed/scroll?user_id=n1&S=inf&W=1&N=0").status_code == 400
+    assert feed_api.STORE.user("n1") is None or feed_api.STORE.user("n1")["body"] is None   # NaN 체형은 저장 안 됨
+    bad = client.post("/api/feed/scroll", json={"profile": {"ratios": {"S": 1, "W": 0, "N": 0}, "is_mixed": "no"}})
+    assert bad.status_code == 400
+    assert client.post("/api/feed/scroll", json={"mode": "general", "page": True}).status_code == 400
+    assert client.post("/api/feed/scroll", json={"mode": "general", "shown": "t01"}).status_code == 200
+    assert client.post("/api/feed/scroll", json={"mode": "general", "shown": [1, 2]}).status_code == 400
+    assert client.post("/api/feed/scroll", json={"mode": "general", "shown": ["t01"] * 5001}).status_code == 400
 
 
 if __name__ == "__main__":

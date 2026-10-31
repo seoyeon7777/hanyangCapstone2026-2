@@ -17,6 +17,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.data.RecommendApi;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
@@ -49,7 +50,11 @@ public class BodyTypeActivity extends AppCompatActivity {
 
     // 결과 화면으로 전달할 값
     public static final String EXTRA_RESULT_TYPE = "result_type";
-    public static final String EXTRA_SCORES = "scores";
+    // 서버 진단 비율 (0~1)과 혼합형 여부
+    public static final String EXTRA_RATIO_S = "ratio_s";
+    public static final String EXTRA_RATIO_W = "ratio_w";
+    public static final String EXTRA_RATIO_N = "ratio_n";
+    public static final String EXTRA_MIXED = "is_mixed";
 
     private int currentQuestion = 0;
     private float userHeightCm;
@@ -57,46 +62,6 @@ public class BodyTypeActivity extends AppCompatActivity {
     // 각 질문에서 선택한 답
     private final int[] selectedAnswers = new int[7];
 
-    /*
-     * 각 질문의 답변이 어떤 체형에 해당하는지 설정
-     *
-     * 0 = 스트레이트
-     * 1 = 웨이브
-     * 2 = 내추럴
-     */
-    private final int[][] answerTypeMap = {
-
-            // Q1 어깨
-            {TYPE_STRAIGHT, TYPE_WAVE, TYPE_NATURAL},
-
-            // Q2 목
-            {TYPE_STRAIGHT, TYPE_WAVE, TYPE_NATURAL},
-
-            // Q3 쇄골
-            {TYPE_STRAIGHT, TYPE_WAVE, TYPE_NATURAL},
-
-            // Q4 뼈마디
-            {TYPE_STRAIGHT, TYPE_WAVE, TYPE_NATURAL},
-
-            // Q5 상체/하체 길이
-            {TYPE_STRAIGHT, TYPE_NATURAL, TYPE_WAVE},
-
-            // Q6 전체 느낌
-            {TYPE_STRAIGHT, TYPE_WAVE, TYPE_NATURAL},
-
-            // Q7 전체 모양
-            {TYPE_STRAIGHT, TYPE_WAVE, TYPE_NATURAL}
-    };
-
-    /*
-     * 질문별 가중치
-     *
-     * Q6, Q7은 전체적인 체형을 묻기 때문에
-     * 다른 질문보다 점수를 높게 설정
-     */
-    private final int[] questionWeight = {
-            1, 1, 1, 1, 1, 2, 2
-    };
 
     private final String[] questions = {
 
@@ -414,122 +379,95 @@ public class BodyTypeActivity extends AppCompatActivity {
     }
 
     /**
-     * 7개 질문의 답변을 이용해
-     * 스트레이트 / 웨이브 / 내추럴 점수 계산
+     * 체형 진단은 서버(A 파트 body_profile.py) 한 곳에서만 한다.
+     * 앱이 따로 채점하면 결과 화면과 홈 추천의 체형이 달라질 수 있어서 (30명 중 6명이 달랐음) 앱 채점은 없앴다.
      */
-    private int[] calculateScores() {
-
-        int[] scores = new int[3];
-
-        for (int i = 0; i < 7; i++) {
-
-            int answer = selectedAnswers[i];
-
-            if (answer < 1 || answer > 3) {
-                continue;
-            }
-
-            int type =
-                    answerTypeMap[i][answer - 1];
-
-            scores[type] += questionWeight[i];
-        }
-
-        return scores;
-    }
-
-    /**
-     * 가장 점수가 높은 체형 선택
-     *
-     * 동점인 경우
-     * Q7 → Q6 순서로 우선 판단
-     */
-    private int decideBodyType(int[] scores) {
-
-        int maxScore = Math.max(
-                scores[0],
-                Math.max(scores[1], scores[2])
-        );
-
-        int resultType = -1;
-        int tieCount = 0;
-
-        for (int i = 0; i < 3; i++) {
-
-            if (scores[i] == maxScore) {
-
-                tieCount++;
-
-                if (resultType == -1) {
-                    resultType = i;
-                }
-            }
-        }
-
-        // 동점이 아니면 바로 반환
-        if (tieCount == 1) {
-            return resultType;
-        }
-
-        // 동점이면 Q7 → Q6 순으로 판단
-        int[] tieBreakQuestions = {
-                6,
-                5
-        };
-
-        for (int q : tieBreakQuestions) {
-
-            int answer = selectedAnswers[q];
-
-            if (answer < 1 || answer > 3) {
-                continue;
-            }
-
-            int type =
-                    answerTypeMap[q][answer - 1];
-
-            if (scores[type] == maxScore) {
-                return type;
-            }
-        }
-
-        return resultType;
-    }
-
     private void showResult() {
 
-        int[] scores = calculateScores();
+        next.setEnabled(false);
+        next.setText("진단 중...");
 
-        int resultType =
-                decideBodyType(scores);
+        // 답부터 저장한다 (서버가 꺼져 있어도 다시 시도하거나 홈에서 진단할 수 있게).
+        // 체형은 서버 진단이 오면 저장한다.
+        saveLastSurvey(-1);
 
-        saveLastSurvey(resultType);
+        RecommendApi.diagnose(
+                this,
+                selectedAnswers.clone(),
+                null,   // 카메라 치수는 진단에 안 쓴다 (팀 결정: 설문만)
+                new RecommendApi.Callback<RecommendApi.Diagnosis>() {
 
-        Intent intent =
-                new Intent(
-                        BodyTypeActivity.this,
-                        BodyTypeResultActivity.class
-                );
+                    @Override
+                    public void onSuccess(RecommendApi.Diagnosis result) {
 
-        intent.putExtra(
-                EXTRA_RESULT_TYPE,
-                resultType
+                        if (isFinishing()) {
+                            return;
+                        }
+
+                        int resultType = typeOf(result.primary);
+
+                        saveLastSurvey(resultType);
+
+                        Intent intent =
+                                new Intent(
+                                        BodyTypeActivity.this,
+                                        BodyTypeResultActivity.class
+                                );
+
+                        intent.putExtra(EXTRA_RESULT_TYPE, resultType);
+                        intent.putExtra(EXTRA_RATIO_S, result.ratioS);
+                        intent.putExtra(EXTRA_RATIO_W, result.ratioW);
+                        intent.putExtra(EXTRA_RATIO_N, result.ratioN);
+                        intent.putExtra(EXTRA_MIXED, result.mixed);
+
+                        // 처음 입력한 키도 결과 화면으로 전달
+                        intent.putExtra(
+                                "USER_HEIGHT_CM",
+                                userHeightCm
+                        );
+
+                        startActivity(intent);
+
+                        finish();
+                    }
+
+                    @Override
+                    public void onError(int code, String message) {
+
+                        if (isFinishing()) {
+                            return;
+                        }
+
+                        next.setEnabled(true);
+                        next.setText("결과 확인");
+
+                        AppDialog.show(
+                                BodyTypeActivity.this,
+                                true,
+                                "체형 진단을 하지 못했어요",
+                                message + "\n답은 저장해 두었어요. 추천 서버가 켜져 있는지 확인하고 다시 시도해 주세요.",
+                                "나중에",
+                                BodyTypeActivity.this::finish,
+                                "다시 시도",
+                                BodyTypeActivity.this::showResult
+                        );
+                    }
+                }
         );
+    }
 
-        intent.putExtra(
-                EXTRA_SCORES,
-                scores
-        );
+    /** 서버 체형 코드 S / W / N → TYPE_ 값 */
+    private static int typeOf(String primary) {
 
-        // 처음 입력한 키도 결과 화면으로 전달
-        intent.putExtra(
-                "USER_HEIGHT_CM",
-                userHeightCm
-        );
-
-        startActivity(intent);
-
-        finish();
+        switch (primary) {
+            case "W":
+                return TYPE_WAVE;
+            case "N":
+                return TYPE_NATURAL;
+            case "S":
+            default:
+                return TYPE_STRAIGHT;
+        }
     }
 
     // =====================================
@@ -562,10 +500,21 @@ public class BodyTypeActivity extends AppCompatActivity {
         getSharedPreferences(PREF_NAME, MODE_PRIVATE)
                 .edit()
                 .putString(KEY_SURVEY_ANSWERS, answers.toString())
-                .putInt(KEY_SURVEY_TYPE, resultType)
                 .putFloat(KEY_SURVEY_HEIGHT, userHeightCm)
                 .putLong(KEY_SURVEY_AT, System.currentTimeMillis())
                 .apply();
+
+        // 체형은 서버 진단 결과만 저장한다 (-1 = 아직 진단 전)
+        SharedPreferences.Editor editor =
+                getSharedPreferences(PREF_NAME, MODE_PRIVATE).edit();
+
+        if (resultType < 0) {
+            editor.remove(KEY_SURVEY_TYPE);
+        } else {
+            editor.putInt(KEY_SURVEY_TYPE, resultType);
+        }
+
+        editor.apply();
     }
 
     private void loadLastAnswers() {
@@ -653,7 +602,11 @@ public class BodyTypeActivity extends AppCompatActivity {
         SimpleDateFormat format =
                 new SimpleDateFormat("MM.dd", Locale.KOREA);
 
-        return typeName(prefs.getInt(KEY_SURVEY_TYPE, TYPE_STRAIGHT))
+        String type = prefs.contains(KEY_SURVEY_TYPE)
+                ? typeName(prefs.getInt(KEY_SURVEY_TYPE, TYPE_STRAIGHT))
+                : "진단 전";
+
+        return type
                 + " · 키 "
                 + Math.round(prefs.getFloat(KEY_SURVEY_HEIGHT, 0f))
                 + "cm · "

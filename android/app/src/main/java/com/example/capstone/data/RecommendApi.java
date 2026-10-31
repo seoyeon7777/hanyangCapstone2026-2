@@ -145,8 +145,9 @@ public final class RecommendApi {
      * 대표 체형(BodyProfileStore)에서 서버 A 파트가 받는 치수(cm)를 꺼낸다.
      * height·shoulder_width·arm_length·upper_body_length·leg_length 5개가 모두 있어야 하고,
      * 가슴두께(chest_depth)와 어깨 경사각(shoulder_slope)은 있으면 같이 보낸다. 없으면 null.
+     * 지금은 쓰지 않는다 (팀 결정 10/24: 체형 진단은 설문만). 치수를 다시 쓰기로 하면 loadFeed·diagnose에 넘긴다
      */
-    static JSONObject cameraMeasurements(Context context) {
+    public static JSONObject cameraMeasurements(Context context) {
 
         BodyProfileStore.Profile profile = BodyProfileStore.getActive(context);
 
@@ -189,10 +190,17 @@ public final class RecommendApi {
         }
     }
 
+    /**
+     * 홈 피드 다음 묶음.
+     * shown: 지금 화면에 이미 있는 서버 상품 product_id (위에서부터 순서대로).
+     * 서버는 이 상품들을 그 순서로 고정하고 그 뒤를 이어 준다
+     * → 스크롤 도중 클릭·찜으로 추천 순서가 바뀌어도 같은 상품이 두 번 나오거나 빠지지 않는다.
+     */
     public static void loadFeed(
             Context context,
             String mode,
             int page,
+            List<String> shown,
             Callback<FeedPage> callback
     ) {
         JSONObject body = new JSONObject();
@@ -202,11 +210,11 @@ public final class RecommendApi {
             body.put("mode", mode);
             body.put("page", page);
             body.put("size", PAGE_SIZE);
+            body.put("shown", new JSONArray(shown));
 
             // 설문 답을 매번 같이 보낸다.
-            // 서버는 기록을 메모리에만 두므로, 서버를 다시 켜도 체형을 바로 다시 진단할 수 있다.
+            // 서버가 메모리 저장소로 돌 때 서버를 다시 켜도 체형을 바로 다시 진단할 수 있다.
             // 단, 내 체형관리에 대표 체형이 있으면 항상 대표 체형을 따른다.
-            // (앱 설문 점수와 서버(A 파트) 진단은 계산법이 달라서, 같은 답이라도 결과가 다를 수 있다)
             int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
             String activeType = activeBodyType(context);
 
@@ -229,14 +237,7 @@ public final class RecommendApi {
 
                 body.put("answers", answerJson);
 
-                // 저장해 둔 대표 체형의 카메라 치수도 같이 보낸다 (설문을 잘 모르는 사용자의 보조 근거).
-                // 필수 치수 5개가 모두 있을 때만 보내고, 서버가 이상한 값이면 설문만으로 진단한다.
-                // (서버는 치수를 설문 답과 함께 올 때만 쓴다)
-                JSONObject measurements = cameraMeasurements(context);
-
-                if (measurements != null) {
-                    body.put("measurements", measurements);
-                }
+                // 카메라 치수는 보내지 않는다 (팀 결정: 체형 진단은 설문만. 서버 rec_config.DIAGNOSIS_USE_MEASUREMENTS)
             }
         } catch (JSONException e) {
             callback.onError(0, "요청을 만들지 못했어요");
@@ -361,33 +362,105 @@ public final class RecommendApi {
                 answerJson.put("q" + (i + 1), answers[i]);
             }
 
-            JSONObject measurements = new JSONObject();
-            measurements.put("height", heightCm);
-            measurements.put("shoulder_width", shoulderCm);
-            measurements.put("arm_length", armCm);
-            measurements.put("upper_body_length", upperBodyCm);
-            measurements.put("leg_length", legCm);
-
+            // 치수(heightCm 등)는 받지만 보내지 않는다 (팀 결정: 체형 진단은 설문만).
+            // 다시 쓰기로 하면 여기서 measurements를 같이 보내고 서버 DIAGNOSIS_USE_MEASUREMENTS를 켠다
             body.put("answers", answerJson);
-            body.put("measurements", measurements);
-            body.put("mode", MODE_BODY);
-            body.put("size", 1);
         } catch (JSONException e) {
             callback.onError(0, "요청을 만들지 못했어요");
             return;
         }
 
-        post("/api/feed/scroll", body, DIAGNOSE_TIMEOUT_MS, new Callback<JSONObject>() {
+        // 설문 결과 화면과 같은 서버 진단 (치수가 이상하면 서버가 설문만으로 진단한다)
+        post("/api/diagnose", body, DIAGNOSE_TIMEOUT_MS, new Callback<JSONObject>() {
             @Override
             public void onSuccess(JSONObject result) {
-                JSONObject resultBody = result.optJSONObject("body");
-                String primary = resultBody == null ? "" : resultBody.optString("primary", "");
+                String primary = result.optString("primary", "");
 
                 if (primary.isEmpty()) {
                     callback.onError(0, "서버 응답을 읽지 못했어요");
                 } else {
                     callback.onSuccess(primary);
                 }
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                callback.onError(code, message);
+            }
+        });
+    }
+
+    // =========================
+    // 설문 결과 화면: 서버 체형 진단
+    // =========================
+
+    /** 서버(A 파트) 체형 진단 결과. 체형 채점은 서버 한 곳에서만 한다 (앱에는 채점 코드 없음) */
+    public static class Diagnosis {
+        public final String primary;   // S / W / N
+        public final float ratioS;
+        public final float ratioW;
+        public final float ratioN;
+        public final boolean mixed;    // 1·2위 차이가 작아 두 체형 특징이 섞임
+        public final String notice;    // 치수를 못 써서 설문만으로 진단했을 때 안내 (없으면 빈 문자열)
+
+        Diagnosis(String primary, float s, float w, float n, boolean mixed, String notice) {
+            this.primary = primary;
+            this.ratioS = s;
+            this.ratioW = w;
+            this.ratioN = n;
+            this.mixed = mixed;
+            this.notice = notice;
+        }
+    }
+
+    /**
+     * POST /api/diagnose — 설문 답(+ 있으면 카메라 치수)으로 체형을 진단한다. 서버에 저장하지는 않는다.
+     * 홈 추천(/api/feed/scroll)과 같은 계산이라 결과 화면과 추천 체형이 어긋나지 않는다.
+     */
+    public static void diagnose(
+            Context context,
+            int[] answers,
+            JSONObject measurements,
+            Callback<Diagnosis> callback
+    ) {
+        JSONObject body = new JSONObject();
+
+        try {
+            JSONObject answerJson = new JSONObject();
+
+            for (int i = 0; i < answers.length; i++) {
+                answerJson.put("q" + (i + 1), answers[i]);
+            }
+
+            body.put("answers", answerJson);
+
+            if (measurements != null) {
+                body.put("measurements", measurements);
+            }
+        } catch (JSONException e) {
+            callback.onError(0, "요청을 만들지 못했어요");
+            return;
+        }
+
+        post("/api/diagnose", body, new Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                JSONObject ratios = result.optJSONObject("ratios");
+                String primary = result.optString("primary", "");
+
+                if (ratios == null || primary.isEmpty()) {
+                    callback.onError(0, "서버 응답을 읽지 못했어요");
+                    return;
+                }
+
+                callback.onSuccess(new Diagnosis(
+                        primary,
+                        (float) ratios.optDouble("S", 0),
+                        (float) ratios.optDouble("W", 0),
+                        (float) ratios.optDouble("N", 0),
+                        result.optBoolean("is_mixed", false),
+                        result.optString("notice", "")
+                ));
             }
 
             @Override

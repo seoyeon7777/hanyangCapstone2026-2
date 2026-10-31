@@ -121,6 +121,8 @@ REASON_EXCLUDED = "체형에 맞지 않는 디자인이 있어 추천에서 뺐�
 # 반응별 태그 선호도 변화량. 결과는 -1~1로 자름
 EVENT_WEIGHTS = {"click": 0.05, "like": 0.10, "purchase": 0.20, "return": -0.20}
 POSITIVE_EVENTS = {"like", "purchase"}
+# 취향은 최근 반응 PREF_WINDOW개로만 계산한다 (오래된 관심이 영원히 남아 추천이 한쪽에 고정되지 않게)
+PREF_WINDOW = 50
 
 # 재진단 안내: 최근 긍정 반응 REDIAG_WINDOW개 중 1위 타입이 피해야 할 옷이 REDIAG_RATIO 이상이면 안내
 REDIAG_WINDOW = 20
@@ -137,6 +139,7 @@ SEASON_BY_MONTH = {12: "winter", 1: "winter", 2: "winter",
 # ── 8단계: 스크롤 피드 (feed_order, /api/feed/scroll) ─────────
 SCROLL_PAGE_SIZE = 10      # 스크롤 한 번에 불러오는 개수 (다양성 규칙도 이 묶음 단위로 적용)
 SCROLL_MAX_PAGE_SIZE = 50  # API에서 한 번에 요청할 수 있는 최대 개수
+SCROLL_MAX_SHOWN = 5000    # 이미 보여 준 상품 목록(shown)으로 받을 수 있는 최대 개수
 
 # ── 9단계: 홈 화면 토글 (ON = 골격 맞춤 / OFF = 일반 쇼핑몰 추천) ──
 MODES = ("body", "general")   # body: 토글 ON(골격 맞춤), general: 토글 OFF(체형을 보지 않음)
@@ -147,7 +150,7 @@ GENERAL_W_PREF = 0.3
 GENERAL_W_SEASON = 0.2
 
 # OFF일 때 추천 이유 (조건을 만족하는 앞의 것부터 REASON_MAX_TAGS개)
-GENERAL_PREF_MIN = 0.55        # 취향 점수가 이 이상이면 "자주 본 스타일"
+GENERAL_PREF_MIN = 0.65        # 취향 점수가 이 이상이면 "자주 본 스타일" (찜 3번·클릭 6번쯤. 0.55는 찜 1번에도 붙었음)
 GENERAL_POPULAR_MIN = 0.75     # 인기도가 이 이상이면 "인기 상품"
 GENERAL_REASON_PREF = "자주 본 스타일과 비슷해요"
 GENERAL_REASON_POPULAR = "요즘 많이 찾는 인기 상품이에요"
@@ -158,4 +161,11 @@ GENERAL_REASON_SEASON = "지금 계절에 입기 좋아요"
 # 둘 다 없으면 지금처럼 recommend/data/items.json + 서버 메모리 (시연용, 서버를 끄면 기록이 사라짐)
 DATABASE_URL_FILE = "database_url.txt"
 DB_ITEMS_CACHE_SECONDS = 60    # DB 상품 목록을 다시 읽는 간격(초). 요청마다 상품 전체를 읽지 않게
+DB_POOL_SIZE = 4              # DB 연결을 최대 몇 개까지 열어 두고 나눠 쓸지 (여러 사람이 동시에 써도 덜 기다리게)
 DB_DEMO_USER_NAME = "앱 사용자"  # 앱이 처음 보낸 user_id로 users 행을 만들 때 넣는 이름 (회원가입 전 사용자)
+
+# ── 12단계: 체형 진단 ──
+# 팀 결정(10/24): 카메라 치수는 진단에 섞지 않고 설문만 쓴다.
+# (치수 점수가 내추럴을 거의 못 맞히고 웨이브로 쏠림 — sample.csv 치수만 내추럴 1/10, 기준 구간이 1cm 오차보다 좁음)
+# True로 바꾸면 설문 0.6 + 치수 0.4 (A 파트 classify) — 치수가 이상하면 그때도 설문만
+DIAGNOSIS_USE_MEASUREMENTS = False
