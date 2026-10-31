@@ -5,10 +5,12 @@ feed_api.py는 어느 쪽이든 같은 함수만 부른다.
 
     items()                      추천 후보 상품 목록 (C의 item 모양)
     item(product_id)             상품 하나 (없으면 None)
-    user(user_id)                {"body", "answers", "pref", "history"} (처음 보는 사용자면 None)
+    user(user_id)                {"body", "answers", "pref", "history", "history_since_body"} (처음 보는 사용자면 None)
+                                 history_since_body = 지금 체형으로 진단된 뒤의 반응만 (재진단 안내 판단용)
     ensure_user(user_id)         사용자가 없으면 만든다
     save_body(user_id, body, answers)   체형 저장 (DB에서는 body_profiles, 바뀐 경우만 새 행)
-    add_event(user_id, item, event)     반응 기록 (DB에서는 user_events)
+    add_event(user_id, item, event)     반응 기록 (DB에서는 user_events). 같은 상품 찜(like)은 한 번만 저장
+    remove_like(user_id, product_id)    찜 해제: 그 상품의 찜 기록을 지운다 → 취향 점수가 찜 전으로 돌아간다
 
 취향(pref)은 따로 저장하지 않는다. 반응 기록(history)에서 feed.pref_from_history로 매번 계산한다
 (최근 PREF_WINDOW개만. 가중치를 바꿔도 기록과 어긋나지 않게 — db/db.sql의 user_events 설명과 같다).
@@ -52,7 +54,11 @@ def make_store():
 
 
 def _new_user():
-    return {"body": None, "answers": None, "pref": {}, "history": []}
+    return {"body": None, "answers": None, "pref": {}, "history": [], "history_since_body": []}
+
+
+def _has_like(history, product_id):
+    return any(h["event"] == "like" and h["item"]["product_id"] == product_id for h in history)
 
 
 class MemoryStore:
@@ -64,6 +70,7 @@ class MemoryStore:
         self._items = list(items)
         self._by_id = {i["product_id"]: i for i in self._items}
         self._users = {}
+        self._seq = 0   # 반응 순서 번호 (체형이 바뀐 뒤의 반응을 가려낼 때 쓴다)
 
     def items(self):
         return self._items
@@ -79,14 +86,36 @@ class MemoryStore:
 
     def save_body(self, user_id, body, answers=None):
         user = self._users.setdefault(user_id, _new_user())
+        # 진단이 바뀐 경우만 "다시 진단"으로 본다 (DB와 같은 기준: 비율·1위·설문 답)
+        same = (user["body"] is not None and user["body"]["primary"] == body["primary"]
+                and all(abs(user["body"]["ratio"][t] - body["ratio"][t]) < 1e-9 for t in ("S", "W", "N"))
+                and (user.get("answers") == answers or answers is None))
         user["body"] = body
         user["answers"] = answers
+        if not same:
+            user["body_since"] = self._seq
+        self._refresh(user)
 
     def add_event(self, user_id, item, event):
         update_pref({}, item, event)  # 모르는 event면 저장하기 전에 ValueError
         user = self._users.setdefault(user_id, _new_user())
-        user["history"].append({"item": item, "event": event})
+        if event == "like" and _has_like(user["history"], item["product_id"]):
+            return  # 같은 상품의 찜은 한 번만 센다
+        self._seq += 1
+        user["history"].append({"item": item, "event": event, "seq": self._seq})
+        self._refresh(user)
+
+    def remove_like(self, user_id, product_id):
+        user = self._users.setdefault(user_id, _new_user())
+        user["history"] = [h for h in user["history"]
+                           if not (h["event"] == "like" and h["item"]["product_id"] == product_id)]
+        self._refresh(user)
+
+    @staticmethod
+    def _refresh(user):
         user["pref"] = pref_from_history(user["history"])
+        since = user.get("body_since", 0)
+        user["history_since_body"] = [h for h in user["history"] if h["seq"] > since]
 
     def reset(self):
         """테스트용: 사용자 기록을 모두 지운다."""
@@ -229,7 +258,7 @@ class PgStore:
         def work(cur):
             # 사용자 확인과 지금 체형을 한 번에 읽는다 (없는 사용자면 행이 없음)
             cur.execute(
-                """SELECT b.ratio_s, b.ratio_w, b.ratio_n, b.primary_type, b.is_mixed, b.answers
+                """SELECT b.ratio_s, b.ratio_w, b.ratio_n, b.primary_type, b.is_mixed, b.answers, b.created_at
                    FROM users u
                    LEFT JOIN body_profiles b ON b.user_id = u.user_id AND b.is_current
                    WHERE u.user_id = %s""",
@@ -238,24 +267,27 @@ class PgStore:
             body_row = cur.fetchone()
             if body_row is None:
                 return None
-            cur.execute("SELECT product_id, event FROM user_events WHERE user_id = %s ORDER BY event_id",
+            cur.execute("SELECT product_id, event, created_at FROM user_events WHERE user_id = %s ORDER BY event_id",
                         (user_id,))
             return body_row, cur.fetchall()
 
         found = self._run(work)
         if found is None:
             return None
-        (s, w, n, primary, is_mixed, answers), events = found
+        (s, w, n, primary, is_mixed, answers, body_at), events = found
         user = _new_user()
         if primary is not None:
             user["body"] = {"ratio": {"S": s, "W": w, "N": n}, "primary": primary,
                             "kind": "mixed" if is_mixed else "single"}
             user["answers"] = answers
-        for product_id, event in events:
+        for product_id, event, created_at in events:
             item = items_by_id.get(product_id)
             if item is None:          # 지금은 판매하지 않는 상품의 기록은 건너뛴다
                 continue
-            user["history"].append({"item": item, "event": event})
+            entry = {"item": item, "event": event}
+            user["history"].append(entry)
+            if body_at is None or created_at >= body_at:   # 지금 체형으로 진단된 뒤의 반응
+                user["history_since_body"].append(entry)
         user["pref"] = pref_from_history(user["history"])
         return user
 
@@ -303,6 +335,18 @@ class PgStore:
         update_pref({}, item, event)  # 모르는 event면 저장하기 전에 ValueError
 
         def work(cur):
-            cur.execute("INSERT INTO user_events (user_id, product_id, event) VALUES (%s, %s, %s)",
-                        (user_id, item["product_id"], event))
+            # 같은 상품의 찜은 한 번만 저장한다 (하트를 껐다 켜도 쌓이지 않게)
+            cur.execute(
+                """INSERT INTO user_events (user_id, product_id, event)
+                   SELECT %s, %s, %s
+                   WHERE %s <> 'like' OR NOT EXISTS (
+                       SELECT 1 FROM user_events WHERE user_id = %s AND product_id = %s AND event = 'like')""",
+                (user_id, item["product_id"], event, event, user_id, item["product_id"]),
+            )
+        self._run(work)
+
+    def remove_like(self, user_id, product_id):
+        def work(cur):
+            cur.execute("DELETE FROM user_events WHERE user_id = %s AND product_id = %s AND event = 'like'",
+                        (user_id, product_id))
         self._run(work)

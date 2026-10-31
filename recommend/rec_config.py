@@ -123,11 +123,15 @@ EVENT_WEIGHTS = {"click": 0.05, "like": 0.10, "purchase": 0.20, "return": -0.20}
 POSITIVE_EVENTS = {"like", "purchase"}
 # 취향은 최근 반응 PREF_WINDOW개로만 계산한다 (오래된 관심이 영원히 남아 추천이 한쪽에 고정되지 않게)
 PREF_WINDOW = 50
+# 찜은 상품마다 한 번만 센다. 하트를 끄면 앱이 "unlike"를 보내고, 서버는 그 상품의 찜 기록을 지운다
+# (취향 점수가 찜 전으로 돌아간다. 기록에서 지우는 방식이라 DB user_events의 event 종류는 그대로)
+UNLIKE_EVENT = "unlike"
 
 # 재진단 안내: 최근 긍정 반응 REDIAG_WINDOW개 중 1위 타입이 피해야 할 옷이 REDIAG_RATIO 이상이면 안내
 REDIAG_WINDOW = 20
 REDIAG_RATIO = 0.5
 REDIAG_MIN_EVENTS = 10  # 긍정 반응이 이보다 적으면 판단하지 않음 (찜 1~2개로 안내가 뜨는 것 방지)
+# 재진단 판단에는 지금 체형으로 진단된 뒤의 반응만 쓴다 (다시 진단하면 예전 찜으로 안내가 뜨지 않게)
 REDIAG_MESSAGE = "최근 고른 옷이 진단 결과와 많이 달라요. 체형을 다시 진단해 볼까요?"
 
 # ── 7단계: API ───────────────────────────────────────────────

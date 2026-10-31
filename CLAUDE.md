@@ -145,13 +145,15 @@ match_score(body, item) -> {
 - `need_rediagnosis(history, body)`: 최근 긍정 반응(like·purchase) 20개 중 1위 타입 피해야 함 태그가 붙은 옷이 50% 이상이면 True → "체형을 다시 진단해 볼까요?" 안내
   - history 형식: `[{"item": 상품, "event": "like"}, ...]` (오래된 것 → 최근 순)
   - 추가 규칙: 긍정 반응이 10개(REDIAG_MIN_EVENTS) 미만이면 판단하지 않고 False (찜 1~2개로 안내가 뜨는 것 방지)
+  - API는 **지금 체형으로 진단된 뒤의 반응만** 넘긴다 (`store.user()`의 `history_since_body`). 진단이 바뀌면(비율·1위·설문 답) 예전 찜으로는 안내가 안 뜬다. 같은 답을 다시 보내는 것(스크롤마다)은 재진단이 아니다. 취향 학습(pref)은 전체 기록을 그대로 쓴다
+- 찜은 상품마다 한 번만 센다 (같은 상품 like는 저장 안 함). 하트를 끄면 앱이 `unlike`(rec_config.UNLIKE_EVENT)를 보내고 서버는 그 상품의 like 기록을 지운다 → 취향 점수가 찜 전으로 돌아간다. DB user_events의 event 종류(click·like·purchase·return)는 그대로 (`store.remove_like`)
 
 ### 4-7. API (7단계, 완료) — `recommend/feed_api.py`
 - `GET /api/feed?user_id=u1&S=0.6&W=0.3&N=0.1&season=fall` 또는 `POST /api/feed` `{"user_id", "body": {"ratio": {...}}, "season"}`
   - 비율 합이 1이 아니면 1로 맞추고, kind·primary는 classify_kind로 계산
   - season을 안 보내면 오늘 날짜의 계절. user_id가 있으면 저장된 pref를 쓰고, 비율을 안 보내면 저장된 체형을 재사용
   - 응답: `{"body", "season", "sections"}`. 모든 옷(코디의 top·bottom 포함)에 `reason` 추가
-- `POST /api/feed/event` `{"user_id", "product_id", "event"}` → `{"pref", "need_rediagnosis", "message"}`
+- `POST /api/feed/event` `{"user_id", "product_id", "event"}` → `{"pref", "need_rediagnosis", "message"}` (event: click·like·unlike·purchase·return)
 - 잘못된 입력은 400 + `{"ok": false, "error": 한국어 메시지}` (B와 같은 모양). 본문이 JSON 객체가 아니거나, body·answers·measurements·user_id·product_id 모양이 틀려도 400 (500이 나지 않게 막음)
 - app.py가 404·405·예상 못 한 500도 JSON으로 돌려준다 (안드로이드 앱이 HTML 오류 화면을 받지 않게)
 - GET에서 S·W·N 중 빠진 값은 0 (POST와 같음)
@@ -195,7 +197,11 @@ match_score(body, item) -> {
 - `MainActivity` 홈: DummyData 대신 서버 순서. 바닥 600dp 전에 다음 묶음, 토글 `switchBodyMode`(ON body / OFF general), 제목 "○○ 체형 맞춤 추천"
   - 토글 ON인데 400(진단 없음) → 안내 후 OFF로 바꿔 다시 부름. 서버 연결 실패 → DummyData를 보여 줌
   - 설문을 새로 하고 돌아오면(`lastSurveyTime` 변화) 다시 부름
-- `ProductAdapter`: 서버 상품 클릭 → click, 찜 → like. 카드에 추천 이유(`textReason`), 가격 0이면 숨김
+- `ProductAdapter`: 서버 상품 클릭 → click, 찜 → like, 찜 해제 → unlike. 카드에 추천 이유(`textReason`), 가격 0이면 숨김
+- 요청 줄: 홈 불러오기(`FEED_IO`)와 클릭·찜 기록(`EVENT_IO`, 3초 제한)을 다른 스레드로 보낸다. 서버에 연결하지 못하면 30초 동안 기록을 보내지 않는다 (`RecommendTiming.isOffline`)
+- 재진단 안내 토스트는 한 번 보이면 3일 동안 다시 안 띄운다. 그 사이 설문을 다시 하면 다시 띄울 수 있다 (`RecommendTiming.shouldShowRediagNotice`, SharedPreferences `rediag_notice_shown_at`). 단위 테스트 `RecommendTimingTest`
+- 구매·반품: 주문 완료(`OrderActivity`) → `RecommendApi.recordPurchase`(장바구니의 서버 상품마다 purchase, 주문번호별 상품 id를 기기에 저장), 반품 신청(`OrderListActivity`) → `recordReturn`(그 주문 상품마다 return). 지금은 서버 상품을 장바구니에 담을 수 없어 실제로 보내지는 않는다
+- 서버 상품을 다시 받을 때마다 이름·브랜드·가격을 새 값으로 바꾼다 (`Product.updateServerDetails`). 찜·장바구니 상태는 유지, 찜한 상품은 찜 탭용 저장 정보도 갱신
 - `Product`: `serverId`·`reason` 추가 (서버 상품은 id −1)
 - 찜(서버 상품): `RecommendApi.saveLike` — 찜 상태를 기기(SharedPreferences "recommend"의 liked_products)에 저장 + 찜할 때 like 전송. 서버 상품 Product는 product_id마다 하나만 만들어 다시 불러와도 하트 유지
   - 찜 탭(`WishActivity`)은 DummyData + `RecommendApi.likedServerProducts`를 보여 줌. 상세 화면은 `server_product_id`로 서버 상품을 찾아 하트만 동작 (옵션·장바구니는 아직 DummyData 상품만)
@@ -250,11 +256,11 @@ match_score(body, item) -> {
 
 ## 5. 정답 테스트 (반드시 통과)
 
-`python -m pytest` (맨 위에서) — B 테스트 240개 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
+`python -m pytest` (맨 위에서) — 255개 중 253개 통과 (`tests/test_a_connection.py`의 2개는 main에서도 실패 중, B 담당. pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 25개 통과 (Flask 필요: `pip install -r requirements.txt`).
-`TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 9개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
+`cd recommend && python test_api.py` — 현재 TEST_API_COUNT개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 TEST_DB_COUNT개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
 

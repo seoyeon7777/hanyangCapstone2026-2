@@ -8,6 +8,7 @@ POST /api/feed        체형은 셋 중 하나로 보낸다
                       {"user_id": "u1", "profile": A의 classify() 결과}
                       {"user_id": "u1", "body": {"ratio": {"S":0.6,"W":0.3,"N":0.1}}}
 POST /api/feed/event  {"user_id": "u1", "product_id": "t01", "event": "like"}
+                      event: click | like | unlike(찜 해제) | purchase | return. 같은 상품 찜은 한 번만 센다
 POST /api/diagnose    {"answers": {"q1": 1, ..., "q7": 3}, "measurements": {...} (선택)}  ← 앱 설문 결과 화면용 체형 진단
                       체형 채점은 서버(A 파트 body_profile.classify) 한 곳에서만 한다. 앱은 결과를 받아 보여 주기만 한다
 GET  /api/feed/scroll?user_id=u1&S=0.6&W=0.3&N=0.1&page=0&size=10   ← 홈 화면 무한 스크롤용
@@ -25,11 +26,12 @@ from datetime import date
 from flask import Blueprint, current_app, jsonify, render_template, request
 
 from rec_config import (
-    SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE, SCROLL_MAX_SHOWN, MODES,
+    SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, UNLIKE_EVENT, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE,
+    SCROLL_MAX_SHOWN, MODES,
 )
 import rec_config
 from fake_matching import classify_kind
-from feed import score_by_mode, home_feed, feed_order, reason, need_rediagnosis, pref_from_history
+from feed import score_by_mode, home_feed, feed_order, reason, need_rediagnosis
 from store import make_store, StoreError
 from matching_b import from_profile
 from body_profile import classify, InputError  # A 파트 (matching_b가 저장소 맨 위 폴더를 경로에 넣어 둠)
@@ -320,16 +322,20 @@ def post_event():
     if not item:
         raise BadRequest("없는 상품이에요")
     event = data.get("event")
-    # 저장 뒤 사용자를 다시 읽지 않고 여기서 계산한다 (DB 왕복을 줄인다. 저장소도 같은 방식으로 계산)
-    history = list(user["history"]) + [{"item": item, "event": event}]
     try:
-        STORE.add_event(user_id, item, event)
+        if event == UNLIKE_EVENT:
+            STORE.remove_like(user_id, product_id)   # 찜 해제: 그 상품의 찜 기록을 지워 취향 점수를 되돌린다
+        else:
+            STORE.add_event(user_id, item, event)    # 같은 상품 찜은 한 번만 저장된다
     except ValueError as e:
         raise BadRequest(str(e))
 
-    rediag = need_rediagnosis(history, user["body"])
+    # 찜 한 번만·찜 해제·진단 뒤 반응 계산은 저장소가 맡는다 → 저장 뒤 한 번 다시 읽는다
+    user = STORE.user(user_id)
+    # 지금 체형으로 진단된 뒤의 반응만 본다 (다시 진단하면 예전 찜으로 안내가 뜨지 않게)
+    rediag = need_rediagnosis(user["history_since_body"], user["body"])
     return jsonify({
-        "pref": pref_from_history(history),
+        "pref": user["pref"],
         "need_rediagnosis": rediag,
         "message": REDIAG_MESSAGE if rediag else "",
     })
