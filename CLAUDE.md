@@ -141,16 +141,19 @@ match_score(body, item) -> {
 ### 4-6. 추천 이유 + 피드백 학습 (6단계, 완료)
 - `reason(r)`: good_tags 앞 2개를 한국어 문장으로. 예: "칼라가 목선을 세워 주고, 몸에 맞는 핏이 라인을 정돈해 줘요." (태그→문장 표는 rec_config.REASON_TEXT, 어울림 태그 전부 있음). good_tags가 없으면 기본 문장, 제외된 옷은 제외 문장
 - `update_pref(pref, item, event)`: 아이템 태그마다 click +0.05, like +0.10, purchase +0.20, return −0.20 더하고 −1~1로 자른다. 새 dict를 돌려주고 원본은 안 바꾼다. 모르는 event는 ValueError
+- `pref_from_history(history)`: 사용자 취향 = **최근 반응 PREF_WINDOW(50)개**만 차례로 update_pref에 넣은 값. 메모리·DB 저장소 둘 다 이걸로 계산한다 (예전 관심이 영원히 남아 추천이 한쪽에 고정되던 문제 수정)
 - `need_rediagnosis(history, body)`: 최근 긍정 반응(like·purchase) 20개 중 1위 타입 피해야 함 태그가 붙은 옷이 50% 이상이면 True → "체형을 다시 진단해 볼까요?" 안내
   - history 형식: `[{"item": 상품, "event": "like"}, ...]` (오래된 것 → 최근 순)
   - 추가 규칙: 긍정 반응이 10개(REDIAG_MIN_EVENTS) 미만이면 판단하지 않고 False (찜 1~2개로 안내가 뜨는 것 방지)
+  - API는 **지금 체형으로 진단된 뒤의 반응만** 넘긴다 (`store.user()`의 `history_since_body`). 진단이 바뀌면(비율·1위·설문 답) 예전 찜으로는 안내가 안 뜬다. 같은 답을 다시 보내는 것(스크롤마다)은 재진단이 아니다. 취향 학습(pref)은 전체 기록을 그대로 쓴다
+- 찜은 상품마다 한 번만 센다 (같은 상품 like는 저장 안 함). 하트를 끄면 앱이 `unlike`(rec_config.UNLIKE_EVENT)를 보내고 서버는 그 상품의 like 기록을 지운다 → 취향 점수가 찜 전으로 돌아간다. DB user_events의 event 종류(click·like·purchase·return)는 그대로 (`store.remove_like`)
 
 ### 4-7. API (7단계, 완료) — `recommend/feed_api.py`
 - `GET /api/feed?user_id=u1&S=0.6&W=0.3&N=0.1&season=fall` 또는 `POST /api/feed` `{"user_id", "body": {"ratio": {...}}, "season"}`
   - 비율 합이 1이 아니면 1로 맞추고, kind·primary는 classify_kind로 계산
   - season을 안 보내면 오늘 날짜의 계절. user_id가 있으면 저장된 pref를 쓰고, 비율을 안 보내면 저장된 체형을 재사용
   - 응답: `{"body", "season", "sections"}`. 모든 옷(코디의 top·bottom 포함)에 `reason` 추가
-- `POST /api/feed/event` `{"user_id", "product_id", "event"}` → `{"pref", "need_rediagnosis", "message"}`
+- `POST /api/feed/event` `{"user_id", "product_id", "event"}` → `{"pref", "need_rediagnosis", "message"}` (event: click·like·unlike·purchase·return)
 - 잘못된 입력은 400 + `{"ok": false, "error": 한국어 메시지}` (B와 같은 모양). 본문이 JSON 객체가 아니거나, body·answers·measurements·user_id·product_id 모양이 틀려도 400 (500이 나지 않게 막음)
 - app.py가 404·405·예상 못 한 500도 JSON으로 돌려준다 (안드로이드 앱이 HTML 오류 화면을 받지 않게)
 - GET에서 S·W·N 중 빠진 값은 0 (POST와 같음)
@@ -167,8 +170,11 @@ match_score(body, item) -> {
   - 태그 제한에 걸린 옷은 버리지 않고 다음 묶음으로 미룸. 미룰 곳이 없으면 그냥 보여 줌
   - 첫 묶음 = rank(scored) = "오늘의 추천"
   - rank와 feed_order는 내부 함수 `_pick_in_order`를 같이 쓴다
-- `GET/POST /api/feed/scroll` (`/api/feed`와 같은 체형·user_id 입력 + `page`(0~), `size`(1~50, 기본 10))
+- `GET/POST /api/feed/scroll` (`/api/feed`와 같은 체형·user_id 입력 + `page`(0~), `size`(1~50, 기본 10), `shown`(선택))
   - 다양성 묶음은 size와 상관없이 항상 10개(SCROLL_PAGE_SIZE). size는 한 번에 보낼 개수만 정한다 → 몇 개씩 받든 이어 붙인 순서가 같다
+  - `shown` = 앱이 이미 보여 준 product_id 순서(최대 SCROLL_MAX_SHOWN). 주면 `feed_order(scored, shown=...)`가 그 옷들을 그대로 맨 앞에 두고(다양성 개수도 이어서 셈) 나머지를 고르고, 응답은 그 다음 size개. page는 순서에 안 쓴다
+    - 이유: page만 쓰면 스크롤 사이에 클릭·찜으로 취향이 바뀔 때 순서가 바뀌어, 이미 본 상품이 또 나오거나 못 본 상품이 빠졌다 (가상 사용자 40명 중 29~34명). shown을 쓰면 0명
+    - 앱(`RecommendApi.loadFeed`)은 홈에 있는 서버 상품 id를 항상 shown으로 보낸다. 스크롤 도중 실패하면 멈추지 않고 5초 뒤 다시 시도(안내 토스트는 한 번만)
   → `{"body", "season", "page", "size", "total", "has_more", "items"}` (items에 reason 포함)
 - `/feed-demo`: 연습 화면. 친구들 홈 화면이 오면 그 화면에서 `/api/feed/scroll`을 부르게 연결하고, 연습 화면은 지워도 된다
 
@@ -177,36 +183,42 @@ match_score(body, item) -> {
 - `mode` = `"body"`(ON, 기본) | `"general"`(OFF) — `rec_config.MODES`
 - `general_score(item, pref, season)`: 체형을 안 본다. 점수 = 인기 0.5 + 취향(pref_score) 0.3 + 계절 0.2
   - final_score와 같은 모양(body는 None, excluded False, good_tags 빈 목록)이라 rank·feed_order를 그대로 쓴다
-  - 이유 문장: 취향 ≥ 0.55 → "자주 본 스타일과 비슷해요", 인기 ≥ 0.75 → "요즘 많이 찾는 인기 상품이에요", 제철 → "지금 계절에 입기 좋아요" (앞에서 2개)
+  - 이유 문장: 취향 ≥ 0.65(GENERAL_PREF_MIN, 찜 3번·클릭 6번쯤. 0.55일 때는 찜 1번에도 붙었음) → "자주 본 스타일과 비슷해요", 인기 ≥ 0.75 → "요즘 많이 찾는 인기 상품이에요", 제철 → "지금 계절에 입기 좋아요" (앞에서 2개)
 - `score_by_mode(mode, body, items, pref, season)`: 토글에 맞는 점수 목록. home_feed·outfits에 `mode` 인자 추가 (OFF면 코디 보정 0)
 - 취향(pref)과 반응 기록은 두 모드가 같이 쓴다. need_rediagnosis는 body가 None이면 False
 - API: `/api/feed`, `/api/feed/scroll`에 `mode` 추가, 응답에 `"mode"`. `mode=general`이면 체형 없이도 된다 (`mode=body`는 여전히 체형 필요 → 400)
 - `/feed-demo`에 토글 스위치
 
 ### 4-10. 안드로이드 앱 홈 연결 (10단계)
-- `android/app/src/main/java/com/example/capstone/data/RecommendApi.java`: `BASE_URL`(에뮬레이터 `http://10.0.2.2:5000`, 폰은 PC IP), `loadFeed(context, mode, page, callback)` → `POST /api/feed/scroll`, `sendEvent(context, product, event)` → `POST /api/feed/event`
+- `android/app/src/main/java/com/example/capstone/data/RecommendApi.java`: `BASE_URL`(= `BuildConfig.RECOMMEND_BASE_URL`. `android/local.properties`의 `recommend.baseUrl`, 없으면 에뮬레이터 `http://10.0.2.2:5000`. 폰은 PC IP를 넣고 다시 빌드), `loadFeed(context, mode, page, shown, callback)` → `POST /api/feed/scroll` (shown = 홈에 이미 있는 서버 상품 id), `sendEvent(context, product, event)` → `POST /api/feed/event`
   - 외부 라이브러리 없이 `HttpURLConnection` + `org.json`. 백그라운드 스레드에서 보내고 결과는 메인 스레드
-  - user_id = 기기마다 만든 `app-<UUID>` (SharedPreferences "recommend")
+  - user_id = 로그인 계정마다 만든 `app-<UUID>` (SharedPreferences "recommend"). 최근 설문·user_id·찜은 `data/AccountPrefs`가 `키@계정`(계정 = `BodyProfileStore.accountKey`, 비로그인은 guest)으로 나눠 저장한다. 예전 기기 단위 값은 처음 연 계정으로 한 번 옮기고, 로그인하면 guest 기록이 비어 있는 계정으로 넘어가며, 이메일·전화번호를 바꾸면 같이 옮긴다
   - 설문 답(`BodyTypeActivity.lastSurveyAnswers`)을 매 요청에 `answers`로 같이 보냄 → 서버를 다시 켜도 진단이 바로 됨
 - `MainActivity` 홈: DummyData 대신 서버 순서. 바닥 600dp 전에 다음 묶음, 토글 `switchBodyMode`(ON body / OFF general), 제목 "○○ 체형 맞춤 추천"
   - 토글 ON인데 400(진단 없음) → 안내 후 OFF로 바꿔 다시 부름. 서버 연결 실패 → DummyData를 보여 줌
   - 설문을 새로 하고 돌아오면(`lastSurveyTime` 변화) 다시 부름
-- `ProductAdapter`: 서버 상품 클릭 → click, 찜 → like. 카드에 추천 이유(`textReason`), 가격 0이면 숨김
+- `ProductAdapter`: 서버 상품 클릭 → click, 찜 → like, 찜 해제 → unlike. 카드에 추천 이유(`textReason`), 가격 0이면 숨김
+- 요청 줄: 홈 불러오기(`FEED_IO`)와 클릭·찜 기록(`EVENT_IO`, 3초 제한)을 다른 스레드로 보낸다. 서버에 연결하지 못하면 30초 동안 기록을 보내지 않는다 (`RecommendTiming.isOffline`)
+- 재진단 안내 토스트는 한 번 보이면 3일 동안 다시 안 띄운다. 그 사이 설문을 다시 하면 다시 띄울 수 있다 (`RecommendTiming.shouldShowRediagNotice`, SharedPreferences `rediag_notice_shown_at`). 단위 테스트 `RecommendTimingTest`
+- 구매·반품: 주문 완료(`OrderActivity`) → `RecommendApi.recordPurchase`(장바구니의 서버 상품마다 purchase, 주문번호별 상품 id를 기기에 저장), 반품 신청(`OrderListActivity`) → `recordReturn`(그 주문 상품마다 return). 지금은 서버 상품을 장바구니에 담을 수 없어 실제로 보내지는 않는다
+- 서버 상품을 다시 받을 때마다 이름·브랜드·가격을 새 값으로 바꾼다 (`Product.updateServerDetails`). 찜·장바구니 상태는 유지, 찜한 상품은 찜 탭용 저장 정보도 갱신
 - `Product`: `serverId`·`reason` 추가 (서버 상품은 id −1)
-- 찜(서버 상품): `RecommendApi.saveLike` — 찜 상태를 기기(SharedPreferences "recommend"의 liked_products)에 저장 + 찜할 때 like 전송. 서버 상품 Product는 product_id마다 하나만 만들어 다시 불러와도 하트 유지
+- 찜(서버 상품): `RecommendApi.saveLike` — 찜 상태를 계정별(SharedPreferences "recommend"의 `liked_products@계정`)로 저장 + 찜할 때 like 전송. 서버 상품 Product는 product_id마다 하나만 만들어 다시 불러와도 하트 유지
   - 찜 탭(`WishActivity`)은 DummyData + `RecommendApi.likedServerProducts`를 보여 줌. 상세 화면은 `server_product_id`로 서버 상품을 찾아 하트만 동작 (옵션·장바구니는 아직 DummyData 상품만)
 - 확인: 여기서는 Android SDK를 받을 수 없어 androidx 대체 클래스로 javac 컴파일 검사 + 같은 요청을 curl로 서버에 보내 응답 확인까지만 했다. 실제 실행은 Android Studio에서 확인할 것
 
 ### 4-11. DB 저장 (Supabase, 11단계)
 - 팀 결정: DB는 Supabase(무료 PostgreSQL). 표는 DB 담당의 `db/db.sql` 그대로. 연결 방법은 `recommend/DB_연결가이드.md`
 - `store.make_store()`: `DATABASE_URL` 환경 변수 → 맨 위 `database_url.txt` 순으로 주소를 찾고, 없으면 MemoryStore (지금까지와 같음)
-- 함수: `items()`, `item(id)`, `user(id)` → `{"body","pref","history"}` 또는 None, `ensure_user`, `save_body(id, body, answers)`, `add_event(id, item, event)`
+- 함수: `items()`, `item(id)`, `user(id)` → `{"body","answers","pref","history"}` 또는 None, `ensure_user`, `save_body(id, body, answers)`, `add_event(id, item, event)`
 - PgStore
   - 상품: products + categories + product_tags (+ brands) 조인. 판매중·삭제 안 됨·태그 있음·`clothing_type`이 OUTFIT_GROUP에 있는 것(jumpsuit 제외). `DB_ITEMS_CACHE_SECONDS`(60초) 캐시
   - 앱 user_id(`app-…`)가 처음 오면 users 행을 만든다 (이름 `DB_DEMO_USER_NAME`, 비밀번호 빈칸, role user)
   - 체형: body_profiles. 비율·답이 같으면 새 행 안 만듦(앱이 스크롤마다 같은 답을 보냄), 바뀌면 이전 행 is_current=false. confidence·is_mixed는 A의 MIX_GAP 기준(db.sql 제약과 같음)
-  - 반응: user_events에 쌓기만. pref는 저장하지 않고 기록을 update_pref로 다시 계산 → 메모리 저장소와 결과가 같다
-  - 연결 실패 → StoreError → API 503 `{"ok": false, "error"}`. psycopg는 `prepare_threshold=None`(Supabase 풀러 대응), 연결 하나를 lock으로 차례로 사용, 끊기면 한 번 다시 연결
+  - 반응: user_events에 쌓기만. pref는 저장하지 않고 기록을 pref_from_history(최근 50개)로 다시 계산 → 메모리 저장소와 결과가 같다
+  - 연결 실패 → StoreError → API 503 `{"ok": false, "error": "DB에 잠시 연결할 수 없어요. 잠시 후 다시 시도해 주세요"}` (자세한 원인은 서버 로그에만). psycopg는 `prepare_threshold=None`(Supabase 풀러 대응)
+  - 연결 풀: 연결을 최대 `DB_POOL_SIZE`(4)개 열어 두고 요청마다 빌려 씀 (예전에는 하나를 모두가 차례로 써서 동시 6명이면 3.4초 → 지금 0.3초, 왕복 80ms 가정). 끊긴 연결은 버리고 새 연결로 한 번 다시
+  - DB 왕복 줄이기: 읽기는 트랜잭션 없이, 사용자+현재 체형은 한 쿼리. API는 체형이 바뀌었을 때만 save_body하고 저장 뒤 사용자를 다시 읽지 않는다(event도 응답 pref를 직접 계산) → 스크롤 13번 → 2번, 찜 13번 → 3번 (PostgreSQL 로그로 셈)
 - 응답 상품에 DB의 `price`, `brand`, `image_url`을 더해 보낸다 (`feed_api.for_screen`). feed.py 결과 모양은 그대로
 - 앱(RecommendApi.toProduct)은 응답의 price·brand를 카드에 쓴다 (없으면 가격 숨김·브랜드 자리에 종류). image_url은 아직 안 씀 (사진 불러오기 라이브러리 필요)
 
@@ -217,26 +229,40 @@ match_score(body, item) -> {
 - MediaPipe는 `tasks-vision:0.10.33`. 0.10.21은 x86_64 라이브러리가 없고 16KB 페이지 기기에서 `program alignment (4096) cannot be smaller than system page size` 로 앱이 꺼졌다 (에뮬레이터에서 카메라 화면을 열면 홈으로 튕김). 0.10.33은 둘 다 해결
 - **카메라 보조 지표 (논문 기준)**: 박선미·정은영(2024) 「신체 유형별 골격진단 요소의 정량화 연구」(여성 20~60대, 사이즈코리아 8차) Table 6의 두 요소만 쓴다. 가슴두께(cm, 옆면 두께=측정선 조정 화면의 "두께")와 어깨 경사각(도, 정면 윤곽에서 `camera/BodyShapeFeatures`가 추정). 나머지(목길이·목둘레·무릎뼈·쇄골)는 카메라로 못 재서 쓰지 않고, 설문(q2·q3·q4)이 맡는다
   - A: `body_profile.py`의 `chest_depth`·`shoulder_slope`·`age`(선택) 치수 → `score_camera_shape`가 `score_avatar`에 더한다 (`W_CHEST_DEPTH`·`W_SHOULDER_SLOPE` 각 0.5, 논문 구간 중간값 사이를 선형으로 나눔, 나이 없으면 30대). 값이 없거나 범위 밖(가슴두께 10~40cm, 경사각 5~50도)이면 무시 → 키 없을 땐 이전과 결과가 똑같다 (무작위 6000건 비교로 확인). 테스트 `tests/test_a_camera_shape.py`
-  - 앱: 측정선 조정에서 가슴두께·어깨 경사각을 같이 구해 프로필 `parts`에 `CHEST_DEPTH`·`SHOULDER_SLOPE`로 저장하고(`BodyEditActivity`), `RecommendApi`가 대표 체형의 치수 5개(키·어깨너비·팔길이·상체길이·다리길이) + 두 값을 매 요청에 `measurements`로 보낸다. **이전에는 설문 답만 보냈으므로, 대표 체형이 저장된 사용자는 이제 설문 0.6 + 카메라 0.4로 진단된다.** 앱은 아직 나이를 안 보낸다(가입 생년월일 연결 전)
+  - 앱: 측정선 조정에서 가슴두께·어깨 경사각을 같이 구해 프로필 `parts`에 `CHEST_DEPTH`·`SHOULDER_SLOPE`로 저장하고(`MeasurementResultActivity`, 키 이름은 `BodyProfileStore.PART_CHEST_DEPTH`·`PART_SHOULDER_SLOPE`). **10/27 변경: 체형은 설문으로만 진단, 카메라는 치수용**
   - 한계: 두 값 모두 옷·머리카락·자세에 민감한 추정이고, 논문 구간이 실제 진단과 맞는지는 검증된 적 없다. 어깨 경사각은 어깨 끝이 아니라 어깨 관절을 쓰므로 실제보다 작게 나올 수 있다. `sample.csv`에 이 두 값이 없어 정확도 변화는 아직 못 쟀다
 - 자동 촬영: 3초 카운트다운 없이 가이드에 맞는 프레임이 0.15초 이어지면 바로 촬영. 측면은 안내창을 닫은 뒤 3초 대기
 - `CapstoneApp`이 모든 화면에서 하단 내비게이션 바를 숨긴다
-- **3D 아바타 삭제** (정확도 낮음): `AvatarPreviewActivity`, `avatar/` 패키지, `avatar.glb`·morph json, Filament 의존성 제거. 대신 **`BodyEditActivity`**(치수 12개를 숫자로 직접 수정, ±0.5cm, 미측정 부위는 키 비율로 추정해 "추정" 표시, 보통 범위(0.6~1.6배) 밖이면 경고)에서 저장한다. `BodyMeasurementContract`·`DemoBodySamples`는 `data/`로 옮겼다
+- **3D 아바타 삭제** (정확도 낮음): `AvatarPreviewActivity`, `avatar/` 패키지, `avatar.glb`·morph json, Filament 의존성 제거. 체형은 측정 결과 화면(`MeasurementResultActivity`)에서 바로 저장한다. 3D용으로 만들었던 치수 직접 수정 화면(`BodyEditActivity`)과 개발용 데모 체형(`DemoBodySamples`, `DemoSampleActivity`, 피팅 화면의 데모 버튼)은 더 쓰지 않아 삭제했다. `BodyMeasurementContract`에는 키 전달용 `EXTRA_USER_HEIGHT_CM`만 남았다
 - **측정 위치 조정** (`MeasurementAdjustActivity` + `camera/MeasureLineView` + `camera/MeasurementSession`): 정면·측면 촬영 뒤, 사진 위의 가슴·허리·골반 선을 위아래로 끌어 맞추면 폭·두께·둘레가 바로 다시 계산된다. 선 높이는 몸 높이 대비 비율(기본 29/43/52%)이고 정면·옆면이 같은 값을 쓴다. 윤곽 마스크는 줄마다 몸의 좌우 끝만 요약해 메모리(`MeasurementSession`)에 둔다. 카메라 촬영(`BodyMeasurementActivity`)과 앨범 선택(`PhotoMeasurementActivity`, 카메라 화면의 "앨범에서 선택" 버튼) 두 흐름 모두 이 화면을 거친다. 두께÷폭 비율이 0.40~0.95를 벗어나면(다른 사람 사진, 같은 사진 두 번 등) 빨간 경고와 확인창을 띄운다. 목·팔·허벅지·종아리 둘레는 "몸 전체 폭"을 읽는 방식이라 틀려서 더 이상 계산하지 않는다 (`camera/BodySilhouetteAnalyzer`는 쓰이지 않는 옛 코드). 윤곽 요약은 `camera/SilhouetteBuilder`
 - **윤곽에서 몸 덩어리 고르기·너무 작게 찍히면 촬영 안 함** (앱·웹 공통): 윤곽 마스크에는 배경 물건(선반·침대·옷더미)도 사람처럼 잡혀 폭·두께가 크게 틀리는 일이 있었다 (예: 가슴 폭 63cm / 두께 2.7cm). 이제 정면·옆면 사진 모두 관절로 몸의 중심선(어깨·엉덩이 평균 x, 코~발목으로 짐작한 몸 키)을 구하고(`BodyShapeFeatures.bodyAxis`), `SilhouetteBuilder`가 그 중심선이 지나는 덩어리를 몸으로 고른다. 중심선 좌우 몸 키의 16%(160cm 기준 ±26cm) 밖은 보지 않고, 중심선에서 12%(약 19cm)보다 먼 덩어리만 있는 줄은 몸이 없는 줄로 본다. 위·아래 끝도 고른 덩어리가 있는 줄로 정한다. 관절을 못 찾으면 예전처럼 화면 가운데 기준. 또 전신(코~발목)이 화면 높이의 62% 미만이면 "조금 더 가까이 와서…"를 띄우고 촬영하지 않는다 (전에는 48%). 테스트 `SilhouetteBuilderTest`
 - 옷차림 안내: 설문 결과 "예" → 카메라 직전에 안내 창(몸에 붙는 옷·관절이 보이는 옷·팔 벌리기, "다시 보지 않기" 체크 시 `measure_tips/skip_clothes_tip`으로 건너뜀), 카메라 화면 상단에 "몸에 붙는 옷을 입으면 더 정확해요" 한 줄 (`textClothesTip`)
-- `BodyEditActivity`는 측정도 수정도 안 한 "키 비율 추정값"을 저장하지 않는다 (저장하면 장바구니 사이즈 알림 `SizeFitChecker`가 가짜 치수로 판정함). 사이즈 알림이 쓰는 치수: 가슴·어깨·허리·골반·허벅지(허벅지는 직접 입력해야 들어감)
+- 사이즈 알림(`SizeFitChecker`)이 쓰는 치수: 가슴·어깨·허리·골반·허벅지
 - 사진 확인 대화상자: 세로 사진이 버튼을 화면 밖으로 밀어내던 문제를 사진 높이를 화면 55%로 제한해 해결
 - 웹 테스트 버전: `web/` (아이폰 Safari용, 같은 계산식). 사용법은 `web/README.md`
 - 알려진 한계(미수정): 길이 환산이 발목 기준이라 약 5% 크게 나올 수 있음, 정면 가슴 폭에 팔이 섞일 수 있음, 측면 사진이 옆모습인지 검사 안 함
 
+### 4-12. 체형 채점은 서버 한 곳 (12단계)
+- 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
+  - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)
+- `POST /api/diagnose` `{"answers", "measurements"(선택)}` → `{"ok", "primary", "secondary", "ratios", "confidence", "is_mixed", "used_measurements", "notice"}`. 저장하지 않는다
+- `feed_api.diagnose()`: /api/diagnose와 /api/feed·/api/feed/scroll이 같이 쓴다. **치수가 이상하면(범위 밖·빠짐) 400 대신 설문만으로 진단**하고 notice에 이유. 설문 답이 틀린 경우만 400. 치수가 객체가 아니면 400
+- 앱: 설문 마지막 "결과 확인" → `RecommendApi.diagnose`(답 + `cameraMeasurements`) → 서버 결과로 `BodyTypeResultActivity` (체형 + 비율 % + 혼합형 안내). 서버에 못 붙으면 답만 저장하고 "다시 시도/나중에" 창
+  - `lastSurveyType`은 이제 서버 진단 결과만 저장 (진단 전이면 없음 → `lastSurveySummary`는 "진단 전"). `MeasurementResultActivity`의 `finalBodyType`도 `/api/diagnose`를 쓴다
+- **팀 결정(10/24): 카메라 치수는 진단에 섞지 않고 설문만** — `rec_config.DIAGNOSIS_USE_MEASUREMENTS = False`. 서버는 치수가 와도 무시하고(`used_measurements` false), 앱도 안 보낸다(`loadFeed`·`diagnose`·`finalBodyType`). `RecommendApi.cameraMeasurements`는 다시 켤 때를 위해 남김
+  - 이유(10/24 분석): 치수 점수만으로는 sample.csv 내추럴 1/10, 애매한 설문에 치수를 더하면 웨이브 32→49%·내추럴 33→19%로 쏠림. 내추럴용 치수 지표가 약하고(최대점 N 1.1 / W 2.25), 기준 구간이 좁아(상체÷다리 0.5511~0.5639) 1cm 오차로 뒤집힘
+  - 설문만 정확도(sample.csv 30명): 튜닝 21명 81.0%, 테스트 9명 88.9%, 전체 83.3% (S 8/10 · W 9/10 · N 8/10). 답 습관에 따른 쏠림은 아래 '보기 순서' 참고
+- 홈 체형 입력(`RecommendApi.bodyInput`, 10/31 통합): ① 대표 체형 카드에 저장한 설문 답(`BodyProfileStore.Profile.surveyAnswers`, 혜림) → 서버가 진단 ② 옛 카드라 답이 없으면 카드의 골격 이름 100% ③ 대표 체형이 없으면 최근 설문 답
+  - 설문을 다시 해서 서버 진단이 오면 `BodyProfileStore.updateActiveSurvey`가 대표 카드의 설문 답·골격 이름도 바꾼다 → 결과 화면과 홈 체형이 항상 같다 (전에는 카드가 측정 저장 때 값에 고정돼 홈이 예전 체형을 보였음)
+  - 서버에 연결이 안 되면 결과 화면은 앱 채점으로 대신하지 않고 "다시 시도/나중에" 창 (팀 결정 그대로. 혜림 브랜치의 앱 채점 대체는 합칠 때 뺐음)
+
 ## 5. 정답 테스트 (반드시 통과)
 
-`python -m pytest` (맨 위에서) — B 테스트 240개 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
-`cd recommend && python test_feed.py` — 현재 38개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
+`python -m pytest` (맨 위에서) — 255개 중 253개 통과 (`tests/test_a_connection.py`의 2개는 main에서도 실패 중, B 담당. pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
+`cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 19개 통과 (Flask 필요: `pip install -r requirements.txt`).
-`TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 8개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
+`cd recommend && python test_api.py` — 현재 28개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 10개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
 
@@ -261,6 +287,9 @@ match_score(body, item) -> {
 | 토글 OFF 칼라 셔츠, 가을, 기록 없음 | 0.5×0.8 + 0.3×0.5 + 0.2×1 = **0.75** |
 | 토글 OFF + pref {"collar": 1.0} | **0.9** |
 | 토글 OFF 순서 (가을, 기록 없음) | b03, t08, b06, t01, t11 … 30개 전부 (제외 없음) |
+| 스크롤 shown = [c2, nope, c1] (collar 5개 + z, 묶음 4) | c2 c1 c3 z / c4 c5 (보여 준 순서 고정, 없는 id 무시) |
+| 취향 창: 찜 10번(a) + 클릭 40번(b) / 클릭 50번(b) | {a 1.0, b 1.0} / {b 1.0} (a는 창 밖) |
+| 토글 OFF "자주 본 스타일" | 취향 0.55(찜 1번) → 안 붙음, 0.65 → 붙음 |
 
 새 단계를 만들면 그 단계의 정답 테스트를 손으로 계산해 `test_feed.py`에 추가한다. 기존 정답값은 고치지 않는다(사람이 명시적으로 요청한 경우만 예외).
 
@@ -306,4 +335,9 @@ match_score(body, item) -> {
 - [ ] B 파트 server.py의 상품 저장소는 아직 메모리 (B API를 쓸 때만 해당)
 - [x] A·B·C 통합 (feature/integration): matching_b.py로 B 연결, app.py 통합 서버, /api/feed에 설문 answers 입력, 상품 태그를 B 이름으로, test_integration.py 8개
 - [x] 9단계: 홈 화면 토글 ON(골격 맞춤)/OFF(일반 쇼핑몰) — general_score, mode 인자, 테스트 9개
+- [x] 12단계: 체형 채점을 서버 하나로 (/api/diagnose, 앱 채점 삭제) + 카메라 치수는 진단에 안 씀(설문만) — test_api 3개 추가
+- [x] 버그 수정(10/26, feature/seoyeon-bugfix): 스크롤 겹침·빠짐(shown), DB 연결 풀·왕복 줄이기, 취향 최근 50개, "자주 본" 기준 0.65, NaN 비율 400, 503 문구, 스크롤 실패 시 다시 시도, profile.is_mixed·page 입력 검사 — test_feed 3·test_api 3·test_db 1 추가
+- [x] 10/31 통합(feature/integration-1031): main + feature/seoyeon + feature/jihyun-merge(찜 한 번만·재진단·구매반품·요청 줄·상품 정보 갱신) + feature/hyerim(장바구니·마이페이지·계정별 저장·서버 주소 설정·대표 카드 설문 답). 겹친 수정(NaN·DB 문구·스크롤 다시 시도)은 하나만 남김. 개발용 데모 체형·치수 수정 화면(BodyEditActivity) 삭제는 유지 — main에서도 데모 버튼으로만 열리던 화면
+- [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
+- [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend

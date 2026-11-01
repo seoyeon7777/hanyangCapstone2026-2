@@ -439,6 +439,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         // 장바구니 상태
         currentProduct.setInCart(true);
+        currentProduct.setCartSelected(true);
 
         // ERD product_options 역할을 임시 저장
         currentProduct.setSelectedSize(

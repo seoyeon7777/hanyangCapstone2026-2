@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.MyPageStore;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.SizeFitChecker;
 
 import java.text.NumberFormat;
@@ -225,6 +226,9 @@ public class OrderActivity extends AppCompatActivity {
 
         // 주문 저장
         MyPageStore.addOrder(newOrder);
+
+        // 구매는 추천 학습에 반영 (장바구니의 서버 상품마다 purchase, 반품 때 쓰려고 주문번호와 함께 저장)
+        RecommendApi.recordPurchase(this, orderNo);
 
         // 주문 완료 화면으로 이동
         Intent intent = new Intent(

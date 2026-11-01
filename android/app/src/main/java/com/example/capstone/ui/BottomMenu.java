@@ -108,6 +108,10 @@ public final class BottomMenu {
                             ? MyPageActivity.class
                             : LoginMainActivity.class;
 
+            if (activity.getClass() == target) {
+                return;
+            }
+
             activity.startActivity(
                     new Intent(activity, target)
             );

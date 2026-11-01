@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
+import com.example.capstone.BuildConfig;
 import com.example.capstone.ui.BodyTypeActivity;
 
 import org.json.JSONArray;
@@ -43,7 +44,8 @@ public final class RecommendApi {
 
     // 에뮬레이터에서는 10.0.2.2가 PC를 가리킨다.
     // 실제 휴대폰이면 서버 화면에 찍힌 PC IP로 바꾼다. 예) "http://192.168.0.12:5000"
-    public static final String BASE_URL = "http://10.0.2.2:5000";
+    // 서버 주소는 android/local.properties의 recommend.baseUrl에서 읽는다 (없으면 에뮬레이터 주소 http://10.0.2.2:5000)
+    public static final String BASE_URL = BuildConfig.RECOMMEND_BASE_URL;
 
     public static final String MODE_BODY = "body";        // 토글 ON: 골격 맞춤 추천
     public static final String MODE_GENERAL = "general";  // 토글 OFF: 일반 추천
@@ -53,21 +55,31 @@ public final class RecommendApi {
     // Supabase(싱가포르)를 쓰면 첫 요청이 느릴 수 있어서 넉넉하게
     private static final int TIMEOUT_MS = 10000;
 
-    private static final int DIAGNOSE_TIMEOUT_MS = 3000;
+    // 클릭·찜 기록은 화면과 상관없으니 짧게 기다린다 (주소가 틀려도 기록이 쌓여 늦어지지 않게)
+    private static final int EVENT_TIMEOUT_MS = 3000;
+
+    // 연결 실패 뒤 기록을 쉬는 시간·재진단 안내 쉬는 기간은 RecommendTiming에 있다
 
     private static final String PREF_NAME = "recommend";
-    private static final String KEY_USER_ID = "user_id";
+    private static final String KEY_REDIAG_SHOWN_AT = "rediag_notice_shown_at";
 
-    // 찜한 서버 상품 {product_id: {name, brand, price, category}}. 앱을 꺼도 찜 탭에 남게 기기에 저장한다
+    // 주문번호 → 그 주문에 들어 있던 서버 상품 id 목록 (반품할 때 return을 보내려고 기기에 저장)
+    private static final String KEY_ORDER_PRODUCTS = "order_server_products";
+
+    // 찜한 서버 상품 {product_id: {name, brand, price, category}}은 로그인 계정별로 기기에 저장한다 (AccountPrefs)
     // [여기에 DB 입력] 로그인·찜 목록 API가 생기면 서버(wishlists)에서 받아 오게 바꾼다
-    private static final String KEY_LIKED = "liked_products";
 
     // 서버 상품은 product_id마다 Product를 하나만 만든다.
     // 홈을 다시 불러와도 같은 객체를 써서 찜 표시가 유지되고, 찜 탭·상세 화면이 같은 상품을 본다
     private static final Map<String, Product> SERVER_PRODUCTS = new LinkedHashMap<>();
 
-    private static final ExecutorService IO = Executors.newSingleThreadExecutor();
+    // 홈 불러오기와 클릭·찜 기록을 다른 줄로 보낸다 (기록이 밀려도 홈 새로고침이 기다리지 않게)
+    private static final ExecutorService FEED_IO = Executors.newSingleThreadExecutor();
+    private static final ExecutorService EVENT_IO = Executors.newSingleThreadExecutor();
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
+
+    // 마지막으로 서버에 연결하지 못한 시각 (0이면 연결 문제 없음)
+    private static volatile long lastConnectFailAt = 0L;
 
     private RecommendApi() {
     }
@@ -98,14 +110,6 @@ public final class RecommendApi {
     // 홈 피드 체형 (대표 체형 / 최근 설문)
     // =========================
 
-    /** 내 체형관리의 대표 체형 → S / W / N. 대표 체형이 없거나 골격 체형이 아니면 null */
-    public static String activeBodyType(Context context) {
-
-        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
-
-        return active == null ? null : typeCode(active.bodyType);
-    }
-
     private static String typeCode(String label) {
 
         if (label == null) {
@@ -124,17 +128,79 @@ public final class RecommendApi {
         }
     }
 
+    /**
+     * 홈 추천에 보낼 체형 입력. 순서:
+     * 1) 대표 체형 카드에 저장한 설문 답 → 서버가 진단 (설문을 다시 하면 결과 화면과 홈 체형이 같아진다)
+     * 2) 옛 카드라 설문 답이 없으면 카드의 체형 이름을 100%로
+     * 3) 대표 체형이 없으면 최근 설문 답. 아무것도 없으면 null
+     */
+    private static JSONObject bodyInput(Context context) throws JSONException {
+
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
+
+        if (active != null) {
+
+            if (active.surveyAnswers != null) {
+                JSONObject input = new JSONObject();
+                input.put("answers", answersJson(active.surveyAnswers));
+                return input;
+            }
+
+            String activeType = typeCode(active.bodyType);
+
+            if (activeType != null) {
+                JSONObject ratio = new JSONObject();
+                ratio.put(activeType, 1.0);
+
+                JSONObject bodyJson = new JSONObject();
+                bodyJson.put("ratio", ratio);
+
+                JSONObject input = new JSONObject();
+                input.put("body", bodyJson);
+                return input;
+            }
+        }
+
+        int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
+
+        if (answers == null) {
+            return null;
+        }
+
+        JSONObject input = new JSONObject();
+        input.put("answers", answersJson(answers));
+        return input;
+    }
+
+    private static JSONObject answersJson(int[] answers) throws JSONException {
+
+        JSONObject answerJson = new JSONObject();
+
+        for (int i = 0; i < answers.length; i++) {
+            answerJson.put("q" + (i + 1), answers[i]);
+        }
+
+        return answerJson;
+    }
+
     /** 골격 맞춤 추천에 쓸 체형 정보가 있는지 (대표 체형 또는 설문) */
     public static boolean hasBodyInput(Context context) {
 
-        return activeBodyType(context) != null
-                || BodyTypeActivity.lastSurveyAnswers(context) != null;
+        try {
+            return bodyInput(context) != null;
+        } catch (JSONException e) {
+            return false;
+        }
     }
 
-    /** 홈이 체형이 바뀌었는지 알아챌 때 쓰는 값 (설문 시각 + 대표 체형) */
+    /** 홈이 체형이 바뀌었는지 알아챌 때 쓰는 값 (계정 + 설문 시각 + 대표 체형 카드) */
     public static String bodyInputKey(Context context) {
 
-        return BodyTypeActivity.lastSurveyTime(context) + "/" + activeBodyType(context);
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
+
+        return BodyProfileStore.accountKey(context)
+                + "/" + BodyTypeActivity.lastSurveyTime(context)
+                + "/" + (active == null ? "" : active.id + "@" + active.savedAt);
     }
 
     // =========================
@@ -145,8 +211,9 @@ public final class RecommendApi {
      * 대표 체형(BodyProfileStore)에서 서버 A 파트가 받는 치수(cm)를 꺼낸다.
      * height·shoulder_width·arm_length·upper_body_length·leg_length 5개가 모두 있어야 하고,
      * 가슴두께(chest_depth)와 어깨 경사각(shoulder_slope)은 있으면 같이 보낸다. 없으면 null.
+     * 지금은 쓰지 않는다 (팀 결정 10/24: 체형 진단은 설문만). 치수를 다시 쓰기로 하면 loadFeed·diagnose에 넘긴다
      */
-    static JSONObject cameraMeasurements(Context context) {
+    public static JSONObject cameraMeasurements(Context context) {
 
         BodyProfileStore.Profile profile = BodyProfileStore.getActive(context);
 
@@ -189,10 +256,17 @@ public final class RecommendApi {
         }
     }
 
+    /**
+     * 홈 피드 다음 묶음.
+     * shown: 지금 화면에 이미 있는 서버 상품 product_id (위에서부터 순서대로).
+     * 서버는 이 상품들을 그 순서로 고정하고 그 뒤를 이어 준다
+     * → 스크롤 도중 클릭·찜으로 추천 순서가 바뀌어도 같은 상품이 두 번 나오거나 빠지지 않는다.
+     */
     public static void loadFeed(
             Context context,
             String mode,
             int page,
+            List<String> shown,
             Callback<FeedPage> callback
     ) {
         JSONObject body = new JSONObject();
@@ -202,40 +276,17 @@ public final class RecommendApi {
             body.put("mode", mode);
             body.put("page", page);
             body.put("size", PAGE_SIZE);
+            body.put("shown", new JSONArray(shown));
 
-            // 설문 답을 매번 같이 보낸다.
-            // 서버는 기록을 메모리에만 두므로, 서버를 다시 켜도 체형을 바로 다시 진단할 수 있다.
-            // 단, 내 체형관리에 대표 체형이 있으면 항상 대표 체형을 따른다.
-            // (앱 설문 점수와 서버(A 파트) 진단은 계산법이 달라서, 같은 답이라도 결과가 다를 수 있다)
-            int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
-            String activeType = activeBodyType(context);
+            // 체형(설문 답 또는 대표 체형)을 매번 같이 보낸다.
+            // 서버가 메모리 저장소로 돌 때 서버를 다시 켜도 체형을 바로 다시 진단할 수 있다.
+            // 카메라 치수는 보내지 않는다 (팀 결정: 체형 진단은 설문만. 서버 rec_config.DIAGNOSIS_USE_MEASUREMENTS)
+            JSONObject input = bodyInput(context);
 
-            if (activeType != null) {
-
-                JSONObject ratio = new JSONObject();
-                ratio.put(activeType, 1.0);
-
-                JSONObject bodyJson = new JSONObject();
-                bodyJson.put("ratio", ratio);
-
-                body.put("body", bodyJson);
-
-            } else if (answers != null) {
-                JSONObject answerJson = new JSONObject();
-
-                for (int i = 0; i < answers.length; i++) {
-                    answerJson.put("q" + (i + 1), answers[i]);
-                }
-
-                body.put("answers", answerJson);
-
-                // 저장해 둔 대표 체형의 카메라 치수도 같이 보낸다 (설문을 잘 모르는 사용자의 보조 근거).
-                // 필수 치수 5개가 모두 있을 때만 보내고, 서버가 이상한 값이면 설문만으로 진단한다.
-                // (서버는 치수를 설문 답과 함께 올 때만 쓴다)
-                JSONObject measurements = cameraMeasurements(context);
-
-                if (measurements != null) {
-                    body.put("measurements", measurements);
+            if (input != null) {
+                for (Iterator<String> keys = input.keys(); keys.hasNext(); ) {
+                    String key = keys.next();
+                    body.put(key, input.get(key));
                 }
             }
         } catch (JSONException e) {
@@ -285,20 +336,22 @@ public final class RecommendApi {
 
         String serverId = item.getString("product_id");
         String category = categoryName(item.optString("clothing_type"));
+        String brand = item.optString("brand", "");
+        String shownBrand = brand.isEmpty() ? category : brand;
+        String name = item.getString("product_name");
+        int price = item.optInt("price", 0);
         Product product = SERVER_PRODUCTS.get(serverId);
+        boolean changed = false;
 
         if (product == null) {
-            String brand = item.optString("brand", "");
-
             // 서버 상품은 DummyData와 번호가 겹치지 않게 id를 -1로 둔다 (상세 화면은 이름만 보여 준다)
-            product = new Product(
-                    -1,
-                    brand.isEmpty() ? category : brand,
-                    item.getString("product_name"),
-                    item.optInt("price", 0)
-            );
+            product = new Product(-1, shownBrand, name, price);
             product.setLiked(likedJson(context).has(serverId));
             SERVER_PRODUCTS.put(serverId, product);
+        } else {
+            // 같은 객체를 다시 써서 찜·장바구니 상태는 유지하고, 이름·브랜드·가격은 받은 값으로 바꾼다
+            // (DB에서 가격을 바꾸면 앱을 다시 켜지 않아도 반영되게)
+            changed = product.updateServerDetails(shownBrand, name, price);
         }
 
         List<String> seasons = new ArrayList<>();
@@ -313,6 +366,10 @@ public final class RecommendApi {
         product.setFilterInfo(category, null, null, seasons.toArray(new String[0]));
         // 추천 이유는 토글(ON/OFF)마다 달라서 받을 때마다 새로 넣는다
         product.setServerInfo(serverId, item.optString("reason", ""));
+
+        if (changed && product.isLiked()) {
+            refreshLikedInfo(context, product);   // 찜 탭이 앱을 다시 켠 뒤에도 새 가격을 보여 주게
+        }
 
         return product;
     }
@@ -336,22 +393,39 @@ public final class RecommendApi {
         }
     }
 
-    public static void finalBodyType(
-            Context context,
-            float heightCm,
-            float shoulderCm,
-            float armCm,
-            float upperBodyCm,
-            float legCm,
-            Callback<String> callback
-    ) {
-        int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
+    // =========================
+    // 설문 결과 화면: 서버 체형 진단
+    // =========================
 
-        if (answers == null) {
-            callback.onError(0, "설문 기록이 없어요");
-            return;
+    /** 서버(A 파트) 체형 진단 결과. 체형 채점은 서버 한 곳에서만 한다 (앱에는 채점 코드 없음) */
+    public static class Diagnosis {
+        public final String primary;   // S / W / N
+        public final float ratioS;
+        public final float ratioW;
+        public final float ratioN;
+        public final boolean mixed;    // 1·2위 차이가 작아 두 체형 특징이 섞임
+        public final String notice;    // 치수를 못 써서 설문만으로 진단했을 때 안내 (없으면 빈 문자열)
+
+        Diagnosis(String primary, float s, float w, float n, boolean mixed, String notice) {
+            this.primary = primary;
+            this.ratioS = s;
+            this.ratioW = w;
+            this.ratioN = n;
+            this.mixed = mixed;
+            this.notice = notice;
         }
+    }
 
+    /**
+     * POST /api/diagnose — 설문 답(+ 있으면 카메라 치수)으로 체형을 진단한다. 서버에 저장하지는 않는다.
+     * 홈 추천(/api/feed/scroll)과 같은 계산이라 결과 화면과 추천 체형이 어긋나지 않는다.
+     */
+    public static void diagnose(
+            Context context,
+            int[] answers,
+            JSONObject measurements,
+            Callback<Diagnosis> callback
+    ) {
         JSONObject body = new JSONObject();
 
         try {
@@ -361,33 +435,35 @@ public final class RecommendApi {
                 answerJson.put("q" + (i + 1), answers[i]);
             }
 
-            JSONObject measurements = new JSONObject();
-            measurements.put("height", heightCm);
-            measurements.put("shoulder_width", shoulderCm);
-            measurements.put("arm_length", armCm);
-            measurements.put("upper_body_length", upperBodyCm);
-            measurements.put("leg_length", legCm);
-
             body.put("answers", answerJson);
-            body.put("measurements", measurements);
-            body.put("mode", MODE_BODY);
-            body.put("size", 1);
+
+            if (measurements != null) {
+                body.put("measurements", measurements);
+            }
         } catch (JSONException e) {
             callback.onError(0, "요청을 만들지 못했어요");
             return;
         }
 
-        post("/api/feed/scroll", body, DIAGNOSE_TIMEOUT_MS, new Callback<JSONObject>() {
+        post("/api/diagnose", body, new Callback<JSONObject>() {
             @Override
             public void onSuccess(JSONObject result) {
-                JSONObject resultBody = result.optJSONObject("body");
-                String primary = resultBody == null ? "" : resultBody.optString("primary", "");
+                JSONObject ratios = result.optJSONObject("ratios");
+                String primary = result.optString("primary", "");
 
-                if (primary.isEmpty()) {
+                if (ratios == null || primary.isEmpty()) {
                     callback.onError(0, "서버 응답을 읽지 못했어요");
-                } else {
-                    callback.onSuccess(primary);
+                    return;
                 }
+
+                callback.onSuccess(new Diagnosis(
+                        primary,
+                        (float) ratios.optDouble("S", 0),
+                        (float) ratios.optDouble("W", 0),
+                        (float) ratios.optDouble("N", 0),
+                        result.optBoolean("is_mixed", false),
+                        result.optString("notice", "")
+                ));
             }
 
             @Override
@@ -403,7 +479,8 @@ public final class RecommendApi {
 
     /**
      * 하트를 누른 뒤 부른다 (product.isLiked()가 바뀐 상태).
-     * 서버 상품이면 찜 상태를 기기에 저장하고, 찜했을 때는 추천 서버에 like를 보낸다 (찜 해제는 서버에 안 보냄).
+     * 서버 상품이면 찜 상태를 기기에 저장하고, 찜하면 like, 찜을 풀면 unlike를 보낸다.
+     * 서버는 같은 상품의 찜을 한 번만 세고, unlike가 오면 그 찜을 지워 취향 점수를 되돌린다.
      * DummyData 상품이면 아무것도 하지 않는다 (기존 동작 그대로).
      */
     public static void saveLike(Context context, Product product) {
@@ -429,11 +506,32 @@ public final class RecommendApi {
             return;
         }
 
-        prefs(context).edit().putString(KEY_LIKED, liked.toString()).apply();
+        saveLikedJson(context, liked);
 
-        if (product.isLiked()) {
-            sendEvent(context, product, "like");
+        sendEvent(context, product, product.isLiked() ? "like" : "unlike");
+    }
+
+    /** 찜 탭용으로 저장해 둔 상품 정보를 지금 값으로 바꾼다 (찜한 상품만) */
+    private static void refreshLikedInfo(Context context, Product product) {
+
+        JSONObject liked = likedJson(context);
+
+        if (!liked.has(product.getServerId())) {
+            return;
         }
+
+        try {
+            JSONObject info = new JSONObject();
+            info.put("name", product.getName());
+            info.put("brand", product.getBrand());
+            info.put("price", product.getPrice());
+            info.put("category", product.getCategory());
+            liked.put(product.getServerId(), info);
+        } catch (JSONException e) {
+            return;
+        }
+
+        saveLikedJson(context, liked);
     }
 
     /** 찜한 서버 상품 목록 (찜 탭용). 홈에서 아직 안 불러온 상품은 저장해 둔 정보로 만든다 */
@@ -478,9 +576,25 @@ public final class RecommendApi {
         return serverId == null ? null : SERVER_PRODUCTS.get(serverId);
     }
 
+    // 찜 목록은 로그인 계정별로 저장한다 (AccountPrefs)
     private static JSONObject likedJson(Context context) {
         try {
-            return new JSONObject(prefs(context).getString(KEY_LIKED, "{}"));
+            return new JSONObject(AccountPrefs.recommend(context)
+                    .getString(AccountPrefs.key(context, AccountPrefs.RECOMMEND_LIKED), "{}"));
+        } catch (JSONException e) {
+            return new JSONObject();
+        }
+    }
+
+    private static void saveLikedJson(Context context, JSONObject liked) {
+        AccountPrefs.recommend(context).edit()
+                .putString(AccountPrefs.key(context, AccountPrefs.RECOMMEND_LIKED), liked.toString())
+                .apply();
+    }
+
+    private static JSONObject jsonPref(Context context, String key) {
+        try {
+            return new JSONObject(prefs(context).getString(key, "{}"));
         } catch (JSONException e) {
             return new JSONObject();
         }
@@ -498,10 +612,21 @@ public final class RecommendApi {
     /**
      * 반응을 보내고, 서버가 "체형을 다시 진단해 볼까요?"라고 하면 안내를 띄운다.
      * 서버 상품이 아니거나 서버가 꺼져 있으면 조용히 넘어간다 (쇼핑 화면은 그대로 쓸 수 있게).
+     * event: click | like | unlike(찜 해제) | purchase | return
      */
     public static void sendEvent(Context context, Product product, String event) {
 
         if (product == null || !product.isFromServer()) {
+            return;
+        }
+
+        sendEvent(context, product.getServerId(), event);
+    }
+
+    private static void sendEvent(Context context, String serverId, String event) {
+
+        // 방금 서버에 연결하지 못했으면 잠시 기록을 보내지 않는다 (요청이 쌓여 앱이 느려지지 않게)
+        if (RecommendTiming.isOffline(lastConnectFailAt, System.currentTimeMillis())) {
             return;
         }
 
@@ -510,21 +635,17 @@ public final class RecommendApi {
 
         try {
             body.put("user_id", userId(appContext));
-            body.put("product_id", product.getServerId());
+            body.put("product_id", serverId);
             body.put("event", event);
         } catch (JSONException e) {
             return;
         }
 
-        post("/api/feed/event", body, new Callback<JSONObject>() {
+        post("/api/feed/event", body, EVENT_TIMEOUT_MS, EVENT_IO, new Callback<JSONObject>() {
             @Override
             public void onSuccess(JSONObject result) {
                 if (result.optBoolean("need_rediagnosis", false)) {
-                    Toast.makeText(
-                            appContext,
-                            result.optString("message"),
-                            Toast.LENGTH_LONG
-                    ).show();
+                    showRediagNoticeOnce(appContext, result.optString("message"));
                 }
             }
 
@@ -535,24 +656,88 @@ public final class RecommendApi {
         });
     }
 
+    /** 재진단 안내: 한 번 보여 주면 쉬는 기간 동안 다시 띄우지 않는다 */
+    private static void showRediagNoticeOnce(Context context, String message) {
+
+        SharedPreferences prefs = prefs(context);
+        long now = System.currentTimeMillis();
+        long shownAt = prefs.getLong(KEY_REDIAG_SHOWN_AT, 0L);
+
+        if (!RecommendTiming.shouldShowRediagNotice(shownAt, BodyTypeActivity.lastSurveyTime(context), now)) {
+            return;
+        }
+
+        prefs.edit().putLong(KEY_REDIAG_SHOWN_AT, now).apply();
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+    }
+
+    // =========================
+    // 구매·반품 (주문 화면이 부른다)
+    // =========================
+
+    /**
+     * 주문을 마쳤을 때 부른다. 장바구니에 담긴 서버 상품마다 purchase를 보내고,
+     * 나중에 반품할 때 쓰려고 주문번호와 상품 id를 기기에 저장한다.
+     * 지금은 서버 상품을 장바구니에 담을 수 없어서(상세 화면 옵션·장바구니는 DummyData만) 보낼 상품이 없다.
+     */
+    public static void recordPurchase(Context context, String orderNo) {
+
+        JSONArray ids = new JSONArray();
+
+        for (Product product : SERVER_PRODUCTS.values()) {
+            if (product.isInCart()) {
+                ids.put(product.getServerId());
+                sendEvent(context, product.getServerId(), "purchase");
+            }
+        }
+
+        if (ids.length() == 0 || orderNo == null) {
+            return;
+        }
+
+        JSONObject orders = jsonPref(context, KEY_ORDER_PRODUCTS);
+
+        try {
+            orders.put(orderNo, ids);
+        } catch (JSONException e) {
+            return;
+        }
+
+        prefs(context).edit().putString(KEY_ORDER_PRODUCTS, orders.toString()).apply();
+    }
+
+    /** 반품을 신청했을 때 부른다. 그 주문의 서버 상품마다 return을 보낸다 */
+    public static void recordReturn(Context context, String orderNo) {
+
+        JSONArray ids = orderNo == null ? null
+                : jsonPref(context, KEY_ORDER_PRODUCTS).optJSONArray(orderNo);
+
+        if (ids == null) {
+            return;
+        }
+
+        for (int i = 0; i < ids.length(); i++) {
+            sendEvent(context, ids.optString(i), "return");
+        }
+    }
+
     // =========================
     // 사용자 구분
     // =========================
 
     /**
-     * 기기마다 한 번 만든 아이디. 같은 아이디면 서버가 찜·클릭 기록을 이어서 쓴다.
+     * 로그인 계정(로그인 전이면 guest)마다 한 번 만든 아이디. 같은 아이디면 서버가 찜·클릭 기록을 이어서 쓴다.
      * [여기에 DB 입력] 로그인 회원번호가 생기면 그 값으로 바꾼다.
      */
     public static String userId(Context context) {
 
-        SharedPreferences prefs = context.getApplicationContext()
-                .getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-
-        String id = prefs.getString(KEY_USER_ID, "");
+        SharedPreferences prefs = AccountPrefs.recommend(context);
+        String key = AccountPrefs.key(context, AccountPrefs.RECOMMEND_USER_ID);
+        String id = prefs.getString(key, "");
 
         if (id.isEmpty()) {
             id = "app-" + UUID.randomUUID();
-            prefs.edit().putString(KEY_USER_ID, id).apply();
+            prefs.edit().putString(key, id).apply();
         }
 
         return id;
@@ -563,12 +748,22 @@ public final class RecommendApi {
     // =========================
 
     private static void post(String path, JSONObject body, Callback<JSONObject> callback) {
-        post(path, body, TIMEOUT_MS, callback);
+        post(path, body, TIMEOUT_MS, FEED_IO, callback);
     }
 
     private static void post(String path, JSONObject body, int timeoutMs, Callback<JSONObject> callback) {
+        post(path, body, timeoutMs, FEED_IO, callback);
+    }
 
-        IO.execute(() -> {
+    private static void post(
+            String path,
+            JSONObject body,
+            int timeoutMs,
+            ExecutorService line,
+            Callback<JSONObject> callback
+    ) {
+
+        line.execute(() -> {
             HttpURLConnection connection = null;
 
             try {
@@ -584,6 +779,7 @@ public final class RecommendApi {
                 }
 
                 int code = connection.getResponseCode();
+                lastConnectFailAt = 0L;   // 서버가 답했다 (오류 코드여도 연결은 됨)
                 InputStream stream = code < 400
                         ? connection.getInputStream()
                         : connection.getErrorStream();
@@ -599,6 +795,9 @@ public final class RecommendApi {
                 }
 
             } catch (IOException | JSONException e) {
+                if (e instanceof IOException) {
+                    lastConnectFailAt = System.currentTimeMillis();
+                }
                 MAIN.post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
             } finally {
                 if (connection != null) {

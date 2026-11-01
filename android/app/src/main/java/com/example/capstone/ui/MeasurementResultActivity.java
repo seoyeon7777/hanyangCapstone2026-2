@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.BodyMeasurementContract;
 import com.example.capstone.data.BodyProfileStore;
-import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.UserBodyProfile;
 import com.example.capstone.login.LoginMainActivity;
 import com.example.capstone.login.LoginSession;
@@ -21,7 +20,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.Locale;
-import java.util.function.Consumer;
 
 public class MeasurementResultActivity extends AppCompatActivity {
 
@@ -426,42 +424,14 @@ public class MeasurementResultActivity extends AppCompatActivity {
         putPart(parts, "CALF", calf);
 
         // 골격 진단 보조 값 (가슴두께 cm, 어깨 경사각 도). 대표 체형이 되면 추천 서버로 간다
-        putPart(parts, BodyEditActivity.PART_CHEST_DEPTH,
+        putPart(parts, BodyProfileStore.PART_CHEST_DEPTH,
                 getIntent().getFloatExtra("CHEST_DEPTH", -1f));
-        putPart(parts, BodyEditActivity.PART_SHOULDER_SLOPE,
+        putPart(parts, BodyProfileStore.PART_SHOULDER_SLOPE,
                 getIntent().getFloatExtra("SHOULDER_SLOPE_DEG", -1f));
-
-        final float[] typeMeasures = {
-                height, shoulder, armLength, torso, legLength
-        };
 
         findViewById(R.id.btnMeasurementDone)
                 .setOnClickListener(v ->
-                        onSaveBodyClicked(outHeight, parts, typeMeasures));
-    }
-
-    private void requestFinalBodyType(
-            float[] m,
-            Consumer<String> onFinal
-    ) {
-
-        for (float value : m) {
-            if (value <= 0f) {
-                return;
-            }
-        }
-
-        RecommendApi.finalBodyType(this, m[0], m[1], m[2], m[3], m[4],
-                new RecommendApi.Callback<String>() {
-                    @Override
-                    public void onSuccess(String primary) {
-                        onFinal.accept(typeLabel(primary));
-                    }
-
-                    @Override
-                    public void onError(int code, String message) {
-                    }
-                });
+                        onSaveBodyClicked(outHeight, parts));
     }
 
     private String surveyTypeLabel() {
@@ -478,24 +448,9 @@ public class MeasurementResultActivity extends AppCompatActivity {
         }
     }
 
-    private String typeLabel(String primary) {
-
-        switch (primary) {
-            case "S":
-                return "스트레이트";
-            case "W":
-                return "웨이브";
-            case "N":
-                return "내추럴";
-            default:
-                return surveyTypeLabel();
-        }
-    }
-
     private void onSaveBodyClicked(
             float heightCm,
-            JSONObject parts,
-            float[] typeMeasures
+            JSONObject parts
     ) {
 
         if (!LoginSession.isLoggedIn(this)) {
@@ -508,19 +463,20 @@ public class MeasurementResultActivity extends AppCompatActivity {
             return;
         }
 
-        String[] bodyType = {surveyTypeLabel()};
+        String bodyType = surveyTypeLabel();
+        int[] surveyAnswers = BodyTypeActivity.lastSurveyAnswers(this);
 
         String defaultName =
                 BodyProfileStore.nextDefaultName(this);
 
-        TextView tvBodyType = BodySaveConfirmDialog.show(this, heightCm, bodyType[0], parts, defaultName,
+        BodySaveConfirmDialog.show(this, heightCm, bodyType, parts, defaultName,
                 new BodySaveConfirmDialog.Listener() {
                     @Override
                     public void onSave(String name) {
                         BodyProfileStore.Profile saved = BodyProfileStore.save(
                                 MeasurementResultActivity.this,
                                 null,
-                                name, heightCm, 0f, bodyType[0], parts);
+                                name, heightCm, 0f, bodyType, parts, surveyAnswers);
                         startActivity(BodySaveCompleteActivity.newIntent(
                                 MeasurementResultActivity.this, saved.name));
                         finish();
@@ -543,11 +499,6 @@ public class MeasurementResultActivity extends AppCompatActivity {
                         finish();
                     }
                 });
-
-        requestFinalBodyType(typeMeasures, finalType -> {
-            bodyType[0] = finalType;
-            tvBodyType.setText(finalType);
-        });
     }
 
     private static void putPart(

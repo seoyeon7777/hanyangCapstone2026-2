@@ -143,6 +143,25 @@ def test_pref_same_as_memory():
     assert results[0] == results[1]
 
 
+def test_like_once_unlike_and_rediag_after_new_diagnosis():
+    """찜은 상품마다 한 줄만, 찜 해제는 그 줄을 지움, 다시 진단하면 그 뒤 반응만으로 재진단 판단."""
+    use_db()
+    scroll_ids({"user_id": "app-5", "answers": ANSWERS_S})
+    ev = lambda pid, event="like": client.post(
+        "/api/feed/event", json={"user_id": "app-5", "product_id": pid, "event": event}).get_json()
+    for _ in range(5):
+        ev("t04")
+    assert sql("SELECT count(*) FROM user_events WHERE user_id = 'app-5' AND event = 'like'") == [(1,)]
+    assert ev("t04", "unlike")["pref"] == {}
+    assert sql("SELECT count(*) FROM user_events WHERE user_id = 'app-5'") == [(0,)]
+
+    for pid in ["t06", "t08", "t09", "t10", "t11", "o04", "o06", "d04", "t01", "b02"]:
+        r = ev(pid)
+    assert r["need_rediagnosis"] is True
+    scroll_ids({"user_id": "app-5", "answers": ANSWERS_W})   # 설문을 다시 해서 진단이 바뀜
+    assert ev("t01", "click")["need_rediagnosis"] is False
+
+
 def test_bad_event_not_saved():
     use_db()
     scroll_ids({"user_id": "app-4", "mode": "general"})
@@ -151,12 +170,34 @@ def test_bad_event_not_saved():
     assert sql("SELECT count(*) FROM user_events WHERE user_id = 'app-4'") == [(0,)]
 
 
+def test_many_users_at_once_share_pool():
+    # 여러 명이 동시에 불러도 모두 성공하고, 연결은 DB_POOL_SIZE개를 넘지 않는다
+    import threading
+    from rec_config import DB_POOL_SIZE
+    use_db()
+    codes = []
+
+    def one(i):
+        res = app.test_client().post("/api/feed/scroll", json={"user_id": f"app-c{i}", "answers": ANSWERS_S})
+        codes.append(res.status_code)
+
+    threads = [threading.Thread(target=one, args=(i,)) for i in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert codes == [200] * 8
+    assert 1 <= feed_api.STORE._opened <= DB_POOL_SIZE
+    assert sql("SELECT count(*) FROM body_profiles WHERE user_id LIKE 'app-c%%'") == [(8,)]
+
+
 def test_db_down_gives_503_json():
     feed_api.STORE = PgStore(make_conninfo(ADMIN_URL, port="1", connect_timeout="2"))
     res = client.post("/api/feed/scroll", json={"mode": "general"})
     assert res.status_code == 503
     data = res.get_json()
-    assert data["ok"] is False and "DB" in data["error"]
+    assert data["ok"] is False and "잠시 후 다시" in data["error"]
+    assert "Supabase" not in data["error"]
 
 
 if __name__ == "__main__":

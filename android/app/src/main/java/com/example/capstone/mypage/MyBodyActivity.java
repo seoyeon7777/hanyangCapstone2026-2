@@ -24,6 +24,7 @@ import com.example.capstone.ui.BodyFeedbackActivity;
 import com.example.capstone.ui.BodyValueTable;
 import com.example.capstone.ui.FittingActivity;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -116,15 +117,32 @@ public class MyBodyActivity extends AppCompatActivity {
         if (selectedIds.isEmpty()) {
             return;
         }
-        MyPageUi.confirm(this, "선택 삭제",
-                "선택한 체형 " + selectedIds.size() + "개를 삭제하시겠습니까?", () -> {
-                    for (String id : selectedIds) {
-                        BodyProfileStore.delete(this, id);
-                    }
-                    Toast.makeText(this, "체형 " + selectedIds.size() + "개를 삭제했어요.",
-                            Toast.LENGTH_SHORT).show();
-                    setSelectMode(false);
-                });
+        String activeId = BodyProfileStore.getActiveId(this);
+        List<String> targets = new ArrayList<>();
+        for (String id : selectedIds) {
+            if (!id.equals(activeId)) {
+                targets.add(id);
+            }
+        }
+        boolean skipActive = targets.size() < selectedIds.size();
+        if (targets.isEmpty()) {
+            AppDialog.alert(this, "선택 삭제",
+                    "대표 체형은 삭제할 수 없어요. 다른 체형을 대표로 설정한 뒤 삭제해 주세요.", "확인");
+            return;
+        }
+        String message = "선택한 체형 " + targets.size() + "개를 삭제하시겠습니까?";
+        if (skipActive) {
+            message += "\n대표 체형은 삭제되지 않아요.";
+        }
+        MyPageUi.confirm(this, "선택 삭제", message, () -> {
+            for (String id : targets) {
+                BodyProfileStore.delete(this, id);
+            }
+            Toast.makeText(this, "체형 " + targets.size() + "개를 삭제했어요."
+                            + (skipActive ? " 대표 체형은 제외했어요." : ""),
+                    Toast.LENGTH_SHORT).show();
+            setSelectMode(false);
+        });
     }
 
     private void updateSelectBar(int profileCount) {
@@ -222,11 +240,17 @@ public class MyBodyActivity extends AppCompatActivity {
 
         card.findViewById(R.id.btnEditProfile).setOnClickListener(v -> openFeedback(profile));
         card.findViewById(R.id.tvRename).setOnClickListener(v -> showRename(profile));
-        card.findViewById(R.id.tvDelete).setOnClickListener(v ->
-                MyPageUi.confirm(this, "체형 삭제", "'" + profile.name + "'을(를) 삭제하시겠습니까?", () -> {
-                    BodyProfileStore.delete(this, profile.id);
-                    loadProfiles();
-                }));
+        card.findViewById(R.id.tvDelete).setOnClickListener(v -> {
+            if (active) {
+                AppDialog.alert(this, "체형 삭제",
+                        "대표 체형은 삭제할 수 없어요. 다른 체형을 대표로 설정한 뒤 삭제해 주세요.", "확인");
+                return;
+            }
+            MyPageUi.confirm(this, "체형 삭제", "'" + profile.name + "'을(를) 삭제하시겠습니까?", () -> {
+                BodyProfileStore.delete(this, profile.id);
+                loadProfiles();
+            });
+        });
     }
 
     private void openFeedback(BodyProfileStore.Profile profile) {

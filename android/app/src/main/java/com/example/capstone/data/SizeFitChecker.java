@@ -155,7 +155,7 @@ public class SizeFitChecker {
         List<FitResult> warnings = new ArrayList<>();
 
         for (Product product : DummyData.getProducts()) {
-            if (!product.isInCart()) {
+            if (!product.isInCart() || !product.isCartSelected()) {
                 continue;
             }
 

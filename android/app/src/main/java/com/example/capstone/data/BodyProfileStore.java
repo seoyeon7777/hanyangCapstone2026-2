@@ -30,6 +30,9 @@ public final class BodyProfileStore {
 
     public static final int KEY_PART_COUNT = 6;
 
+    public static final String PART_CHEST_DEPTH = "CHEST_DEPTH";
+    public static final String PART_SHOULDER_SLOPE = "SHOULDER_SLOPE";
+
     public static final String SETTING_SIZE_WARNING = "size_warning";
     /** 체형 측정 전 장바구니/주문 시 "아직 체형 측정을 하지 않았습니다" 팝업 */
     public static final String SETTING_MEASURE_NOTICE = "measure_notice";
@@ -50,6 +53,7 @@ public final class BodyProfileStore {
         public float bodyFat;
         public String bodyType;
         public JSONObject parts;
+        public int[] surveyAnswers;
 
         public float part(String key) {
             return parts == null ? -1f : (float) parts.optDouble(key, -1d);
@@ -70,6 +74,13 @@ public final class BodyProfileStore {
             j.put("bodyFat", bodyFat);
             j.put("bodyType", bodyType);
             j.put("parts", parts == null ? new JSONObject() : parts);
+            if (surveyAnswers != null) {
+                JSONArray answers = new JSONArray();
+                for (int answer : surveyAnswers) {
+                    answers.put(answer);
+                }
+                j.put("surveyAnswers", answers);
+            }
             return j;
         }
 
@@ -85,7 +96,22 @@ public final class BodyProfileStore {
             if (p.parts == null) {
                 p.parts = new JSONObject();
             }
+            p.surveyAnswers = readAnswers(j.optJSONArray("surveyAnswers"));
             return p;
+        }
+
+        private static int[] readAnswers(JSONArray array) {
+            if (array == null || array.length() != 7) {
+                return null;
+            }
+            int[] answers = new int[7];
+            for (int i = 0; i < 7; i++) {
+                answers[i] = array.optInt(i, 0);
+                if (answers[i] < 1 || answers[i] > 3) {
+                    return null;
+                }
+            }
+            return answers;
         }
     }
 
@@ -176,7 +202,8 @@ public final class BodyProfileStore {
     }
 
     public static Profile save(Context context, String editId, String name, float heightCm,
-                               float bodyFat, String bodyType, JSONObject parts) {
+                               float bodyFat, String bodyType, JSONObject parts,
+                               int[] surveyAnswers) {
         List<Profile> list = getProfiles(context);
         Profile target = null;
         if (editId != null) {
@@ -199,6 +226,7 @@ public final class BodyProfileStore {
         target.bodyFat = bodyFat;
         target.bodyType = bodyType;
         target.parts = parts;
+        target.surveyAnswers = surveyAnswers;
         writeProfiles(context, list);
         // 새로 측정한 체형만 자동으로 대표 지정 (기존 체형 수정 시에는 대표 유지)
         // 대표 체형이 하나도 없으면 설정과 상관없이 대표로 지정
@@ -246,6 +274,27 @@ public final class BodyProfileStore {
         // 이 부분에 서버 대표 체형 변경 API 넣기
         prefs(context).edit().putString("active_" + account(context), id).apply();
         syncActiveProfile(context);
+    }
+
+    /**
+     * 설문을 다시 해서 서버가 새로 진단했을 때 부른다. 대표 체형 카드의 설문 답·골격 이름을 새 값으로 바꾼다.
+     * 홈은 대표 카드의 설문 답으로 추천하므로, 이걸 안 하면 결과 화면은 새 체형인데 홈은 예전 체형이 된다.
+     * 치수(parts)·이름·저장 시각은 그대로 둔다. 대표 체형이 없으면 아무것도 안 한다.
+     */
+    public static void updateActiveSurvey(Context context, int[] answers, String bodyType) {
+        String activeId = getActiveId(context);
+        if (activeId == null || answers == null) {
+            return;
+        }
+        List<Profile> list = getProfiles(context);
+        for (Profile p : list) {
+            if (activeId.equals(p.id)) {
+                p.surveyAnswers = answers.clone();
+                p.bodyType = bodyType;
+                writeProfiles(context, list);
+                return;
+            }
+        }
     }
 
     public static void syncActiveProfile(Context context) {

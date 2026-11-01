@@ -168,6 +168,22 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
         resultTitle.setText(typeName);
 
+        // 서버 진단 비율 (예: 스트레이트 38% · 웨이브 41% · 내추럴 21%)
+        float ratioS = receivedIntent.getFloatExtra(BodyTypeActivity.EXTRA_RATIO_S, -1f);
+
+        if (ratioS >= 0f) {
+            float ratioW = receivedIntent.getFloatExtra(BodyTypeActivity.EXTRA_RATIO_W, 0f);
+            float ratioN = receivedIntent.getFloatExtra(BodyTypeActivity.EXTRA_RATIO_N, 0f);
+
+            summary += "\n\n스트레이트 " + Math.round(ratioS * 100) + "%"
+                    + " · 웨이브 " + Math.round(ratioW * 100) + "%"
+                    + " · 내추럴 " + Math.round(ratioN * 100) + "%";
+
+            if (receivedIntent.getBooleanExtra(BodyTypeActivity.EXTRA_MIXED, false)) {
+                summary += "\n두 체형의 특징이 함께 보여요. 추천도 두 체형을 섞어서 골라 드려요.";
+            }
+        }
+
         resultDescription.setText(KoreanLineBreak.keepWords(summary));
         resultFeatures.setText(KoreanLineBreak.keepWords(features));
         KoreanLineBreak.apply(findViewById(R.id.resultNotice));

@@ -13,6 +13,16 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
+        <CheckBox
+            android:id="@+id/cbCartSelect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:buttonTint="#111111"
+            android:contentDescription="상품 선택"
+            android:minWidth="0dp"
+            android:minHeight="0dp" />
+
         <FrameLayout
             android:layout_width="105dp"
             android:layout_height="130dp"
@@ -124,6 +134,17 @@
             android:layout_width="0dp"
             android:layout_height="1dp"
             android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/btnChangeOption"
+            android:layout_width="72dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="8dp"
+            android:gravity="center"
+            android:text="옵션 변경"
+            android:textSize="13sp"
+            android:textColor="#111111"
+            android:background="#F5F5F5" />
 
         <TextView
             android:id="@+id/btnDeleteCart"

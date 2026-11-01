@@ -10,6 +10,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
@@ -53,6 +54,9 @@ public class CartActivity extends AppCompatActivity {
     private LinearLayout recommendationSection;
     private LinearLayout recommendationRow;
     private LinearLayout summaryLayout;
+    private LinearLayout selectAllRow;
+    private View selectAllDivider;
+    private CheckBox selectAllCheck;
 
     private CartAdapter cartAdapter;
 
@@ -114,21 +118,11 @@ public class CartActivity extends AppCompatActivity {
 
         parent.addView(root, index, oldParams);
 
-        // 제목은 이곳에서 한 번만 생성
-        titleCount = makeText(
-                "장바구니 0", 18, true, BLACK
-        );
-
-        titleCount.setGravity(Gravity.CENTER);
-
-        root.addView(
-                titleCount,
-                new LinearLayout.LayoutParams(
-                        -1, dp(56)
-                )
-        );
+        titleCount = findViewById(R.id.textCartTitle);
 
         root.addView(divider());
+
+        createSelectAllRow(root);
 
         cartFrame = new FrameLayout(this);
 
@@ -149,6 +143,47 @@ public class CartActivity extends AppCompatActivity {
         createEmptyView();
         createRecommendationSection(root);
         createSummarySection(root);
+    }
+
+    private void createSelectAllRow(LinearLayout root) {
+
+        selectAllRow = new LinearLayout(this);
+        selectAllRow.setOrientation(LinearLayout.HORIZONTAL);
+        selectAllRow.setGravity(Gravity.CENTER_VERTICAL);
+        selectAllRow.setPadding(dp(16), 0, dp(16), 0);
+
+        root.addView(
+                selectAllRow,
+                new LinearLayout.LayoutParams(
+                        -1, dp(48)
+                )
+        );
+
+        selectAllCheck = new CheckBox(this);
+        selectAllCheck.setButtonTintList(
+                ColorStateList.valueOf(BLACK)
+        );
+        selectAllCheck.setMinWidth(0);
+        selectAllCheck.setMinHeight(0);
+        selectAllCheck.setTextSize(14);
+        selectAllCheck.setTextColor(BLACK);
+        selectAllCheck.setText("전체 선택");
+
+        selectAllCheck.setOnClickListener(v -> {
+
+            boolean checked = selectAllCheck.isChecked();
+
+            for (Product product : cartProducts) {
+                product.setCartSelected(checked);
+            }
+
+            showCartProducts();
+        });
+
+        selectAllRow.addView(selectAllCheck);
+
+        selectAllDivider = divider();
+        root.addView(selectAllDivider);
     }
 
     // 장바구니가 비어 있을 때
@@ -385,7 +420,22 @@ public class CartActivity extends AppCompatActivity {
 
         card.addView(price);
 
-        card.setOnClickListener(v -> goHome());
+        card.setOnClickListener(v -> openDetail(product));
+    }
+
+    private void openDetail(Product product) {
+
+        Intent intent = new Intent(
+                this, ProductDetailActivity.class
+        );
+
+        intent.putExtra("product_id", product.getId());
+        intent.putExtra("product_brand", product.getBrand());
+        intent.putExtra("product_name", product.getName());
+        intent.putExtra("product_price", product.getPrice());
+        intent.putExtra("server_product_id", product.getServerId());
+
+        startActivity(intent);
     }
 
     // 총 상품 금액 영역
@@ -492,6 +542,7 @@ public class CartActivity extends AppCompatActivity {
             for (Product product : DummyData.getProducts()) {
 
                 if (!product.isInCart()) continue;
+                if (!product.isCartSelected()) continue;
 
                 int quantity = product.getCartQuantity();
 
@@ -511,7 +562,9 @@ public class CartActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "장바구니에 상품이 없습니다.",
+                        cartProducts.isEmpty()
+                                ? "장바구니에 상품이 없습니다."
+                                : "주문할 상품을 선택해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -576,8 +629,10 @@ public class CartActivity extends AppCompatActivity {
 
         cartProducts.clear();
 
+        int cartQuantity = 0;
         int totalQuantity = 0;
         int totalPrice = 0;
+        int selectedCount = 0;
 
         for (Product product : DummyData.getProducts()) {
 
@@ -588,20 +643,34 @@ public class CartActivity extends AppCompatActivity {
             if (quantity <= 0) continue;
 
             cartProducts.add(product);
+            cartQuantity += quantity;
 
+            if (!product.isCartSelected()) continue;
+
+            selectedCount++;
             totalQuantity += quantity;
             totalPrice += product.getPrice() * quantity;
         }
 
         if (titleCount != null) {
             titleCount.setText(
-                    "장바구니 " + totalQuantity
+                    "장바구니 " + cartQuantity
             );
         }
 
         if (totalQuantityText != null) {
             totalQuantityText.setText(
                     totalQuantity + "개"
+            );
+        }
+
+        if (selectAllCheck != null) {
+            selectAllCheck.setChecked(
+                    !cartProducts.isEmpty()
+                            && selectedCount == cartProducts.size()
+            );
+            selectAllCheck.setText(
+                    "전체 선택 (" + selectedCount + "/" + cartProducts.size() + ")"
             );
         }
 
@@ -623,6 +692,18 @@ public class CartActivity extends AppCompatActivity {
                 empty ? View.GONE : View.VISIBLE
         );
 
+        if (selectAllRow != null) {
+            selectAllRow.setVisibility(
+                    empty ? View.GONE : View.VISIBLE
+            );
+        }
+
+        if (selectAllDivider != null) {
+            selectAllDivider.setVisibility(
+                    empty ? View.GONE : View.VISIBLE
+            );
+        }
+
         if (recommendationSection != null) {
             recommendationSection.setVisibility(
                     empty ? View.VISIBLE : View.GONE
@@ -642,7 +723,9 @@ public class CartActivity extends AppCompatActivity {
             );
 
             btnGoOrder.setText(
-                    formatPrice(totalPrice) + " 주문하기"
+                    selectedCount == 0
+                            ? "주문할 상품을 선택해주세요"
+                            : formatPrice(totalPrice) + " 주문하기"
             );
         }
 

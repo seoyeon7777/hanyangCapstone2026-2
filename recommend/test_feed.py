@@ -12,7 +12,7 @@ from rec_config import W_BODY, W_PREF, W_TREND, OUTFIT_GROUP
 from fake_matching import classify_kind, match_score
 from feed import (load_items, final_score, score_all, rank, home_feed,
                   outfits, reason, update_pref, need_rediagnosis, feed_order,
-                  general_score, score_by_mode)
+                  general_score, score_by_mode, pref_from_history)
 
 # 이 파일의 정답값은 임시 매칭(fake_matching) 기준으로 손계산한 것이다.
 # 실제 B 파트 연결은 test_integration.py에서 확인한다.
@@ -387,6 +387,41 @@ def test_general_feed_order_hand_calc():
 def test_general_outfits_have_no_body_bonus():
     looks = outfits(None, list(ITEMS.values()), mode="general")
     assert len(looks) == 3 and all(c["bonus"] == 0.0 for c in looks)
+
+
+def test_feed_order_keeps_shown_items_first():
+    # 스크롤 도중 취향이 바뀌어도 이미 보여 준 옷(shown)은 그 순서로 고정하고 나머지만 이어서 고른다.
+    # collar 5개 + z, 묶음 4. 앱이 c2, c1 순서로 보여 줬다고 하면 (없는 id "nope"은 무시)
+    # 묶음 1: c2 c1(이미 collar 2개) → c3(collar 3개 한도) → z / 묶음 2: c4 c5
+    cats = ["top", "bottom", "top", "bottom", "top"]
+    scored = [fake(f"c{i + 1}", 0.9 - i * 0.1, cats[i], "collar") for i in range(5)]
+    scored.append(fake("z", 0.1, "bottom", "wide"))
+    assert ids(feed_order(scored, page_size=4, shown=["c2", "nope", "c1"])) == ["c2", "c1", "c3", "z", "c4", "c5"]
+    # 제외된 옷은 shown에 있어도 다시 나오지 않음
+    scored.append(fake("x", 0.95, "top", excluded=True))
+    assert "x" not in ids(feed_order(scored, page_size=4, shown=["x"]))
+    # shown이 비면 원래 순서와 같음
+    assert ids(feed_order(scored, page_size=4, shown=[])) == ids(feed_order(scored, page_size=4))
+
+
+def test_pref_uses_recent_events_only():
+    # 취향은 최근 PREF_WINDOW(50)개 반응으로만 계산 → 관심이 바뀌면 예전 취향이 사라진다
+    a, b = {"tags": ["a"]}, {"tags": ["b"]}
+    old_likes = [{"item": a, "event": "like"}] * 10
+    # 찜 10번(a) + 클릭 40번(b) = 50개 → 둘 다 들어감: a 10×0.10 = 1.0, b 40×0.05 = 2.0 → 1.0
+    assert pref_from_history(old_likes + [{"item": b, "event": "click"}] * 40) == {"a": 1.0, "b": 1.0}
+    # 클릭 50번(b)이 더 쌓이면 a 찜은 창 밖으로 밀려남
+    assert pref_from_history(old_likes + [{"item": b, "event": "click"}] * 50) == {"b": 1.0}
+    assert pref_from_history([]) == {}
+
+
+def test_general_pref_reason_needs_several_events():
+    # "자주 본 스타일" 문구는 취향 점수 0.65 이상부터 (찜 1번 = 0.1 → 0.55로는 안 붙음)
+    # 칼라 셔츠 t01에서 pref에 있는 태그는 collar 하나 → 취향 = 0.5 + 값/2
+    one_like = general_score(ITEMS["t01"], {"collar": 0.1}, season="fall")      # 0.55
+    three_likes = general_score(ITEMS["t01"], {"collar": 0.3}, season="fall")   # 0.65
+    assert "자주 본 스타일과 비슷해요" not in one_like["reasons"]
+    assert three_likes["reasons"][0] == "자주 본 스타일과 비슷해요"
 
 
 def test_mode_validation():

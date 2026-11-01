@@ -2,14 +2,12 @@ package com.example.capstone.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.capstone.BuildConfig;
 import com.example.capstone.R;
 import com.example.capstone.data.BodyMeasurementContract;
 import com.example.capstone.data.BodyProfileStore;
@@ -28,13 +26,6 @@ public class FittingActivity extends AppCompatActivity {
         findViewById(R.id.btnStartFitting).setOnClickListener(v -> startFitting());
         findViewById(R.id.btnLoadSurvey).setOnClickListener(v -> loadLastSurvey());
         findViewById(R.id.btnShowFeedback).setOnClickListener(v -> showFeedback());
-
-        View btnDemo = findViewById(R.id.btnDemoSamples);
-        if (BuildConfig.DEBUG && btnDemo != null) {
-            btnDemo.setVisibility(View.VISIBLE);
-            btnDemo.setOnClickListener(v ->
-                    startActivity(new Intent(this, DemoSampleActivity.class)));
-        }
     }
 
     @Override

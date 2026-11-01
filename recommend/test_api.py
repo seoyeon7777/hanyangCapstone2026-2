@@ -72,19 +72,68 @@ def test_event_learns_and_feed_reflects():
     assert client.post("/api/feed/event", json={"user_id": "u1", "product_id": "zzz", "event": "like"}).status_code == 400
 
 
+# 스트레이트(S 1.0)에게 피해야 할 태그가 있는 상품 8개 / 어울리는 상품 일부
+S_AVOID = ["t06", "t08", "t09", "t10", "t11", "o04", "o06", "d04"]
+S_GOOD = ["t01", "b02"]
+
+
+def like(user_id, product_id, event="like"):
+    return client.post("/api/feed/event",
+                       json={"user_id": user_id, "product_id": product_id, "event": event}).get_json()
+
+
 def test_event_triggers_rediagnosis():
     reset()
     client.post("/api/feed", json={"user_id": "u2", "body": {"ratio": {"S": 1, "W": 0, "N": 0}}})
-    for _ in range(9):
-        r = client.post("/api/feed/event", json={"user_id": "u2", "product_id": "t06", "event": "like"}).get_json()
-        assert r["need_rediagnosis"] is False  # 10개 전까지는 판단 안 함
-    r = client.post("/api/feed/event", json={"user_id": "u2", "product_id": "t06", "event": "like"}).get_json()
+    # 서로 다른 상품 9개 (피해야 할 옷 7 + 어울리는 옷 2) → 10개 전까지는 판단 안 함
+    for pid in S_AVOID[:7] + S_GOOD:
+        assert like("u2", pid)["need_rediagnosis"] is False
+    r = like("u2", S_AVOID[7])  # 10개 중 8개(80%)가 피해야 할 옷
     assert r["need_rediagnosis"] is True and r["message"]
+
+
+def test_like_counted_once_and_unlike_reverts():
+    """1번: 하트를 껐다 켜도 찜이 쌓이지 않고, 끄면 취향 점수가 찜 전으로 돌아간다."""
+    reset()
+    client.post("/api/feed", json={"user_id": "u5", "body": {"ratio": {"S": 1, "W": 0, "N": 0}}})
+    once = like("u5", "t04")["pref"]
+    assert once == {"len:crop": 0.1, "mat:knit": 0.1}
+    for _ in range(10):                       # 같은 상품을 계속 찜해도
+        assert like("u5", "t04")["pref"] == once
+    assert like("u5", "t04", "unlike")["pref"] == {}   # 찜 해제 → 찜 전(기록 없음)으로
+    assert like("u5", "t04")["pref"] == once           # 다시 찜하면 한 번만
+
+    # 예전 버그 재현: 피해야 할 옷 하나를 10번 껐다 켜도 재진단 안내가 뜨지 않는다
+    for _ in range(10):
+        like("u5", "t06", "unlike")
+        r = like("u5", "t06")
+    assert r["need_rediagnosis"] is False
+    user = feed_api.STORE.user("u5")
+    assert sum(1 for h in user["history"] if h["event"] == "like" and h["item"]["product_id"] == "t06") == 1
+
+
+def test_rediagnosis_uses_events_after_new_diagnosis():
+    """3번: 다시 진단하면 예전 찜으로는 재진단 안내가 뜨지 않는다."""
+    reset()
+    client.post("/api/feed", json={"user_id": "u6", "body": {"ratio": {"S": 1, "W": 0, "N": 0}}})
+    for pid in S_AVOID + S_GOOD:
+        r = like("u6", pid)
+    assert r["need_rediagnosis"] is True
+
+    # 같은 체형을 다시 보내는 것(스크롤마다 같은 답)은 재진단이 아니다 → 그대로 True
+    client.get("/api/feed/scroll?user_id=u6&S=1&season=fall")
+    assert like("u6", "t01", "click")["need_rediagnosis"] is True
+
+    # 설문을 다시 해서 진단이 바뀜 → 그 뒤 반응이 아직 없으니 안내 안 함
+    client.post("/api/feed", json={"user_id": "u6", "body": {"ratio": {"S": 0.2, "W": 0.7, "N": 0.1}}})
+    assert like("u6", "t01", "click")["need_rediagnosis"] is False
+    # 예전 찜은 취향 학습에는 그대로 남는다
+    assert len(feed_api.STORE.user("u6")["history"]) == 12
 
 
 def test_routes_registered():
     rules = {r.rule for r in app.url_map.iter_rules()}
-    assert {"/api/feed", "/api/feed/event", "/api/feed/scroll", "/feed-demo"} <= rules   # C
+    assert {"/api/feed", "/api/feed/event", "/api/feed/scroll", "/api/diagnose", "/feed-demo"} <= rules   # C
     assert {"/api/form", "/api/items", "/api/items/validate", "/api/recommend"} <= rules  # B
 
 
@@ -94,13 +143,13 @@ MEASURES = {"height": 165.0, "shoulder_width": 31.5, "arm_length": 53.1,
 
 
 def test_feed_from_survey_answers():
-    # A(설문 진단) → B(적합도) → C(피드)가 한 번에 이어지는지
+    # A(설문 진단) → B(적합도) → C(피드)가 한 번에 이어지는지. 치수는 보내도 진단에 안 쓴다 (설문만, 팀 결정)
     reset()
     res = client.post("/api/feed", json={"user_id": "a1", "answers": ANSWERS, "measurements": MEASURES})
     assert res.status_code == 200
     data = res.get_json()
     from body_profile import classify
-    expected = classify(ANSWERS, MEASURES)
+    expected = classify(ANSWERS)
     assert data["body"]["primary"] == expected["primary"] == "S"
     assert data["body"]["kind"] == ("mixed" if expected["is_mixed"] else "single")
     assert abs(data["body"]["ratio"]["S"] - expected["ratios"]["S"]) < 1e-9
@@ -115,6 +164,48 @@ def test_feed_from_profile():
                "confidence": 0.05, "is_mixed": True}
     data = client.post("/api/feed", json={"profile": profile}).get_json()
     assert data["body"]["kind"] == "mixed" and data["body"]["primary"] == "S"
+
+
+def test_diagnose_same_as_home_feed():
+    # 앱 설문 결과 화면(/api/diagnose)과 홈 추천(/api/feed)이 같은 계산(A 파트, 설문만)을 쓴다
+    reset()
+    from body_profile import classify
+    expected = classify(ANSWERS)
+    for body in ({"answers": ANSWERS}, {"answers": ANSWERS, "measurements": MEASURES}):
+        d = client.post("/api/diagnose", json=body).get_json()
+        assert d["ok"] and d["primary"] == expected["primary"] and d["is_mixed"] == expected["is_mixed"]
+        assert d["ratios"] == expected["ratios"]                       # 치수를 보내도 설문만
+        assert d["used_measurements"] is False and d["notice"] == ""
+        feed = client.post("/api/feed", json=body).get_json()
+        assert feed["body"]["primary"] == d["primary"]
+        assert all(abs(feed["body"]["ratio"][t] - d["ratios"][t]) < 1e-9 for t in "SWN")
+
+
+def test_measurements_switch_on():
+    # 나중에 치수를 다시 켜면(rec_config) 설문+치수, 치수가 이상하면 그때도 설문만으로
+    import rec_config
+    from body_profile import classify
+    reset()
+    rec_config.DIAGNOSIS_USE_MEASUREMENTS = True
+    try:
+        d = client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": MEASURES}).get_json()
+        assert d["used_measurements"] is True and d["ratios"] == classify(ANSWERS, MEASURES)["ratios"]
+        for bad in ({**MEASURES, "shoulder_width": 80}, {"height": 165}):
+            d = client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": bad}).get_json()
+            assert d["ok"] and d["used_measurements"] is False and "설문만" in d["notice"]
+            assert d["ratios"] == classify(ANSWERS)["ratios"]
+            res = client.post("/api/feed/scroll", json={"user_id": "m1", "answers": ANSWERS, "measurements": bad})
+            assert res.status_code == 200
+    finally:
+        rec_config.DIAGNOSIS_USE_MEASUREMENTS = False
+
+
+def test_diagnose_bad_input():
+    reset()
+    assert client.post("/api/diagnose", json={}).status_code == 400
+    res = client.post("/api/diagnose", json={"answers": {"q1": 1}})
+    assert res.status_code == 400 and "q2" in res.get_json()["error"]
+    assert client.post("/api/diagnose", json={"answers": ANSWERS, "measurements": "abc"}).status_code == 400
 
 
 def test_bad_survey_answers():
@@ -218,6 +309,18 @@ def test_bad_inputs_return_json_400_not_500():
         assert data["ok"] is False and data["error"], (url, payload)
 
 
+def test_nan_ratio_is_400():
+    reset()
+    for ratio in ({"S": float("nan"), "W": 0.3, "N": 0.1}, {"S": "nan"}, {"S": float("inf")}):
+        res = client.post("/api/feed/scroll", json={"user_id": "n1", "body": {"ratio": ratio}})
+        assert res.status_code == 400, ratio
+        assert res.get_json()["ok"] is False
+        user = feed_api.STORE.user("n1")
+        assert user is None or user["body"] is None, ratio
+    res = client.get("/api/feed?S=nan&W=0.5")
+    assert res.status_code == 400
+
+
 def test_errors_are_json_everywhere():
     res = client.get("/api/없는주소")
     assert res.status_code == 404 and res.get_json()["ok"] is False
@@ -252,6 +355,47 @@ def test_scroll_order_same_for_any_page_size():
     assert len(base) == 30
     for size in (5, 7, 30, 50):
         assert whole(size) == base, size
+
+
+def test_scroll_with_shown_never_repeats_or_skips():
+    # 스크롤 사이사이 클릭·찜으로 취향이 바뀌어도, 앱이 이미 받은 상품(shown)을 보내면 겹침·빠짐이 없다
+    for mode in ("body", "general"):
+        reset()
+        answers = {f"q{i}": 1 for i in range(1, 8)}
+        seen = []
+        while True:
+            d = client.post("/api/feed/scroll", json={"user_id": "s1", "answers": answers, "mode": mode,
+                                                      "shown": seen}).get_json()
+            got = [i["product_id"] for i in d["items"]]
+            seen += got
+            for pid in got[:3]:
+                client.post("/api/feed/event", json={"user_id": "s1", "product_id": pid, "event": "click"})
+            if got:
+                client.post("/api/feed/event", json={"user_id": "s1", "product_id": got[-1], "event": "like"})
+            if not d["has_more"]:
+                break
+        assert len(seen) == len(set(seen)) == 30, mode
+
+
+def test_event_response_pref_same_as_saved():
+    reset()
+    client.post("/api/feed/scroll", json={"user_id": "p1", "mode": "general"})
+    for pid, event in (("t01", "like"), ("t04", "click"), ("t01", "return")):
+        res = client.post("/api/feed/event", json={"user_id": "p1", "product_id": pid, "event": event})
+    assert res.get_json()["pref"] == feed_api.STORE.user("p1")["pref"]
+
+
+def test_more_bad_inputs_are_400():
+    reset()
+    assert client.get("/api/feed/scroll?S=nan&W=1&N=0").status_code == 400
+    assert client.get("/api/feed/scroll?user_id=n1&S=inf&W=1&N=0").status_code == 400
+    assert feed_api.STORE.user("n1") is None or feed_api.STORE.user("n1")["body"] is None   # NaN 체형은 저장 안 됨
+    bad = client.post("/api/feed/scroll", json={"profile": {"ratios": {"S": 1, "W": 0, "N": 0}, "is_mixed": "no"}})
+    assert bad.status_code == 400
+    assert client.post("/api/feed/scroll", json={"mode": "general", "page": True}).status_code == 400
+    assert client.post("/api/feed/scroll", json={"mode": "general", "shown": "t01"}).status_code == 200
+    assert client.post("/api/feed/scroll", json={"mode": "general", "shown": [1, 2]}).status_code == 400
+    assert client.post("/api/feed/scroll", json={"mode": "general", "shown": ["t01"] * 5001}).status_code == 400
 
 
 if __name__ == "__main__":

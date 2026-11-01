@@ -14,6 +14,7 @@ public class Product {
     private boolean liked;
     private boolean inCart;
     private int cartQuantity;
+    private boolean cartSelected = true;
 
     // 장바구니에서 고객이 선택한 옵션
     private String selectedSize;
@@ -83,6 +84,14 @@ public class Product {
         this.cartQuantity = cartQuantity;
     }
 
+    public boolean isCartSelected() {
+        return cartSelected;
+    }
+
+    public void setCartSelected(boolean cartSelected) {
+        this.cartSelected = cartSelected;
+    }
+
     public String getSelectedSize() {
         return selectedSize;
     }
@@ -132,6 +141,18 @@ public class Product {
     public void setServerInfo(String serverId, String reason) {
         this.serverId = serverId == null ? "" : serverId;
         this.reason = reason == null ? "" : reason;
+    }
+
+    /**
+     * 서버에서 다시 받은 이름·브랜드·가격으로 바꾼다 (RecommendApi가 호출).
+     * 찜·장바구니 상태는 그대로 둔다. 하나라도 바뀌었으면 true
+     */
+    public boolean updateServerDetails(String brand, String name, int price) {
+        boolean changed = !this.brand.equals(brand) || !this.name.equals(name) || this.price != price;
+        this.brand = brand;
+        this.name = name;
+        this.price = price;
+        return changed;
     }
 
     // 상품 필터 정보 설정
