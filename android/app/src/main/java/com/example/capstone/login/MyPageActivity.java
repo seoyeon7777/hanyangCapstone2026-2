@@ -115,8 +115,9 @@ public class MyPageActivity extends AppCompatActivity {
     private void loadUserInfo() {
         // [여기에 DB 입력] 로그인한 회원의 이름/이메일/프로필 이미지 조회 (users)
         MyPageStore.User user = MyPageStore.getUser();
-        tvUserName.setText((user.name.isEmpty() ? "회원" : user.name) + "님");
-        tvUserEmail.setText(user.email);
+        String shownName = LoginSession.getDisplayName(this);
+        tvUserName.setText((shownName.isEmpty() ? "회원" : shownName) + "님");
+        tvUserEmail.setText(user.email.isEmpty() ? user.phone : user.email);
 
         ProfilePhotoStore.showIn(imgProfile,
                 Math.round(12 * getResources().getDisplayMetrics().density));

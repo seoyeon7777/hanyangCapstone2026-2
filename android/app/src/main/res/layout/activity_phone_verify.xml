@@ -96,28 +96,46 @@
         android:textColor="@color/black"
         android:textSize="12sp" />
 
-    <EditText
-        android:id="@+id/etAuthCode"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="인증번호를 입력해주세요."
-        android:inputType="number"
-        android:maxLength="4"
-        android:background="@drawable/bg_edit"
-        android:paddingHorizontal="16dp"
-        android:textSize="14sp"
-        android:layout_marginBottom="12dp"/>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
 
-    <Button
-        android:id="@+id/btnVerifyCode"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:text="인증확인"
-        android:textColor="@color/white"
-        android:textSize="14sp"
-        android:background="@drawable/bg_button"
-        app:backgroundTint="@null"
-        android:visibility="gone"/>
+        <EditText
+            android:id="@+id/etAuthCode"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:hint="인증번호 6자리"
+            android:inputType="number"
+            android:maxLength="6"
+            android:background="@drawable/bg_edit"
+            android:paddingHorizontal="16dp"
+            android:textSize="14sp"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btnVerifyCode"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="인증확인"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:paddingHorizontal="16dp"
+            android:background="@drawable/bg_button"
+            app:backgroundTint="@null"
+            android:enabled="false"
+            android:alpha="0.4"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvVerifyStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="인증받기를 누르면 인증번호를 보내 드려요. (3분 안에 입력)"
+        android:textSize="12sp"
+        android:textColor="#777777"/>
 
     <View
         android:layout_width="match_parent"

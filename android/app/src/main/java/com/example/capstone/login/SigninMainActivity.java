@@ -63,14 +63,11 @@ public class SigninMainActivity extends AppCompatActivity {
         });
 
         // 소셜 회원가입/로그인 - 나중에 연결
-        btnNaver.setOnClickListener(v -> {
-        });
+        btnNaver.setOnClickListener(v -> LoginMainActivity.socialNotReady(this));
 
-        btnFacebook.setOnClickListener(v -> {
-        });
+        btnFacebook.setOnClickListener(v -> LoginMainActivity.socialNotReady(this));
 
-        btnGmail.setOnClickListener(v -> {
-        });
+        btnGmail.setOnClickListener(v -> LoginMainActivity.socialNotReady(this));
 
         // 로그인하기 → 이전 로그인 화면으로 복귀
         btLogin.setOnClickListener(v -> finish());

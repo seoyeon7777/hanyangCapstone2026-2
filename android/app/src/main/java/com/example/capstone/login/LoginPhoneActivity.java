@@ -14,12 +14,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
+import com.example.capstone.data.AccountStore;
+import com.example.capstone.data.InputRules;
 
 public class LoginPhoneActivity extends AppCompatActivity {
 
     private ImageButton btnBack, btnHome;
     private EditText etPhone, etAuthCode;
-    private Button btnCheckId, btnlogin;
+    private Button btnlogin;
     private ImageButton btnTogglePw;
     private TextView tvSignup;
     private ImageButton btnKakao, btnNaver, btnGmail;
@@ -43,7 +45,6 @@ public class LoginPhoneActivity extends AppCompatActivity {
         etAuthCode = findViewById(R.id.etAuthCode);
         btnTogglePw = findViewById(R.id.btnTogglePw);
 
-        btnCheckId = findViewById(R.id.btnCheckId);
         btnlogin = findViewById(R.id.btnlogin);
 
         tvSignup = findViewById(R.id.tvSignup);
@@ -84,38 +85,21 @@ public class LoginPhoneActivity extends AppCompatActivity {
             etAuthCode.setSelection(etAuthCode.getText().length());
         });
 
-        btnCheckId.setOnClickListener(v -> {
-            String phone = etPhone.getText().toString().trim();
-
-            if (TextUtils.isEmpty(phone)) {
-                Toast.makeText(
-                        this,
-                        "휴대폰 번호를 입력해주세요.",
-                        Toast.LENGTH_SHORT
-                ).show();
-                return;
-            }
-
-            // [여기에 DB 입력] 가입된 휴대폰 번호인지 확인 후 인증번호 발송 (users)
-            Toast.makeText(
-                    this,
-                    "인증번호가 발송되었습니다.",
-                    Toast.LENGTH_SHORT
-            ).show();
-        });
-
         btnlogin.setOnClickListener(v -> {
-            String phone = etPhone.getText().toString().trim();
-            String password = etAuthCode.getText().toString().trim();
+            String phone = InputRules.normalizePhone(etPhone.getText().toString());
+            String password = etAuthCode.getText().toString();
 
-            if (TextUtils.isEmpty(phone)) {
+            if (phone == null) {
                 Toast.makeText(
                         this,
-                        "휴대폰 번호를 입력해주세요.",
+                        "휴대폰 번호를 정확히 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
                 return;
             }
+
+            etPhone.setText(phone);
+            etPhone.setSelection(phone.length());
 
             if (TextUtils.isEmpty(password)) {
                 Toast.makeText(
@@ -129,8 +113,19 @@ public class LoginPhoneActivity extends AppCompatActivity {
             // [여기에 DB 입력] 휴대폰 번호 + 비밀번호가 맞는 회원인지 확인 (users)
             //                 틀리면 "휴대폰 번호 또는 비밀번호가 올바르지 않습니다." 안내 후 return
             //                 맞으면 회원 이름/이메일도 함께 받아 아래 login(...)에 넘긴다
-            LoginSession.login(this, "", "", phone);
-            LoginMainActivity.goToMyPage(this);
+            AccountStore.Account account = AccountStore.loginByPhone(this, phone, password);
+
+            if (account == null) {
+                Toast.makeText(
+                        this,
+                        "휴대폰 번호 또는 비밀번호가 올바르지 않습니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+                return;
+            }
+
+            LoginSession.login(this, account);
+            LoginMainActivity.finishLogin(this);
         });
 
         tvSignup.setOnClickListener(v -> {
@@ -139,13 +134,10 @@ public class LoginPhoneActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        btnKakao.setOnClickListener(v -> {
-        });
+        btnKakao.setOnClickListener(v -> LoginMainActivity.socialNotReady(this));
 
-        btnNaver.setOnClickListener(v -> {
-        });
+        btnNaver.setOnClickListener(v -> LoginMainActivity.socialNotReady(this));
 
-        btnGmail.setOnClickListener(v -> {
-        });
+        btnGmail.setOnClickListener(v -> LoginMainActivity.socialNotReady(this));
     }
 }

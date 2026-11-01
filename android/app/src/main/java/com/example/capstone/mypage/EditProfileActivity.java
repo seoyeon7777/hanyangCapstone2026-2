@@ -3,9 +3,13 @@ package com.example.capstone.mypage;
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.AccountPrefs;
+import com.example.capstone.data.AccountStore;
 import com.example.capstone.data.BodyProfileStore;
+import com.example.capstone.data.InputRules;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.ProfilePhotoStore;
+import com.example.capstone.data.RecommendApi;
+import com.example.capstone.data.ShopStore;
 import com.example.capstone.login.LoginSession;
 import com.example.capstone.ui.AppDialog;
 
@@ -15,7 +19,6 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
-import android.util.Patterns;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,8 +28,6 @@ import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
-
-import java.util.Locale;
 
 /** 마이페이지 > 프로필 수정 (users) */
 public class EditProfileActivity extends AppCompatActivity {
@@ -67,7 +68,7 @@ public class EditProfileActivity extends AppCompatActivity {
     private void loadProfile() {
         // [여기에 DB 입력] 로그인한 회원의 아이디/이름/이메일/휴대폰 조회 (users)
         MyPageStore.User user = MyPageStore.getUser();
-        showValue(tvUserId, LoginSession.getUserId(this));
+        showValue(tvUserId, LoginSession.getNickname(this));
         showValue(tvName, user.name);
         showValue(tvEmail, user.email);
 
@@ -86,6 +87,7 @@ public class EditProfileActivity extends AppCompatActivity {
         imgProfile.setOnClickListener(v -> changePhoto());
 
         findViewById(R.id.btnEditName).setOnClickListener(v -> editName());
+        findViewById(R.id.btnEditNickname).setOnClickListener(v -> editNickname());
         findViewById(R.id.btnEditEmail).setOnClickListener(v -> editEmail());
         findViewById(R.id.btnEditPhone).setOnClickListener(v -> editPhone());
 
@@ -154,12 +156,13 @@ public class EditProfileActivity extends AppCompatActivity {
         AppDialog.input(this, "이름 변경", null,
                 user.name, "이름을 입력해주세요",
                 InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PERSON_NAME,
-                "변경", name -> {
-                    if (name.isEmpty()) {
+                "변경", input -> {
+                    if (input.trim().isEmpty()) {
                         toast("이름을 입력해주세요.");
                         return false;
                     }
-                    if (name.length() > 20) {
+                    String name = InputRules.normalizeName(input);
+                    if (name == null) {
                         toast("이름은 20자 이하로 입력해주세요.");
                         return false;
                     }
@@ -178,12 +181,16 @@ public class EditProfileActivity extends AppCompatActivity {
                 user.email, "example@gmail.com",
                 InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
                 "변경", input -> {
-                    String email = input.replaceAll("\\s", "").toLowerCase(Locale.ROOT);
-                    if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    String email = InputRules.normalizeEmail(input);
+                    if (email == null) {
                         toast("이메일 형식이 올바르지 않습니다.");
                         return false;
                     }
                     // [여기에 DB 입력] 다른 회원이 쓰는 이메일인지 중복 확인 + 이메일 인증 후 저장 (users)
+                    if (AccountStore.isEmailTakenByOther(this, LoginSession.getUserId(this), email)) {
+                        toast("이미 다른 계정에서 쓰는 이메일입니다.");
+                        return false;
+                    }
                     confirmChange("이메일 변경", user.email, email, () -> {
                         saveProfile(user.name, email, user.phone);
                         toast("이메일이 변경되었습니다.");
@@ -203,10 +210,42 @@ public class EditProfileActivity extends AppCompatActivity {
                         toast("휴대폰 번호를 정확히 입력해주세요.");
                         return false;
                     }
+                    if (AccountStore.isPhoneTakenByOther(this, LoginSession.getUserId(this), phone)) {
+                        toast("이미 다른 계정에서 쓰는 휴대폰 번호입니다.");
+                        return false;
+                    }
                     // [여기에 DB 입력] 실제 서비스에서는 바꾼 번호로 본인 인증(문자 인증) 후 저장
                     confirmChange("휴대폰 번호 변경", user.phone, phone, () -> {
                         saveProfile(user.name, user.email, phone);
                         toast("휴대폰 번호가 변경되었습니다.");
+                    });
+                    return true;
+                });
+    }
+
+    private void editNickname() {
+        String current = LoginSession.getNickname(this);
+
+        AppDialog.input(this, "닉네임 변경", "리뷰와 마이페이지에 보이는 이름이에요.",
+                current, "공백 없이 2~10자",
+                InputType.TYPE_CLASS_TEXT,
+                "변경", input -> {
+                    String nickname = InputRules.normalizeNickname(input);
+                    if (nickname == null) {
+                        toast(InputRules.NICKNAME_ERROR);
+                        return false;
+                    }
+                    confirmChange("닉네임 변경", current, nickname, () -> {
+                        MyPageStore.User user = MyPageStore.getUser();
+                        if (!AccountStore.updateProfile(this, LoginSession.getUserId(this),
+                                user.name, nickname, user.email, user.phone)) {
+                            toast("닉네임을 바꾸지 못했어요.");
+                            return;
+                        }
+                        LoginSession.updateNickname(this, nickname);
+                        user.nickname = nickname;
+                        loadProfile();
+                        toast("닉네임이 변경되었습니다.");
                     });
                     return true;
                 });
@@ -226,6 +265,11 @@ public class EditProfileActivity extends AppCompatActivity {
         String before = BodyProfileStore.accountKey(this);
 
         // [여기에 DB 입력] 회원 정보 수정 (users)
+        if (!AccountStore.updateProfile(this, LoginSession.getUserId(this),
+                name, LoginSession.getNickname(this), email, phone)) {
+            toast("정보를 바꾸지 못했어요. 이미 다른 계정에서 쓰는 값인지 확인해주세요.");
+            return;
+        }
         MyPageStore.updateProfile(name, email, phone);
         LoginSession.updateProfile(this, name, email, phone);
 
@@ -274,6 +318,18 @@ public class EditProfileActivity extends AppCompatActivity {
 
     private void withdraw() {
         // [여기에 DB 입력] 회원 탈퇴 처리 + 로그인 세션 삭제 (users)
+        String userId = LoginSession.getUserId(this);
+        String account = BodyProfileStore.accountKey(this);
+        RecommendApi.forgetAccount(this);
+        MyPageStore.deleteAccountData(userId);
+        ShopStore.deleteAccountData(userId);
+        BodyProfileStore.deleteAccount(this, account);
+        ProfilePhotoStore.delete(this);
+        getSharedPreferences(PREF_SETTINGS, MODE_PRIVATE).edit()
+                .remove(KEY_MARKETING_SMS + account)
+                .remove(KEY_MARKETING_EMAIL + account)
+                .apply();
+        AccountStore.delete(this, userId);
         LoginSession.logout(this);
         MyPageStore.logout();
         toast("탈퇴가 완료되었습니다.");
