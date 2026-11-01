@@ -3,6 +3,7 @@ package com.example.capstone.mypage;
 import com.example.capstone.R;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.MyPageStore.Address;
+import com.example.capstone.ui.PostcodeDialog;
 
 import android.content.Context;
 import android.content.Intent;
@@ -111,8 +112,11 @@ public class AddressEditActivity extends AppCompatActivity {
         btnSearchZip.setOnClickListener(v ->
                 // TODO: 우편번호 검색 (다음/카카오 우편번호 서비스 WebView) 연결 후
                 //       선택한 결과로 etZipCode, etAddress1 자동 입력
-                Toast.makeText(this, "주소 검색은 준비 중입니다. 직접 입력해주세요.",
-                        Toast.LENGTH_SHORT).show());
+                PostcodeDialog.show(this, (zip, address) -> {
+                    etZipCode.setText(zip);
+                    etAddress1.setText(address);
+                    etAddress2.requestFocus();
+                }));
 
         btnSave.setOnClickListener(v -> saveAddress());
     }

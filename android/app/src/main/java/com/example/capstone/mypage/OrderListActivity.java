@@ -136,7 +136,8 @@ public class OrderListActivity extends AppCompatActivity {
         ((TextView) view.findViewById(R.id.tvBrand)).setText(order.brand);
         ((TextView) view.findViewById(R.id.tvProductName)).setText(order.productName);
         ((TextView) view.findViewById(R.id.tvOption)).setText(order.option + " / " + order.quantity + "개");
-        ((TextView) view.findViewById(R.id.tvPrice)).setText(MyPageStore.formatPrice(order.getTotalPrice()));
+        ((TextView) view.findViewById(R.id.tvPrice)).setText(MyPageStore.formatPrice(order.getPaidPrice()));
+        view.setOnClickListener(v -> showDetail(order));
 
         Button btnCancel = view.findViewById(R.id.btnCancel);
         Button btnTracking = view.findViewById(R.id.btnTracking);
@@ -168,6 +169,38 @@ public class OrderListActivity extends AppCompatActivity {
         return view;
     }
 
+    private void showDetail(Order order) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("주문번호: ").append(order.orderNo)
+                .append("\n주문일: ").append(order.orderDate)
+                .append("\n상태: ").append(order.getStatusLabel())
+                .append("\n\n").append(order.brand).append(" ").append(order.productName)
+                .append("\n옵션: ").append(order.option)
+                .append("\n수량: ").append(order.quantity).append("개")
+                .append("\n상품 금액: ").append(MyPageStore.formatPrice(order.getTotalPrice()));
+        if (order.discount > 0) {
+            sb.append("\n쿠폰 할인: -").append(MyPageStore.formatPrice(order.discount));
+        }
+        if (order.shippingFee > 0) {
+            sb.append("\n배송비: ").append(MyPageStore.formatPrice(order.shippingFee));
+        }
+        if (!order.paymentMethod.isEmpty()) {
+            sb.append("\n결제 수단: ").append(order.paymentMethod);
+        }
+        if (!order.address.isEmpty()) {
+            sb.append("\n\n받는 분: ").append(order.receiver)
+                    .append(" (").append(order.receiverPhone).append(")")
+                    .append("\n배송지: ").append(order.getShippingAddress());
+            if (!order.request.isEmpty()) {
+                sb.append("\n요청사항: ").append(order.request);
+            }
+        }
+        if (order.status >= MyPageStore.STATUS_PAID && order.status < MyPageStore.STATUS_DONE) {
+            sb.append("\n\n(시연용) 배송 상태는 결제 후 1분마다 한 단계씩 바뀌어요.");
+        }
+        AppDialog.alert(this, "주문 상세", sb.toString(), "확인");
+    }
+
     /** 배송조회 (delivery) */
     private void showTracking(Order order) {
         // [여기에 DB 입력] 주문의 택배사/송장번호/배송 상태 조회 (delivery)
@@ -195,8 +228,8 @@ public class OrderListActivity extends AppCompatActivity {
         Spinner spReason = dialogView.findViewById(R.id.spReason);
         EditText etDetail = dialogView.findViewById(R.id.etReasonDetail);
 
-        tvProduct.setText(order.productName + " · " + order.option + "\n"
-                + MyPageStore.formatPrice(order.getTotalPrice()));
+        tvProduct.setText(order.productName + " · " + order.option + " / " + order.quantity + "개\n"
+                + MyPageStore.formatPrice(order.getPaidPrice()));
         rgType.setVisibility(isCancel ? View.GONE : View.VISIBLE);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
