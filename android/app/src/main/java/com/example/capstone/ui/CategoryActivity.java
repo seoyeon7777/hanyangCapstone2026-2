@@ -22,6 +22,7 @@ import com.example.capstone.R;
 import com.example.capstone.adapter.ProductAdapter;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.Product;
+import com.example.capstone.data.RecommendApi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +40,7 @@ public class CategoryActivity extends AppCompatActivity {
 
     private static final String[] CATEGORIES = {
             "상의", "바지", "아우터", "원피스",
-            "스커트", "수영복", "트레이닝",
-            "신발", "가방·잡화"
+            "스커트"
     };
 
     private static final String[][] SUBCATEGORIES = {
@@ -68,23 +68,6 @@ public class CategoryActivity extends AppCompatActivity {
                     "전체", "미니 스커트",
                     "미디 스커트", "롱 스커트",
                     "데님 스커트"
-            },
-            {
-                    "전체", "비키니",
-                    "원피스 수영복", "래시가드"
-            },
-            {
-                    "전체", "트레이닝 상의",
-                    "트레이닝 하의", "레깅스",
-                    "스포츠웨어"
-            },
-            {
-                    "전체", "운동화", "스니커즈",
-                    "로퍼", "샌들", "부츠"
-            },
-            {
-                    "전체", "가방", "모자",
-                    "벨트", "양말"
             }
     };
 
@@ -192,6 +175,12 @@ public class CategoryActivity extends AppCompatActivity {
         btnCategorySort.setOnClickListener(
                 v -> showSortDialog()
         );
+
+        RecommendApi.loadCatalog(this, () -> {
+            if (!isFinishing()) {
+                updateProducts();
+            }
+        });
     }
 
     // 다른 화면에서 전달한 카테고리 정보
@@ -643,10 +632,20 @@ public class CategoryActivity extends AppCompatActivity {
 
             case "최신순":
                 products.sort(
-                        (a, b) -> Integer.compare(
-                                b.getId(),
-                                a.getId()
-                        )
+                        (a, b) -> {
+                            boolean newA = DummyData.isNew(a);
+                            boolean newB = DummyData.isNew(b);
+                            if (newA != newB) {
+                                return newA ? -1 : 1;
+                            }
+                            if (a.isFromServer() != b.isFromServer()) {
+                                return a.isFromServer() ? 1 : -1;
+                            }
+                            return Integer.compare(
+                                    b.getId(),
+                                    a.getId()
+                            );
+                        }
                 );
                 break;
 
@@ -670,6 +669,12 @@ public class CategoryActivity extends AppCompatActivity {
 
             default:
                 // 추천순은 더미 데이터 기본 순서
+                products.sort(
+                        (a, b) -> Integer.compare(
+                                RecommendApi.bodyRank(a),
+                                RecommendApi.bodyRank(b)
+                        )
+                );
                 break;
         }
     }

@@ -6,6 +6,8 @@ import java.util.List;
 public class DummyData {
 
     private static final List<Product> PRODUCTS = new ArrayList<>();
+    private static final List<Product> SERVER_PRODUCTS = new ArrayList<>();
+    private static final int NEW_COUNT = 6;
 
     static {
         // 기존 상품 1~6
@@ -282,11 +284,34 @@ public class DummyData {
     }
 
     public static List<Product> getProducts() {
+        List<Product> all = new ArrayList<>(PRODUCTS);
+        synchronized (SERVER_PRODUCTS) {
+            all.addAll(SERVER_PRODUCTS);
+        }
+        return all;
+    }
+
+    public static List<Product> getLocalProducts() {
         return PRODUCTS;
     }
 
+    public static void addServerProduct(Product product) {
+        synchronized (SERVER_PRODUCTS) {
+            if (!SERVER_PRODUCTS.contains(product)) {
+                SERVER_PRODUCTS.add(product);
+            }
+        }
+    }
+
+    public static boolean isNew(Product product) {
+        if (product == null || product.isFromServer()) {
+            return false;
+        }
+        return product.getId() > PRODUCTS.size() - NEW_COUNT;
+    }
+
     public static Product getProductById(int id) {
-        for (Product product : PRODUCTS) {
+        for (Product product : getProducts()) {
             if (product.getId() == id) {
                 return product;
             }

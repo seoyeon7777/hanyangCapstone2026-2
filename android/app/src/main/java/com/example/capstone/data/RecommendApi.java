@@ -73,6 +73,14 @@ public final class RecommendApi {
     // 홈을 다시 불러와도 같은 객체를 써서 찜 표시가 유지되고, 찜 탭·상세 화면이 같은 상품을 본다
     private static final Map<String, Product> SERVER_PRODUCTS = new LinkedHashMap<>();
 
+    private static final int SERVER_ID_BASE = 1000;
+    private static final int CATALOG_PAGE_SIZE = 50;
+    private static final List<String> CATALOG_ORDER = new ArrayList<>();
+    private static final List<String> BODY_ORDER = new ArrayList<>();
+    private static volatile boolean catalogLoading = false;
+    private static volatile long catalogLoadedAt = 0L;
+    private static final long CATALOG_REFRESH_MILLIS = 5 * 60 * 1000L;
+
     // 홈 불러오기와 클릭·찜 기록을 다른 줄로 보낸다 (기록이 밀려도 홈 새로고침이 기다리지 않게)
     private static final ExecutorService FEED_IO = Executors.newSingleThreadExecutor();
     private static final ExecutorService EVENT_IO = Executors.newSingleThreadExecutor();
@@ -345,9 +353,8 @@ public final class RecommendApi {
 
         if (product == null) {
             // 서버 상품은 DummyData와 번호가 겹치지 않게 id를 -1로 둔다 (상세 화면은 이름만 보여 준다)
-            product = new Product(-1, shownBrand, name, price);
+            product = newServerProduct(serverId, shownBrand, name, price);
             product.setLiked(likedJson(context).has(serverId));
-            SERVER_PRODUCTS.put(serverId, product);
         } else {
             // 같은 객체를 다시 써서 찜·장바구니 상태는 유지하고, 이름·브랜드·가격은 받은 값으로 바꾼다
             // (DB에서 가격을 바꾸면 앱을 다시 켜지 않아도 반영되게)
@@ -363,7 +370,10 @@ public final class RecommendApi {
             }
         }
 
-        product.setFilterInfo(category, null, null, seasons.toArray(new String[0]));
+        product.setFilterInfo(category, null, null, seasonNames(seasons));
+        if (item.has("image_url")) {
+            product.setImageUrl(item.optString("image_url", ""));
+        }
         // 추천 이유는 토글(ON/OFF)마다 달라서 받을 때마다 새로 넣는다
         product.setServerInfo(serverId, item.optString("reason", ""));
 
@@ -372,6 +382,197 @@ public final class RecommendApi {
         }
 
         return product;
+    }
+
+    private static synchronized Product newServerProduct(String serverId, String brand, String name, int price) {
+        Product product = new Product(SERVER_ID_BASE + SERVER_PRODUCTS.size() + 1, brand, name, price);
+        product.setServerInfo(serverId, "");
+        SERVER_PRODUCTS.put(serverId, product);
+        DummyData.addServerProduct(product);
+        return product;
+    }
+
+    public static synchronized Product rememberServerProduct(String serverId, String brand, String name,
+                                                             int price, String category) {
+        Product product = SERVER_PRODUCTS.get(serverId);
+        if (product != null) {
+            return product;
+        }
+        product = newServerProduct(serverId, brand, name, price);
+        product.setFilterInfo(category, null, null, null);
+        return product;
+    }
+
+    private static String[] seasonNames(List<String> seasons) {
+        List<String> names = new ArrayList<>();
+        for (String season : seasons) {
+            switch (season) {
+                case "spring":
+                    names.add("봄");
+                    break;
+                case "summer":
+                    names.add("여름");
+                    break;
+                case "fall":
+                    names.add("가을");
+                    break;
+                case "winter":
+                    names.add("겨울");
+                    break;
+                default:
+                    names.add(season);
+                    break;
+            }
+        }
+        return names.toArray(new String[0]);
+    }
+
+    public static void refreshLikes(Context context) {
+        JSONObject liked = likedJson(context);
+        for (Map.Entry<String, Product> entry : SERVER_PRODUCTS.entrySet()) {
+            entry.getValue().setLiked(liked.has(entry.getKey()));
+        }
+    }
+
+    public static int catalogRank(Product product) {
+        if (product == null || !product.isFromServer()) {
+            return Integer.MAX_VALUE;
+        }
+        synchronized (CATALOG_ORDER) {
+            int index = CATALOG_ORDER.indexOf(product.getServerId());
+            return index < 0 ? Integer.MAX_VALUE : index;
+        }
+    }
+
+    public static int bodyRank(Product product) {
+        if (product == null || !product.isFromServer()) {
+            return Integer.MAX_VALUE;
+        }
+        synchronized (CATALOG_ORDER) {
+            if (BODY_ORDER.isEmpty()) {
+                int index = CATALOG_ORDER.indexOf(product.getServerId());
+                return index < 0 ? Integer.MAX_VALUE : index;
+            }
+            int index = BODY_ORDER.indexOf(product.getServerId());
+            return index < 0 ? Integer.MAX_VALUE : index;
+        }
+    }
+
+    public static boolean hasCatalog() {
+        synchronized (CATALOG_ORDER) {
+            return !CATALOG_ORDER.isEmpty();
+        }
+    }
+
+    public static void loadCatalog(Context context, Runnable onDone) {
+        if (catalogLoading
+                || (catalogLoadedAt > 0 && System.currentTimeMillis() - catalogLoadedAt < CATALOG_REFRESH_MILLIS)) {
+            if (onDone != null) {
+                MAIN.post(onDone);
+            }
+            return;
+        }
+        catalogLoading = true;
+        Context app = context.getApplicationContext();
+        loadCatalogPage(app, MODE_GENERAL, new ArrayList<>(), () -> {
+            if (!hasBodyInput(app)) {
+                synchronized (CATALOG_ORDER) {
+                    BODY_ORDER.clear();
+                }
+                finishLoading(onDone);
+                return;
+            }
+            loadCatalogPage(app, MODE_BODY, new ArrayList<>(), () -> finishLoading(onDone));
+        });
+    }
+
+    private static void finishLoading(Runnable onDone) {
+        catalogLoading = false;
+        ShopStore.refreshPrices();
+        if (onDone != null) {
+            onDone.run();
+        }
+    }
+
+    private static void loadCatalogPage(Context context, String mode, List<String> shown, Runnable onDone) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put("user_id", userId(context));
+            body.put("mode", mode);
+            body.put("page", 0);
+            body.put("size", CATALOG_PAGE_SIZE);
+            body.put("shown", new JSONArray(shown));
+            if (MODE_BODY.equals(mode)) {
+                JSONObject input = bodyInput(context);
+                if (input != null) {
+                    for (Iterator<String> keys = input.keys(); keys.hasNext(); ) {
+                        String key = keys.next();
+                        body.put(key, input.get(key));
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            finishCatalog(mode, null, onDone);
+            return;
+        }
+
+        post("/api/feed/scroll", body, new Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                try {
+                    Map<String, String> reasons = new LinkedHashMap<>();
+                    for (Product product : SERVER_PRODUCTS.values()) {
+                        reasons.put(product.getServerId(), product.getReason());
+                    }
+                    FeedPage page = parsePage(context, result);
+                    for (Product product : page.items) {
+                        String before = reasons.get(product.getServerId());
+                        if (before != null && !before.isEmpty()) {
+                            product.setServerInfo(product.getServerId(), before);
+                        }
+                        if (!shown.contains(product.getServerId())) {
+                            shown.add(product.getServerId());
+                        }
+                    }
+                    if (page.hasMore && !page.items.isEmpty()) {
+                        loadCatalogPage(context, mode, shown, onDone);
+                        return;
+                    }
+                    finishCatalog(mode, shown, onDone);
+                } catch (JSONException e) {
+                    finishCatalog(mode, shown.isEmpty() ? null : shown, onDone);
+                }
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                finishCatalog(mode, shown.isEmpty() ? null : shown, onDone);
+            }
+        });
+    }
+
+    private static void finishCatalog(String mode, List<String> order, Runnable onDone) {
+        if (order != null) {
+            synchronized (CATALOG_ORDER) {
+                List<String> target = MODE_BODY.equals(mode) ? BODY_ORDER : CATALOG_ORDER;
+                target.clear();
+                target.addAll(order);
+            }
+            if (MODE_GENERAL.equals(mode)) {
+                catalogLoadedAt = System.currentTimeMillis();
+            }
+        } else if (MODE_BODY.equals(mode)) {
+            synchronized (CATALOG_ORDER) {
+                BODY_ORDER.clear();
+            }
+        }
+        if (onDone != null) {
+            onDone.run();
+        }
+    }
+
+    public static void invalidateCatalog() {
+        catalogLoadedAt = 0L;
     }
 
     /** 서버 clothing_type → 앱 상단 메뉴 이름 */
@@ -385,7 +586,7 @@ public final class RecommendApi {
             case "pants":
                 return "바지";
             case "skirt":
-                return "치마";
+                return "스커트";
             case "dress":
                 return "원피스";
             default:
@@ -486,6 +687,7 @@ public final class RecommendApi {
     public static void saveLike(Context context, Product product) {
 
         if (product == null || !product.isFromServer()) {
+            ShopStore.saveLike(product);
             return;
         }
 
@@ -551,16 +753,14 @@ public final class RecommendApi {
                     continue;
                 }
 
-                product = new Product(
-                        -1,
+                product = rememberServerProduct(
+                        serverId,
                         info.optString("brand"),
                         info.optString("name"),
-                        info.optInt("price", 0)
+                        info.optInt("price", 0),
+                        info.optString("category")
                 );
-                product.setFilterInfo(info.optString("category"), null, null, null);
-                product.setServerInfo(serverId, "");
                 product.setLiked(true);
-                SERVER_PRODUCTS.put(serverId, product);
             }
 
             if (product.isLiked()) {
@@ -574,6 +774,26 @@ public final class RecommendApi {
     /** 상세 화면용: 홈·찜 탭에서 본 서버 상품 (없으면 null) */
     public static Product serverProduct(String serverId) {
         return serverId == null ? null : SERVER_PRODUCTS.get(serverId);
+    }
+
+    public static void forgetAccount(Context context) {
+        JSONObject liked = likedJson(context);
+        for (Iterator<String> it = liked.keys(); it.hasNext(); ) {
+            Product product = SERVER_PRODUCTS.get(it.next());
+            if (product != null) {
+                product.setLiked(false);
+            }
+        }
+        AccountPrefs.recommend(context).edit()
+                .remove(AccountPrefs.key(context, AccountPrefs.RECOMMEND_LIKED))
+                .remove(AccountPrefs.key(context, AccountPrefs.RECOMMEND_USER_ID))
+                .apply();
+        AccountPrefs.survey(context).edit()
+                .remove(AccountPrefs.key(context, AccountPrefs.SURVEY_ANSWERS))
+                .remove(AccountPrefs.key(context, AccountPrefs.SURVEY_TYPE))
+                .remove(AccountPrefs.key(context, AccountPrefs.SURVEY_HEIGHT))
+                .remove(AccountPrefs.key(context, AccountPrefs.SURVEY_AT))
+                .apply();
     }
 
     // 찜 목록은 로그인 계정별로 저장한다 (AccountPrefs)
@@ -680,15 +900,13 @@ public final class RecommendApi {
      * 나중에 반품할 때 쓰려고 주문번호와 상품 id를 기기에 저장한다.
      * 지금은 서버 상품을 장바구니에 담을 수 없어서(상세 화면 옵션·장바구니는 DummyData만) 보낼 상품이 없다.
      */
-    public static void recordPurchase(Context context, String orderNo) {
+    public static void recordPurchase(Context context, String orderNo, String serverId) {
 
         JSONArray ids = new JSONArray();
 
-        for (Product product : SERVER_PRODUCTS.values()) {
-            if (product.isInCart()) {
-                ids.put(product.getServerId());
-                sendEvent(context, product.getServerId(), "purchase");
-            }
+        if (serverId != null && !serverId.isEmpty()) {
+            ids.put(serverId);
+            sendEvent(context, serverId, "purchase");
         }
 
         if (ids.length() == 0 || orderNo == null) {

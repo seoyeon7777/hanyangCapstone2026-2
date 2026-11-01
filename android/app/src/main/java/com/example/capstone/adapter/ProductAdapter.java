@@ -11,7 +11,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.R;
+import com.example.capstone.data.DummyData;
 import com.example.capstone.data.Product;
+import com.example.capstone.data.ProductImages;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.ui.ProductDetailActivity;
 
@@ -99,11 +101,13 @@ public class ProductAdapter
 
         // NEW 배지
         // 임시 기준: 상품 ID가 5 이상이면 NEW (추천 서버 상품은 표시 안 함)
-        boolean isNew = !fromServer && product.getId() >= 5;
+        boolean isNew = DummyData.isNew(product);
 
         holder.textNewBadge.setVisibility(
                 isNew ? View.VISIBLE : View.GONE
         );
+
+        ProductImages.bind(holder.frameImage, holder.textImageLabel, holder.imgProduct, product);
 
         // 찜 상태
         updateHeart(holder, product);
@@ -231,6 +235,9 @@ public class ProductAdapter
         ImageView textHeart;
         TextView textNewBadge;
         TextView textReason;
+        View frameImage;
+        TextView textImageLabel;
+        ImageView imgProduct;
 
         public ProductViewHolder(
                 @NonNull View itemView
@@ -260,6 +267,10 @@ public class ProductAdapter
             textReason = itemView.findViewById(
                     R.id.textReason
             );
+
+            frameImage = itemView.findViewById(R.id.frameProductImage);
+            textImageLabel = itemView.findViewById(R.id.textImageLabel);
+            imgProduct = itemView.findViewById(R.id.imgProduct);
         }
     }
 }

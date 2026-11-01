@@ -204,6 +204,18 @@ public class SizeChart {
         }
 
 
+        String category = product.getCategory();
+
+        if ("바지".equals(category) || "스커트".equals(category)) {
+
+            return CATEGORY_BOTTOM;
+        }
+
+        if (category != null && !category.isEmpty() && !"기타".equals(category)) {
+
+            return CATEGORY_TOP;
+        }
+
         String name = product.getName();
 
         for (String keyword : BOTTOM_KEYWORDS) {

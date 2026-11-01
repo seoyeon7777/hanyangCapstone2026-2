@@ -14,6 +14,8 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.capstone.data.MyPageStore;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -30,6 +32,7 @@ public class ReviewActivity extends AppCompatActivity {
     private static final int BORDER = 0xFFE8E8E8;
 
     private int productId;
+    private String serverId;
     private boolean satisfiedOnly = false;
 
     private final List<JSONObject> reviews =
@@ -46,6 +49,7 @@ public class ReviewActivity extends AppCompatActivity {
                 "product_id",
                 -1
         );
+        serverId = getIntent().getStringExtra("server_product_id");
 
         createScreen();
         loadReviews();
@@ -186,6 +190,19 @@ public class ReviewActivity extends AppCompatActivity {
             }
 
         } catch (Exception ignored) {
+        }
+
+        for (MyPageStore.MyReview review : MyPageStore.getProductReviews(productId, serverId)) {
+            try {
+                JSONObject j = new JSONObject();
+                j.put("title", (review.author.isEmpty() ? "구매자" : review.author)
+                        + " · " + review.option);
+                j.put("content", review.content);
+                j.put("date", review.writtenDate);
+                j.put("rating", review.rating);
+                reviews.add(j);
+            } catch (Exception ignored) {
+            }
         }
     }
 
