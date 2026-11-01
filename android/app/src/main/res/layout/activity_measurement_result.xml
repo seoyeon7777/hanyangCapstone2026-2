@@ -209,19 +209,31 @@
         </LinearLayout>
 
 
-        <!-- 신체 둘레 -->
+        <!-- 신체 둘레: 사진이나 키·몸무게·나이로 구한 항목만 보인다 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="신체 둘레 (추정)"
+            android:text="신체 둘레"
             android:textColor="#000000"
             android:textSize="20sp"
             android:textStyle="bold"
             android:layout_marginTop="34dp"/>
 
+        <TextView
+            android:id="@+id/textResultEstNote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:lineSpacingExtra="2dp"
+            android:text="(추정)은 사진으로 잰 값이 없거나, 키·몸무게·나이로 어림한 값과 너무 달라서 어림한 값으로 대신한 항목이에요."
+            android:textColor="#888888"
+            android:textSize="12sp"
+            android:visibility="gone"/>
+
 
         <!-- 1행 -->
         <LinearLayout
+            android:id="@+id/rowCirc1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -242,6 +254,7 @@
 
         <!-- 2행 -->
         <LinearLayout
+            android:id="@+id/rowCirc2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
@@ -252,53 +265,16 @@
                 android:text="골반둘레"/>
 
             <TextView
-                android:id="@+id/textResultNeck"
-                style="@style/MeasurementCard"
-                android:text="목둘레"/>
-
-        </LinearLayout>
-
-
-        <!-- 3행 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/textResultUpperArm"
-                style="@style/MeasurementCard"
-                android:text="상완둘레"/>
-
-            <TextView
-                android:id="@+id/textResultForearm"
-                style="@style/MeasurementCard"
-                android:text="전완둘레"/>
-
-        </LinearLayout>
-
-
-        <!-- 4행 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
                 android:id="@+id/textResultThigh"
                 style="@style/MeasurementCard"
                 android:text="허벅지둘레"/>
-
-            <TextView
-                android:id="@+id/textResultCalf"
-                style="@style/MeasurementCard"
-                android:text="종아리둘레"/>
 
         </LinearLayout>
 
 
         <!-- 비율 분석 -->
         <TextView
+            android:id="@+id/headerRatio"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="비율 분석"
@@ -309,6 +285,7 @@
 
 
         <LinearLayout
+            android:id="@+id/rowRatio"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -325,6 +302,7 @@
                 android:textSize="15sp"/>
 
             <View
+                android:id="@+id/ratioDiv1"
                 android:layout_width="1dp"
                 android:layout_height="70dp"
                 android:layout_gravity="center_vertical"
@@ -341,6 +319,7 @@
                 android:textSize="15sp"/>
 
             <View
+                android:id="@+id/ratioDiv2"
                 android:layout_width="1dp"
                 android:layout_height="70dp"
                 android:layout_gravity="center_vertical"

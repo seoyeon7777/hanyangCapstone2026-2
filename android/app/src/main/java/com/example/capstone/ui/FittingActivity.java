@@ -9,10 +9,12 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.data.BodyInput;
 import com.example.capstone.data.BodyMeasurementContract;
+import com.example.capstone.data.BodyPrior;
 import com.example.capstone.data.BodyProfileStore;
 
-/** 팀원 피팅 진입: 키 → 체형 자가진단. */
+/** 팀원 피팅 진입: 키·몸무게·나이 → 체형 자가진단. */
 public class FittingActivity extends AppCompatActivity {
 
     @Override
@@ -57,6 +59,9 @@ public class FittingActivity extends AppCompatActivity {
         if (heightCm <= 0f) {
             return;
         }
+        if (!readWeightAndAge(false)) {
+            return;
+        }
 
         Intent intent = new Intent(this, BodyTypeActivity.class);
         intent.putExtra(BodyMeasurementContract.EXTRA_USER_HEIGHT_CM, heightCm);
@@ -80,8 +85,68 @@ public class FittingActivity extends AppCompatActivity {
         if (heightCm <= 0f) {
             return;
         }
+        // 몸무게·나이는 비워 두면 지난번에 입력한 값을 쓴다
+        if (!readWeightAndAge(true)) {
+            return;
+        }
 
         startActivity(BodyTypeActivity.lastSurveyIntent(this, heightCm));
+    }
+
+    /**
+     * 몸무게(kg)·나이를 확인해 저장한다. 잘못되면 안내 후 false.
+     * useSavedWhenBlank가 true면 비어 있을 때 지난번 값을 쓴다.
+     */
+    private boolean readWeightAndAge(boolean useSavedWhenBlank) {
+        EditText editWeight = findViewById(R.id.editWeight);
+        EditText editAge = findViewById(R.id.editAge);
+        String weightText = editWeight.getText().toString().trim();
+        String ageText = editAge.getText().toString().trim();
+
+        float weightKg;
+        if (weightText.isEmpty()) {
+            weightKg = useSavedWhenBlank ? BodyInput.weight(this) : -1f;
+            if (weightKg <= 0f) {
+                Toast.makeText(this, "몸무게를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        } else {
+            try {
+                weightKg = Float.parseFloat(weightText);
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "몸무게를 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            if (weightKg < 25f || weightKg > 150f) {
+                Toast.makeText(this, "몸무게를 25~150kg 사이로 입력해주세요.", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+
+        float age;
+        if (ageText.isEmpty()) {
+            age = useSavedWhenBlank ? BodyInput.age(this) : -1f;
+            if (age <= 0f) {
+                Toast.makeText(this, "나이를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        } else {
+            try {
+                age = Integer.parseInt(ageText);
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "나이를 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            if (age < BodyPrior.INPUT_AGE_MIN || age > BodyPrior.INPUT_AGE_MAX) {
+                Toast.makeText(this, "나이를 10~99세 사이로 입력해주세요.", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        }
+
+        BodyInput.save(this, -1f, weightKg, age);
+        // 입력한 값으로 사이즈 알림용 치수를 바로 갱신한다
+        BodyProfileStore.syncActiveProfile(this);
+        return true;
     }
 
     /** 입력한 키를 확인해 저장하고 돌려준다. 잘못된 값이면 안내 후 -1. */

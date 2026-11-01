@@ -37,10 +37,14 @@ public final class BodyValueTable {
     }
 
     private static void addParts(List<String[]> rows, JSONObject parts, int from, int to) {
+        // 키·몸무게·나이로 어림해서 채운 부위는 "(추정)"을 붙인다
+        String estimated = parts == null ? "" : parts.optString(BodyProfileStore.EST_PARTS, "");
         for (int i = from; i < to; i++) {
-            double value = parts == null ? -1d : parts.optDouble(BodyProfileStore.PART_KEYS[i], -1d);
+            String key = BodyProfileStore.PART_KEYS[i];
+            double value = parts == null ? -1d : parts.optDouble(key, -1d);
             if (value > 0d) {
-                rows.add(new String[]{BodyProfileStore.PART_LABELS[i], cm((float) value)});
+                String label = BodyProfileStore.PART_LABELS[i] + (estimated.contains(key) ? "(추정)" : "");
+                rows.add(new String[]{label, cm((float) value)});
             }
         }
     }

@@ -4,6 +4,7 @@ package com.example.capstone.ui;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -11,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
 import com.example.capstone.data.BodyMeasurementContract;
+import com.example.capstone.data.BodyInput;
+import com.example.capstone.data.BodyPrior;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.UserBodyProfile;
 import com.example.capstone.login.LoginMainActivity;
@@ -63,20 +66,8 @@ public class MeasurementResultActivity extends AppCompatActivity {
         TextView textHip =
                 findViewById(R.id.textResultHip);
 
-        TextView textNeck =
-                findViewById(R.id.textResultNeck);
-
-        TextView textUpperArm =
-                findViewById(R.id.textResultUpperArm);
-
-        TextView textForearm =
-                findViewById(R.id.textResultForearm);
-
         TextView textThigh =
                 findViewById(R.id.textResultThigh);
-
-        TextView textCalf =
-                findViewById(R.id.textResultCalf);
 
         // =========================================
         // 촬영 사진
@@ -220,6 +211,33 @@ public class MeasurementResultActivity extends AppCompatActivity {
                 );
 
         // =========================================
+        // 사진으로 잰 가슴·허리·골반·허벅지 둘레를 키·몸무게·나이 기준 추정과 맞춘다.
+        // 옷·팔 때문에 기준선과 크게 다르면 기준선 값을 쓰고 "추정"으로 표시한다.
+        // (입력한 몸무게·나이가 없거나 범위 밖이면 측정값을 그대로 쓴다)
+        // =========================================
+
+        // 사진 모델(딥러닝)이 구한 둘레가 있으면 규칙 기반 사진 계산 값 대신 쓴다
+        final float dlChest = receivedIntent.getFloatExtra("DL_CHEST", -1f);
+        final float dlWaist = receivedIntent.getFloatExtra("DL_WAIST", -1f);
+        final float dlHip = receivedIntent.getFloatExtra("DL_HIP", -1f);
+        final boolean modelUsed = dlChest > 0f && dlWaist > 0f && dlHip > 0f;
+        if (modelUsed) {
+            chest = dlChest;
+            waist = dlWaist;
+            hip = dlHip;
+        }
+
+        final BodyPrior.Result prior = BodyInput.prior(this, height);
+        final boolean[] estimated = new boolean[BodyPrior.PART_KEYS.length];
+        final float[] fixed = BodyPrior.reconcile(prior,
+                new float[]{chest, waist, hip, thigh}, estimated,
+                new boolean[]{modelUsed, modelUsed, modelUsed, false});
+        chest = fixed[BodyPrior.CHEST];
+        waist = fixed[BodyPrior.WAIST];
+        hip = fixed[BodyPrior.HIP];
+        thigh = fixed[BodyPrior.THIGH];
+
+        // =========================================
         // 앱 전체에서 사용하는 신체 정보 저장
         // 쇼핑 화면 사이즈 주의 기능 유지
         // =========================================
@@ -233,6 +251,9 @@ public class MeasurementResultActivity extends AppCompatActivity {
                         hip,
                         thigh
                 );
+        for (int i = 0; i < estimated.length; i++) {
+            UserBodyProfile.getInstance().setEstimated(i, estimated[i]);
+        }
 
         // =========================================
         // 기본 신체 정보 출력
@@ -263,36 +284,40 @@ public class MeasurementResultActivity extends AppCompatActivity {
         // =========================================
 
         textChest.setText(
-                formatCard("가슴둘레", chest)
+                formatCard(estimated[BodyPrior.CHEST] ? "가슴둘레(추정)" : "가슴둘레", chest)
         );
 
         textWaist.setText(
-                formatCard("허리둘레", waist)
+                formatCard(estimated[BodyPrior.WAIST] ? "허리둘레(추정)" : "허리둘레", waist)
         );
 
         textHip.setText(
-                formatCard("골반둘레", hip)
-        );
-
-        textNeck.setText(
-                formatCard("목둘레", neck)
-        );
-
-        textUpperArm.setText(
-                formatCard("상완둘레", upperArm)
-        );
-
-        textForearm.setText(
-                formatCard("전완둘레", forearm)
+                formatCard(estimated[BodyPrior.HIP] ? "골반둘레(추정)" : "골반둘레", hip)
         );
 
         textThigh.setText(
-                formatCard("허벅지둘레", thigh)
+                formatCard(estimated[BodyPrior.THIGH] ? "허벅지둘레(추정)" : "허벅지둘레", thigh)
         );
 
-        textCalf.setText(
-                formatCard("종아리둘레", calf)
-        );
+        // 사진이나 키·몸무게·나이로 구하지 못한 항목은 화면에 보이지 않게 한다
+        showOnlyIfValid(textHeight, height);
+        showOnlyIfValid(textShoulder, shoulder);
+        showOnlyIfValid(textArm, armLength);
+        showOnlyIfValid(textTorso, torso);
+        showOnlyIfValid(textLeg, legLength);
+
+        boolean showChest = chest > 0f;
+        boolean showWaist = waist > 0f;
+        boolean showHip = hip > 0f;
+        boolean showThigh = thigh > 0f;
+        applyCardRow(findViewById(R.id.rowCirc1), textChest, showChest, textWaist, showWaist);
+        applyCardRow(findViewById(R.id.rowCirc2), textHip, showHip, textThigh, showThigh);
+
+        boolean anyEstimated = false;
+        for (boolean e : estimated) {
+            anyEstimated |= e;
+        }
+        findViewById(R.id.textResultEstNote).setVisibility(anyEstimated ? View.VISIBLE : View.GONE);
 
         // =========================================
         // 정면 사진 표시
@@ -355,9 +380,7 @@ public class MeasurementResultActivity extends AppCompatActivity {
 
         } else {
 
-            textUpperRatio.setText(
-                    "상체 비율\n\n측정값 없음"
-            );
+            textUpperRatio.setVisibility(View.GONE);
         }
 
         // =========================================
@@ -379,9 +402,7 @@ public class MeasurementResultActivity extends AppCompatActivity {
 
         } else {
 
-            textLowerRatio.setText(
-                    "하체 비율\n\n측정값 없음"
-            );
+            textLowerRatio.setVisibility(View.GONE);
         }
 
         // =========================================
@@ -402,10 +423,18 @@ public class MeasurementResultActivity extends AppCompatActivity {
 
         } else {
 
-            textWhr.setText(
-                    "허리-골반 비율\n(WHR)\n\n-"
-            );
+            textWhr.setVisibility(View.GONE);
         }
+
+        // 구분선과 제목도 보이는 항목에 맞춘다
+        boolean upperShown = textUpperRatio.getVisibility() == View.VISIBLE;
+        boolean lowerShown = textLowerRatio.getVisibility() == View.VISIBLE;
+        boolean whrShown = textWhr.getVisibility() == View.VISIBLE;
+        findViewById(R.id.ratioDiv1).setVisibility(upperShown && lowerShown ? View.VISIBLE : View.GONE);
+        findViewById(R.id.ratioDiv2).setVisibility(whrShown && (upperShown || lowerShown) ? View.VISIBLE : View.GONE);
+        int ratioVisibility = upperShown || lowerShown || whrShown ? View.VISIBLE : View.GONE;
+        findViewById(R.id.headerRatio).setVisibility(ratioVisibility);
+        findViewById(R.id.rowRatio).setVisibility(ratioVisibility);
 
         final float outHeight = height;
 
@@ -416,12 +445,30 @@ public class MeasurementResultActivity extends AppCompatActivity {
         putPart(parts, "HIP", hip);
         putPart(parts, "ARM_LENGTH", armLength);
         putPart(parts, "LEG_LENGTH", legLength);
-        putPart(parts, "NECK", neck);
         putPart(parts, "BACK_LENGTH", torso);
-        putPart(parts, "UPPER_ARM", upperArm);
-        putPart(parts, "FOREARM", forearm);
         putPart(parts, "THIGH", thigh);
-        putPart(parts, "CALF", calf);
+
+        // 사진 모델로 구한 값이면 표시한다 (저장된 프로필을 다시 불러올 때 기준선과 달라도 믿는다)
+        if (modelUsed && !estimated[BodyPrior.CHEST] && !estimated[BodyPrior.WAIST] && !estimated[BodyPrior.HIP]) {
+            try {
+                parts.put(BodyProfileStore.PHOTO_MODEL, "1");
+            } catch (Exception ignored) {
+            }
+        }
+
+        // 기준선 값으로 채운 부위는 저장할 때 추정으로 표시한다 (사이즈 알림 여유를 넓힌다)
+        StringBuilder estParts = new StringBuilder();
+        for (int i = 0; i < estimated.length; i++) {
+            if (estimated[i]) {
+                estParts.append(estParts.length() > 0 ? "," : "").append(BodyPrior.PART_KEYS[i]);
+            }
+        }
+        if (estParts.length() > 0) {
+            try {
+                parts.put(BodyProfileStore.EST_PARTS, estParts.toString());
+            } catch (Exception ignored) {
+            }
+        }
 
         // 골격 진단 보조 값 (가슴두께 cm, 어깨 경사각 도). 대표 체형이 되면 추천 서버로 간다
         putPart(parts, BodyProfileStore.PART_CHEST_DEPTH,
@@ -492,7 +539,7 @@ public class MeasurementResultActivity extends AppCompatActivity {
 
                     @Override
                     public void onRetakeCamera() {
-                        Intent intent = new Intent(MeasurementResultActivity.this, BodyMeasurementActivity.class);
+                        Intent intent = new Intent(MeasurementResultActivity.this, PhotoMeasurementActivity.class);
                         intent.putExtra(BodyMeasurementContract.EXTRA_USER_HEIGHT_CM, heightCm);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         startActivity(intent);
@@ -601,6 +648,26 @@ public class MeasurementResultActivity extends AppCompatActivity {
     // =========================================
     // 기본 신체 치수 표시
     // =========================================
+
+    /** 값이 없으면(0 이하) 항목을 아예 숨긴다. */
+    private static void showOnlyIfValid(TextView view, float value) {
+        view.setVisibility(value > 0f ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * 카드 두 장이 든 줄을 정리한다. 둘 다 없으면 줄을 숨기고,
+     * 하나만 없으면 자리를 비워서(보이지 않게) 남은 카드가 다른 줄과 같은 너비를 유지하게 한다.
+     */
+    private static void applyCardRow(View row, TextView first, boolean showFirst,
+                                     TextView second, boolean showSecond) {
+        if (!showFirst && !showSecond) {
+            row.setVisibility(View.GONE);
+            return;
+        }
+        row.setVisibility(View.VISIBLE);
+        first.setVisibility(showFirst ? View.VISIBLE : View.INVISIBLE);
+        second.setVisibility(showSecond ? View.VISIBLE : View.INVISIBLE);
+    }
 
     private String formatBasic(
             String name,

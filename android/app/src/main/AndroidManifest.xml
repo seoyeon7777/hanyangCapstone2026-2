@@ -30,9 +30,7 @@
             android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ui.BodyTypeActivity" />
         <activity android:name=".ui.BodyTypeResultActivity" />
-        <activity android:name=".ui.BodyMeasurementActivity" />
         <activity android:name=".ui.PhotoMeasurementActivity" />
-        <activity android:name=".ui.MeasurementAdjustActivity" />
         <activity android:name=".ui.MeasurementResultActivity" />
         <activity android:name=".ui.ProductDetailActivity" />
         <activity android:name=".login.LoginMainActivity" />

@@ -218,7 +218,7 @@ public class BodyFeedbackActivity extends AppCompatActivity {
             return;
         }
 
-        Intent intent = new Intent(this, BodyMeasurementActivity.class);
+        Intent intent = new Intent(this, PhotoMeasurementActivity.class);
         intent.putExtra(BodyMeasurementContract.EXTRA_USER_HEIGHT_CM, heightCm);
         startActivity(intent);
     }

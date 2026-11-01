@@ -10,6 +10,12 @@ public class SizeFitChecker {
     // 임시 사이즈표의 판정 여유값(cm)
     private static final float TOLERANCE_CM = 3.0f;
 
+    // 키·몸무게·나이로 어림한 값은 오차가 더 크므로(평균 2~3cm, 10명 중 1명은 5cm 이상) 판정 여유를 넓힌다
+    private static final float ESTIMATED_TOLERANCE_CM = 5.0f;
+
+    // 추천 사이즈가 동점일 때 가까운 쪽을 고르기 위한 작은 가중치 (판정 기준에는 쓰지 않는다)
+    private static final float TIE_BREAK_WEIGHT = 0.01f;
+
     // 작은 오차 하나만으로 부적합 판정하지 않기 위한 기준
     private static final float WARNING_SCORE = 5.0f;
 
@@ -83,12 +89,14 @@ public class SizeFitChecker {
             compared++;
 
             float deviation = distance(value, min, max);
+            float tol = tolerance(profile, i);
 
-            if (deviation <= TOLERANCE_CM) {
+            if (deviation <= tol) {
                 continue;
             }
 
-            float excess = deviation - TOLERANCE_CM;
+            float excess = deviation - tol;
+            String shownName = profile.isEstimated(estimatedIndex(i)) ? names[i] + "(추정)" : names[i];
 
             if (value > max) {
                 tight++;
@@ -97,7 +105,7 @@ public class SizeFitChecker {
                 reasons.add(String.format(
                         Locale.KOREA,
                         "%s %.1fcm · 권장 %.1f~%.1fcm (작을 수 있음)",
-                        names[i], value, min, max));
+                        shownName, value, min, max));
 
             } else if (value < min) {
                 loose++;
@@ -106,7 +114,7 @@ public class SizeFitChecker {
                 reasons.add(String.format(
                         Locale.KOREA,
                         "%s %.1fcm · 권장 %.1f~%.1fcm (클 수 있음)",
-                        names[i], value, min, max));
+                        shownName, value, min, max));
             }
         }
 
@@ -198,7 +206,8 @@ public class SizeFitChecker {
             float score = 0f;
             int compared = 0;
 
-            for (float[] part : parts) {
+            for (int pi = 0; pi < parts.length; pi++) {
+                float[] part = parts[pi];
                 if (!valid(part[0], part[1], part[2])) {
                     continue;
                 }
@@ -209,7 +218,10 @@ public class SizeFitChecker {
                         part[0], part[1], part[2]);
 
                 score += Math.max(
-                        0f, deviation - TOLERANCE_CM);
+                        0f, deviation - tolerance(profile, pi));
+                // 추정 치수는 여유가 넓어서 여러 사이즈가 점수 0으로 동점이 된다.
+                // 그럴 때 실제로 더 가까운 사이즈를 고르도록 차이를 아주 조금 더한다.
+                score += TIE_BREAK_WEIGHT * deviation;
             }
 
             if (compared == 0) {
@@ -223,6 +235,25 @@ public class SizeFitChecker {
         }
 
         return bestSize;
+    }
+
+    /**
+     * 사이즈표 비교 순서(가슴, 어깨, 허리, 골반, 허벅지)에서 i번째 값의 판정 여유.
+     * 추정치면 넓게 둔다.
+     */
+    private static float tolerance(UserBodyProfile profile, int i) {
+        return profile.isEstimated(estimatedIndex(i)) ? ESTIMATED_TOLERANCE_CM : TOLERANCE_CM;
+    }
+
+    /** 사이즈표 비교 순서의 i번째 → BodyPrior 부위 번호. 어깨처럼 기준선이 없으면 -1 */
+    private static int estimatedIndex(int i) {
+        switch (i) {
+            case 0: return BodyPrior.CHEST;
+            case 2: return BodyPrior.WAIST;
+            case 3: return BodyPrior.HIP;
+            case 4: return BodyPrior.THIGH;
+            default: return -1;
+        }
     }
 
     private static boolean valid(

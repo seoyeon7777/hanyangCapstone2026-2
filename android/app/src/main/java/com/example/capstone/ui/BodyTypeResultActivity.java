@@ -30,7 +30,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
         Intent intent = new Intent(
                 BodyTypeResultActivity.this,
-                BodyMeasurementActivity.class
+                PhotoMeasurementActivity.class
         );
 
         intent.putExtra(
@@ -41,7 +41,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    /** 촬영 전 옷차림 안내. 몸에 붙는 옷이 정확하다는 것을 알려 준다. */
+    /** 사진을 고르기 전 옷차림 안내. 몸에 붙는 옷이 정확하다는 것을 알려 준다. */
     private void showClothesTip() {
 
         float density = getResources().getDisplayMetrics().density;
@@ -188,7 +188,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         resultFeatures.setText(KoreanLineBreak.keepWords(features));
         KoreanLineBreak.apply(findViewById(R.id.resultNotice));
 
-        // 자세한 신체 분석 → 카메라 실행
+        // 자세한 신체 분석 → 정면·옆면 사진 고르기
         btnYes.setOnClickListener(v -> {
 
             if (userHeightCm < 100f || userHeightCm > 230f) {
@@ -200,7 +200,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 return;
             }
 
-            // 카메라를 켜기 전에 옷차림 안내 (다시 보지 않기를 고르면 건너뜀)
+            // 사진을 고르기 전에 옷차림 안내 (다시 보지 않기를 고르면 건너뜀)
             if (getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
                     .getBoolean(KEY_SKIP_CLOTHES_TIP, false)) {
                 startMeasurement();

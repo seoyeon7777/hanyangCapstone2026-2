@@ -163,7 +163,7 @@
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:lineSpacingExtra="3dp"
-                android:text="카메라 또는 전신 사진을 이용하면&#10;신체 비율과 치수를 더 자세하게 분석할 수 있습니다."
+                android:text="전신 사진(정면·옆면)을 올리면&#10;신체 비율과 치수를 더 자세하게 분석할 수 있습니다."
                 android:textColor="#777777"
                 android:textSize="13sp" />
 

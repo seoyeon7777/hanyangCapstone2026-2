@@ -68,6 +68,9 @@ public final class MeasurementSession {
     public static float heightCm;
     public static File frontPhoto;
     public static File sidePhoto;
+    /** 사진 모델이 구한 가슴·허리·엉덩이 둘레(cm). 못 구했으면 null */
+    public static float[] modelCirc;
+
     /** 앨범에서 고른 사진이면 파일 대신 Uri */
     public static Uri frontUri;
     public static Uri sideUri;
@@ -81,6 +84,7 @@ public final class MeasurementSession {
     }
 
     public static void clear() {
+        modelCirc = null;
         front = null;
         side = null;
         frontLengths = null;

@@ -30,6 +30,12 @@ public final class BodyProfileStore {
 
     public static final int KEY_PART_COUNT = 6;
 
+    /** 프로필 parts 안에서, 키·몸무게·나이로 어림해서 채운 부위 이름들(예: "CHEST,WAIST") */
+    public static final String EST_PARTS = "EST_PARTS";
+
+    /** 프로필 parts 안에서, 가슴·허리·엉덩이가 사진 모델(딥러닝)로 구한 값이면 "1" */
+    public static final String PHOTO_MODEL = "PHOTO_MODEL";
+
     public static final String PART_CHEST_DEPTH = "CHEST_DEPTH";
     public static final String PART_SHOULDER_SLOPE = "SHOULDER_SLOPE";
 
@@ -301,16 +307,34 @@ public final class BodyProfileStore {
         UserBodyProfile profile = UserBodyProfile.getInstance();
         profile.clear();
         Profile active = getActive(context);
-        if (active == null) {
-            return;
+        float height = active != null ? active.heightCm : BodyInput.height(context);
+
+        // 가슴·허리·엉덩이·허벅지는 키·몸무게·나이로 어림한 값(기준선)과 맞춘다:
+        // 측정값이 없거나 옷·팔 때문에 기준선과 크게 다르면 기준선 값을 쓰고 "추정"으로 표시한다.
+        // 체형 측정을 안 한 사람(대표 체형 없음)도 키·몸무게·나이를 입력했으면 이 값으로 사이즈 알림을 받는다.
+        BodyPrior.Result prior = BodyInput.prior(context, height);
+        float[] measured = new float[BodyPrior.PART_KEYS.length];
+        String savedEst = active == null || active.parts == null ? "" : active.parts.optString(EST_PARTS, "");
+        for (int i = 0; i < measured.length; i++) {
+            measured[i] = active == null ? -1f : active.part(BodyPrior.PART_KEYS[i]);
         }
+        boolean[] est = new boolean[measured.length];
+        boolean fromModel = active != null && active.parts != null
+                && "1".equals(active.parts.optString(PHOTO_MODEL, ""));
+        // 사진 모델로 구한 가슴·허리·엉덩이는 기준선과 달라도 믿는다 (허벅지는 모델이 없다)
+        boolean[] trusted = {fromModel, fromModel, fromModel, false};
+        float[] fixed = BodyPrior.reconcile(prior, measured, est, trusted);
+
         profile.updateFromMeasurement(
-                active.heightCm,
-                active.part("SHOULDER"),
-                active.part("CHEST"),
-                active.part("WAIST"),
-                active.part("HIP"),
-                active.part("THIGH"));
+                height,
+                active == null ? -1f : active.part("SHOULDER"),
+                fixed[BodyPrior.CHEST],
+                fixed[BodyPrior.WAIST],
+                fixed[BodyPrior.HIP],
+                fixed[BodyPrior.THIGH]);
+        for (int i = 0; i < est.length; i++) {
+            profile.setEstimated(i, est[i] || savedEst.contains(BodyPrior.PART_KEYS[i]));
+        }
     }
 
     public static boolean isSettingOn(Context context, String key) {

@@ -62,6 +62,8 @@ dependencies {
     // 관절 인식: MediaPipe Pose Landmarker (모델은 assets/models/pose_landmarker_full.task)
     implementation("com.google.mediapipe:tasks-vision:0.10.33")
     implementation("com.google.mlkit:segmentation-selfie:16.0.0-beta6")
+    // 사진 모델(ONNX, assets/models/body_photo.onnx) 실행. 16KB 페이지 기기를 위해 1.22 이상을 쓴다
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.22.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)

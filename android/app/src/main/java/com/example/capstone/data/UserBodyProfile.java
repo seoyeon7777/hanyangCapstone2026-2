@@ -40,6 +40,9 @@ public class UserBodyProfile {
     private float hipCircumference = -1f;   // 골반(엉덩이)둘레
     private float thighCircumference = -1f; // 허벅지둘레
 
+    // 키·몸무게·나이로 어림한 값(BodyPrior)인지. 순서는 BodyPrior: 가슴, 허리, 엉덩이, 허벅지
+    private final boolean[] estimated = new boolean[4];
+
 
     // =========================
     // 측정 정보가 있는지 확인
@@ -81,21 +84,37 @@ public class UserBodyProfile {
             this.shoulderWidth = shoulderWidth;
         }
 
+        // 새로 들어온 값은 측정·입력값이므로 추정 표시를 지운다 (추정이면 호출한 쪽이 setEstimated로 다시 표시)
         if (chestCircumference > 0) {
             this.chestCircumference = chestCircumference;
+            estimated[BodyPrior.CHEST] = false;
         }
 
         if (waistCircumference > 0) {
             this.waistCircumference = waistCircumference;
+            estimated[BodyPrior.WAIST] = false;
         }
 
         if (hipCircumference > 0) {
             this.hipCircumference = hipCircumference;
+            estimated[BodyPrior.HIP] = false;
         }
 
         if (thighCircumference > 0) {
             this.thighCircumference = thighCircumference;
+            estimated[BodyPrior.THIGH] = false;
         }
+    }
+
+    /** 부위(BodyPrior.CHEST 등)의 값이 추정치인지 표시한다. */
+    public void setEstimated(int partIndex, boolean isEstimated) {
+        if (partIndex >= 0 && partIndex < estimated.length) {
+            estimated[partIndex] = isEstimated;
+        }
+    }
+
+    public boolean isEstimated(int partIndex) {
+        return partIndex >= 0 && partIndex < estimated.length && estimated[partIndex];
     }
 
 
@@ -111,6 +130,7 @@ public class UserBodyProfile {
         waistCircumference = -1f;
         hipCircumference = -1f;
         thighCircumference = -1f;
+        java.util.Arrays.fill(estimated, false);
     }
 
 

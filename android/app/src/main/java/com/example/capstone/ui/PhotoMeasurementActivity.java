@@ -17,6 +17,8 @@ import com.example.capstone.camera.BodyMeasurementCalculator;
 import com.example.capstone.camera.BodyShapeFeatures;
 import com.example.capstone.camera.MeasurementSession;
 import com.example.capstone.camera.SilhouetteBuilder;
+import com.example.capstone.data.BodyInput;
+import com.example.capstone.data.BodyPrior;
 import com.example.capstone.camera.MediaPipePoseDetector;
 import com.example.capstone.camera.Pose;
 
@@ -84,6 +86,8 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
     private BodyMeasurementCalculator.Result basicResult;
 
     private MeasurementSession.Silhouette frontSilhouette;
+    private com.example.capstone.camera.Pose frontPose;
+    private com.example.capstone.camera.Pose sidePose;
 
 
     // =====================================================
@@ -445,6 +449,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     .addOnSuccessListener(results -> {
 
                         Pose pose = (Pose) results.get(0);
+                        frontPose = pose;
                         SegmentationMask mask =
                                 (SegmentationMask) results.get(1);
 
@@ -501,11 +506,14 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     .addOnSuccessListener(mask ->
                             // 옆면도 관절로 몸의 중심선을 구해 몸 덩어리를 고른다 (실패하면 화면 가운데 기준)
                             poseDetector.process(image)
-                                    .addOnCompleteListener(poseTask -> finishSide(
-                                            mask,
-                                            poseTask.isSuccessful()
-                                                    ? BodyShapeFeatures.bodyAxis(poseTask.getResult())
-                                                    : null)))
+                                    .addOnCompleteListener(poseTask -> {
+                                        sidePose = poseTask.isSuccessful() ? poseTask.getResult() : null;
+                                        finishSide(
+                                                mask,
+                                                poseTask.isSuccessful()
+                                                        ? BodyShapeFeatures.bodyAxis(poseTask.getResult())
+                                                        : null);
+                                    }))
                     .addOnFailureListener(e ->
                             analysisError(
                                     "옆면 사진 분석 오류: " + e.getMessage()
@@ -529,10 +537,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         }
 
         textSideStatus.setText("✓ 옆면 신체 분석 완료");
-        textPhotoStatus.setText("측정 위치를 확인해주세요.");
-
-        // 가슴·허리·골반 둘레는 측정 위치를 확인·조정한 뒤 계산한다
-        // (카메라 촬영 흐름과 같은 화면)
+        // 가슴·허리·골반 둘레: 사진 모델(딥러닝)이 구한 값을 쓰고, 못 구하면 기본 위치(몸 높이의 29/43/52%)로 계산한다
         MeasurementSession.clear();
         MeasurementSession.heightCm = userHeightCm;
         MeasurementSession.front = frontSilhouette;
@@ -543,12 +548,41 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
 
         btnAnalyzePhotos.setEnabled(true);
 
-        Intent intent = new Intent(
-                PhotoMeasurementActivity.this,
-                MeasurementAdjustActivity.class
-        );
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        startActivity(intent);
+        // 성인이고 키·몸무게·나이가 있으면 사진 모델을 돌린다 (몇 초 걸린다)
+        final float weightKg = BodyInput.weight(this);
+        final float age = BodyInput.age(this);
+        final BodyPrior.Result prior = BodyPrior.estimate(userHeightCm, weightKg, age);
+        if (prior != null && prior.adult && frontPose != null && sidePose != null) {
+            textPhotoStatus.setText("사진을 분석하고 있어요. 잠시만 기다려 주세요.");
+            btnAnalyzePhotos.setEnabled(false);
+            BodyPhotoPipeline.run(this, segmenter, frontPhotoUri, frontPose, sidePhotoUri, sidePose,
+                    userHeightCm, weightKg, age, prior, circ -> {
+                        btnAnalyzePhotos.setEnabled(true);
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
+                        MeasurementSession.modelCirc = circ;
+                        openResultOrWarn();
+                    });
+            return;
+        }
+        textPhotoStatus.setText("분석이 끝났어요. 결과를 불러옵니다.");
+        openResultOrWarn();
+    }
+
+    /** 정면·옆면 몸 비율이 이상하면 확인을 받고, 아니면 바로 결과 화면으로 간다 */
+    private void openResultOrWarn() {
+        String warning = MeasurementResultLauncher.shapeWarning();
+        if (warning == null) {
+            MeasurementResultLauncher.open(this);
+            return;
+        }
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("치수가 이상할 수 있어요")
+                .setMessage(warning + "\n그래도 계산할까요?")
+                .setPositiveButton("그래도 계산", (d, w) -> MeasurementResultLauncher.open(this))
+                .setNegativeButton("사진 다시 고르기", null)
+                .show();
     }
 
     // =====================================================
