@@ -894,18 +894,18 @@ public final class RecommendApi {
     // =========================
 
     /**
-     * 주문을 마쳤을 때 부른다. 장바구니에 담긴 서버 상품마다 purchase를 보내고,
+     * 주문을 마쳤을 때 부른다. 이번에 주문한 서버 상품(serverIds)마다 purchase를 보내고,
      * 나중에 반품할 때 쓰려고 주문번호와 상품 id를 기기에 저장한다.
-     * 지금은 서버 상품을 장바구니에 담을 수 없어서(상세 화면 옵션·장바구니는 DummyData만) 보낼 상품이 없다.
+     * 장바구니에 있어도 이번에 주문하지 않은 상품은 보내지 않는다 (OrderActivity가 주문한 줄만 넘긴다).
      */
-    public static void recordPurchase(Context context, String orderNo) {
+    public static void recordPurchase(Context context, String orderNo, List<String> serverIds) {
 
         JSONArray ids = new JSONArray();
 
-        for (Product product : SERVER_PRODUCTS.values()) {
-            if (product.isInCart()) {
-                ids.put(product.getServerId());
-                sendEvent(context, product.getServerId(), "purchase");
+        for (String serverId : serverIds) {
+            if (serverId != null && !serverId.isEmpty()) {
+                ids.put(serverId);
+                sendEvent(context, serverId, "purchase");
             }
         }
 

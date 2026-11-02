@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.data.CartStore;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.ProductImages;
 import com.example.capstone.data.RecommendApi;
@@ -459,21 +460,17 @@ public class ProductDetailActivity extends AppCompatActivity {
             return;
         }
 
-        boolean sameOption = currentProduct.isInCart()
-                && selectedSize.equals(currentProduct.getSelectedSize())
-                && selectedColor.equals(currentProduct.getSelectedColor());
-        boolean optionChanged = currentProduct.isInCart() && !sameOption;
-        int quantity = sameOption
-                ? currentProduct.getCartQuantity() + selectedQuantity
-                : selectedQuantity;
+        // 같은 옵션이 이미 있으면 그 줄의 수량을 더하고, 옵션이 다르면 줄을 따로 만든다 (CartStore)
+        boolean sameOption = CartStore.containsOption(this, currentProduct, selectedSize, selectedColor);
+        boolean otherOption = !sameOption && CartStore.contains(this, currentProduct);
 
-        putInCart(quantity);
+        Product line = CartStore.add(this, currentProduct, selectedSize, selectedColor, selectedQuantity);
 
-        String message = selectedSize + " / " + selectedColor + " / " + quantity + "개";
+        String message = selectedSize + " / " + selectedColor + " / " + line.getCartQuantity() + "개";
         if (sameOption) {
             message += "\n같은 옵션이 이미 있어서 수량을 더했어요.";
-        } else if (optionChanged) {
-            message += "\n장바구니에 있던 옵션을 이 옵션으로 바꿨어요.";
+        } else if (otherOption) {
+            message += "\n다른 옵션과 따로 담았어요.";
         }
 
         AppDialog.show(this, false,
@@ -483,28 +480,22 @@ public class ProductDetailActivity extends AppCompatActivity {
                 "장바구니 보기", () -> startActivity(new Intent(this, CartActivity.class)));
     }
 
+    // 바로 구매: 장바구니는 건드리지 않고 이 상품·옵션만 결제 화면으로 넘긴다
     private void buyNow() {
 
         if (currentProduct == null) {
             return;
         }
 
-        putInCart(selectedQuantity);
-
         Intent intent = new Intent(this, OrderActivity.class);
         intent.putExtra("productNames", currentProduct.getName());
         intent.putExtra("productOption", selectedSize + " / " + selectedColor);
         intent.putExtra("totalQuantity", selectedQuantity);
         intent.putExtra("totalPrice", currentProduct.getPrice() * selectedQuantity);
+        if (currentProduct.isFromServer()) {
+            intent.putExtra(OrderActivity.EXTRA_BUY_NOW_SERVER_ID, currentProduct.getServerId());
+        }
         startActivity(intent);
-    }
-
-    private void putInCart(int quantity) {
-        currentProduct.setInCart(true);
-        currentProduct.setCartSelected(true);
-        currentProduct.setSelectedSize(selectedSize);
-        currentProduct.setSelectedColor(selectedColor);
-        currentProduct.setCartQuantity(quantity);
     }
 
 

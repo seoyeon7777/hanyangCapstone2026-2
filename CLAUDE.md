@@ -200,7 +200,7 @@ match_score(body, item) -> {
 - `ProductAdapter`: 서버 상품 클릭 → click, 찜 → like, 찜 해제 → unlike. 카드에 추천 이유(`textReason`), 가격 0이면 숨김
 - 요청 줄: 홈 불러오기(`FEED_IO`)와 클릭·찜 기록(`EVENT_IO`, 3초 제한)을 다른 스레드로 보낸다. 서버에 연결하지 못하면 30초 동안 기록을 보내지 않는다 (`RecommendTiming.isOffline`)
 - 재진단 안내 토스트는 한 번 보이면 3일 동안 다시 안 띄운다. 그 사이 설문을 다시 하면 다시 띄울 수 있다 (`RecommendTiming.shouldShowRediagNotice`, SharedPreferences `rediag_notice_shown_at`). 단위 테스트 `RecommendTimingTest`
-- 구매·반품: 주문 완료(`OrderActivity`) → `RecommendApi.recordPurchase`(장바구니의 서버 상품마다 purchase, 주문번호별 상품 id를 기기에 저장), 반품 신청(`OrderListActivity`) → `recordReturn`(그 주문 상품마다 return). 지금은 서버 상품을 장바구니에 담을 수 없어 실제로 보내지는 않는다
+- 구매·반품: 주문 완료(`OrderActivity`) → `RecommendApi.recordPurchase(context, orderNo, serverIds)`(**이번에 주문한** 서버 상품마다 purchase, 주문번호별 상품 id를 기기에 저장), 반품 신청(`OrderListActivity`) → `recordReturn`(그 주문 상품마다 return)
 - 서버 상품을 다시 받을 때마다 이름·브랜드·가격을 새 값으로 바꾼다 (`Product.updateServerDetails`). 찜·장바구니 상태는 유지, 찜한 상품은 찜 탭용 저장 정보도 갱신
 - `Product`: `serverId`·`reason` 추가 (서버 상품은 id −1)
 - 찜(서버 상품): `RecommendApi.saveLike` — 찜 상태를 계정별(SharedPreferences "recommend"의 `liked_products@계정`)로 저장 + 찜할 때 like 전송. 서버 상품 Product는 product_id마다 하나만 만들어 다시 불러와도 하트 유지
@@ -248,6 +248,18 @@ match_score(body, item) -> {
 - 사진: `data/ProductImages` — `image_url`이 있으면 불러오고, 없으면 종류별 색 카드
 - 상품 상세: "바로 구매"(장바구니에 담고 결제 화면으로), 사이즈 추천 문구. 장바구니·주문·쿠폰·계정은 feature/jihyun-merge(4-13) 쪽 구현을 쓴다
 - 카메라 화면은 11/1 커밋에서 삭제됨(사진 선택만). CAMERA 권한·CameraX 의존성·`BodySilhouetteAnalyzer` 제거
+
+### 4-15. 장바구니 저장 (11/03)
+- 요구사항(서연): 장바구니는 앱을 꺼도 남고, 계정마다 따로 저장되고, 같은 상품도 옵션이 다르면 따로 담긴다. 배송비는 전부 무료
+- `data/CartStore`: 한 줄 = 상품 + 사이즈·색상 + 수량 + 체크. SharedPreferences `cart_store`의 `cart@계정`(계정 = `BodyProfileStore.accountKey`, 비로그인 guest)에 JSON으로 저장
+  - 같은 상품·같은 옵션을 또 담으면 그 줄 수량을 더하고, 옵션이 다르면 새 줄. 옵션 변경으로 같은 옵션이 되면 한 줄로 합친다. 수량 1~99
+  - 비로그인으로 담은 장바구니는 로그인한 계정 장바구니에 합친다. 전화번호 형식 통일(`LoginSession.adoptOldPhoneData`)·이메일/전화 변경(`EditProfileActivity`) 때 장바구니도 옮긴다
+  - 화면에는 줄마다 만든 `Product` 복사본(`Product.copyForCart`, `getCartLineId`)을 준다. 다시 켤 때는 상품 목록(DummyData·서버 상품)에서 찾아 복원하고, 못 찾으면 저장해 둔 이름·가격으로 보여 준다
+  - 예전 방식(상품 객체에 inCart 표시, `DummyData.removeOrderedFromCart`)은 없앴다 — 혜림이 만든 ShopStore를 jihyun-merge와 겹친다고 뺀 뒤로 장바구니가 저장되지 않았다
+- 주문: 장바구니 → 결제 화면에 **주문하는 줄 번호**(`OrderActivity.EXTRA_CART_LINE_IDS`)를 넘긴다. 결제를 마치면 그 줄만 장바구니에서 빼고, 그 줄의 서버 상품만 purchase로 보낸다 (전에는 체크 안 한 장바구니 상품까지 purchase로 보냈음). 사이즈 경고도 그 줄만
+- 바로 구매: 장바구니를 건드리지 않고 결제 화면으로 간다 (서버 상품이면 `EXTRA_BUY_NOW_SERVER_ID`로 purchase)
+- 배송비: 결제 화면에 "무료", 결제 금액 = 상품 금액 − 쿠폰 (배송비 계산 없음)
+- 단위 테스트 `CartStoreTest` 8개 (다시 켜도 남음·옵션별 줄·계정별·비로그인 합치기·옵션 변경 합치기·주문한 줄만 빼기·계정 이름 변경·수량 범위)
 
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
@@ -352,6 +364,7 @@ match_score(body, item) -> {
 - [x] 버그 수정(10/26, feature/seoyeon-bugfix): 스크롤 겹침·빠짐(shown), DB 연결 풀·왕복 줄이기, 취향 최근 50개, "자주 본" 기준 0.65, NaN 비율 400, 503 문구, 스크롤 실패 시 다시 시도, profile.is_mixed·page 입력 검사 — test_feed 3·test_api 3·test_db 1 추가
 - [x] 10/31 통합(feature/integration-1031): main + feature/seoyeon + feature/jihyun-merge(찜 한 번만·재진단·구매반품·요청 줄·상품 정보 갱신) + feature/hyerim(장바구니·마이페이지·계정별 저장·서버 주소 설정·대표 카드 설문 답). 겹친 수정(NaN·DB 문구·스크롤 다시 시도)은 하나만 남김. 개발용 데모 체형·치수 수정 화면(BodyEditActivity) 삭제는 유지 — main에서도 데모 버튼으로만 열리던 화면
 - [x] 11/03 통합(feature/integration-1103): feature/hyerim(서버 상품을 카테고리·검색에, 주문·결제·장바구니·찜) + feature/jihyun-merge(기기 계정·비밀번호 해시·쿠폰 기간·주문 옵션) + feature/yeonoh 중 판매자 기능을 뺀 수정(사진 모델 측정 뒤 메모리 해제, 사진 분석 실패 안내, 안드로이드 7 호환 tint·padding, 안내 문구). **판매자 센터·판매자 API·사진 올리기는 화면 설계 전이라 넣지 않음** (feature/yeonoh에 남아 있음). feature/yubin-update는 지현 장바구니와 내용이 같아 넣지 않음
+- [x] 장바구니 저장(4-15): 앱을 꺼도 남음·계정별·옵션별 줄·주문한 줄만 빼기, 배송비 무료 — CartStoreTest 8개
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend

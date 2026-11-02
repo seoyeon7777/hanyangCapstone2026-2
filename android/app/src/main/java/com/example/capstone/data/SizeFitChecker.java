@@ -1,6 +1,8 @@
 
 package com.example.capstone.data;
 
+import android.content.Context;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -159,14 +161,16 @@ public class SizeFitChecker {
         );
     }
 
-    public static List<FitResult> checkCart() {
+    /** 장바구니에서 체크한 줄의 사이즈 경고 (CartStore에 저장된 계정별 장바구니) */
+    public static List<FitResult> checkCart(Context context) {
+        return checkLines(CartStore.selectedLines(context));
+    }
+
+    /** 주어진 장바구니 줄들의 사이즈 경고 (주문 화면은 이번에 주문하는 줄만 넘긴다) */
+    public static List<FitResult> checkLines(List<Product> lines) {
         List<FitResult> warnings = new ArrayList<>();
 
-        for (Product product : DummyData.getProducts()) {
-            if (!product.isInCart() || !product.isCartSelected()) {
-                continue;
-            }
-
+        for (Product product : lines) {
             FitResult fit = check(
                     product,
                     product.getSelectedSize()
