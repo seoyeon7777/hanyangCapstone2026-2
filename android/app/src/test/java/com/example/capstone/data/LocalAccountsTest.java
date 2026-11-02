@@ -1,0 +1,45 @@
+package com.example.capstone.data;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+
+import org.junit.Test;
+
+public class LocalAccountsTest {
+
+    @Test
+    public void phoneFormatsBecomeSameAccount() {
+        assertEquals("010-3945-8685", LocalAccounts.normalizePhone("01039458685"));
+        assertEquals("010-3945-8685", LocalAccounts.normalizePhone("010-3945-8685"));
+        assertEquals("010-3945-8685", LocalAccounts.normalizePhone(" 010 3945 8685 "));
+        assertEquals("011-123-4567", LocalAccounts.normalizePhone("0111234567"));
+    }
+
+    @Test
+    public void notPhoneNumberIsRejected() {
+        assertNull(LocalAccounts.normalizePhone("1234"));
+        assertNull(LocalAccounts.normalizePhone("id@gmail.com"));
+        assertNull(LocalAccounts.normalizePhone(null));
+    }
+
+    @Test
+    public void onlySamePasswordGivesSameHash() throws Exception {
+        byte[] salt = LocalAccounts.fromHex("00112233445566778899aabbccddeeff");
+
+        String saved = LocalAccounts.hash("Password1!", salt);
+
+        assertEquals(saved, LocalAccounts.hash("Password1!", salt));
+        assertEquals(saved, LocalAccounts.hash(" Password1! ", salt));
+        assertNotEquals(saved, LocalAccounts.hash("password1!", salt));
+        assertNotEquals(saved, LocalAccounts.hash("Password1!",
+                LocalAccounts.fromHex("ffeeddccbbaa99887766554433221100")));
+    }
+
+    @Test
+    public void hexRoundTrip() {
+        byte[] bytes = {0, 15, (byte) 255, 127};
+        assertEquals("000fff7f", LocalAccounts.toHex(bytes));
+        assertEquals("000fff7f", LocalAccounts.toHex(LocalAccounts.fromHex("000fff7f")));
+    }
+}

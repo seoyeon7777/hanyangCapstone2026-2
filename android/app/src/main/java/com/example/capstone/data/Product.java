@@ -108,6 +108,25 @@ public class Product {
         this.selectedColor = selectedColor;
     }
 
+    /** "L / NAVY" 모양의 선택 옵션. 고른 옵션이 없으면 빈 문자열 */
+    public String getOptionLabel() {
+        boolean hasSize = selectedSize != null && !selectedSize.isEmpty();
+        boolean hasColor = selectedColor != null && !selectedColor.isEmpty();
+
+        if (hasSize && hasColor) {
+            return selectedSize + " / " + selectedColor;
+        }
+
+        return hasSize ? selectedSize : hasColor ? selectedColor : "";
+    }
+
+    /** 장바구니에서 뺀다 (삭제·결제 완료) */
+    public void removeFromCart() {
+        inCart = false;
+        cartQuantity = 1;
+        cartSelected = true;
+    }
+
     public String getCategory() {
         return category;
     }

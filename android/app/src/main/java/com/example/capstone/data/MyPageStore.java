@@ -576,15 +576,6 @@ public class MyPageStore {
         user.phone = phone;
     }
 
-    public static boolean checkPassword(String password) {
-        // DB 연동 전 임시 처리
-        return true;
-    }
-
-    public static void changePassword(String newPassword) {
-        user.password = newPassword;
-    }
-
     public static void logout() {
         user = new User("", "", "", "");
         receivedCouponIds.clear();

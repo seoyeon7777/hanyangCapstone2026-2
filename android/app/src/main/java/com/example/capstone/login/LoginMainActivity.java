@@ -87,7 +87,7 @@ public class LoginMainActivity extends AppCompatActivity {
 
         // 비밀번호 재설정
         tvResetPw.setOnClickListener(v ->
-                startActivity(new Intent(LoginMainActivity.this, ResetPwActivity.class)));
+                startActivity(new Intent(LoginMainActivity.this, ResetPwMainActivity.class)));
 
         // 계정 찾기
         tvFindId.setOnClickListener(v ->

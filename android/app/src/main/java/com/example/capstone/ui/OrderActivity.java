@@ -2,6 +2,7 @@ package com.example.capstone.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
@@ -11,6 +12,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.data.DummyData;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.RecommendApi;
@@ -84,15 +86,11 @@ public class OrderActivity extends AppCompatActivity {
         // 상품명
         tvProductName.setText(productNames);
 
-        // 선택 옵션
-        // 현재 장바구니에서 별도 옵션을 전달하지 않으면 기본 문구 표시
-        String option = getIntent().getStringExtra("productOption");
-
-        if (option == null || option.trim().isEmpty()) {
-            option = "선택 옵션";
-        }
+        // 장바구니에서 고른 옵션 그대로. 옵션이 없는 상품이면 줄을 숨긴다
+        String option = orderOption();
 
         tvProductOption.setText(option);
+        tvProductOption.setVisibility(option.isEmpty() ? View.GONE : View.VISIBLE);
 
         // 수량
         tvProductQuantity.setText(
@@ -187,6 +185,11 @@ public class OrderActivity extends AppCompatActivity {
         completeOrder();
     }
 
+    private String orderOption() {
+        String option = getIntent().getStringExtra("productOption");
+        return option == null ? "" : option.trim();
+    }
+
     // 결제 완료 및 주문 내역 저장
     private void completeOrder() {
 
@@ -201,11 +204,7 @@ public class OrderActivity extends AppCompatActivity {
 
         String orderDate = MyPageStore.today();
 
-        String option = getIntent().getStringExtra("productOption");
-
-        if (option == null || option.trim().isEmpty()) {
-            option = "선택 옵션";
-        }
+        String option = orderOption();
 
         // 현재 장바구니는 상품별 정보가 아닌
         // 상품명 목록, 총수량, 총금액을 전달한다.
@@ -216,7 +215,8 @@ public class OrderActivity extends AppCompatActivity {
                         orderDate,
                         "쇼핑몰",
                         productNames,
-                        option + " / 총 " + Math.max(1, totalQuantity) + "개",
+                        (option.isEmpty() ? "" : option + " / ")
+                                + "총 " + Math.max(1, totalQuantity) + "개",
                         1,
                         totalPrice,
                         MyPageStore.STATUS_PAID,
@@ -229,6 +229,9 @@ public class OrderActivity extends AppCompatActivity {
 
         // 구매는 추천 학습에 반영 (장바구니의 서버 상품마다 purchase, 반품 때 쓰려고 주문번호와 함께 저장)
         RecommendApi.recordPurchase(this, orderNo);
+
+        // 결제한 상품은 장바구니에서 뺀다
+        DummyData.removeOrderedFromCart();
 
         // 주문 완료 화면으로 이동
         Intent intent = new Intent(

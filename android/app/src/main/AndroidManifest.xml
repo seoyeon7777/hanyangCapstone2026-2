@@ -48,6 +48,7 @@
         <!-- 팀원 merged_capstone 추가 화면 -->
         <activity android:name=".login.MyPageActivity" android:exported="false" />
         <activity android:name=".login.CouponActivity" android:exported="false" />
+        <activity android:name=".login.ResetPwMainActivity" android:exported="false" />
         <activity android:name=".login.ResetPwActivity" android:exported="false" />
         <activity android:name=".login.FindIdActivity" android:exported="false" />
         <activity android:name=".login.InquiryActivity" android:exported="false" />

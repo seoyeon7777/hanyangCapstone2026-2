@@ -107,28 +107,12 @@ public class CartAdapter
         );
 
         // 선택 옵션
-        String size = product.getSelectedSize();
-        String color = product.getSelectedColor();
+        String option = product.getOptionLabel();
 
-        StringBuilder option = new StringBuilder();
-
-        if (size != null && !size.isEmpty()) {
-            option.append(size);
-        }
-
-        if (color != null && !color.isEmpty()) {
-
-            if (option.length() > 0) {
-                option.append(" / ");
-            }
-
-            option.append(color);
-        }
-
-        if (option.length() > 0) {
+        if (!option.isEmpty()) {
 
             holder.textOption.setVisibility(View.VISIBLE);
-            holder.textOption.setText(option.toString());
+            holder.textOption.setText(option);
 
         } else {
 
@@ -190,9 +174,7 @@ public class CartAdapter
             Product currentProduct =
                     cartList.get(currentPosition);
 
-            currentProduct.setInCart(false);
-            currentProduct.setCartQuantity(1);
-            currentProduct.setCartSelected(true);
+            currentProduct.removeFromCart();
 
             cartList.remove(currentPosition);
 

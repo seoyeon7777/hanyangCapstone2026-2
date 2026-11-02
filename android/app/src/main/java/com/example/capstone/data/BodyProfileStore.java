@@ -166,6 +166,14 @@ public final class BodyProfileStore {
         e.apply();
     }
 
+    /** to 계정에 체형 기록이 없을 때만 from의 기록을 옮긴다. */
+    public static void adoptAccount(Context context, String from, String to) {
+        SharedPreferences p = prefs(context);
+        if (!p.contains("profiles_" + to) && !p.contains("active_" + to)) {
+            moveAccount(context, from, to);
+        }
+    }
+
     public static List<Profile> getProfiles(Context context) {
         // 이 부분에 서버 body_measurements 목록 조회 API 넣기
         List<Profile> list = new ArrayList<>();

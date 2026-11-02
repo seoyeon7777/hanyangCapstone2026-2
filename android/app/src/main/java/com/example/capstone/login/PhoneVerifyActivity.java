@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
+import com.example.capstone.data.LocalAccounts;
 
 public class PhoneVerifyActivity extends AppCompatActivity {
 
@@ -176,11 +177,33 @@ public class PhoneVerifyActivity extends AppCompatActivity {
                 return;
             }
 
+            String normalized = LocalAccounts.normalizePhone(phone);
+
+            if (normalized == null) {
+                Toast.makeText(
+                        this,
+                        "휴대폰 번호를 정확히 입력해주세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
+                return;
+            }
+
+            if (LocalAccounts.isTaken(this, "", normalized)) {
+                Toast.makeText(
+                        this,
+                        "이미 가입된 휴대폰 번호입니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+                return;
+            }
+
             Intent intent =
                     new Intent(
                             PhoneVerifyActivity.this,
                             SigninActivity.class
                     );
+
+            intent.putExtra(SigninActivity.EXTRA_PHONE, normalized);
 
             startActivity(intent);
         });
