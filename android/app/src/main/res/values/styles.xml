@@ -41,7 +41,8 @@
         <item name="android:layout_height">48dp</item>
         <item name="android:layout_marginBottom">18dp</item>
         <item name="android:background">@drawable/bg_edit</item>
-        <item name="android:paddingHorizontal">16dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
         <item name="android:textSize">14sp</item>
         <item name="android:inputType">text</item>
     </style>
@@ -63,7 +64,8 @@
         <item name="android:layout_height">34dp</item>
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">0dp</item>
-        <item name="android:paddingHorizontal">14dp</item>
+        <item name="android:paddingLeft">14dp</item>
+        <item name="android:paddingRight">14dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
         <item name="android:background">@drawable/bg_button_small_outline</item>
@@ -90,7 +92,8 @@
         <item name="android:layout_height">34dp</item>
         <item name="android:layout_marginEnd">8dp</item>
         <item name="android:gravity">center</item>
-        <item name="android:paddingHorizontal">14dp</item>
+        <item name="android:paddingLeft">14dp</item>
+        <item name="android:paddingRight">14dp</item>
         <item name="android:background">@drawable/bg_chip_state</item>
         <item name="android:textColor">@color/chip_text_state</item>
         <item name="android:textSize">13sp</item>
@@ -111,7 +114,8 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">center</item>
-        <item name="android:paddingVertical">60dp</item>
+        <item name="android:paddingTop">60dp</item>
+        <item name="android:paddingBottom">60dp</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">#AAAAAA</item>
         <item name="android:visibility">gone</item>

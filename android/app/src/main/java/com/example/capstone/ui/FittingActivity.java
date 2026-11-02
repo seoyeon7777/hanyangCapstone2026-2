@@ -71,7 +71,7 @@ public class FittingActivity extends AppCompatActivity {
     /** 최근 설문을 지난번 답이 선택된 채로 1번 문항부터 연다. */
     private void loadLastSurvey() {
         if (!BodyTypeActivity.hasLastSurvey(this)) {
-            Toast.makeText(this, "아직 저장된 설문이 없어요. '가상 피팅 시작하기'로 먼저 설문을 진행해주세요.",
+            Toast.makeText(this, "아직 저장된 설문이 없어요. '체형 분석 시작하기'로 먼저 설문을 진행해주세요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }

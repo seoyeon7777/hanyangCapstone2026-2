@@ -2,6 +2,7 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -30,7 +31,7 @@
             android:layout_height="40dp"
             android:padding="8dp"
             android:src="@drawable/ic_shopping_bag"
-            android:tint="#111111"
+            app:tint="#111111"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="장바구니"/>
     </LinearLayout>
@@ -46,4 +47,4 @@
     <!-- 공통 하단 메뉴 (view_bottom_menu.xml) -->
     <include layout="@layout/view_bottom_menu" />
 
-</LinearLayout>
+</LinearLayout>

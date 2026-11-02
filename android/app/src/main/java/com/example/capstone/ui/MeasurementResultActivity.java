@@ -317,7 +317,13 @@ public class MeasurementResultActivity extends AppCompatActivity {
         for (boolean e : estimated) {
             anyEstimated |= e;
         }
-        findViewById(R.id.textResultEstNote).setVisibility(anyEstimated ? View.VISIBLE : View.GONE);
+        // 성인이라 사진 모델이 돌았어야 하는데 결과가 없으면, 사진 분석을 마치지 못했다고 알린다
+        final boolean photoModelFailed = prior != null && prior.adult && !modelUsed;
+        TextView estNote = findViewById(R.id.textResultEstNote);
+        if (photoModelFailed) {
+            estNote.setText("사진 분석을 마치지 못해 둘레는 키·몸무게·나이로 어림하거나 간단한 계산으로 구한 값이에요. 정확하지 않을 수 있으니 사진을 다시 골라 보세요.");
+        }
+        estNote.setVisibility(anyEstimated || photoModelFailed ? View.VISIBLE : View.GONE);
 
         // =========================================
         // 정면 사진 표시
