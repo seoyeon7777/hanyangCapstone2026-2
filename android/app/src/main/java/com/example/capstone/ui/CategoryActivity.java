@@ -160,6 +160,9 @@ public class CategoryActivity extends AppCompatActivity {
                     );
                 });
 
+        findViewById(R.id.btnCategoryCart)
+                .setOnClickListener(v -> BottomMenu.openCart(this));
+
         recyclerCategory.setLayoutManager(
                 new GridLayoutManager(this, 2)
         );

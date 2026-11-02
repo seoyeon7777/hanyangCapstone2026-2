@@ -2,13 +2,8 @@ package com.example.capstone.login;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextUtils;
-import android.text.TextWatcher;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -21,41 +16,27 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
-import com.example.capstone.data.AccountStore;
-import com.example.capstone.data.InputRules;
 
 public class SigninActivity extends AppCompatActivity {
 
     private ImageButton btnBack, btnHome;
 
-    private EditText etId, etPw, etPw2, etName, etNickname, etYear;
+    private EditText etId, etPw, etPw2, etName, etYear;
     private Button btnCheckId, btnNext;
     private ImageButton btnTogglePw1, btnTogglePw2;
 
-    private Spinner spMonth, spDay;
+    private Spinner spMonth, spDay, spGender;
 
     private CheckBox cbAll, cb1, cb2, cb3, cb4, cb5;
 
-    private String checkedEmail = null;
+    private boolean isIdChecked = false;
     private boolean isPwVisible = false;
     private boolean isPw2Visible = false;
-
-    private String verifiedPhone;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signin);
-
-        verifiedPhone = InputRules.normalizePhone(
-                getIntent().getStringExtra(PhoneVerifyActivity.EXTRA_PHONE));
-
-        if (verifiedPhone == null) {
-            Toast.makeText(this, "휴대폰 인증부터 진행해주세요.", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, PhoneVerifyActivity.class));
-            finish();
-            return;
-        }
 
         initViews();
         setupSpinners();
@@ -76,11 +57,11 @@ public class SigninActivity extends AppCompatActivity {
         btnTogglePw2 = findViewById(R.id.btnTogglePw);
 
         etName = findViewById(R.id.etName);
-        etNickname = findViewById(R.id.etNickname);
         etYear = findViewById(R.id.etYear);
 
         spMonth = findViewById(R.id.spMonth);
         spDay = findViewById(R.id.spDay);
+        spGender = findViewById(R.id.spGender);
 
         cbAll = findViewById(R.id.cbAll);
         cb1 = findViewById(R.id.cb1);
@@ -90,23 +71,6 @@ public class SigninActivity extends AppCompatActivity {
         cb5 = findViewById(R.id.cb5);
 
         btnNext = findViewById(R.id.btnNext);
-
-        InputFilter noSpace = (source, start, end, dest, dstart, dend) -> {
-            StringBuilder sb = new StringBuilder();
-            for (int i = start; i < end; i++) {
-                char c = source.charAt(i);
-                if (!Character.isWhitespace(c)) {
-                    sb.append(c);
-                }
-            }
-            return sb.length() == end - start ? null : sb.toString();
-        };
-        InputFilter pwLength = new InputFilter.LengthFilter(InputRules.PASSWORD_MAX);
-        etPw.setFilters(new InputFilter[]{noSpace, pwLength});
-        etPw2.setFilters(new InputFilter[]{noSpace, pwLength});
-        etNickname.setFilters(new InputFilter[]{noSpace,
-                new InputFilter.LengthFilter(InputRules.NICKNAME_MAX)});
-        etId.setFilters(new InputFilter[]{noSpace});
     }
 
     private void setupSpinners() {
@@ -129,64 +93,17 @@ public class SigninActivity extends AppCompatActivity {
 
         spMonth.setAdapter(monthAdapter);
 
-        updateDays();
 
-        spMonth.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                updateDays();
-            }
+        String[] days = new String[31];
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-
-        etYear.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (s.length() == 4) {
-                    updateDays();
-                }
-            }
-        });
-    }
-
-    private int selectedYear() {
-        try {
-            return Integer.parseInt(etYear.getText().toString().trim());
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
-
-    private void updateDays() {
-        int year = selectedYear();
-        int month = spMonth.getSelectedItemPosition() + 1;
-        int days = InputRules.daysInMonth(year > 0 ? year : 2000, month);
-
-        int previous = spDay.getAdapter() == null ? 0 : spDay.getSelectedItemPosition();
-        if (spDay.getAdapter() != null && spDay.getAdapter().getCount() == days) {
-            return;
-        }
-
-        String[] items = new String[days];
-        for (int i = 0; i < days; i++) {
-            items[i] = (i + 1) + "일";
+        for (int i = 0; i < 31; i++) {
+            days[i] = (i + 1) + "일";
         }
 
         ArrayAdapter<String> dayAdapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_item,
-                items
+                days
         );
 
         dayAdapter.setDropDownViewResource(
@@ -194,7 +111,21 @@ public class SigninActivity extends AppCompatActivity {
         );
 
         spDay.setAdapter(dayAdapter);
-        spDay.setSelection(Math.min(Math.max(previous, 0), days - 1));
+
+
+        String[] genders = {"남성", "여성"};
+
+        ArrayAdapter<String> genderAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                genders
+        );
+
+        genderAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+        );
+
+        spGender.setAdapter(genderAdapter);
     }
 
     private void setListeners() {
@@ -214,22 +145,22 @@ public class SigninActivity extends AppCompatActivity {
         // 아이디 중복확인
         btnCheckId.setOnClickListener(v -> {
 
-            String email = InputRules.normalizeEmail(etId.getText().toString());
+            String id = etId.getText().toString().trim();
 
-            if (TextUtils.isEmpty(etId.getText().toString().trim())) {
+            if (TextUtils.isEmpty(id)) {
                 Toast.makeText(
                         this,
-                        "이메일을 입력해주세요.",
+                        "아이디를 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
                 return;
             }
 
-            if (email == null) {
+            if (id.length() < 8) {
                 Toast.makeText(
                         this,
-                        "이메일 형식이 올바르지 않습니다. (예: example@gmail.com)",
+                        "아이디는 8자 이상이어야 합니다.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -238,22 +169,11 @@ public class SigninActivity extends AppCompatActivity {
 
             // [여기에 DB 입력] 같은 아이디로 가입한 회원이 있는지 확인 (users)
             //                 있으면 "이미 사용 중인 아이디입니다." 안내 후 return
-            if (AccountStore.emailExists(this, email)) {
-                Toast.makeText(
-                        this,
-                        "이미 가입된 이메일입니다.",
-                        Toast.LENGTH_SHORT
-                ).show();
-                return;
-            }
-
-            etId.setText(email);
-            etId.setSelection(email.length());
-            checkedEmail = email;
+            isIdChecked = true;
 
             Toast.makeText(
                     this,
-                    "사용 가능한 이메일입니다.",
+                    "사용 가능한 아이디입니다.",
                     Toast.LENGTH_SHORT
             ).show();
         });
@@ -276,10 +196,7 @@ public class SigninActivity extends AppCompatActivity {
                     int before,
                     int count
             ) {
-                if (checkedEmail != null
-                        && !checkedEmail.equals(InputRules.normalizeEmail(s.toString()))) {
-                    checkedEmail = null;
-                }
+                isIdChecked = false;
             }
 
             @Override
@@ -377,121 +294,139 @@ public class SigninActivity extends AppCompatActivity {
         cb5.setOnCheckedChangeListener(individualListener);
 
         // 가입하기
-        btnNext.setOnClickListener(v -> signup());
-    }
+        btnNext.setOnClickListener(v -> {
 
-    private void signup() {
+            String id =
+                    etId.getText().toString().trim();
 
-        String pw = etPw.getText().toString();
-        String pw2 = etPw2.getText().toString();
-        String name = InputRules.normalizeName(etName.getText().toString());
-        String nickname = InputRules.normalizeNickname(etNickname.getText().toString());
-        int year = selectedYear();
-        int month = spMonth.getSelectedItemPosition() + 1;
-        int day = spDay.getSelectedItemPosition() + 1;
+            String pw =
+                    etPw.getText().toString().trim();
 
-        if (checkedEmail == null) {
-            toast(InputRules.normalizeEmail(etId.getText().toString()) == null
-                    ? "이메일을 정확히 입력해주세요."
-                    : "이메일 중복확인을 해주세요.");
-            return;
-        }
+            String pw2 =
+                    etPw2.getText().toString().trim();
 
-        if (!InputRules.isValidPassword(pw)) {
-            toast(InputRules.PASSWORD_ERROR);
-            return;
-        }
+            String name =
+                    etName.getText().toString().trim();
 
-        if (!pw.equals(pw2)) {
-            toast("비밀번호가 일치하지 않습니다.");
-            return;
-        }
+            String year =
+                    etYear.getText().toString().trim();
 
-        if (name == null) {
-            toast("이름을 입력해주세요. (" + InputRules.NAME_MAX + "자 이하)");
-            return;
-        }
+            if (TextUtils.isEmpty(id)) {
 
-        if (nickname == null) {
-            toast(InputRules.NICKNAME_ERROR);
-            return;
-        }
+                Toast.makeText(
+                        this,
+                        "아이디를 입력해주세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
 
-        if (!InputRules.isValidBirthYear(year)) {
-            toast("출생년도를 정확히 입력해주세요. (" + InputRules.BIRTH_YEAR_MIN + "~"
-                    + InputRules.currentYear() + ")");
-            return;
-        }
-
-        if (!InputRules.isValidBirth(year, month, day)) {
-            toast("생년월일을 정확히 선택해주세요.");
-            return;
-        }
-
-        if (InputRules.age(year, month, day) < 14) {
-            toast("만 14세 이상만 가입할 수 있습니다.");
-            return;
-        }
-
-        if (!cb1.isChecked()
-                || !cb2.isChecked()
-                || !cb3.isChecked()) {
-
-            toast("필수 약관에 모두 동의해주세요.");
-            return;
-        }
-
-        // [여기에 DB 입력] 회원가입 정보 저장 - 아이디, 비밀번호(암호화), 이름, 생년월일, 성별, 휴대폰 (users)
-        //                 저장에 성공했을 때만 아래 완료 화면으로 이동할 것
-        AccountStore.Account account = AccountStore.register(
-                this,
-                checkedEmail,
-                verifiedPhone,
-                pw,
-                name,
-                nickname,
-                InputRules.formatBirth(year, month, day),
-                "F"
-        );
-
-        if (account == null) {
-            if (AccountStore.phoneExists(this, verifiedPhone)) {
-                toast("이미 가입된 휴대폰 번호입니다.");
-            } else if (AccountStore.emailExists(this, checkedEmail)) {
-                checkedEmail = null;
-                toast("이미 가입된 이메일입니다.");
-            } else {
-                toast("회원가입에 실패했어요. 입력한 정보를 다시 확인해주세요.");
+                return;
             }
-            return;
-        }
 
-        LoginSession.login(this, account);
+            if (!isIdChecked) {
 
-        String accountKey = com.example.capstone.data.BodyProfileStore.accountKey(this);
-        getSharedPreferences("profile_settings", MODE_PRIVATE).edit()
-                .putBoolean("marketing_sms_" + accountKey, cb4.isChecked())
-                .putBoolean("marketing_email_" + accountKey, cb4.isChecked())
-                .apply();
+                Toast.makeText(
+                        this,
+                        "아이디 중복확인을 해주세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
 
-        Intent intent =
-                new Intent(
-                        SigninActivity.this,
-                        SigninCompleteActivity.class
-                );
+                return;
+            }
 
-        intent.putExtra(
-                SigninCompleteActivity.EXTRA_NAME,
-                account.displayName()
-        );
+            if (TextUtils.isEmpty(pw)
+                    || pw.length() < 8) {
 
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
-    }
+                Toast.makeText(
+                        this,
+                        "비밀번호는 8자 이상 입력해주세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
 
-    private void toast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (!pw.equals(pw2)) {
+
+                Toast.makeText(
+                        this,
+                        "비밀번호가 일치하지 않습니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            if (TextUtils.isEmpty(name)) {
+
+                Toast.makeText(
+                        this,
+                        "이름을 입력해주세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            if (TextUtils.isEmpty(year)
+                    || year.length() != 4) {
+
+                Toast.makeText(
+                        this,
+                        "출생년도 4자리를 입력해주세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            if (!cb1.isChecked()
+                    || !cb2.isChecked()
+                    || !cb3.isChecked()) {
+
+                Toast.makeText(
+                        this,
+                        "필수 약관에 모두 동의해주세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            String month =
+                    spMonth.getSelectedItem().toString();
+
+            String day =
+                    spDay.getSelectedItem().toString();
+
+            String gender =
+                    spGender.getSelectedItem().toString();
+
+            // [여기에 DB 입력] 회원가입 정보 저장 - 아이디, 비밀번호(암호화), 이름, 생년월일, 성별, 휴대폰 (users)
+            //                 저장에 성공했을 때만 아래 완료 화면으로 이동할 것
+            Toast.makeText(
+                    this,
+                    name + "님, 회원가입 완료! (" +
+                            year + "년 " +
+                            month + " " +
+                            day + ", " +
+                            gender + ")",
+                    Toast.LENGTH_LONG
+            ).show();
+
+            Intent intent =
+                    new Intent(
+                            SigninActivity.this,
+                            SigninCompleteActivity.class
+                    );
+
+            intent.putExtra(
+                    SigninCompleteActivity.EXTRA_NAME,
+                    name
+            );
+
+            startActivity(intent);
+            finish();
+        });
     }
 
     private void updateAllCheckState() {

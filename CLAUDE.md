@@ -242,6 +242,12 @@ match_score(body, item) -> {
 - 웹 테스트 버전: `web/` (아이폰 Safari용, 같은 계산식). 사용법은 `web/README.md`
 - 알려진 한계(미수정): 길이 환산이 발목 기준이라 약 5% 크게 나올 수 있음, 정면 가슴 폭에 팔이 섞일 수 있음, 측면 사진이 옆모습인지 검사 안 함
 
+### 4-14. 앱 상품 목록·사진 정리 (11/1)
+- 서버 상품: `RecommendApi.loadCatalog`가 `/api/feed/scroll`(general 전체 + 체형이 있으면 body)로 전체 순서를 받아 `DummyData.getProducts()`에 합친다 → 카테고리·검색·신상·베스트에도 나온다. 서버 상품 id는 1000번대. 베스트=general 순서, 카테고리 추천순·홈 "전체보기"=body 순서
+- 사진: `data/ProductImages` — `image_url`이 있으면 불러오고, 없으면 종류별 색 카드
+- 상품 상세: "바로 구매"(장바구니에 담고 결제 화면으로), 사이즈 추천 문구. 장바구니·주문·쿠폰·계정은 feature/jihyun-merge(4-13) 쪽 구현을 쓴다
+- 카메라 화면은 11/1 커밋에서 삭제됨(사진 선택만). CAMERA 권한·CameraX 의존성·`BodySilhouetteAnalyzer` 제거
+
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
   - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)
@@ -255,19 +261,6 @@ match_score(body, item) -> {
 - 홈 체형 입력(`RecommendApi.bodyInput`, 10/31 통합): ① 대표 체형 카드에 저장한 설문 답(`BodyProfileStore.Profile.surveyAnswers`, 혜림) → 서버가 진단 ② 옛 카드라 답이 없으면 카드의 골격 이름 100% ③ 대표 체형이 없으면 최근 설문 답
   - 설문을 다시 해서 서버 진단이 오면 `BodyProfileStore.updateActiveSurvey`가 대표 카드의 설문 답·골격 이름도 바꾼다 → 결과 화면과 홈 체형이 항상 같다 (전에는 카드가 측정 저장 때 값에 고정돼 홈이 예전 체형을 보였음)
   - 서버에 연결이 안 되면 결과 화면은 앱 채점으로 대신하지 않고 "다시 시도/나중에" 창 (팀 결정 그대로. 혜림 브랜치의 앱 채점 대체는 합칠 때 뺐음)
-
-### 4-13. 앱 계정·쇼핑 정리 (11/1, 시연용 기기 저장)
-- 서버에 로그인·주문 API가 없어서, 계정·주문·장바구니는 **기기 안에** 계정별로 저장한다. DB가 연결되면 각 화면의 "[여기에 DB 입력]" 자리를 바꾼다
-- `data/InputRules`: 이메일(공백 제거+소문자)·휴대폰(010-0000-0000)·비밀번호(영문+숫자+특수문자 8~20자, 공백 불가)·닉네임·생년월일 규칙 한 곳. 모든 로그인·가입·수정 화면이 이걸 쓴다
-- `data/AccountStore`: 가입한 계정(비밀번호는 salt+SHA-256). 로그인은 실제로 비밀번호를 확인한다. 성별은 F 고정(DB 값 M/F/기타로 변환은 `InputRules.toDbGender`)
-- `data/AuthCodes`: 인증번호 6자리, 3분. 문자를 못 보내서 토스트로 번호를 보여 준다(시연용)
-- `data/MyPageStore`: 주문·취소·배송지·카드·환불계좌·쿠폰·문의를 로그인 계정(user id)별로 저장. 리뷰는 모든 계정 공용 목록(상품 상세 리뷰에 보임). 앱 시작 때 `CapstoneApp`이 init
-  - 주문은 상품 한 줄마다 하나(같은 결제는 `groupNo`로 묶음). 결제 후 1분마다 배송준비중→배송중→배송완료로 바뀐다(시연용). 문의는 1분 뒤 자동 답변
-- `data/ShopStore`: 장바구니(같은 상품도 옵션이 다르면 따로)·일반 상품 찜을 계정별 저장. 주문하면 산 상품만 장바구니에서 빠진다. 배송비 5만 원 미만 3,000원
-- `data/Coupons`: 쿠폰 목록과 할인 계산. 결제 화면에서 쿠폰 선택, 쓰면 사용완료
-- 서버 상품: `RecommendApi.loadCatalog`가 `/api/feed/scroll`(general 전체 + 체형이 있으면 body)로 전체 순서를 받아 `DummyData.getProducts()`에 합친다 → 카테고리·검색·신상·베스트에도 나온다. 서버 상품 id는 1000번대. 베스트=general 순서, 카테고리 추천순·홈 "전체보기"=body 순서
-- 사진: `data/ProductImages` — `image_url`이 있으면 불러오고, 없으면 종류별 색 카드
-- 카메라 화면은 11/1 커밋에서 삭제됨(사진 선택만). CAMERA 권한·CameraX 의존성·`BodySilhouetteAnalyzer` 제거
 
 ## 5. 정답 테스트 (반드시 통과)
 
@@ -338,11 +331,11 @@ match_score(body, item) -> {
 - [x] 앱(안드로이드) 홈을 /api/feed/scroll·/api/feed/event에 연결 (4-10, feature/seoyeon-android-connect)
 - [x] Android Studio 에뮬레이터에서 실제 실행 확인 (Pixel 6 API 35: 홈에 서버 상품·추천 이유·토글 표시)
   - API 37 에뮬레이터는 친구들 3D 라이브러리(Filament)가 16KB 페이지를 지원하지 않아 앱이 꺼진다 → API 35(16KB 아닌 이미지)로 실행
-- [x] 서버 상품의 옵션·장바구니·바로 구매 (4-13). 사진은 image_url이 오면 표시 — DB에 사진 주소 넣기는 남음
+- [x] 서버 상품의 옵션·장바구니·바로 구매 (4-14). 사진은 image_url이 오면 표시 — DB에 사진 주소 넣기는 남음
 - [x] 11단계: DB 저장 (store.py, Supabase) — 상품을 DB에서, 체형·반응을 body_profiles·user_events에. test_db.py 8개
 - [x] Supabase 프로젝트(서연 계정, 조직 hanyang-capstone, 싱가포르) 만들고 db.sql 실행, seed_db.py로 시연 상품 30개 → 서버 "데이터 DB" 연결 확인
   - 접속 주소는 Session pooler(`aws-0-ap-southeast-1.pooler.supabase.com:5432`). 비밀번호는 각자 database_url.txt에만
-- [x] 상단 탭·카테고리·검색·장바구니에 서버 상품 합침 (4-13). DummyData 40개는 그대로 같이 보임 — 뺄지는 팀 결정
+- [x] 상단 탭·카테고리·검색·장바구니에 서버 상품 합침 (4-14). DummyData 40개는 그대로 같이 보임 — 뺄지는 팀 결정
 - [ ] 로그인 사용자와 추천 user_id(app-…) 연결 (로그인이 서버·DB와 연결된 뒤)
 - [ ] 실제 상품 데이터(products + product_tags) 넣기, popularity 산식 정하기
 - [ ] B 파트 server.py의 상품 저장소는 아직 메모리 (B API를 쓸 때만 해당)

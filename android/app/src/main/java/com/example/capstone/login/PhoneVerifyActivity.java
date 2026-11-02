@@ -5,31 +5,25 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
-import com.example.capstone.data.AccountStore;
-import com.example.capstone.data.AuthCodes;
-import com.example.capstone.data.InputRules;
 
 public class PhoneVerifyActivity extends AppCompatActivity {
-
-    public static final String EXTRA_PHONE = "verified_phone";
 
     private ImageButton btnBack, btnHome;
     private EditText etPhone, etAuthCode;
     private Button btnVerify, btnVerifyCode, btnNext;
-    private TextView tvVerifyStatus;
 
-    private String sentPhone = null;
-    private String verifiedPhone = null;
+    private boolean isCodeSent = false;
+    private boolean isCodeVerified = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +44,6 @@ public class PhoneVerifyActivity extends AppCompatActivity {
         btnVerify = findViewById(R.id.btnVerify);
         btnVerifyCode = findViewById(R.id.btnVerifyCode);
         btnNext = findViewById(R.id.btnNext);
-        tvVerifyStatus = findViewById(R.id.tvVerifyStatus);
     }
 
     private void setListeners() {
@@ -66,62 +59,55 @@ public class PhoneVerifyActivity extends AppCompatActivity {
         });
 
         btnVerify.setOnClickListener(v -> {
-            String phone = InputRules.normalizePhone(etPhone.getText().toString());
+            String phone = etPhone.getText().toString().trim();
 
-            if (phone == null) {
+            if (TextUtils.isEmpty(phone)) {
                 Toast.makeText(
                         this,
-                        "휴대폰 번호를 정확히 입력해주세요.",
+                        "휴대폰 번호를 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
                 return;
             }
 
-            if (AccountStore.phoneExists(this, phone)) {
-                Toast.makeText(
-                        this,
-                        "이미 가입된 휴대폰 번호입니다. 로그인하거나 계정 찾기를 이용해주세요.",
-                        Toast.LENGTH_LONG
-                ).show();
-                return;
-            }
-
-            etPhone.setText(phone);
-            etPhone.setSelection(phone.length());
-
-            sentPhone = phone;
-            verifiedPhone = null;
-            String code = AuthCodes.issue(phone);
-
-            btnVerify.setText("다시 받기");
-            setVerifyEnabled(true);
-            btnVerifyCode.setText("인증확인");
-            tvVerifyStatus.setText("인증번호를 보냈어요. 3분 안에 입력해주세요.");
-            etAuthCode.setText("");
-            etAuthCode.requestFocus();
+            isCodeSent = true;
 
             Toast.makeText(
                     this,
-                    AuthCodes.sentMessage(code),
-                    Toast.LENGTH_LONG
+                    "인증번호가 발송되었습니다.",
+                    Toast.LENGTH_SHORT
             ).show();
         });
 
-        etPhone.addTextChangedListener(new TextWatcher() {
+        etAuthCode.addTextChangedListener(new TextWatcher() {
+
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            public void beforeTextChanged(
+                    CharSequence s,
+                    int start,
+                    int count,
+                    int after
+            ) {
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String phone = InputRules.normalizePhone(s.toString());
-                if (sentPhone != null && !sentPhone.equals(phone)) {
-                    sentPhone = null;
-                    verifiedPhone = null;
-                    btnVerify.setText("인증받기");
+            public void onTextChanged(
+                    CharSequence s,
+                    int start,
+                    int before,
+                    int count
+            ) {
+
+                if (!TextUtils.isEmpty(s.toString().trim())) {
+                    btnVerifyCode.setVisibility(View.VISIBLE);
+                } else {
+                    btnVerifyCode.setVisibility(View.GONE);
+                }
+
+                if (isCodeVerified) {
+                    isCodeVerified = false;
                     btnVerifyCode.setText("인증확인");
-                    setVerifyEnabled(false);
-                    tvVerifyStatus.setText("번호가 바뀌었어요. 인증번호를 다시 받아주세요.");
+                    btnVerifyCode.setEnabled(true);
                 }
             }
 
@@ -135,7 +121,7 @@ public class PhoneVerifyActivity extends AppCompatActivity {
             String authCode =
                     etAuthCode.getText().toString().trim();
 
-            if (sentPhone == null) {
+            if (!isCodeSent) {
                 Toast.makeText(
                         this,
                         "먼저 인증받기를 눌러주세요.",
@@ -145,38 +131,46 @@ public class PhoneVerifyActivity extends AppCompatActivity {
             }
 
             if (TextUtils.isEmpty(authCode)
-                    || authCode.length() != InputRules.AUTH_CODE_LENGTH) {
+                    || authCode.length() != 4) {
 
                 Toast.makeText(
                         this,
-                        "인증번호 " + InputRules.AUTH_CODE_LENGTH + "자리를 입력해주세요.",
+                        "인증번호 4자리를 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
                 return;
             }
 
-            AuthCodes.Result result = AuthCodes.verify(sentPhone, authCode);
-            Toast.makeText(this, AuthCodes.message(result), Toast.LENGTH_SHORT).show();
+            isCodeVerified = true;
 
-            if (result != AuthCodes.Result.OK) {
-                if (result == AuthCodes.Result.EXPIRED) {
-                    tvVerifyStatus.setText("인증 시간이 지났어요. 다시 받기를 눌러주세요.");
-                }
-                return;
-            }
-
-            verifiedPhone = sentPhone;
             btnVerifyCode.setText("인증완료");
-            setVerifyEnabled(false);
-            tvVerifyStatus.setText("✓ " + verifiedPhone + " 인증이 완료되었어요.");
+            btnVerifyCode.setEnabled(false);
+
+            Toast.makeText(
+                    this,
+                    "인증이 완료되었습니다.",
+                    Toast.LENGTH_SHORT
+            ).show();
         });
 
         btnNext.setOnClickListener(v -> {
 
-            if (verifiedPhone == null) {
+            String phone =
+                    etPhone.getText().toString().trim();
+
+            if (TextUtils.isEmpty(phone)) {
                 Toast.makeText(
                         this,
-                        "휴대폰 인증을 완료해주세요.",
+                        "휴대폰 번호를 입력해주세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
+                return;
+            }
+
+            if (!isCodeVerified) {
+                Toast.makeText(
+                        this,
+                        "인증확인을 완료해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
                 return;
@@ -187,15 +181,8 @@ public class PhoneVerifyActivity extends AppCompatActivity {
                             PhoneVerifyActivity.this,
                             SigninActivity.class
                     );
-            intent.putExtra(EXTRA_PHONE, verifiedPhone);
 
             startActivity(intent);
         });
-    }
-
-    private void setVerifyEnabled(boolean enabled) {
-        btnVerifyCode.setEnabled(enabled);
-        btnVerifyCode.setAlpha(enabled ? 1f : 0.4f);
-        etAuthCode.setEnabled(enabled);
     }
 }

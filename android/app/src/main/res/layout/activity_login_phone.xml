@@ -73,7 +73,19 @@
             android:background="@drawable/bg_edit"
             android:inputType="phone"
             android:paddingHorizontal="16dp"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnCheckId"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="인증받기"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:paddingHorizontal="16dp"
+            android:background="@drawable/bg_button"
+            app:backgroundTint="@null" />
 
     </LinearLayout>
 
@@ -94,7 +106,7 @@
             android:id="@+id/etAuthCode"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:hint="비밀번호"
+            android:hint="password"
             android:inputType="textPassword"
             android:maxLength="20"
             android:background="@drawable/bg_edit"

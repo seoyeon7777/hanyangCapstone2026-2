@@ -133,6 +133,134 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_button_outlin"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10,000원"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="- 쿠폰"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="10,000원 이상 구매 시 사용"
+                        android:textSize="13sp"
+                        android:textColor="#5A5A5A"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2026.08.30 23:59 까지"
+                        android:textSize="13sp"
+                        android:textColor="#5A5A5A"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_button_outlin"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="30%"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="[브랜드] - 쿠폰"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
+                        android:layout_marginTop="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="30,000원 이상 구매 시 최대 100,000원 할인"
+                        android:textSize="13sp"
+                        android:textColor="#5A5A5A"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="2026.08.16 23:59 까지"
+                        android:textSize="13sp"
+                        android:textColor="#5A5A5A"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:alpha="0.4"
+                    android:tag="used"
+                    android:background="@drawable/bg_button_outlin"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="5,000원"
+                        android:textColor="@color/black"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="웰컴 쿠폰 (사용완료)"
+                        android:textColor="@color/black"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="제한 없음"
+                        android:textColor="#5A5A5A"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="2026.07.31 23:59 까지"
+                        android:textColor="#5A5A5A"
+                        android:textSize="13sp" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- 쿠폰 받기 -->
@@ -228,7 +356,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="사용기간: 2026.11.01 ~ 2026.12.31"
+                            android:text="사용기간: 2026.08.12 ~ 2026.08.15"
                             android:textSize="12sp"
                             android:textColor="#5A5A5A"
                             android:layout_marginTop="2dp" />
@@ -289,7 +417,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="사용기간: 2026.11.01 ~ 2026.12.31"
+                            android:text="사용기간: 2026.08.13 ~ 2026.08.18"
                             android:textSize="12sp"
                             android:textColor="#5A5A5A"
                             android:layout_marginTop="2dp" />
@@ -350,7 +478,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="사용기간: 2026.11.01 ~ 2026.12.31"
+                            android:text="사용기간: 2026.08.10 ~ 2026.08.31"
                             android:textSize="12sp"
                             android:textColor="#5A5A5A"
                             android:layout_marginTop="2dp" />

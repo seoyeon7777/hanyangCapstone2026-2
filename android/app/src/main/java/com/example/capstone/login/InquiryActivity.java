@@ -2,7 +2,6 @@ package com.example.capstone.login;
 
 import com.example.capstone.R;
 import com.example.capstone.data.MyPageStore;
-import com.example.capstone.ui.AppDialog;
 
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -195,14 +194,6 @@ public class InquiryActivity extends AppCompatActivity {
             ((TextView) card.findViewById(R.id.tvInquiryType)).setText("· " + inquiry.type);
             ((TextView) card.findViewById(R.id.tvInquiryTitle)).setText(inquiry.title);
             ((TextView) card.findViewById(R.id.tvInquiryDate)).setText(inquiry.date + " 등록");
-
-            card.setOnClickListener(v -> {
-                String answer = inquiry.answer == null || inquiry.answer.isEmpty()
-                        ? "아직 답변을 준비하고 있어요. 보통 영업일 기준 1~2일 안에 답변드려요."
-                        : inquiry.answer;
-                AppDialog.alert(this, inquiry.title,
-                        "[문의 내용]\n" + inquiry.content + "\n\n[답변]\n" + answer, "확인");
-            });
 
             containerInquiryList.addView(card);
         }

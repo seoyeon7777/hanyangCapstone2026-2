@@ -166,17 +166,6 @@ public final class BodyProfileStore {
         e.apply();
     }
 
-    public static void deleteAccount(Context context, String account) {
-        SharedPreferences p = prefs(context);
-        SharedPreferences.Editor e = p.edit()
-                .remove("profiles_" + account)
-                .remove("active_" + account);
-        for (String key : SETTING_KEYS) {
-            e.remove("setting_" + key + "_" + account);
-        }
-        e.apply();
-    }
-
     public static List<Profile> getProfiles(Context context) {
         // 이 부분에 서버 body_measurements 목록 조회 API 넣기
         List<Profile> list = new ArrayList<>();

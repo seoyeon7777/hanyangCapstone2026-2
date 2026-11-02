@@ -160,16 +160,16 @@ public class SizeFitChecker {
     }
 
     public static List<FitResult> checkCart() {
-        return checkItems(ShopStore.getSelected());
-    }
-
-    public static List<FitResult> checkItems(List<ShopStore.CartItem> items) {
         List<FitResult> warnings = new ArrayList<>();
 
-        for (ShopStore.CartItem item : items) {
+        for (Product product : DummyData.getProducts()) {
+            if (!product.isInCart() || !product.isCartSelected()) {
+                continue;
+            }
+
             FitResult fit = check(
-                    item.product(),
-                    item.size
+                    product,
+                    product.getSelectedSize()
             );
 
             if (fit.needsWarning()) {

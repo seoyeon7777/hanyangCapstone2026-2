@@ -1,13 +1,9 @@
 package com.example.capstone.login;
 
 import com.example.capstone.R;
-import com.example.capstone.data.AccountStore;
-import com.example.capstone.data.AuthCodes;
-import com.example.capstone.data.InputRules;
 
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -20,6 +16,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.Locale;
 
 public class ResetPwActivity extends AppCompatActivity {
 
@@ -34,13 +31,13 @@ public class ResetPwActivity extends AppCompatActivity {
     private boolean isCodeSent = false;
     private boolean isCodeVerified = false;
 
-    private AccountStore.Account target;
-
     private boolean isPwVisible = false;
     private boolean isPw2Visible = false;
 
     /** 인증번호 자릿수 */
-    private static final int AUTH_CODE_LENGTH = InputRules.AUTH_CODE_LENGTH;
+    private static final int AUTH_CODE_LENGTH = 4;
+    /** 비밀번호 최소 길이 */
+    private static final int PASSWORD_MIN_LENGTH = 8;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,19 +65,6 @@ public class ResetPwActivity extends AppCompatActivity {
         btnTogglePw2 = findViewById(R.id.btnTogglePw2);
 
         containerNewPw = findViewById(R.id.containerNewPw);
-
-        InputFilter noSpace = (source, start, end, dest, dstart, dend) -> {
-            StringBuilder sb = new StringBuilder();
-            for (int i = start; i < end; i++) {
-                if (!Character.isWhitespace(source.charAt(i))) {
-                    sb.append(source.charAt(i));
-                }
-            }
-            return sb.length() == end - start ? null : sb.toString();
-        };
-        InputFilter[] filters = {noSpace, new InputFilter.LengthFilter(InputRules.PASSWORD_MAX)};
-        etPassword.setFilters(filters);
-        etPasswordConfirm.setFilters(filters);
     }
 
     private void setListeners() {
@@ -167,17 +151,8 @@ public class ResetPwActivity extends AppCompatActivity {
         // [여기에 DB 입력] 가입된 이메일인지 확인 (users)
         //                 없으면 "가입되지 않은 이메일입니다." 안내 후 return
         // [여기에 DB 입력] 발송한 인증번호를 만료시각과 함께 저장 (auth_codes)
-        target = AccountStore.findByEmail(this, email);
-        if (target == null) {
-            isCodeSent = false;
-            Toast.makeText(this, "가입되지 않은 이메일입니다.", Toast.LENGTH_SHORT).show();
-            return;
-        }
         isCodeSent = true;
-        isCodeVerified = false;
-        containerNewPw.setVisibility(View.GONE);
-        String code = AuthCodes.issue("reset:" + target.id);
-        Toast.makeText(this, email + " 로 " + AuthCodes.sentMessage(code), Toast.LENGTH_LONG).show();
+        Toast.makeText(this, email + " 로 인증번호가 발송되었습니다.", Toast.LENGTH_SHORT).show();
     }
 
     /** 입력한 인증번호를 확인하고, 통과하면 새 비밀번호 입력란을 연다. */
@@ -197,11 +172,6 @@ public class ResetPwActivity extends AppCompatActivity {
 
         // [여기에 DB 입력] 저장된 인증번호와 입력값이 같은지, 만료되지 않았는지 확인 (auth_codes)
         //                 틀리거나 만료됐으면 안내 후 return
-        AuthCodes.Result result = AuthCodes.verify("reset:" + target.id, authCode);
-        if (result != AuthCodes.Result.OK) {
-            Toast.makeText(this, AuthCodes.message(result), Toast.LENGTH_SHORT).show();
-            return;
-        }
         isCodeVerified = true;
         btnVerifyCode.setText("인증완료");
         btnVerifyCode.setEnabled(false);
@@ -212,16 +182,17 @@ public class ResetPwActivity extends AppCompatActivity {
 
     /** 새 비밀번호로 변경한다. */
     private void resetPassword() {
-        String pw = etPassword.getText().toString();
-        String pw2 = etPasswordConfirm.getText().toString();
+        String pw = etPassword.getText().toString().trim();
+        String pw2 = etPasswordConfirm.getText().toString().trim();
 
-        if (!isCodeVerified || target == null) {
+        if (!isCodeVerified) {
             Toast.makeText(this, "인증확인을 완료해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (!InputRules.isValidPassword(pw)) {
-            Toast.makeText(this, InputRules.PASSWORD_ERROR, Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(pw) || pw.length() < PASSWORD_MIN_LENGTH) {
+            Toast.makeText(this, "비밀번호는 " + PASSWORD_MIN_LENGTH + "자 이상 입력해주세요.",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -232,10 +203,6 @@ public class ResetPwActivity extends AppCompatActivity {
 
         // [여기에 DB 입력] 새 비밀번호 저장 - 암호화(해시)해서 저장 (users)
         // [여기에 DB 입력] 사용한 인증번호 만료 처리 (auth_codes)
-        if (!AccountStore.changePassword(this, target.id, pw)) {
-            Toast.makeText(this, "비밀번호를 바꾸지 못했어요. 다시 시도해주세요.", Toast.LENGTH_SHORT).show();
-            return;
-        }
         Toast.makeText(this, "비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.",
                 Toast.LENGTH_SHORT).show();
 
@@ -249,6 +216,23 @@ public class ResetPwActivity extends AppCompatActivity {
      * 공백을 없애고 소문자로 바꾼 뒤 형식을 검사하며, 올바르지 않으면 null을 돌려준다.
      */
     private String normalizeEmail() {
-        return InputRules.normalizeEmail(etEmail.getText().toString());
+        String input = etEmail.getText().toString().replaceAll("\\s", "");
+
+        if (TextUtils.isEmpty(input)) {
+            return null;
+        }
+
+        String email = input.toLowerCase(Locale.ROOT);
+
+        // @가 없거나 두 개 이상이면 잘못된 주소
+        if (email.indexOf('@') <= 0 || email.indexOf('@') != email.lastIndexOf('@')) {
+            return null;
+        }
+
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            return null;
+        }
+
+        return email;
     }
 }

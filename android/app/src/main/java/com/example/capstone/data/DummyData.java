@@ -2,11 +2,11 @@ package com.example.capstone.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DummyData {
 
-    private static final List<Product> PRODUCTS = new ArrayList<>();
-    private static final List<Product> SERVER_PRODUCTS = new ArrayList<>();
+    private static final List<Product> PRODUCTS = new CopyOnWriteArrayList<>();
     private static final int NEW_COUNT = 6;
 
     static {
@@ -284,22 +284,55 @@ public class DummyData {
     }
 
     public static List<Product> getProducts() {
-        List<Product> all = new ArrayList<>(PRODUCTS);
-        synchronized (SERVER_PRODUCTS) {
-            all.addAll(SERVER_PRODUCTS);
-        }
-        return all;
-    }
-
-    public static List<Product> getLocalProducts() {
         return PRODUCTS;
     }
 
-    public static void addServerProduct(Product product) {
-        synchronized (SERVER_PRODUCTS) {
-            if (!SERVER_PRODUCTS.contains(product)) {
-                SERVER_PRODUCTS.add(product);
+    /** 결제를 마친 상품(장바구니에서 체크한 상품)을 장바구니에서 뺀다. 체크 안 한 상품은 남는다 */
+    public static void removeOrderedFromCart() {
+        for (Product product : PRODUCTS) {
+            if (product.isInCart() && product.isCartSelected()) {
+                product.removeFromCart();
             }
+        }
+    }
+
+    /** 체크한 상품들의 옵션. 한 개면 "L / NAVY", 여러 개면 "이름: L / NAVY, 이름: M / BLACK" */
+    public static String orderedOptionText(List<Product> ordered) {
+        if (ordered.size() == 1) {
+            return ordered.get(0).getOptionLabel();
+        }
+
+        StringBuilder text = new StringBuilder();
+
+        for (Product product : ordered) {
+            String option = product.getOptionLabel();
+
+            if (option.isEmpty()) {
+                continue;
+            }
+
+            if (text.length() > 0) {
+                text.append(", ");
+            }
+
+            text.append(product.getName()).append(": ").append(option);
+        }
+
+        return text.toString();
+    }
+
+    public static Product getProductById(int id) {
+        for (Product product : PRODUCTS) {
+            if (product.getId() == id) {
+                return product;
+            }
+        }
+        return null;
+    }
+
+    public static void addServerProduct(Product product) {
+        if (product != null && !PRODUCTS.contains(product)) {
+            PRODUCTS.add(product);
         }
     }
 
@@ -307,15 +340,12 @@ public class DummyData {
         if (product == null || product.isFromServer()) {
             return false;
         }
-        return product.getId() > PRODUCTS.size() - NEW_COUNT;
-    }
-
-    public static Product getProductById(int id) {
-        for (Product product : getProducts()) {
-            if (product.getId() == id) {
-                return product;
+        int localCount = 0;
+        for (Product p : PRODUCTS) {
+            if (!p.isFromServer()) {
+                localCount++;
             }
         }
-        return null;
+        return product.getId() > localCount - NEW_COUNT;
     }
 }

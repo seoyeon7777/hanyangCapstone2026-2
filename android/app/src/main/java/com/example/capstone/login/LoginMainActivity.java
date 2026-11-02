@@ -1,13 +1,11 @@
 package com.example.capstone.login;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -17,11 +15,6 @@ import com.example.capstone.mypage.NoticeActivity;
 
 public class LoginMainActivity extends AppCompatActivity {
 
-    public static final String EXTRA_RETURN = "return_after_login";
-    private static final String EXTRA_CLOSE = "close_login";
-
-    private static boolean returnAfterLogin = false;
-
     private ImageButton btnBack, btnHome;
     private Button btnLoginPhone, btnLoginEmail;
     private ImageButton btnKakao, btnNaver, btnGmail;
@@ -30,49 +23,10 @@ public class LoginMainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getIntent().getBooleanExtra(EXTRA_CLOSE, false)) {
-            finish();
-            return;
-        }
-        returnAfterLogin = getIntent().getBooleanExtra(EXTRA_RETURN, false);
         setContentView(R.layout.activity_login_main);
 
         initViews();
         setListeners();
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        if (intent.getBooleanExtra(EXTRA_CLOSE, false)) {
-            finish();
-        }
-    }
-
-    public static Intent returnIntent(Context context) {
-        Intent intent = new Intent(context, LoginMainActivity.class);
-        intent.putExtra(EXTRA_RETURN, true);
-        return intent;
-    }
-
-    public static void finishLogin(Activity activity) {
-        if (!returnAfterLogin) {
-            goToMyPage(activity);
-            return;
-        }
-        returnAfterLogin = false;
-        Toast.makeText(activity, "로그인되었습니다.", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(activity, LoginMainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putExtra(EXTRA_CLOSE, true);
-        activity.startActivity(intent);
-        activity.finish();
-    }
-
-    public static void socialNotReady(Activity activity) {
-        Toast.makeText(activity,
-                "소셜 로그인은 준비 중이에요. 이메일 또는 휴대폰 번호로 로그인해 주세요.",
-                Toast.LENGTH_SHORT).show();
     }
 
     private void initViews() {
@@ -115,11 +69,14 @@ public class LoginMainActivity extends AppCompatActivity {
         });
 
         // 소셜 로그인 - 나중에 연동
-        btnKakao.setOnClickListener(v -> socialNotReady(this));
+        btnKakao.setOnClickListener(v -> {
+        });
 
-        btnNaver.setOnClickListener(v -> socialNotReady(this));
+        btnNaver.setOnClickListener(v -> {
+        });
 
-        btnGmail.setOnClickListener(v -> socialNotReady(this));
+        btnGmail.setOnClickListener(v -> {
+        });
 
         // 회원가입
         tvSignup.setOnClickListener(v -> {

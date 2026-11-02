@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF">
@@ -49,7 +50,6 @@
 
         <!-- 주문 상품 -->
         <TextView
-            android:id="@+id/tvOrderItemsTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"
@@ -58,12 +58,46 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
-        <LinearLayout
-            android:id="@+id/containerOrderItems"
+        <TextView
+            android:id="@+id/tvProductName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="16dp" />
+            android:paddingHorizontal="16dp"
+            android:text="상품명"
+            android:textColor="#222222"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvProductOption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:paddingHorizontal="16dp"
+            android:text="옵션: M / Black"
+            android:textColor="#777777"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvProductQuantity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:paddingHorizontal="16dp"
+            android:text="수량: 1개"
+            android:textColor="#777777"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvProductPrice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:paddingHorizontal="16dp"
+            android:text="29,900원"
+            android:textColor="#111111"
+            android:textSize="17sp"
+            android:textStyle="bold" />
 
         <View
             android:layout_width="match_parent"
@@ -71,7 +105,7 @@
             android:layout_marginTop="20dp"
             android:background="#F5F5F5" />
 
-        <!-- 배송지 정보 -->
+        <!-- 배송지 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -83,7 +117,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="배송지 정보"
+                android:text="배송지"
                 android:textColor="#111111"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -91,123 +125,49 @@
             <TextView
                 android:id="@+id/btnChangeAddress"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
+                android:layout_height="34dp"
                 android:background="@drawable/bg_button_small_outline"
                 android:gravity="center"
-                android:paddingHorizontal="12dp"
-                android:text="배송지 변경"
+                android:paddingHorizontal="14dp"
+                android:text="변경"
                 android:textColor="#111111"
-                android:textSize="12sp" />
-
+                android:textSize="13sp" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvAddressLabel"
+        <FrameLayout
+            android:id="@+id/containerAddress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="16dp"
-            android:paddingBottom="4dp"
-            android:text="새 배송지"
-            android:textColor="#777777"
-            android:textSize="13sp" />
-
-        <EditText
-            android:id="@+id/etReceiver"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginHorizontal="16dp"
-            android:hint="받는 사람"
-            android:inputType="textPersonName"
-            android:paddingHorizontal="12dp"
-            android:textSize="15sp" />
-
-        <EditText
-            android:id="@+id/etPhone"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="8dp"
-            android:hint="휴대폰 번호 (010-0000-0000)"
-            android:inputType="phone"
-            android:paddingHorizontal="12dp"
-            android:textSize="15sp" />
+            android:paddingHorizontal="16dp" />
 
         <LinearLayout
+            android:id="@+id/btnAddAddress"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="88dp"
             android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="8dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <EditText
-                android:id="@+id/etZipCode"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:hint="우편번호 (5자리)"
-                android:inputType="number"
-                android:maxLength="5"
-                android:paddingHorizontal="12dp"
-                android:textSize="15sp" />
+            android:background="@drawable/bg_add_card_dashed"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:visibility="gone">
 
             <TextView
-                android:id="@+id/btnSearchAddress"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/bg_button_small_outline"
-                android:gravity="center"
-                android:paddingHorizontal="12dp"
-                android:text="주소 검색"
+                android:layout_height="wrap_content"
+                android:text="+"
                 android:textColor="#111111"
-                android:textSize="12sp" />
+                android:textSize="24sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="배송지 등록"
+                android:textColor="#111111"
+                android:textSize="14sp"
+                android:textStyle="bold" />
         </LinearLayout>
-
-        <EditText
-            android:id="@+id/etAddress"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="8dp"
-            android:hint="주소"
-            android:inputType="textPostalAddress"
-            android:paddingHorizontal="12dp"
-            android:textSize="15sp" />
-
-        <EditText
-            android:id="@+id/etAddressDetail"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="8dp"
-            android:hint="상세 주소"
-            android:inputType="textPostalAddress"
-            android:paddingHorizontal="12dp"
-            android:textSize="15sp" />
-
-        <EditText
-            android:id="@+id/etRequest"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="8dp"
-            android:hint="배송 요청사항 (선택)"
-            android:inputType="text"
-            android:maxLength="50"
-            android:paddingHorizontal="12dp"
-            android:textSize="15sp" />
-
-        <CheckBox
-            android:id="@+id/cbSaveAddress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="12dp"
-            android:layout_marginTop="4dp"
-            android:buttonTint="#111111"
-            android:text="이 배송지를 배송지 목록에 저장"
-            android:textColor="#333333"
-            android:textSize="14sp" />
 
         <View
             android:layout_width="match_parent"
@@ -229,18 +189,28 @@
             android:id="@+id/rgPayment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="16dp" />
+            android:paddingHorizontal="16dp">
 
-        <TextView
-            android:id="@+id/btnManagePayment"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="6dp"
-            android:paddingVertical="6dp"
-            android:text="결제 수단 관리  ›"
-            android:textColor="#777777"
-            android:textSize="13sp" />
+            <RadioButton
+                android:id="@+id/rbCard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:buttonTint="#111111"
+                android:checked="true"
+                android:text="신용/체크카드"
+                android:textColor="#111111"
+                android:textSize="15sp" />
+
+            <RadioButton
+                android:id="@+id/rbBank"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:buttonTint="#111111"
+                android:text="계좌이체"
+                android:textColor="#111111"
+                android:textSize="15sp" />
+
+        </RadioGroup>
 
         <View
             android:layout_width="match_parent"
@@ -248,6 +218,7 @@
             android:layout_marginTop="20dp"
             android:background="#F5F5F5" />
 
+        <!-- 쿠폰 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -270,7 +241,7 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tvCoupon"
+                    android:id="@+id/tvCouponSelected"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
@@ -280,22 +251,29 @@
             </LinearLayout>
 
             <TextView
-                android:id="@+id/btnCoupon"
+                android:id="@+id/btnSelectCoupon"
                 android:layout_width="wrap_content"
-                android:layout_height="32dp"
+                android:layout_height="34dp"
                 android:background="@drawable/bg_button_small_outline"
                 android:gravity="center"
-                android:paddingHorizontal="12dp"
+                android:paddingHorizontal="14dp"
                 android:text="쿠폰 선택"
                 android:textColor="#111111"
-                android:textSize="12sp" />
-
+                android:textSize="13sp" />
         </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/containerCoupon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp"
+            android:visibility="gone" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:background="#F5F5F5" />
 
         <!-- 결제 금액 -->
@@ -326,7 +304,7 @@
                 android:id="@+id/tvOrderPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0원"
+                android:text="29,900원"
                 android:textColor="#222222"
                 android:textSize="15sp" />
 
@@ -348,7 +326,7 @@
                 android:textSize="15sp" />
 
             <TextView
-                android:id="@+id/tvDiscountPrice"
+                android:id="@+id/tvCouponDiscount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0원"
@@ -402,7 +380,7 @@
                 android:id="@+id/tvTotalPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0원"
+                android:text="29,900원"
                 android:textColor="#111111"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -418,7 +396,7 @@
             android:layout_marginTop="28dp"
             android:backgroundTint="#111111"
             android:textColor="#FFFFFF"
-            android:text="결제하기"
+            android:text="29,900원 결제하기"
             android:textSize="17sp"
             android:textStyle="bold" />
 

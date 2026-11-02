@@ -488,7 +488,6 @@ public final class RecommendApi {
 
     private static void finishLoading(Runnable onDone) {
         catalogLoading = false;
-        ShopStore.refreshPrices();
         if (onDone != null) {
             onDone.run();
         }
@@ -687,7 +686,6 @@ public final class RecommendApi {
     public static void saveLike(Context context, Product product) {
 
         if (product == null || !product.isFromServer()) {
-            ShopStore.saveLike(product);
             return;
         }
 
@@ -900,13 +898,15 @@ public final class RecommendApi {
      * 나중에 반품할 때 쓰려고 주문번호와 상품 id를 기기에 저장한다.
      * 지금은 서버 상품을 장바구니에 담을 수 없어서(상세 화면 옵션·장바구니는 DummyData만) 보낼 상품이 없다.
      */
-    public static void recordPurchase(Context context, String orderNo, String serverId) {
+    public static void recordPurchase(Context context, String orderNo) {
 
         JSONArray ids = new JSONArray();
 
-        if (serverId != null && !serverId.isEmpty()) {
-            ids.put(serverId);
-            sendEvent(context, serverId, "purchase");
+        for (Product product : SERVER_PRODUCTS.values()) {
+            if (product.isInCart()) {
+                ids.put(product.getServerId());
+                sendEvent(context, product.getServerId(), "purchase");
+            }
         }
 
         if (ids.length() == 0 || orderNo == null) {

@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.R;
-import com.example.capstone.data.ShopStore;
+import com.example.capstone.data.Product;
 import com.example.capstone.ui.ProductOptionSheet;
 
 import java.text.NumberFormat;
@@ -21,15 +21,15 @@ import java.util.Locale;
 public class CartAdapter
         extends RecyclerView.Adapter<CartAdapter.CartViewHolder> {
 
-    private final List<ShopStore.CartItem> cartList;
+    private final List<Product> cartList;
     private final Runnable onCartChanged;
 
-    public CartAdapter(List<ShopStore.CartItem> cartList) {
+    public CartAdapter(List<Product> cartList) {
         this(cartList, null);
     }
 
     public CartAdapter(
-            List<ShopStore.CartItem> cartList,
+            List<Product> cartList,
             Runnable onCartChanged
     ) {
         this.cartList = cartList;
@@ -42,6 +42,7 @@ public class CartAdapter
             @NonNull ViewGroup parent,
             int viewType
     ) {
+
         View view = LayoutInflater
                 .from(parent.getContext())
                 .inflate(
@@ -58,33 +59,38 @@ public class CartAdapter
             @NonNull CartViewHolder holder,
             int position
     ) {
-        ShopStore.CartItem item = cartList.get(position);
 
-        holder.cbSelect.setChecked(item.selected);
+        Product product = cartList.get(position);
+
+        holder.cbSelect.setChecked(product.isCartSelected());
 
         holder.cbSelect.setOnClickListener(v -> {
-            ShopStore.setSelected(item, holder.cbSelect.isChecked());
+
+            product.setCartSelected(holder.cbSelect.isChecked());
             notifyCartChanged();
         });
 
         holder.btnChangeOption.setOnClickListener(v ->
                 ProductOptionSheet.show(
                         v.getContext(),
-                        item.product(),
-                        item.size,
-                        item.color,
-                        item.quantity,
+                        product,
+                        product.getSelectedSize(),
+                        product.getSelectedColor(),
+                        product.getCartQuantity(),
                         "옵션 변경",
                         (size, color, quantity) -> {
-                            boolean merged = ShopStore.changeOption(item, size, color, quantity);
+
+                            product.setSelectedSize(size);
+                            product.setSelectedColor(color);
+                            product.setCartQuantity(quantity);
+
                             Toast.makeText(
                                     v.getContext(),
-                                    merged
-                                            ? "같은 옵션이 이미 담겨 있어 수량을 합쳤습니다."
-                                            : "옵션을 " + size + " / " + color
+                                    "옵션을 " + size + " / " + color
                                             + " / " + quantity + "개로 변경했습니다.",
                                     Toast.LENGTH_SHORT
                             ).show();
+
                             notifyCartChanged();
                         }
                 )
@@ -92,61 +98,87 @@ public class CartAdapter
 
         // 브랜드명
         holder.textBrand.setText(
-                item.brand
+                product.getBrand()
         );
 
         // 상품명
         holder.textProductName.setText(
-                item.name
+                product.getName()
         );
 
         // 선택 옵션
-        holder.textOption.setVisibility(View.VISIBLE);
-        holder.textOption.setText(item.optionText());
+        String size = product.getSelectedSize();
+        String color = product.getSelectedColor();
+
+        StringBuilder option = new StringBuilder();
+
+        if (size != null && !size.isEmpty()) {
+            option.append(size);
+        }
+
+        if (color != null && !color.isEmpty()) {
+
+            if (option.length() > 0) {
+                option.append(" / ");
+            }
+
+            option.append(color);
+        }
+
+        if (option.length() > 0) {
+
+            holder.textOption.setVisibility(View.VISIBLE);
+            holder.textOption.setText(option.toString());
+
+        } else {
+
+            holder.textOption.setVisibility(View.GONE);
+        }
 
         // 상품 가격
-        updateItemPrice(holder, item);
+        updateItemPrice(holder, product);
 
         // 수량 표시
         holder.textQuantity.setText(
-                String.valueOf(item.quantity)
+                String.valueOf(product.getCartQuantity())
         );
 
         // 수량 증가
         holder.btnPlus.setOnClickListener(v -> {
-            if (item.quantity >= ShopStore.MAX_QUANTITY) {
-                Toast.makeText(v.getContext(),
-                        "한 번에 " + ShopStore.MAX_QUANTITY + "개까지 담을 수 있어요.",
-                        Toast.LENGTH_SHORT).show();
-                return;
-            }
 
-            ShopStore.setQuantity(item, item.quantity + 1);
+            int quantity = product.getCartQuantity();
+
+            product.setCartQuantity(quantity + 1);
 
             holder.textQuantity.setText(
-                    String.valueOf(item.quantity)
+                    String.valueOf(product.getCartQuantity())
             );
 
-            updateItemPrice(holder, item);
+            updateItemPrice(holder, product);
             notifyCartChanged();
         });
 
         // 수량 감소
         holder.btnMinus.setOnClickListener(v -> {
-            if (item.quantity > 1) {
-                ShopStore.setQuantity(item, item.quantity - 1);
+
+            int quantity = product.getCartQuantity();
+
+            if (quantity > 1) {
+
+                product.setCartQuantity(quantity - 1);
 
                 holder.textQuantity.setText(
-                        String.valueOf(item.quantity)
+                        String.valueOf(product.getCartQuantity())
                 );
 
-                updateItemPrice(holder, item);
+                updateItemPrice(holder, product);
                 notifyCartChanged();
             }
         });
 
         // 상품 삭제
         holder.btnDelete.setOnClickListener(v -> {
+
             int currentPosition =
                     holder.getBindingAdapterPosition();
 
@@ -155,7 +187,13 @@ public class CartAdapter
                 return;
             }
 
-            ShopStore.remove(cartList.get(currentPosition));
+            Product currentProduct =
+                    cartList.get(currentPosition);
+
+            currentProduct.setInCart(false);
+            currentProduct.setCartQuantity(1);
+            currentProduct.setCartSelected(true);
+
             cartList.remove(currentPosition);
 
             notifyItemRemoved(currentPosition);
@@ -166,11 +204,16 @@ public class CartAdapter
     // 상품별 수량을 반영한 가격
     private void updateItemPrice(
             CartViewHolder holder,
-            ShopStore.CartItem item
+            Product product
     ) {
+
+        int quantity = product.getCartQuantity();
+
+        int price = product.getPrice() * quantity;
+
         String formattedPrice = NumberFormat
                 .getNumberInstance(Locale.KOREA)
-                .format(item.totalPrice());
+                .format(price);
 
         holder.textPrice.setText(
                 formattedPrice + "원"
@@ -179,6 +222,7 @@ public class CartAdapter
 
     // 장바구니 화면 전체 금액 갱신
     private void notifyCartChanged() {
+
         if (onCartChanged != null) {
             onCartChanged.run();
         }
@@ -200,15 +244,14 @@ public class CartAdapter
         TextView btnMinus;
         TextView textQuantity;
         TextView btnPlus;
-
         TextView btnDelete;
         TextView btnChangeOption;
-
         CheckBox cbSelect;
 
         public CartViewHolder(
                 @NonNull View itemView
         ) {
+
             super(itemView);
 
             cbSelect = itemView.findViewById(

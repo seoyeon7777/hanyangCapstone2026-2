@@ -11,12 +11,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
 import com.example.capstone.data.DummyData;
-import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.ProductImages;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.Product;
-import com.example.capstone.data.ShopStore;
 import com.example.capstone.data.SizeChart;
 import com.example.capstone.data.SizeFitChecker;
 import com.example.capstone.data.UserBodyProfile;
@@ -204,8 +202,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         // =========================
         // 장바구니 버튼
         //
-        // 옵션을 이미 골랐으면 바로 체형과 맞는지 확인하고,
-        // 아직 안 골랐으면 옵션 선택 창부터 띄운다.
+        // 담을 때마다 옵션 선택 창을 처음 상태로 띄운다.
         // =========================
 
         btnAddCart.setOnClickListener(v -> {
@@ -214,14 +211,10 @@ public class ProductDetailActivity extends AppCompatActivity {
                 return;
             }
 
-
-            if (isOptionSelected()) {
-
-                checkFitThen(this::addToCart, "장바구니 담기");
-
-                return;
-            }
-
+            selectedSize = "";
+            selectedColor = "";
+            selectedQuantity = 1;
+            updateOptionSummary();
 
             showOptionSheet(
                     "장바구니 담기",
@@ -322,9 +315,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         if (currentProduct == null) {
             return;
         }
-        int count = MyPageStore.getProductReviews(
-                currentProduct.getId(), currentProduct.getServerId()).size();
-        btnReview.setText(count == 0 ? "리뷰 보기  ›" : "리뷰 보기 (" + count + ")  ›");
+        btnReview.setText("리뷰 보기  ›");
     }
 
     private void updateSizeRecommendText() {
@@ -468,17 +459,26 @@ public class ProductDetailActivity extends AppCompatActivity {
             return;
         }
 
-        boolean added = ShopStore.add(
-                currentProduct,
-                selectedSize,
-                selectedColor,
-                selectedQuantity
-        );
+        boolean sameOption = currentProduct.isInCart()
+                && selectedSize.equals(currentProduct.getSelectedSize())
+                && selectedColor.equals(currentProduct.getSelectedColor());
+        boolean optionChanged = currentProduct.isInCart() && !sameOption;
+        int quantity = sameOption
+                ? currentProduct.getCartQuantity() + selectedQuantity
+                : selectedQuantity;
+
+        putInCart(quantity);
+
+        String message = selectedSize + " / " + selectedColor + " / " + quantity + "개";
+        if (sameOption) {
+            message += "\n같은 옵션이 이미 있어서 수량을 더했어요.";
+        } else if (optionChanged) {
+            message += "\n장바구니에 있던 옵션을 이 옵션으로 바꿨어요.";
+        }
 
         AppDialog.show(this, false,
                 "장바구니에 담았어요",
-                selectedSize + " / " + selectedColor + " / " + selectedQuantity + "개"
-                        + (added ? "" : "\n같은 옵션이 이미 있어서 수량을 더했어요."),
+                message,
                 "계속 쇼핑", null,
                 "장바구니 보기", () -> startActivity(new Intent(this, CartActivity.class)));
     }
@@ -489,13 +489,22 @@ public class ProductDetailActivity extends AppCompatActivity {
             return;
         }
 
-        startActivity(OrderActivity.buyNowIntent(
-                this,
-                currentProduct,
-                selectedSize,
-                selectedColor,
-                selectedQuantity
-        ));
+        putInCart(selectedQuantity);
+
+        Intent intent = new Intent(this, OrderActivity.class);
+        intent.putExtra("productNames", currentProduct.getName());
+        intent.putExtra("productOption", selectedSize + " / " + selectedColor);
+        intent.putExtra("totalQuantity", selectedQuantity);
+        intent.putExtra("totalPrice", currentProduct.getPrice() * selectedQuantity);
+        startActivity(intent);
+    }
+
+    private void putInCart(int quantity) {
+        currentProduct.setInCart(true);
+        currentProduct.setCartSelected(true);
+        currentProduct.setSelectedSize(selectedSize);
+        currentProduct.setSelectedColor(selectedColor);
+        currentProduct.setCartQuantity(quantity);
     }
 
 

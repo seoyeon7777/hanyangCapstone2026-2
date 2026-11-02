@@ -28,7 +28,6 @@ import com.example.capstone.adapter.CartAdapter;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.Product;
-import com.example.capstone.data.ShopStore;
 import com.example.capstone.data.SizeFitChecker;
 
 import java.text.NumberFormat;
@@ -61,8 +60,7 @@ public class CartActivity extends AppCompatActivity {
 
     private CartAdapter cartAdapter;
 
-    private final List<ShopStore.CartItem> cartProducts = new ArrayList<>();
-    private TextView shippingText;
+    private final List<Product> cartProducts = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +94,6 @@ public class CartActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        ShopStore.refreshPrices();
         showCartProducts();
     }
 
@@ -176,7 +173,9 @@ public class CartActivity extends AppCompatActivity {
 
             boolean checked = selectAllCheck.isChecked();
 
-            ShopStore.selectAll(checked);
+            for (Product product : cartProducts) {
+                product.setCartSelected(checked);
+            }
 
             showCartProducts();
         });
@@ -456,7 +455,7 @@ public class CartActivity extends AppCompatActivity {
         root.addView(
                 summaryLayout,
                 new LinearLayout.LayoutParams(
-                        -1, dp(108)
+                        -1, dp(82)
                 )
         );
 
@@ -487,26 +486,6 @@ public class CartActivity extends AppCompatActivity {
 
         quantityRow.addView(totalQuantityText);
 
-        LinearLayout shippingRow = new LinearLayout(this);
-        shippingRow.setGravity(Gravity.CENTER_VERTICAL);
-
-        summaryLayout.addView(
-                shippingRow,
-                new LinearLayout.LayoutParams(
-                        -1, dp(26)
-                )
-        );
-
-        shippingRow.addView(
-                makeText("배송비", 13, false, GRAY),
-                new LinearLayout.LayoutParams(
-                        0, -2, 1f
-                )
-        );
-
-        shippingText = makeText("무료", 13, false, BLACK);
-        shippingRow.addView(shippingText);
-
         LinearLayout priceRow = new LinearLayout(this);
         priceRow.setGravity(Gravity.CENTER_VERTICAL);
 
@@ -518,7 +497,7 @@ public class CartActivity extends AppCompatActivity {
         );
 
         TextView totalLabel = makeText(
-                "결제 예정 금액", 15, true, BLACK
+                "총 상품 금액", 15, true, BLACK
         );
 
         priceRow.addView(
@@ -554,13 +533,29 @@ public class CartActivity extends AppCompatActivity {
 
         btnGoOrder.setOnClickListener(v -> {
 
-            List<ShopStore.CartItem> selected = ShopStore.getSelected();
-            int totalQuantity = 0;
-            long[] ids = new long[selected.size()];
+            StringBuilder productNames =
+                    new StringBuilder();
 
-            for (int i = 0; i < selected.size(); i++) {
-                ids[i] = selected.get(i).id;
-                totalQuantity += selected.get(i).quantity;
+            int totalQuantity = 0;
+            int totalPrice = 0;
+
+            for (Product product : DummyData.getProducts()) {
+
+                if (!product.isInCart()) continue;
+                if (!product.isCartSelected()) continue;
+
+                int quantity = product.getCartQuantity();
+
+                if (quantity <= 0) continue;
+
+                if (productNames.length() > 0) {
+                    productNames.append(", ");
+                }
+
+                productNames.append(product.getName());
+
+                totalQuantity += quantity;
+                totalPrice += product.getPrice() * quantity;
             }
 
             if (totalQuantity == 0) {
@@ -576,6 +571,10 @@ public class CartActivity extends AppCompatActivity {
                 return;
             }
 
+            final String names = productNames.toString();
+            final int quantity = totalQuantity;
+            final int price = totalPrice;
+
             // 기존 체형 적합도 경고 유지
             List<FitResult> warnings =
                     SizeFitChecker.checkCart();
@@ -586,20 +585,43 @@ public class CartActivity extends AppCompatActivity {
                         CartActivity.this,
                         warnings,
                         SizeWarningDialog.Action.ORDER,
-                        () -> goOrder(ids)
+                        () -> goOrder(
+                                names, quantity, price
+                        )
                 );
 
                 return;
             }
 
-            goOrder(ids);
+            goOrder(names, quantity, price);
         });
     }
 
     // 주문 화면으로 이동
-    private void goOrder(long[] ids) {
+    private void goOrder(
+            String productNames,
+            int totalQuantity,
+            int totalPrice
+    ) {
 
-        startActivity(OrderActivity.cartIntent(this, ids));
+        Intent intent = new Intent(
+                CartActivity.this,
+                OrderActivity.class
+        );
+
+        intent.putExtra(
+                "productNames", productNames
+        );
+
+        intent.putExtra(
+                "totalQuantity", totalQuantity
+        );
+
+        intent.putExtra(
+                "totalPrice", totalPrice
+        );
+
+        startActivity(intent);
     }
 
     // 장바구니 상품과 금액 갱신
@@ -612,30 +634,23 @@ public class CartActivity extends AppCompatActivity {
         int totalPrice = 0;
         int selectedCount = 0;
 
-        for (ShopStore.CartItem item : ShopStore.getCart()) {
+        for (Product product : DummyData.getProducts()) {
 
-            cartProducts.add(item);
-            cartQuantity += item.quantity;
+            if (!product.isInCart()) continue;
 
-            if (!item.selected) continue;
+            int quantity = product.getCartQuantity();
+
+            if (quantity <= 0) continue;
+
+            cartProducts.add(product);
+            cartQuantity += quantity;
+
+            if (!product.isCartSelected()) continue;
 
             selectedCount++;
-            totalQuantity += item.quantity;
-            totalPrice += item.totalPrice();
+            totalQuantity += quantity;
+            totalPrice += product.getPrice() * quantity;
         }
-
-        int shipping = ShopStore.shippingFee(totalPrice);
-
-        if (shippingText != null) {
-            shippingText.setText(
-                    shipping == 0
-                            ? (totalPrice == 0 ? "-" : "무료")
-                            : formatPrice(shipping) + " ("
-                            + formatPrice(ShopStore.FREE_SHIPPING_MIN) + " 이상 무료)"
-            );
-        }
-
-        totalPrice += shipping;
 
         if (titleCount != null) {
             titleCount.setText(

@@ -1,9 +1,6 @@
 package com.example.capstone.login;
 
 import com.example.capstone.R;
-import com.example.capstone.data.AccountStore;
-import com.example.capstone.data.AuthCodes;
-import com.example.capstone.data.InputRules;
 
 import android.os.Bundle;
 import android.text.Editable;
@@ -16,6 +13,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class FindIdActivity extends AppCompatActivity {
@@ -28,13 +26,12 @@ public class FindIdActivity extends AppCompatActivity {
     private LinearLayout containerResult;
     private TextView tvFoundAccount;
 
+    private boolean isCodeSent = false;
     private boolean isCodeVerified = false;
     private boolean isAccountFound = false;
 
-    private AccountStore.Account target;
-
     /** 인증번호 자릿수 */
-    private static final int AUTH_CODE_LENGTH = InputRules.AUTH_CODE_LENGTH;
+    private static final int AUTH_CODE_LENGTH = 4;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,43 +101,31 @@ public class FindIdActivity extends AppCompatActivity {
 
     /** 입력한 휴대폰 번호로 인증번호를 보낸다. */
     private void requestAuthCode() {
-        String name = InputRules.normalizeName(etName.getText().toString());
-        String phone = InputRules.normalizePhone(etPhone.getText().toString());
+        String name = etName.getText().toString().trim();
+        String phone = etPhone.getText().toString().trim();
 
-        if (name == null) {
+        if (TextUtils.isEmpty(name)) {
             Toast.makeText(this, "이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (phone == null) {
-            Toast.makeText(this, "휴대폰 번호를 정확히 입력해주세요.", Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(phone)) {
+            Toast.makeText(this, "휴대폰 번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        etPhone.setText(phone);
 
         // [여기에 DB 입력] 이름 + 휴대폰 번호가 일치하는 회원이 있는지 확인 (users)
         //                 없으면 "일치하는 회원 정보가 없습니다." 안내 후 return
         // [여기에 DB 입력] 발송한 인증번호를 만료시각과 함께 저장 (auth_codes)
-        target = AccountStore.findByNameAndPhone(this, name, phone);
-        if (target == null) {
-            Toast.makeText(this, "일치하는 회원 정보가 없습니다.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String code = AuthCodes.issue("find:" + target.id);
-        isCodeVerified = false;
-        isAccountFound = false;
-        containerResult.setVisibility(View.GONE);
-        btnConfirm.setText("계정 찾기");
-        Toast.makeText(this, AuthCodes.sentMessage(code), Toast.LENGTH_LONG).show();
+        isCodeSent = true;
+        Toast.makeText(this, "인증번호가 발송되었습니다.", Toast.LENGTH_SHORT).show();
     }
 
     /** 입력한 인증번호를 확인한다. */
     private void verifyAuthCode() {
         String authCode = etAuthCode.getText().toString().trim();
 
-        if (target == null) {
+        if (!isCodeSent) {
             Toast.makeText(this, "먼저 인증받기를 눌러주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -153,12 +138,6 @@ public class FindIdActivity extends AppCompatActivity {
 
         // [여기에 DB 입력] 저장된 인증번호와 입력값이 같은지, 만료되지 않았는지 확인 (auth_codes)
         //                 틀리거나 만료됐으면 안내 후 return
-        AuthCodes.Result result = AuthCodes.verify("find:" + target.id, authCode);
-        if (result != AuthCodes.Result.OK) {
-            Toast.makeText(this, AuthCodes.message(result), Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         isCodeVerified = true;
         btnVerifyCode.setText("인증완료");
         btnVerifyCode.setEnabled(false);
@@ -187,14 +166,14 @@ public class FindIdActivity extends AppCompatActivity {
             return;
         }
 
-        if (!isCodeVerified || target == null) {
+        if (!isCodeVerified) {
             Toast.makeText(this, "인증확인을 완료해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // [여기에 DB 입력] 이름 + 휴대폰 번호로 가입 이메일 조회 후 tvFoundAccount에 표시 (users)
         //                 이메일은 일부를 가려서 표시 (예: ex****@gmail.com)
-        tvFoundAccount.setText(InputRules.maskEmail(target.email));
+        tvFoundAccount.setText("-");
         containerResult.setVisibility(View.VISIBLE);
 
         isAccountFound = true;

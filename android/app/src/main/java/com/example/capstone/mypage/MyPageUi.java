@@ -1,7 +1,6 @@
 package com.example.capstone.mypage;
 
 import com.example.capstone.R;
-import com.example.capstone.data.InputRules;
 import com.example.capstone.ui.AppDialog;
 
 import android.app.Activity;
@@ -118,6 +117,11 @@ final class MyPageUi {
 
     /** 010-1234-5678 형태로 맞춘다. 숫자 자릿수가 맞지 않으면 null */
     static String normalizePhone(String input) {
-        return InputRules.normalizePhone(input);
+        String digits = input.replaceAll("[^0-9]", "");
+        if (!digits.matches("01[016789][0-9]{7,8}")) {
+            return null;
+        }
+        int midEnd = digits.length() - 4;
+        return digits.substring(0, 3) + "-" + digits.substring(3, midEnd) + "-" + digits.substring(midEnd);
     }
 }

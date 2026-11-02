@@ -54,7 +54,7 @@ public class WishActivity extends AppCompatActivity {
 
     private final String[] categories = {
             "전체", "상의", "아우터",
-            "원피스", "바지", "스커트"   // 치마: 추천 서버 상품(skirt)용
+            "원피스", "바지", "치마"   // 치마: 추천 서버 상품(skirt)용
     };
 
     @Override
@@ -422,11 +422,7 @@ public class WishActivity extends AppCompatActivity {
     private List<Product> allProducts() {
 
         List<Product> products = new ArrayList<>(DummyData.getProducts());
-        for (Product product : RecommendApi.likedServerProducts(this)) {
-            if (!products.contains(product)) {
-                products.add(product);
-            }
-        }
+        products.addAll(RecommendApi.likedServerProducts(this));
         return products;
     }
 

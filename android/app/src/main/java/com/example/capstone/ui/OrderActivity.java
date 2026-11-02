@@ -1,103 +1,74 @@
 package com.example.capstone.ui;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
 
-import androidx.appcompat.app.AlertDialog;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.NestedScrollView;
 
 import com.example.capstone.R;
-import com.example.capstone.data.Coupons;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.FitResult;
-import com.example.capstone.data.InputRules;
 import com.example.capstone.data.MyPageStore;
-import com.example.capstone.data.Product;
 import com.example.capstone.data.RecommendApi;
-import com.example.capstone.data.ShopStore;
 import com.example.capstone.data.SizeFitChecker;
-import com.example.capstone.login.LoginMainActivity;
-import com.example.capstone.login.LoginSession;
+import com.example.capstone.data.CheckoutCoupons;
 import com.example.capstone.mypage.DeliveryAddressActivity;
-import com.example.capstone.mypage.PaymentMethodActivity;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
-import java.util.ArrayList;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class OrderActivity extends AppCompatActivity {
 
-    private static final String EXTRA_CART_IDS = "cart_item_ids";
-    private static final String EXTRA_BUY_PRODUCT = "buy_product_id";
-    private static final String EXTRA_BUY_SERVER = "buy_server_id";
-    private static final String EXTRA_BUY_SIZE = "buy_size";
-    private static final String EXTRA_BUY_COLOR = "buy_color";
-    private static final String EXTRA_BUY_QUANTITY = "buy_quantity";
-
-    private static final String PAY_TRANSFER = "계좌이체";
-    private static final String PAY_OTHER_CARD = "신용/체크카드 (다른 카드)";
-
     private TextView btnBack;
-    private TextView tvOrderItemsTitle;
-    private LinearLayout containerOrderItems;
-    private TextView tvAddressLabel;
+    private TextView tvProductName;
+    private TextView tvProductOption;
+    private TextView tvProductQuantity;
+    private TextView tvProductPrice;
     private TextView tvOrderPrice;
-    private TextView tvDiscountPrice;
-    private TextView tvDeliveryPrice;
     private TextView tvTotalPrice;
-    private TextView tvCoupon;
 
-    private EditText etReceiver;
-    private EditText etPhone;
-    private EditText etZipCode;
-    private EditText etAddress;
-    private EditText etAddressDetail;
-    private EditText etRequest;
-    private CheckBox cbSaveAddress;
+    private FrameLayout containerAddress;
+    private View btnAddAddress;
+    private TextView btnChangeAddress;
+    private TextView tvCouponSelected;
+    private TextView tvCouponDiscount;
+    private FrameLayout containerCoupon;
 
     private RadioGroup rgPayment;
     private Button btnOrder;
 
-    private final List<ShopStore.CartItem> lines = new ArrayList<>();
-    private final List<String> paymentLabels = new ArrayList<>();
-    private long[] cartIds;
-
-    private Coupons.Coupon selectedCoupon;
-    private int productTotal;
-    private int discount;
-    private int shippingFee;
+    private String productNames;
+    private int totalQuantity;
+    private int totalPrice;
 
     private boolean orderCompleted = false;
-    private boolean loginAsked = false;
-    private boolean addressFilled = false;
 
-    public static Intent cartIntent(Context context, long[] cartIds) {
-        Intent intent = new Intent(context, OrderActivity.class);
-        intent.putExtra(EXTRA_CART_IDS, cartIds);
-        return intent;
-    }
+    private long selectedAddressId = -1;
+    private CheckoutCoupons.Coupon selectedCoupon;
 
-    public static Intent buyNowIntent(Context context, Product product, String size, String color, int quantity) {
-        Intent intent = new Intent(context, OrderActivity.class);
-        intent.putExtra(EXTRA_BUY_PRODUCT, product.getId());
-        intent.putExtra(EXTRA_BUY_SERVER, product.getServerId());
-        intent.putExtra(EXTRA_BUY_SIZE, size);
-        intent.putExtra(EXTRA_BUY_COLOR, color);
-        intent.putExtra(EXTRA_BUY_QUANTITY, quantity);
-        return intent;
-    }
+    private final ActivityResultLauncher<Intent> pickAddress = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    selectedAddressId = result.getData()
+                            .getLongExtra(DeliveryAddressActivity.EXTRA_ADDRESS_ID, -1);
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,52 +82,62 @@ public class OrderActivity extends AppCompatActivity {
         // XML 연결
         btnBack = findViewById(R.id.btnBack);
 
-        tvOrderItemsTitle = findViewById(R.id.tvOrderItemsTitle);
-        containerOrderItems = findViewById(R.id.containerOrderItems);
-        tvAddressLabel = findViewById(R.id.tvAddressLabel);
+        tvProductName = findViewById(R.id.tvProductName);
+        tvProductOption = findViewById(R.id.tvProductOption);
+        tvProductQuantity = findViewById(R.id.tvProductQuantity);
+        tvProductPrice = findViewById(R.id.tvProductPrice);
 
         tvOrderPrice = findViewById(R.id.tvOrderPrice);
-        tvDiscountPrice = findViewById(R.id.tvDiscountPrice);
-        tvDeliveryPrice = findViewById(R.id.tvDeliveryPrice);
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
-        tvCoupon = findViewById(R.id.tvCoupon);
 
-        etReceiver = findViewById(R.id.etReceiver);
-        etPhone = findViewById(R.id.etPhone);
-        etZipCode = findViewById(R.id.etZipCode);
-        etAddress = findViewById(R.id.etAddress);
-        etAddressDetail = findViewById(R.id.etAddressDetail);
-        etRequest = findViewById(R.id.etRequest);
-        cbSaveAddress = findViewById(R.id.cbSaveAddress);
+        containerAddress = findViewById(R.id.containerAddress);
+        btnAddAddress = findViewById(R.id.btnAddAddress);
+        btnChangeAddress = findViewById(R.id.btnChangeAddress);
+        tvCouponSelected = findViewById(R.id.tvCouponSelected);
+        tvCouponDiscount = findViewById(R.id.tvCouponDiscount);
+        containerCoupon = findViewById(R.id.containerCoupon);
 
         rgPayment = findViewById(R.id.rgPayment);
         btnOrder = findViewById(R.id.btnOrder);
 
         // 장바구니에서 전달한 주문 정보
-        loadLines();
+        productNames = getIntent().getStringExtra("productNames");
+        totalQuantity = getIntent().getIntExtra("totalQuantity", 0);
+        totalPrice = getIntent().getIntExtra("totalPrice", 0);
 
-        if (lines.isEmpty()) {
-            Toast.makeText(this, "주문할 상품이 없습니다.", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
+        if (productNames == null || productNames.trim().isEmpty()) {
+            productNames = "주문 상품";
         }
 
-        renderLines();
+        // 상품명
+        tvProductName.setText(productNames);
+
+        // 장바구니에서 고른 옵션 그대로. 옵션이 없는 상품이면 줄을 숨긴다
+        String option = orderOption();
+
+        tvProductOption.setText(option);
+        tvProductOption.setVisibility(option.isEmpty() ? View.GONE : View.VISIBLE);
+
+        // 수량
+        tvProductQuantity.setText(
+                "총 수량: " + totalQuantity + "개"
+        );
+
+        // 금액
+        String formattedPrice = NumberFormat
+                .getNumberInstance(Locale.KOREA)
+                .format(totalPrice) + "원";
+
+        tvProductPrice.setText(formattedPrice);
+        tvOrderPrice.setText(formattedPrice);
+        updatePrices();
 
         // 뒤로가기
         btnBack.setOnClickListener(v -> finish());
 
-        findViewById(R.id.btnChangeAddress).setOnClickListener(v -> chooseAddress());
-        findViewById(R.id.btnSearchAddress).setOnClickListener(v ->
-                PostcodeDialog.show(this, (zip, address) -> {
-                    etZipCode.setText(zip);
-                    etAddress.setText(address);
-                    etAddressDetail.setText("");
-                    etAddressDetail.requestFocus();
-                }));
-        findViewById(R.id.btnManagePayment).setOnClickListener(v ->
-                startActivity(new Intent(this, PaymentMethodActivity.class)));
-        findViewById(R.id.btnCoupon).setOnClickListener(v -> chooseCoupon());
+        btnChangeAddress.setOnClickListener(v -> openAddressBook());
+        btnAddAddress.setOnClickListener(v -> openAddressBook());
+        findViewById(R.id.btnSelectCoupon).setOnClickListener(v -> showCouponPicker());
 
         // 주문하기
         btnOrder.setOnClickListener(v -> order());
@@ -165,275 +146,186 @@ public class OrderActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        if (orderCompleted || lines.isEmpty()) {
-            return;
-        }
-
-        if (!LoginSession.isLoggedIn(this)) {
-            askLogin();
-            return;
-        }
-
-        if (!addressFilled) {
-            MyPageStore.Address address = MyPageStore.getDefaultAddress();
-            if (address != null) {
-                fillAddress(address);
-            } else {
-                fillFromAccount();
-            }
-            addressFilled = true;
-        }
-
-        renderPayments();
-        updatePrices();
+        renderAddress();
     }
 
-    private void askLogin() {
-        if (loginAsked) {
-            finish();
-            return;
-        }
-        loginAsked = true;
-        new AlertDialog.Builder(this)
-                .setTitle("로그인이 필요해요")
-                .setMessage("주문하려면 로그인해 주세요. 로그인하면 이 화면으로 돌아와 주문을 이어서 할 수 있어요.")
-                .setCancelable(false)
-                .setPositiveButton("로그인", (d, w) ->
-                        startActivity(LoginMainActivity.returnIntent(this)))
-                .setNegativeButton("취소", (d, w) -> finish())
-                .show();
-    }
-
-    private void loadLines() {
-        cartIds = getIntent().getLongArrayExtra(EXTRA_CART_IDS);
-
-        if (cartIds != null) {
-            for (long id : cartIds) {
-                ShopStore.CartItem item = ShopStore.find(id);
-                if (item != null) {
-                    lines.add(item);
-                }
-            }
-            return;
-        }
-
-        int productId = getIntent().getIntExtra(EXTRA_BUY_PRODUCT, -1);
-        String serverId = getIntent().getStringExtra(EXTRA_BUY_SERVER);
-        Product product = null;
-
-        if (serverId != null && !serverId.isEmpty()) {
-            product = RecommendApi.serverProduct(serverId);
-        }
-        if (product == null) {
-            product = DummyData.getProductById(productId);
-        }
-        if (product == null) {
-            return;
-        }
-
-        lines.add(ShopStore.newItem(
-                product,
-                getIntent().getStringExtra(EXTRA_BUY_SIZE),
-                getIntent().getStringExtra(EXTRA_BUY_COLOR),
-                getIntent().getIntExtra(EXTRA_BUY_QUANTITY, 1)
-        ));
-    }
-
-    private void renderLines() {
-        containerOrderItems.removeAllViews();
-        productTotal = 0;
-        int count = 0;
-
-        for (ShopStore.CartItem item : lines) {
-            productTotal += item.totalPrice();
-            count += item.quantity;
-
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.VERTICAL);
-            row.setPadding(0, dp(8), 0, dp(12));
-
-            TextView brand = text(item.brand, 12, false, 0xFF888888);
-            TextView name = text(item.name, 16, true, 0xFF222222);
-            TextView option = text("옵션: " + item.optionText() + "  ·  수량 " + item.quantity + "개",
-                    14, false, 0xFF777777);
-            TextView price = text(MyPageStore.formatPrice(item.totalPrice()), 16, true, 0xFF111111);
-
-            row.addView(brand);
-            row.addView(name);
-            row.addView(option);
-            row.addView(price);
-
-            if (containerOrderItems.getChildCount() > 0) {
-                View line = new View(this);
-                line.setBackgroundColor(0xFFEEEEEE);
-                containerOrderItems.addView(line, new LinearLayout.LayoutParams(-1, dp(1)));
-            }
-            containerOrderItems.addView(row);
-        }
-
-        tvOrderItemsTitle.setText("주문 상품 " + lines.size() + "종 (총 " + count + "개)");
-    }
-
-    private void fillFromAccount() {
-        MyPageStore.User user = MyPageStore.getUser();
-        etReceiver.setText(user.name);
-        etPhone.setText(user.phone);
-        tvAddressLabel.setText("저장된 배송지가 없어요. 입력한 배송지를 저장할 수 있어요.");
-        cbSaveAddress.setChecked(true);
-        cbSaveAddress.setVisibility(View.VISIBLE);
-    }
-
-    private void fillAddress(MyPageStore.Address address) {
-        etReceiver.setText(address.receiver);
-        etPhone.setText(address.phone);
-        etZipCode.setText(address.zipCode);
-        etAddress.setText(address.address1);
-        etAddressDetail.setText(address.address2);
-        etRequest.setText(address.request);
-        tvAddressLabel.setText((address.isDefault ? "기본 배송지 · " : "") + address.label);
-        cbSaveAddress.setChecked(false);
-        cbSaveAddress.setVisibility(View.GONE);
-    }
-
-    private void clearAddress() {
-        etReceiver.setText(MyPageStore.getUser().name);
-        etPhone.setText(MyPageStore.getUser().phone);
-        etZipCode.setText("");
-        etAddress.setText("");
-        etAddressDetail.setText("");
-        etRequest.setText("");
-        tvAddressLabel.setText("새 배송지");
-        cbSaveAddress.setVisibility(View.VISIBLE);
-        cbSaveAddress.setChecked(true);
-    }
-
-    private void chooseAddress() {
+    private MyPageStore.Address selectedAddress() {
         List<MyPageStore.Address> addresses = MyPageStore.getAddresses();
-        List<String> items = new ArrayList<>();
-
-        for (MyPageStore.Address address : addresses) {
-            items.add((address.isDefault ? "[기본] " : "") + address.label + "\n"
-                    + address.receiver + " · " + address.getFullAddress());
-        }
-        items.add("+ 새 배송지 직접 입력");
-        items.add("배송지 관리로 이동");
-
-        new AlertDialog.Builder(this)
-                .setTitle("배송지 선택")
-                .setItems(items.toArray(new String[0]), (d, which) -> {
-                    if (which < addresses.size()) {
-                        fillAddress(addresses.get(which));
-                    } else if (which == addresses.size()) {
-                        clearAddress();
-                    } else {
-                        addressFilled = false;
-                        startActivity(new Intent(this, DeliveryAddressActivity.class));
-                    }
-                })
-                .setNegativeButton("닫기", null)
-                .show();
-    }
-
-    private void renderPayments() {
-        String previous = selectedPayment();
-        rgPayment.removeAllViews();
-        paymentLabels.clear();
-
-        for (MyPageStore.PaymentCard card : MyPageStore.getCards()) {
-            addPayment(card.company + " " + card.getMaskedNumber()
-                    + (card.isDefault ? " (기본)" : ""));
-        }
-        if (MyPageStore.isKakaoPayLinked()) {
-            addPayment("카카오페이");
-        }
-        if (MyPageStore.isNaverPayLinked()) {
-            addPayment("네이버페이");
-        }
-        addPayment(PAY_OTHER_CARD);
-        addPayment(PAY_TRANSFER);
-
-        int checkIndex = 0;
-        if (previous != null && paymentLabels.contains(previous)) {
-            checkIndex = paymentLabels.indexOf(previous);
-        } else {
-            List<MyPageStore.PaymentCard> cards = MyPageStore.getCards();
-            for (int i = 0; i < cards.size(); i++) {
-                if (cards.get(i).isDefault) {
-                    checkIndex = i;
-                }
-            }
-        }
-        ((RadioButton) rgPayment.getChildAt(checkIndex)).setChecked(true);
-    }
-
-    private void addPayment(String label) {
-        RadioButton button = new RadioButton(this);
-        button.setId(View.generateViewId());
-        button.setText(label);
-        button.setTextSize(15);
-        button.setTextColor(0xFF111111);
-        button.setButtonTintList(ColorStateList.valueOf(0xFF111111));
-        button.setPadding(dp(4), dp(6), 0, dp(6));
-        rgPayment.addView(button);
-        paymentLabels.add(label);
-    }
-
-    private String selectedPayment() {
-        int id = rgPayment.getCheckedRadioButtonId();
-        if (id == -1) {
+        if (addresses.isEmpty()) {
             return null;
         }
-        View view = rgPayment.findViewById(id);
-        int index = rgPayment.indexOfChild(view);
-        return index >= 0 && index < paymentLabels.size() ? paymentLabels.get(index) : null;
+        MyPageStore.Address found = MyPageStore.findAddress(selectedAddressId);
+        return found != null ? found : addresses.get(0);
     }
 
-    private void chooseCoupon() {
-        List<Coupons.Coupon> usable = Coupons.usable(productTotal);
+    private void renderAddress() {
+        MyPageStore.Address address = selectedAddress();
 
-        if (usable.isEmpty()) {
+        containerAddress.removeAllViews();
+        btnAddAddress.setVisibility(address == null ? View.VISIBLE : View.GONE);
+        btnChangeAddress.setVisibility(address == null ? View.GONE : View.VISIBLE);
+
+        if (address != null) {
+            selectedAddressId = address.id;
+            containerAddress.addView(addressCard(containerAddress, address));
+        }
+    }
+
+    private View addressCard(ViewGroup parent, MyPageStore.Address address) {
+        View card = LayoutInflater.from(this).inflate(R.layout.item_address, parent, false);
+
+        ((TextView) card.findViewById(R.id.tvLabel)).setText(address.label);
+        ((TextView) card.findViewById(R.id.tvReceiver)).setText(address.receiver + " · " + address.phone);
+        ((TextView) card.findViewById(R.id.tvAddress)).setText(address.getFullAddress());
+
+        TextView tvRequest = card.findViewById(R.id.tvRequest);
+        tvRequest.setText(address.request);
+        tvRequest.setVisibility(TextUtils.isEmpty(address.request) ? View.GONE : View.VISIBLE);
+
+        card.findViewById(R.id.tvDefaultBadge)
+                .setVisibility(address.isDefault ? View.VISIBLE : View.GONE);
+        ((View) card.findViewById(R.id.btnSetDefault).getParent()).setVisibility(View.GONE);
+        return card;
+    }
+
+    private LinearLayout sheetList(String titleText) {
+        float density = getResources().getDisplayMetrics().density;
+        int pad = Math.round(20 * density);
+
+        LinearLayout list = new LinearLayout(this);
+        list.setOrientation(LinearLayout.VERTICAL);
+        list.setBackgroundResource(R.drawable.bg_dialog_card);
+        list.setPadding(pad, pad, pad, Math.round(28 * density));
+
+        TextView title = new TextView(this);
+        title.setText(titleText);
+        title.setTextSize(19);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setTextColor(0xFF111111);
+        list.addView(title);
+        return list;
+    }
+
+    private LinearLayout.LayoutParams rowParams() {
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = Math.round(12 * getResources().getDisplayMetrics().density);
+        return lp;
+    }
+
+    private void openAddressBook() {
+        Intent intent = new Intent(this, DeliveryAddressActivity.class);
+        intent.putExtra(DeliveryAddressActivity.EXTRA_SELECT_MODE, true);
+        intent.putExtra(DeliveryAddressActivity.EXTRA_ADDRESS_ID, selectedAddressId);
+        pickAddress.launch(intent);
+    }
+
+    private void showCouponPicker() {
+        List<CheckoutCoupons.Coupon> coupons = CheckoutCoupons.owned();
+
+        if (coupons.isEmpty()) {
             Toast.makeText(this,
-                    "사용할 수 있는 쿠폰이 없어요. 마이페이지 > 쿠폰함에서 쿠폰을 받을 수 있어요.",
+                    "사용할 수 있는 쿠폰이 없어요. 마이페이지 > 쿠폰함에서 받을 수 있어요.",
                     Toast.LENGTH_LONG).show();
             return;
         }
 
-        List<String> items = new ArrayList<>();
-        items.add("사용 안 함");
-        for (Coupons.Coupon coupon : usable) {
-            items.add(coupon.name + " (-" + MyPageStore.formatPrice(coupon.discountFor(productTotal)) + ")");
+        BottomSheetDialog sheet = new BottomSheetDialog(this);
+        LinearLayout list = sheetList("쿠폰 선택");
+
+        list.addView(noCouponRow(sheet), rowParams());
+
+        for (CheckoutCoupons.Coupon coupon : coupons) {
+            list.addView(couponCard(list, coupon, sheet), rowParams());
         }
 
-        new AlertDialog.Builder(this)
-                .setTitle("쿠폰 선택")
-                .setItems(items.toArray(new String[0]), (d, which) -> {
-                    selectedCoupon = which == 0 ? null : usable.get(which - 1);
-                    updatePrices();
-                })
-                .setNegativeButton("닫기", null)
-                .show();
+        NestedScrollView scroll = new NestedScrollView(this);
+        scroll.addView(list);
+        sheet.setContentView(scroll);
+        sheet.show();
+    }
+
+    private View noCouponRow(BottomSheetDialog sheet) {
+        int pad = Math.round(16 * getResources().getDisplayMetrics().density);
+
+        TextView row = new TextView(this);
+        row.setText("쿠폰 사용 안 함");
+        row.setTextSize(15);
+        row.setTextColor(0xFF111111);
+        row.setPadding(pad, pad, pad, pad);
+        row.setBackgroundResource(selectedCoupon == null ? R.drawable.bg_card_active : R.drawable.bg_card);
+        row.setOnClickListener(v -> {
+            selectedCoupon = null;
+            updatePrices();
+            sheet.dismiss();
+        });
+        return row;
+    }
+
+    private View couponCard(ViewGroup parent, CheckoutCoupons.Coupon coupon, BottomSheetDialog sheet) {
+        View card = couponDetail(parent, coupon);
+        boolean usable = coupon.discountFor(totalPrice) > 0;
+
+        if (coupon == selectedCoupon) {
+            card.setBackgroundResource(R.drawable.bg_card_active);
+        }
+        card.setAlpha(usable ? 1f : 0.4f);
+
+        if (usable) {
+            card.setOnClickListener(v -> {
+                selectedCoupon = coupon;
+                updatePrices();
+                sheet.dismiss();
+            });
+        }
+        return card;
+    }
+
+    private View couponDetail(ViewGroup parent, CheckoutCoupons.Coupon coupon) {
+        View card = LayoutInflater.from(this).inflate(R.layout.item_coupon_owned, parent, false);
+
+        int discount = coupon.discountFor(totalPrice);
+        boolean usable = discount > 0;
+
+        ((TextView) card.findViewById(R.id.tvCouponDiscount)).setText(coupon.discountText());
+        ((TextView) card.findViewById(R.id.tvCouponName)).setText(coupon.name);
+        ((TextView) card.findViewById(R.id.tvCouponCondition)).setText(coupon.conditionText
+                + "\n" + (usable ? "이번 주문 할인 -" + won(discount) : "이번 주문에는 사용할 수 없어요"));
+        ((TextView) card.findViewById(R.id.tvCouponExpire)).setText(coupon.expireText());
+        return card;
+    }
+
+    private int couponDiscount() {
+        return selectedCoupon == null ? 0 : selectedCoupon.discountFor(totalPrice);
+    }
+
+    private int payPrice() {
+        return Math.max(0, totalPrice - couponDiscount());
     }
 
     private void updatePrices() {
-        discount = selectedCoupon == null ? 0 : selectedCoupon.discountFor(productTotal);
-        if (selectedCoupon != null && discount == 0) {
-            selectedCoupon = null;
+        int discount = couponDiscount();
+
+        tvCouponSelected.setText(selectedCoupon == null ? "사용 안 함" : "쿠폰 1장 적용");
+        tvCouponSelected.setTextColor(selectedCoupon == null ? 0xFF777777 : 0xFF111111);
+        tvCouponDiscount.setText(discount == 0 ? "0원" : "-" + won(discount));
+
+        containerCoupon.removeAllViews();
+        containerCoupon.setVisibility(selectedCoupon == null ? View.GONE : View.VISIBLE);
+        if (selectedCoupon != null) {
+            View card = couponDetail(containerCoupon, selectedCoupon);
+            card.setBackgroundResource(R.drawable.bg_card_active);
+            card.setOnClickListener(v -> showCouponPicker());
+            containerCoupon.addView(card);
         }
-        shippingFee = ShopStore.shippingFee(productTotal);
-        int total = productTotal - discount + shippingFee;
 
-        tvOrderPrice.setText(MyPageStore.formatPrice(productTotal));
-        tvDiscountPrice.setText(discount == 0 ? "0원" : "-" + MyPageStore.formatPrice(discount));
-        tvDeliveryPrice.setText(shippingFee == 0 ? "무료"
-                : MyPageStore.formatPrice(shippingFee) + " ("
-                + MyPageStore.formatPrice(ShopStore.FREE_SHIPPING_MIN) + " 이상 무료)");
-        tvTotalPrice.setText(MyPageStore.formatPrice(total));
-        tvCoupon.setText(selectedCoupon == null ? "사용 안 함"
-                : selectedCoupon.name + " (-" + MyPageStore.formatPrice(discount) + ")");
+        String pay = won(payPrice());
+        tvTotalPrice.setText(pay);
+        btnOrder.setText(pay + " 결제하기");
+    }
 
-        // 결제 버튼
-        btnOrder.setText(MyPageStore.formatPrice(total) + " 결제하기");
+    private static String won(int price) {
+        return NumberFormat.getNumberInstance(Locale.KOREA).format(price) + "원";
     }
 
     private void order() {
@@ -442,57 +334,15 @@ public class OrderActivity extends AppCompatActivity {
             return;
         }
 
-        if (!LoginSession.isLoggedIn(this)) {
-            loginAsked = false;
-            askLogin();
-            return;
-        }
-
-        String receiver = etReceiver.getText().toString().trim();
-        String phone = InputRules.normalizePhone(etPhone.getText().toString());
-        String zipCode = etZipCode.getText().toString().trim();
-        String address = etAddress.getText().toString().trim();
-        String addressDetail = etAddressDetail.getText().toString().trim();
-
-        // 받는 사람
-        if (receiver.isEmpty()) {
-            etReceiver.setError("받는 사람을 입력해주세요.");
-            etReceiver.requestFocus();
-            return;
-        }
-
-        // 전화번호
-        if (phone == null) {
-            etPhone.setError("휴대폰 번호를 정확히 입력해주세요.");
-            etPhone.requestFocus();
-            return;
-        }
-        etPhone.setText(phone);
-
-        if (!zipCode.matches("[0-9]{5}")) {
-            etZipCode.setError("우편번호 5자리를 입력해주세요.");
-            etZipCode.requestFocus();
-            return;
-        }
-
-        // 주소
-        if (address.isEmpty()) {
-            etAddress.setError("주소를 입력해주세요.");
-            etAddress.requestFocus();
-            return;
-        }
-
-        // 상세주소
-        if (addressDetail.isEmpty()) {
-            etAddressDetail.setError("상세 주소를 입력해주세요.");
-            etAddressDetail.requestFocus();
+        if (selectedAddress() == null) {
+            Toast.makeText(this, "배송지를 등록해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // 결제 방법
-        String payment = selectedPayment();
+        int checkedPaymentId = rgPayment.getCheckedRadioButtonId();
 
-        if (payment == null) {
+        if (checkedPaymentId == -1) {
             Toast.makeText(
                     this,
                     "결제 방법을 선택해주세요.",
@@ -502,7 +352,7 @@ public class OrderActivity extends AppCompatActivity {
         }
 
         // 결제 직전 사이즈 주의 팝업
-        List<FitResult> warnings = SizeFitChecker.checkItems(lines);
+        List<FitResult> warnings = SizeFitChecker.checkCart();
 
         if (!warnings.isEmpty()) {
 
@@ -510,29 +360,22 @@ public class OrderActivity extends AppCompatActivity {
                     OrderActivity.this,
                     warnings,
                     SizeWarningDialog.Action.PAYMENT,
-                    () -> confirmPayment(payment)
+                    this::completeOrder
             );
 
             return;
         }
 
-        confirmPayment(payment);
+        completeOrder();
     }
 
-    private void confirmPayment(String payment) {
-        int total = productTotal - discount + shippingFee;
-        String message = "상품 " + lines.size() + "종 · " + MyPageStore.formatPrice(total)
-                + "\n결제 수단: " + payment
-                + (selectedCoupon == null ? "" : "\n쿠폰: " + selectedCoupon.name)
-                + "\n\n결제할까요?";
-
-        AppDialog.show(this, false, "결제 확인", message,
-                "취소", null,
-                "결제하기", () -> completeOrder(payment));
+    private String orderOption() {
+        String option = getIntent().getStringExtra("productOption");
+        return option == null ? "" : option.trim();
     }
 
     // 결제 완료 및 주문 내역 저장
-    private void completeOrder(String payment) {
+    private void completeOrder() {
 
         if (orderCompleted) {
             return;
@@ -541,91 +384,38 @@ public class OrderActivity extends AppCompatActivity {
         orderCompleted = true;
         btnOrder.setEnabled(false);
 
-        String groupNo = "ORD" + System.currentTimeMillis();
+        String orderNo = "ORD" + System.currentTimeMillis();
 
         String orderDate = MyPageStore.today();
 
-        String receiver = etReceiver.getText().toString().trim();
-        String phone = InputRules.normalizePhone(etPhone.getText().toString());
-        String zipCode = etZipCode.getText().toString().trim();
-        String address = etAddress.getText().toString().trim() + " "
-                + etAddressDetail.getText().toString().trim();
-        String request = etRequest.getText().toString().trim();
+        String option = orderOption();
 
-        List<MyPageStore.Order> newOrders = new ArrayList<>();
-        int remainingDiscount = discount;
-        long now = System.currentTimeMillis();
-
-        for (int i = 0; i < lines.size(); i++) {
-            ShopStore.CartItem item = lines.get(i);
-
-            int lineDiscount;
-            if (i == lines.size() - 1) {
-                lineDiscount = remainingDiscount;
-            } else {
-                lineDiscount = productTotal == 0 ? 0
-                        : (int) ((long) discount * item.totalPrice() / productTotal);
-                remainingDiscount -= lineDiscount;
-            }
-
-            MyPageStore.Order order = new MyPageStore.Order(
-                    groupNo + "-" + (i + 1),
-                    orderDate,
-                    item.brand,
-                    item.name,
-                    item.optionText(),
-                    item.quantity,
-                    item.price,
-                    MyPageStore.STATUS_PAID,
-                    "",
-                    ""
-            );
-            order.groupNo = groupNo;
-            order.productId = item.productId;
-            order.serverId = item.serverId;
-            order.size = item.size;
-            order.color = item.color;
-            order.receiver = receiver;
-            order.receiverPhone = phone == null ? "" : phone;
-            order.zipCode = zipCode;
-            order.address = address;
-            order.request = request;
-            order.paymentMethod = payment;
-            order.discount = lineDiscount;
-            order.shippingFee = i == 0 ? shippingFee : 0;
-            order.createdAt = now;
-            newOrders.add(order);
-        }
+        // 현재 장바구니는 상품별 정보가 아닌
+        // 상품명 목록, 총수량, 총금액을 전달한다.
+        // 총 결제금액이 정확하도록 주문 한 건으로 저장한다.
+        MyPageStore.Order newOrder =
+                new MyPageStore.Order(
+                        orderNo,
+                        orderDate,
+                        "쇼핑몰",
+                        productNames,
+                        (option.isEmpty() ? "" : option + " / ")
+                                + "총 " + Math.max(1, totalQuantity) + "개",
+                        1,
+                        payPrice(),
+                        MyPageStore.STATUS_PAID,
+                        "",
+                        ""
+                );
 
         // 주문 저장
-        MyPageStore.addOrders(newOrders);
-
-        if (selectedCoupon != null) {
-            MyPageStore.useCoupon(selectedCoupon.id);
-        }
-
-        if (cbSaveAddress.getVisibility() == View.VISIBLE && cbSaveAddress.isChecked()) {
-            MyPageStore.saveAddress(new MyPageStore.Address(
-                    MyPageStore.newId(),
-                    MyPageStore.getAddresses().isEmpty() ? "기본 배송지" : "배송지",
-                    receiver,
-                    phone == null ? "" : phone,
-                    zipCode,
-                    etAddress.getText().toString().trim(),
-                    etAddressDetail.getText().toString().trim(),
-                    request,
-                    MyPageStore.getAddresses().isEmpty()
-            ));
-        }
-
-        if (cartIds != null) {
-            ShopStore.removeIds(cartIds);
-        }
+        MyPageStore.addOrder(newOrder);
 
         // 구매는 추천 학습에 반영 (장바구니의 서버 상품마다 purchase, 반품 때 쓰려고 주문번호와 함께 저장)
-        for (MyPageStore.Order order : newOrders) {
-            RecommendApi.recordPurchase(this, order.orderNo, order.serverId);
-        }
+        RecommendApi.recordPurchase(this, orderNo);
+
+        // 결제한 상품은 장바구니에서 뺀다
+        DummyData.removeOrderedFromCart();
 
         // 주문 완료 화면으로 이동
         Intent intent = new Intent(
@@ -633,26 +423,10 @@ public class OrderActivity extends AppCompatActivity {
                 OrderCompleteActivity.class
         );
 
-        intent.putExtra("totalPrice", productTotal - discount + shippingFee);
-        intent.putExtra("orderNo", groupNo);
+        intent.putExtra("totalPrice", payPrice());
+        intent.putExtra("orderNo", orderNo);
 
         startActivity(intent);
         finish();
-    }
-
-    private TextView text(String value, int size, boolean bold, int color) {
-        TextView view = new TextView(this);
-        view.setText(value);
-        view.setTextSize(size);
-        view.setTextColor(color);
-        if (bold) {
-            view.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        }
-        view.setPadding(0, dp(2), 0, dp(2));
-        return view;
-    }
-
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 }
