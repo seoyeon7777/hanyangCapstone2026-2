@@ -13,6 +13,7 @@ import com.example.capstone.mypage.NoticeActivity;
 import com.example.capstone.mypage.OrderListActivity;
 import com.example.capstone.ui.AppDialog;
 import com.example.capstone.ui.BottomMenu;
+import com.example.capstone.ui.SellerCenterActivity;
 import com.example.capstone.mypage.PaymentMethodActivity;
 import com.example.capstone.mypage.RefundAccountActivity;
 
@@ -164,6 +165,9 @@ public class MyPageActivity extends AppCompatActivity {
         // 문의
         menuMyInquiry.setOnClickListener(v -> open(InquiryActivity.class));
         menuNotice.setOnClickListener(v -> open(NoticeActivity.class));
+
+        // 판매자 센터: 내 상품 목록과 상품 등록
+        findViewById(R.id.menuSeller).setOnClickListener(v -> open(SellerCenterActivity.class));
 
         // 로그아웃
         tvLogout.setOnClickListener(v -> AppDialog.show(this, false,

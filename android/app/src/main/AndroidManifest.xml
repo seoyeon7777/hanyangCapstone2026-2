@@ -75,6 +75,11 @@
         <activity android:name=".ui.BodySaveCompleteActivity" android:exported="false" />
         <activity android:name=".ui.BodyFeedbackActivity" android:exported="false" />
 
+        <!-- 판매자 -->
+        <activity android:name=".ui.SellerCenterActivity" android:exported="false" />
+        <activity android:name=".ui.SellerProductActivity" android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <activity
             android:name=".ui.SearchActivity"
             android:exported="false"

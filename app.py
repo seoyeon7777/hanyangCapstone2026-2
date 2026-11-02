@@ -9,6 +9,8 @@
 
 B (server.py)        GET /api/form, POST /api/items/validate, GET·POST /api/items, POST /api/recommend
 C (recommend/)       GET·POST /api/feed, GET·POST /api/feed/scroll, POST /api/feed/event, GET /feed-demo
+판매자 등록          GET /api/seller/form, POST /api/seller/products(/validate), GET /api/seller/products,
+                     POST /api/seller/images, GET /uploads/<파일>   (recommend/seller_api.py)
 A (body_profile.py)  POST /api/feed에 "answers"(설문)를 보내면 C가 A를 불러 진단한다
 오류는 모두 JSON {"ok": false, "error": "..."} 로 돌려준다 (앱이 HTML 오류 화면을 받지 않게).
 """
@@ -26,9 +28,23 @@ from flask import jsonify  # noqa: E402
 
 from server import create_app  # noqa: E402  B 파트 서버
 from feed_api import feed_bp, STORE   # noqa: E402  C 파트 API
+from seller_api import seller_bp      # noqa: E402  판매자 상품 등록 API
+from rec_config import IMAGE_MAX_BYTES  # noqa: E402
 
 app = create_app()
 app.register_blueprint(feed_bp)
+app.register_blueprint(seller_bp)
+
+# B 서버는 요청 본문을 1MB로 제한한다. 사진 올리기만 더 크게 받고, 나머지는 그대로 1MB로 막는다.
+JSON_LIMIT = app.config["MAX_CONTENT_LENGTH"]
+app.config["MAX_CONTENT_LENGTH"] = IMAGE_MAX_BYTES + 512 * 1024
+
+
+@app.before_request
+def limit_body_size():
+    from flask import request
+    if request.path != "/api/seller/images" and (request.content_length or 0) > JSON_LIMIT:
+        return jsonify({"ok": False, "error": "요청이 너무 크다 (최대 1MB)"}), 413
 
 
 @app.errorhandler(HTTPException)

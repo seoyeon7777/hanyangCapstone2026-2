@@ -393,6 +393,11 @@
                 style="@style/MyPageMenuItem"
                 android:text="고객센터/공지사항"/>
 
+            <TextView
+                android:id="@+id/menuSeller"
+                style="@style/MyPageMenuItem"
+                android:text="판매자 센터"/>
+
             <!-- ============ 로그아웃 ============ -->
             <TextView
                 android:id="@+id/tvLogout"

@@ -245,3 +245,8 @@ samples/validation_before_fix*.txt
 
 # DB 비밀번호가 들어 있는 접속 주소 (절대 올리지 말 것)
 database_url.txt
+
+# 판매자 등록: 올린 사진, 메모리 저장소 때 등록한 상품, Supabase 키 파일
+recommend/uploads/
+recommend/data/registered_items.json
+supabase.env

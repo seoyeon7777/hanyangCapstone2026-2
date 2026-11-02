@@ -28,6 +28,7 @@ android/                안드로이드 앱 (Android Studio로 이 폴더를 연
 requirements.txt        flask (API·서버용), psycopg (DB용. 알고리즘과 테스트 대부분은 표준 라이브러리만)
 db/                     DB 담당: db.sql (PostgreSQL 표 32개, Supabase에 그대로 실행), README.md (표 설명)
 database_url.txt        (깃에 없음) DB 접속 주소 한 줄. 있으면 서버가 Supabase를 쓴다
+supabase.env            (깃에 없음) 사진을 Supabase Storage에 올릴 때만: SUPABASE_URL·SUPABASE_SERVICE_KEY·SUPABASE_BUCKET (KEY=값 한 줄씩). 없으면 사진은 이 PC 폴더에 저장
 app.py                  ★ 통합 서버 (B server.create_app + C feed_bp). python app.py → 0.0.0.0:5000 (에뮬레이터 10.0.2.2, 폰은 PC IP)
                         모든 오류를 JSON {"ok": false, "error"}로. HOST·PORT·FLASK_DEBUG 환경변수
 body_profile.py …       A 파트
@@ -39,6 +40,8 @@ recommend/              ★ C 파트 (추천 피드) — 이 폴더에서 작업
   feed.py               C 파트 본체 (final_score, score_all, rank, feed_order, home_feed, outfits, reason, update_pref, need_rediagnosis)
   feed_api.py           7·8단계 API (Flask Blueprint)
   store.py              11단계 저장소: DB 주소가 있으면 PgStore(PostgreSQL), 없으면 MemoryStore(items.json + 메모리)
+  seller_api.py         14단계 판매자 상품 등록 API (Flask Blueprint). 양식·검증·태그는 B(tagging.py), 저장은 store.py
+  image_storage.py      상품 사진 저장소: 이 PC의 recommend/uploads/ (기본) 또는 Supabase Storage (키가 있을 때)
   seed_db.py            시연 상품 30개를 DB에 넣는 스크립트 (여러 번 실행해도 됨)
   DB_연결가이드.md       Supabase 만들기 → 주소 넣기 → 확인 (팀원용)
   templates/feed_demo.html  8단계 연습용 무한 스크롤 화면 (/feed-demo). 팀 공용 templates/와 분리
@@ -48,6 +51,7 @@ recommend/              ★ C 파트 (추천 피드) — 이 폴더에서 작업
   test_integration.py   A+B+C 연결 테스트 (표준 라이브러리만)
   test_api.py           API 테스트 (Flask 필요, 맨 위 app.py를 불러옴. 항상 메모리 저장소)
   test_db.py            DB 저장소 테스트 (로컬 PostgreSQL에 임시 DB를 만들어 확인. TEST_DATABASE_URL 없으면 건너뜀)
+  test_seller.py        판매자 상품 등록 테스트 (Flask 필요. 항상 임시 폴더·메모리 저장소. DB·Supabase에 쓰지 않음)
   data/items.json       시연용 가짜 상품 30개 — B 태그 이름(fit:slim, sil:IH …)
   data/items_fake.json  같은 30개의 옛 태그 버전 — test_feed.py 전용
 ```
@@ -256,12 +260,42 @@ match_score(body, item) -> {
   - 설문을 다시 해서 서버 진단이 오면 `BodyProfileStore.updateActiveSurvey`가 대표 카드의 설문 답·골격 이름도 바꾼다 → 결과 화면과 홈 체형이 항상 같다 (전에는 카드가 측정 저장 때 값에 고정돼 홈이 예전 체형을 보였음)
   - 서버에 연결이 안 되면 결과 화면은 앱 채점으로 대신하지 않고 "다시 시도/나중에" 창 (팀 결정 그대로. 혜림 브랜치의 앱 채점 대체는 합칠 때 뺐음)
 
+### 4-14. 판매자 상품 등록 (14단계)
+- 판매자가 앱에서 상품을 올리면 B의 양식 검증·태그를 거쳐 저장되고, 바로 추천 후보(홈 피드)가 된다. 점수·순위 알고리즘(final_score·rank·home_feed)과 B 파트는 바꾸지 않았다
+- API (`recommend/seller_api.py`, app.py가 등록). 오류는 400 `{"ok": false, "error": 한국어}`
+  - `GET /api/seller/form`: 화면 정의 (종류 5개, B 속성 양식 10항목, 계절, 사이즈, 색상, 종류별 치수 항목, 사진 제한). 앱은 이 응답대로 화면을 그린다
+  - `POST /api/seller/products/validate`: 검증 + 태그 미리보기 (저장 안 함). `POST /api/seller/products`: 등록 (201)
+  - `GET /api/seller/products?brand=이름`: 그 브랜드로 등록한 상품. `POST /api/seller/images`(multipart `file`): 사진 올리기 → `{"url": "/uploads/…", "full_url": …}`
+  - 입력: brand, product_name, clothing_type, price(1~10,000,000 정수), description(선택, 5,000자), seasons, sizes(XS~FREE), colors, **measurements = {사이즈: {항목: cm}} (고른 사이즈마다 그 종류의 치수 항목을 모두)**, attrs(핏·기장·혼용률 …, B 양식), composition_percent, image_url(선택)
+  - 치수 항목은 종류마다 다르다 (`rec_config.SELLER_MEASUREMENTS`): 상의·아우터 4개, 팬츠 3개, 스커트 3개, 원피스 6개. 옷을 평평하게 놓고 잰 단면(cm), 5~250
+  - 새 상품의 인기도는 기록이 없어 0.5 (`SELLER_DEFAULT_POPULARITY`, **임시값**)
+- 저장 (`store.py`의 `add_product`)
+  - 메모리 저장소: 서버 안 + `recommend/data/registered_items.json`(깃에 없음)에 보관해 서버를 다시 켜도 남는다. product_id는 `r1`, `r2` …
+  - DB 저장소(PgStore): brands·fabrics·categories는 없으면 만들고, products·product_options(사이즈×색상)·치수 표·product_tags(source=`direct`)에 한 트랜잭션으로 넣는다. **DB 치수 표는 기본키가 product_id 하나라 상품당 한 줄**이다 → 가운데 사이즈 치수만 그 표에 넣고, 사이즈별 전체 치수·사이즈·색상은 `product_tags.attrs`의 `seller_extra`에 같이 저장한다. 표 구조는 DB 담당과 정할 것. **진짜 PostgreSQL이 없는 PC에서 만들어 SQL 문법은 아직 확인하지 못했다** (가짜 커서로 순서·값만 확인). 처음 DB에 연결할 때 등록 한 번으로 확인할 것
+  - 추천 응답(`/api/feed*`)의 상품에 `sizes`·`colors`·`measurements`를 더해 보낸다 (`feed_api.DISPLAY_KEYS`). 설명(description)은 상품 수만큼 실려 응답이 커지므로 뺐다
+- 사진 (`image_storage.py`): 사진 파일은 DB에 넣지 않고 주소만 `products.main_image_url`에 적는다
+  - 키가 없으면 `recommend/uploads/`(깃에 없음)에 저장하고 **`/uploads/<파일>` 경로만 적는다**. 서버 주소(에뮬레이터 10.0.2.2, 폰은 PC의 IP)는 보는 기기마다 달라서, 앱에 보낼 때 `absolute_image_url`이 그 요청의 서버 주소를 붙인다
+  - `SUPABASE_URL`·`SUPABASE_SERVICE_KEY`·`SUPABASE_BUCKET`이 모두 있으면 Supabase Storage(공개 버킷)에 올리고 공개 주소(https)를 적는다. 서비스 키는 서버 전용 비밀이다 — 앱·깃에 넣지 말 것 (환경 변수 또는 맨 위 `supabase.env`). **Supabase 쪽은 키가 없어서 실제로 올려 보지 못했다** (요청 모양만 가짜 응답으로 확인)
+  - 내용으로 JPG·PNG·WEBP인지 확인하고(이름·헤더는 믿지 않음) 5MB까지. 저장 이름은 추측할 수 없는 무작위 값. app.py는 사진 올리기만 큰 본문을 받고 나머지 API는 그대로 1MB로 막는다
+- 앱 (`android/.../ui/`, `data/`)
+  - `SellerCenterActivity`(내 상품 목록, 상품 등록 버튼), `SellerProductActivity`(**상품 등록 화면**: 서버 양식대로 종류별 속성·치수 칸, 사진 고르기·올리기), 공용 `SellerUi`, 서버 호출 `data/SellerApi`, 입력 해석 `data/SellerFormRules`(단위 테스트 있음)
+  - **상품 등록은 마이페이지 → "판매자 센터" → "상품 등록하기"에서 한다.** 판매자 계정·가입은 없다: 서버에 판매자 권한이 없어서(`users.role`은 user/admin만 허용) 누구나 열 수 있고, 등록할 때 브랜드 이름을 직접 적는다. 서버는 브랜드 이름으로 누구의 상품인지 가른다 (`data/SellerStore`는 마지막에 쓴 브랜드 이름만 기기에 기억해 다음 등록 때 채우고 센터 목록에 쓴다)
+  - 핏은 B 양식의 필수 항목이라 반드시 고른다 (슬림·레귤러·오버 → `fit:*` 태그 → 추천 점수)
+- 아직 안 한 것
+  - 등록 API에 인증이 없다 (서버가 같은 네트워크에 열려 있으면 누구나 등록·사진 올리기 가능)
+  - 등록한 상품의 수정·삭제·품절 처리, 재고
+  - 앱 홈·상품 상세가 등록 상품의 사이즈·색상·치수를 쓰는 것 (서버는 이미 내려 줌), 사이즈 경고를 판매자 치수 기준으로 바꾸기
+  - 판매자 권한·브랜드-계정 연결 (DB). 그전에는 "판매자 센터" 메뉴를 판매자에게만 보이게 할 수 없다
+  - 판매자 센터·상품 등록 화면을 에뮬레이터에서 눌러 보는 확인 (컴파일·단위 테스트·실제 서버 HTTP 시험까지만 했다)
+- 같이 고친 것 (앱): 설문 안내 문구를 실제 버튼 이름("체형 분석 시작하기")으로, 성인인데 사진 모델 결과가 없으면 결과 화면에 안내, 사진 모델은 측정이 끝나면 닫아 메모리(약 45MB)를 돌려줌, lint 오류 7개(`paddingHorizontal/Vertical` → `paddingLeft/Right/Top/Bottom`, `android:tint` → `app:tint`)
+
 ## 5. 정답 테스트 (반드시 통과)
 
 `python -m pytest` (맨 위에서) — 255개 중 253개 통과 (`tests/test_a_connection.py`의 2개는 main에서도 실패 중, B 담당. pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
 `cd recommend && python test_api.py` — 현재 28개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_seller.py` — 현재 19개 통과 (Flask 필요. 판매자 상품 등록·사진 올리기·치수 검사·DB 저장 SQL 순서. 임시 폴더만 씀).
 `TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 10개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
@@ -338,6 +372,8 @@ match_score(body, item) -> {
 - [x] 12단계: 체형 채점을 서버 하나로 (/api/diagnose, 앱 채점 삭제) + 카메라 치수는 진단에 안 씀(설문만) — test_api 3개 추가
 - [x] 버그 수정(10/26, feature/seoyeon-bugfix): 스크롤 겹침·빠짐(shown), DB 연결 풀·왕복 줄이기, 취향 최근 50개, "자주 본" 기준 0.65, NaN 비율 400, 503 문구, 스크롤 실패 시 다시 시도, profile.is_mixed·page 입력 검사 — test_feed 3·test_api 3·test_db 1 추가
 - [x] 10/31 통합(feature/integration-1031): main + feature/seoyeon + feature/jihyun-merge(찜 한 번만·재진단·구매반품·요청 줄·상품 정보 갱신) + feature/hyerim(장바구니·마이페이지·계정별 저장·서버 주소 설정·대표 카드 설문 답). 겹친 수정(NaN·DB 문구·스크롤 다시 시도)은 하나만 남김. 개발용 데모 체형·치수 수정 화면(BodyEditActivity) 삭제는 유지 — main에서도 데모 버튼으로만 열리던 화면
+- [x] 14단계: 판매자 상품 등록 (seller_api.py, image_storage.py, store.add_product, 앱 판매자 센터·상품 등록 화면) — test_seller 19개, 앱 단위 테스트 8개 추가
+- [ ] 판매자 상품 등록 마무리: API 인증, 상품 수정·삭제·품절, 앱 홈·상세에서 등록 상품의 사이즈·치수 사용, Supabase 키·DB 연결 후 실제 등록 확인, 판매자 권한(DB)
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend
