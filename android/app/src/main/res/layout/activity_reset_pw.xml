@@ -52,8 +52,9 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="40dp"/>
 
-    <!-- ============ 이메일주소 ============ -->
+    <!-- ============ 이메일주소 또는 휴대폰 번호 (화면을 열 때 정함) ============ -->
     <TextView
+        android:id="@+id/tvContactLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="이메일주소"

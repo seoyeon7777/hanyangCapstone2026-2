@@ -262,6 +262,12 @@ match_score(body, item) -> {
   - 설문을 다시 해서 서버 진단이 오면 `BodyProfileStore.updateActiveSurvey`가 대표 카드의 설문 답·골격 이름도 바꾼다 → 결과 화면과 홈 체형이 항상 같다 (전에는 카드가 측정 저장 때 값에 고정돼 홈이 예전 체형을 보였음)
   - 서버에 연결이 안 되면 결과 화면은 앱 채점으로 대신하지 않고 "다시 시도/나중에" 창 (팀 결정 그대로. 혜림 브랜치의 앱 채점 대체는 합칠 때 뺐음)
 
+### 4-13. 앱 계정·주문·쿠폰 (11/01)
+- 휴대폰 번호는 `LocalAccounts.normalizePhone`으로 010-0000-0000 모양 하나로 저장 → 하이픈 유무와 상관없이 같은 계정. 다른 형식으로 저장된 체형·설문·찜·사진은 로그인·앱 시작 때, 지금 계정에 기록이 없을 때만 옮긴다 (`LoginSession.adoptOldPhoneData`)
+- 로그인은 가입한 비밀번호만 통과: `data/LocalAccounts`가 회원을 기기(SharedPreferences `local_accounts`)에 PBKDF2 해시로 저장. **가입한 기기에서만 로그인된다.** 서버 users 표와 연결되면 대체할 임시 저장소. 가입을 마치면 바로 로그인된다. 생년월일·성별은 아직 저장하지 않는다. 이메일 로그인은 프로필에 이메일을 등록한 뒤에 된다. 비밀번호 재설정은 핸드폰 번호·이메일 중 고르는 화면(`ResetPwMainActivity`) → 입력 화면(`ResetPwActivity`, `EXTRA_BY_PHONE`). 인증번호는 아직 가짜(4자리면 통과)
+- 결제 완료 → 체크한 상품만 장바구니에서 뺀다 (`DummyData.removeOrderedFromCart`). 주문 화면·주문 내역 옵션은 고른 값 그대로 (`Product.getOptionLabel`, 여러 상품이면 `이름: L / NAVY, …`)
+- 기간 지난 쿠폰은 보유 탭에서 빠지고 받기 버튼은 "기간만료" (`CouponExpiry`). 레이아웃의 가짜 보유 쿠폰 카드 3장 삭제. 받기 쿠폰 중 뉴베러 신상품(2026.12.30까지)·겨울 긴소매(2026.11.30까지)는 받을 수 있고 전상품 5%는 만료 상태
+
 ## 5. 정답 테스트 (반드시 통과)
 
 `python -m pytest` (맨 위에서) — 255개 중 253개 통과 (`tests/test_a_connection.py`의 2개는 main에서도 실패 중, B 담당. pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).

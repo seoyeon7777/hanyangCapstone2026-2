@@ -1,6 +1,7 @@
 package com.example.capstone.login;
 
 import com.example.capstone.R;
+import com.example.capstone.data.LocalAccounts;
 
 import android.os.Bundle;
 import android.text.Editable;
@@ -12,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +21,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.Locale;
 
 public class ResetPwActivity extends AppCompatActivity {
+
+    /** true면 휴대폰 번호로, false면 이메일로 찾는 화면 */
+    public static final String EXTRA_BY_PHONE = "extra_by_phone";
+
+    private boolean byPhone;
 
     private ImageButton btnBack, btnHome;
 
@@ -44,7 +51,10 @@ public class ResetPwActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reset_pw);
 
+        byPhone = getIntent().getBooleanExtra(EXTRA_BY_PHONE, false);
+
         initViews();
+        applyContactType();
         setListeners();
     }
 
@@ -65,6 +75,15 @@ public class ResetPwActivity extends AppCompatActivity {
         btnTogglePw2 = findViewById(R.id.btnTogglePw2);
 
         containerNewPw = findViewById(R.id.containerNewPw);
+    }
+
+    private void applyContactType() {
+        if (!byPhone) {
+            return;
+        }
+        ((TextView) findViewById(R.id.tvContactLabel)).setText("휴대폰 번호");
+        etEmail.setHint("010-0000-0000");
+        etEmail.setInputType(InputType.TYPE_CLASS_PHONE);
     }
 
     private void setListeners() {
@@ -135,24 +154,30 @@ public class ResetPwActivity extends AppCompatActivity {
         btnConfirm.setOnClickListener(v -> resetPassword());
     }
 
-    /** 입력한 이메일로 인증번호를 보낸다. */
+    /** 입력한 이메일 또는 휴대폰 번호로 인증번호를 보낸다. */
     private void requestAuthCode() {
-        String email = normalizeEmail();
+        String contact = normalizeContact();
 
-        if (email == null) {
-            Toast.makeText(this, "올바른 이메일 형식이 아닙니다. (예: example@gmail.com)",
+        if (contact == null) {
+            Toast.makeText(this, byPhone
+                            ? "휴대폰 번호를 정확히 입력해주세요."
+                            : "올바른 이메일 형식이 아닙니다. (예: example@gmail.com)",
                     Toast.LENGTH_SHORT).show();
             return;
         }
 
-        etEmail.setText(email);
-        etEmail.setSelection(email.length());
+        etEmail.setText(contact);
+        etEmail.setSelection(contact.length());
 
-        // [여기에 DB 입력] 가입된 이메일인지 확인 (users)
-        //                 없으면 "가입되지 않은 이메일입니다." 안내 후 return
+        // [여기에 DB 입력] 가입된 이메일·휴대폰 번호인지 확인 (users)
+        if (!LocalAccounts.contactExists(this, contact)) {
+            Toast.makeText(this, notRegisteredMessage(), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         // [여기에 DB 입력] 발송한 인증번호를 만료시각과 함께 저장 (auth_codes)
         isCodeSent = true;
-        Toast.makeText(this, email + " 로 인증번호가 발송되었습니다.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, contact + " (으)로 인증번호가 발송되었습니다.", Toast.LENGTH_SHORT).show();
     }
 
     /** 입력한 인증번호를 확인하고, 통과하면 새 비밀번호 입력란을 연다. */
@@ -202,6 +227,12 @@ public class ResetPwActivity extends AppCompatActivity {
         }
 
         // [여기에 DB 입력] 새 비밀번호 저장 - 암호화(해시)해서 저장 (users)
+        String contact = normalizeContact();
+        if (contact == null || !LocalAccounts.resetPassword(this, contact, pw)) {
+            Toast.makeText(this, notRegisteredMessage(), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         // [여기에 DB 입력] 사용한 인증번호 만료 처리 (auth_codes)
         Toast.makeText(this, "비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.",
                 Toast.LENGTH_SHORT).show();
@@ -209,6 +240,17 @@ public class ResetPwActivity extends AppCompatActivity {
         // 비밀번호가 바뀌었으니 기존 로그인 상태는 지우고 로그인 화면으로 돌아간다.
         LoginSession.logout(this);
         LoginMainActivity.backToLogin(this);
+    }
+
+    private String notRegisteredMessage() {
+        return byPhone ? "가입되지 않은 휴대폰 번호입니다." : "가입되지 않은 이메일입니다.";
+    }
+
+    /** 입력값을 정규화해 돌려준다. 올바르지 않으면 null */
+    private String normalizeContact() {
+        return byPhone
+                ? LocalAccounts.normalizePhone(etEmail.getText().toString())
+                : normalizeEmail();
     }
 
     /**
