@@ -29,6 +29,8 @@ public class Product {
     // 추천 서버에서 받은 상품만 채워진다 (DummyData 상품은 빈 문자열)
     private String serverId = "";
     private String reason = "";
+    private String imageUrl = "";
+    private float popularity = -1f;
 
     public Product(int id, String brand, String name, int price) {
         this.id = id;
@@ -108,6 +110,25 @@ public class Product {
         this.selectedColor = selectedColor;
     }
 
+    /** "L / NAVY" 모양의 선택 옵션. 고른 옵션이 없으면 빈 문자열 */
+    public String getOptionLabel() {
+        boolean hasSize = selectedSize != null && !selectedSize.isEmpty();
+        boolean hasColor = selectedColor != null && !selectedColor.isEmpty();
+
+        if (hasSize && hasColor) {
+            return selectedSize + " / " + selectedColor;
+        }
+
+        return hasSize ? selectedSize : hasColor ? selectedColor : "";
+    }
+
+    /** 장바구니에서 뺀다 (삭제·결제 완료) */
+    public void removeFromCart() {
+        inCart = false;
+        cartQuantity = 1;
+        cartSelected = true;
+    }
+
     public String getCategory() {
         return category;
     }
@@ -131,6 +152,22 @@ public class Product {
     /** 추천 서버가 붙여 준 추천 이유 문장 */
     public String getReason() {
         return reason;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl == null ? "" : imageUrl;
+    }
+
+    public float getPopularity() {
+        return popularity;
+    }
+
+    public void setPopularity(float popularity) {
+        this.popularity = popularity;
     }
 
     public boolean isFromServer() {

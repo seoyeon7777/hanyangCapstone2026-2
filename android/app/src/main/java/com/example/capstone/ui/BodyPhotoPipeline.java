@@ -65,6 +65,14 @@ final class BodyPhotoPipeline {
                 }
             } catch (Throwable t) {
                 Log.w(TAG, "사진 모델 처리 실패", t);
+            } finally {
+                // 모델은 측정할 때만 필요하다. 다음 측정 때 다시 불러온다
+                synchronized (BodyPhotoPipeline.class) {
+                    if (model != null) {
+                        model.close();
+                        model = null;
+                    }
+                }
             }
             final float[] out = result;
             new Handler(Looper.getMainLooper()).post(() -> callback.onDone(out));

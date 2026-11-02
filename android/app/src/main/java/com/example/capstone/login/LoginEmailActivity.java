@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
+import com.example.capstone.data.LocalAccounts;
 
 public class LoginEmailActivity extends AppCompatActivity {
 
@@ -197,9 +198,19 @@ public class LoginEmailActivity extends AppCompatActivity {
             }
 
             // [여기에 DB 입력] 이메일 + 비밀번호가 맞는 회원인지 확인 (users)
-            //                 틀리면 "이메일 또는 비밀번호가 올바르지 않습니다." 안내 후 return
-            //                 맞으면 회원 이름/휴대폰도 함께 받아 아래 login(...)에 넘긴다
-            LoginSession.login(this, "", email, "");
+            LocalAccounts.Account account = LocalAccounts.login(this, email, authCode);
+
+            if (account == null) {
+                Toast.makeText(
+                        this,
+                        "이메일 또는 비밀번호가 올바르지 않습니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            LoginSession.login(this, account.id, account.name, account.email, account.phone);
             LoginMainActivity.goToMyPage(this);
         });
 

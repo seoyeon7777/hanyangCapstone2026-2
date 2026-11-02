@@ -538,6 +538,7 @@ public class CartActivity extends AppCompatActivity {
 
             int totalQuantity = 0;
             int totalPrice = 0;
+            List<Product> ordered = new ArrayList<>();
 
             for (Product product : DummyData.getProducts()) {
 
@@ -547,6 +548,8 @@ public class CartActivity extends AppCompatActivity {
                 int quantity = product.getCartQuantity();
 
                 if (quantity <= 0) continue;
+
+                ordered.add(product);
 
                 if (productNames.length() > 0) {
                     productNames.append(", ");
@@ -572,6 +575,7 @@ public class CartActivity extends AppCompatActivity {
             }
 
             final String names = productNames.toString();
+            final String option = DummyData.orderedOptionText(ordered);
             final int quantity = totalQuantity;
             final int price = totalPrice;
 
@@ -586,20 +590,21 @@ public class CartActivity extends AppCompatActivity {
                         warnings,
                         SizeWarningDialog.Action.ORDER,
                         () -> goOrder(
-                                names, quantity, price
+                                names, option, quantity, price
                         )
                 );
 
                 return;
             }
 
-            goOrder(names, quantity, price);
+            goOrder(names, option, quantity, price);
         });
     }
 
     // 주문 화면으로 이동
     private void goOrder(
             String productNames,
+            String productOption,
             int totalQuantity,
             int totalPrice
     ) {
@@ -611,6 +616,10 @@ public class CartActivity extends AppCompatActivity {
 
         intent.putExtra(
                 "productNames", productNames
+        );
+
+        intent.putExtra(
+                "productOption", productOption
         );
 
         intent.putExtra(

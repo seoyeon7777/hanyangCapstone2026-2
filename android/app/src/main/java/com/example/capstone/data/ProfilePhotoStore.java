@@ -39,6 +39,13 @@ public final class ProfilePhotoStore {
         }
     }
 
+    /** to 계정에 사진이 없을 때만 from의 사진을 옮긴다. */
+    public static void adoptAccount(Context context, String from, String to) {
+        if (!file(context, to).exists()) {
+            moveAccount(context, from, to);
+        }
+    }
+
     public static boolean hasPhoto(Context context) {
         return file(context).exists();
     }

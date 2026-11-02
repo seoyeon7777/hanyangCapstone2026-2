@@ -1,6 +1,7 @@
 package com.example.capstone.login;
 
 import com.example.capstone.R;
+import com.example.capstone.data.CouponExpiry;
 import com.example.capstone.data.MyPageStore;
 
 import android.graphics.Color;
@@ -46,8 +47,8 @@ public class CouponActivity extends AppCompatActivity {
      */
     private static final String[][] AVAILABLE_COUPONS = {
             // id, 할인, 이름, 사용 조건, 사용 기한
-            {"NEWBETTER_NEW_30", "30%", "뉴베러 신상품 쿠폰", "1원 이상 구매 시 최대 50,000원 할인", "2026.08.15 23:59 까지"},
-            {"FALL_LONGSLEEVE_30", "30%", "가을 긴소매 쿠폰", "1원 이상 구매 시 최대 30,000원 할인", "2026.08.18 23:59 까지"},
+            {"NEWBETTER_NEW_30", "30%", "뉴베러 신상품 쿠폰", "1원 이상 구매 시 최대 50,000원 할인", "2026.12.30 23:59 까지"},
+            {"WINTER_LONGSLEEVE_30", "30%", "겨울 긴소매 쿠폰", "1원 이상 구매 시 최대 30,000원 할인", "2026.11.30 23:59 까지"},
             {"ALL_5", "5%", "전상품 5% 쿠폰", "20,000원 이상 구매 시 사용", "2026.08.31 23:59 까지"},
     };
 
@@ -115,7 +116,6 @@ public class CouponActivity extends AppCompatActivity {
     private void showOwnedTab() {
         // [여기에 DB 입력] 로그인한 회원의 보유 쿠폰 목록 조회 → containerOwned 채우기 (user_coupons, coupons)
         //                 개수는 tvCouponCount에, 사용완료/기간만료 쿠폰은 흐리게 표시
-        //                 지금 XML에 있는 쿠폰 카드 3장은 자리만 잡아둔 가짜 화면
         ownedTabShown = true;
         updateCouponCount();
         containerOwned.setVisibility(View.VISIBLE);
@@ -169,6 +169,14 @@ public class CouponActivity extends AppCompatActivity {
         }
 
         String[] coupon = AVAILABLE_COUPONS[index];
+        // 화면을 열어 둔 사이에 기간이 지난 경우
+        if (CouponExpiry.isExpired(coupon[4], System.currentTimeMillis())) {
+            markExpired(button);
+            updateCouponCount();
+            Toast.makeText(this, "기간이 지난 쿠폰입니다.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         // [여기에 DB 입력] 받은 쿠폰 저장 - 이미 받은 쿠폰이면 저장하지 않음 (user_coupons)
         //                 저장에 실패하면 버튼을 원래 상태로 되돌릴 것
         if (!MyPageStore.receiveCoupon(coupon[0])) {
@@ -186,8 +194,13 @@ public class CouponActivity extends AppCompatActivity {
 
     /** 화면을 다시 열었을 때, 이전에 받은 쿠폰을 보유 탭과 버튼 상태에 다시 반영한다. */
     private void restoreReceivedCoupons() {
+        long now = System.currentTimeMillis();
+
         for (int i = 0; i < AVAILABLE_COUPONS.length; i++) {
-            if (MyPageStore.isCouponReceived(AVAILABLE_COUPONS[i][0])) {
+            // 기간이 지난 쿠폰은 받을 수 없고, 이미 받았어도 보유 탭에 넣지 않는다
+            if (CouponExpiry.isExpired(AVAILABLE_COUPONS[i][4], now)) {
+                markExpired(downloadButtons[i]);
+            } else if (MyPageStore.isCouponReceived(AVAILABLE_COUPONS[i][0])) {
                 markReceived(downloadButtons[i]);
                 addOwnedCard(AVAILABLE_COUPONS[i]);
             }
@@ -196,6 +209,12 @@ public class CouponActivity extends AppCompatActivity {
 
     private void markReceived(Button button) {
         button.setText("받기완료");
+        button.setEnabled(false);
+        button.setAlpha(0.4f);
+    }
+
+    private void markExpired(Button button) {
+        button.setText("기간만료");
         button.setEnabled(false);
         button.setAlpha(0.4f);
     }

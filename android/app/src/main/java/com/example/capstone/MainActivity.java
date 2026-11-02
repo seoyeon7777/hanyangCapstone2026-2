@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int BLACK = Color.rgb(17, 17, 17);
     private static final int GRAY = Color.rgb(150, 150, 150);
 
+    private static final String MENU_ALL = "추천 전체";
+
     private static final String[] MENUS = {
             "홈", "신상", "베스트", "상의",
             "아우터", "원피스", "바지"
@@ -203,13 +205,23 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.btnSeeAllProducts)
                 .setOnClickListener(v -> {
-                    selectedMenu = "베스트";
+                    selectedMenu = MENU_ALL;
                     resetFilters();
                     updateScreen();
                     homeScrollView.smoothScrollTo(0, 0);
                 });
 
         updateScreen();
+        loadCatalog();
+    }
+
+    private void loadCatalog() {
+        RecommendApi.loadCatalog(this, () -> {
+            if (isFinishing() || "홈".equals(selectedMenu)) {
+                return;
+            }
+            updateProducts();
+        });
     }
 
     // XML을 수정하지 않고 Capstone 로고 찾기
@@ -337,9 +349,36 @@ public class MainActivity extends AppCompatActivity {
         if ("신상".equals(selectedMenu)) {
             Collections.sort(
                     products,
+                    (a, b) -> {
+                        boolean newA = DummyData.isNew(a);
+                        boolean newB = DummyData.isNew(b);
+                        if (newA != newB) {
+                            return newA ? -1 : 1;
+                        }
+                        if (a.isFromServer() != b.isFromServer()) {
+                            return a.isFromServer() ? 1 : -1;
+                        }
+                        return Integer.compare(
+                                b.getId(),
+                                a.getId()
+                        );
+                    }
+            );
+        } else if ("베스트".equals(selectedMenu)) {
+            Collections.sort(
+                    products,
                     (a, b) -> Integer.compare(
-                            b.getId(),
-                            a.getId()
+                            RecommendApi.catalogRank(a),
+                            RecommendApi.catalogRank(b)
+                    )
+            );
+        } else if (MENU_ALL.equals(selectedMenu)) {
+            final boolean bodyMode = switchBodyMode.isChecked();
+            Collections.sort(
+                    products,
+                    (a, b) -> Integer.compare(
+                            bodyMode ? RecommendApi.bodyRank(a) : RecommendApi.catalogRank(a),
+                            bodyMode ? RecommendApi.bodyRank(b) : RecommendApi.catalogRank(b)
                     )
             );
         }
@@ -369,7 +408,8 @@ public class MainActivity extends AppCompatActivity {
 
         if ("홈".equals(selectedMenu)
                 || "신상".equals(selectedMenu)
-                || "베스트".equals(selectedMenu)) {
+                || "베스트".equals(selectedMenu)
+                || MENU_ALL.equals(selectedMenu)) {
             return true;
         }
 
@@ -689,6 +729,12 @@ public class MainActivity extends AppCompatActivity {
         if (productAdapter != null) {
             productAdapter.notifyDataSetChanged();
         }
+
+        if (!loadedBodyKey.isEmpty()
+                && !RecommendApi.bodyInputKey(this).equals(loadedBodyKey)) {
+            RecommendApi.invalidateCatalog();
+        }
+        loadCatalog();
 
         if ("홈".equals(selectedMenu)
                 && !RecommendApi.bodyInputKey(this).equals(loadedBodyKey)) {

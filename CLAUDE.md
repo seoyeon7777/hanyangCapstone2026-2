@@ -242,6 +242,12 @@ match_score(body, item) -> {
 - 웹 테스트 버전: `web/` (아이폰 Safari용, 같은 계산식). 사용법은 `web/README.md`
 - 알려진 한계(미수정): 길이 환산이 발목 기준이라 약 5% 크게 나올 수 있음, 정면 가슴 폭에 팔이 섞일 수 있음, 측면 사진이 옆모습인지 검사 안 함
 
+### 4-14. 앱 상품 목록·사진 정리 (11/1)
+- 서버 상품: `RecommendApi.loadCatalog`가 `/api/feed/scroll`(general 전체 + 체형이 있으면 body)로 전체 순서를 받아 `DummyData.getProducts()`에 합친다 → 카테고리·검색·신상·베스트에도 나온다. 서버 상품 id는 1000번대. 베스트=general 순서, 카테고리 추천순·홈 "전체보기"=body 순서
+- 사진: `data/ProductImages` — `image_url`이 있으면 불러오고, 없으면 종류별 색 카드
+- 상품 상세: "바로 구매"(장바구니에 담고 결제 화면으로), 사이즈 추천 문구. 장바구니·주문·쿠폰·계정은 feature/jihyun-merge(4-13) 쪽 구현을 쓴다
+- 카메라 화면은 11/1 커밋에서 삭제됨(사진 선택만). CAMERA 권한·CameraX 의존성·`BodySilhouetteAnalyzer` 제거
+
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
   - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)
@@ -255,6 +261,12 @@ match_score(body, item) -> {
 - 홈 체형 입력(`RecommendApi.bodyInput`, 10/31 통합): ① 대표 체형 카드에 저장한 설문 답(`BodyProfileStore.Profile.surveyAnswers`, 혜림) → 서버가 진단 ② 옛 카드라 답이 없으면 카드의 골격 이름 100% ③ 대표 체형이 없으면 최근 설문 답
   - 설문을 다시 해서 서버 진단이 오면 `BodyProfileStore.updateActiveSurvey`가 대표 카드의 설문 답·골격 이름도 바꾼다 → 결과 화면과 홈 체형이 항상 같다 (전에는 카드가 측정 저장 때 값에 고정돼 홈이 예전 체형을 보였음)
   - 서버에 연결이 안 되면 결과 화면은 앱 채점으로 대신하지 않고 "다시 시도/나중에" 창 (팀 결정 그대로. 혜림 브랜치의 앱 채점 대체는 합칠 때 뺐음)
+
+### 4-13. 앱 계정·주문·쿠폰 (11/01)
+- 휴대폰 번호는 `LocalAccounts.normalizePhone`으로 010-0000-0000 모양 하나로 저장 → 하이픈 유무와 상관없이 같은 계정. 다른 형식으로 저장된 체형·설문·찜·사진은 로그인·앱 시작 때, 지금 계정에 기록이 없을 때만 옮긴다 (`LoginSession.adoptOldPhoneData`)
+- 로그인은 가입한 비밀번호만 통과: `data/LocalAccounts`가 회원을 기기(SharedPreferences `local_accounts`)에 PBKDF2 해시로 저장. **가입한 기기에서만 로그인된다.** 서버 users 표와 연결되면 대체할 임시 저장소. 가입을 마치면 바로 로그인된다. 생년월일·성별은 아직 저장하지 않는다. 이메일 로그인은 프로필에 이메일을 등록한 뒤에 된다. 비밀번호 재설정은 핸드폰 번호·이메일 중 고르는 화면(`ResetPwMainActivity`) → 입력 화면(`ResetPwActivity`, `EXTRA_BY_PHONE`). 인증번호는 아직 가짜(4자리면 통과)
+- 결제 완료 → 체크한 상품만 장바구니에서 뺀다 (`DummyData.removeOrderedFromCart`). 주문 화면·주문 내역 옵션은 고른 값 그대로 (`Product.getOptionLabel`, 여러 상품이면 `이름: L / NAVY, …`)
+- 기간 지난 쿠폰은 보유 탭에서 빠지고 받기 버튼은 "기간만료" (`CouponExpiry`). 레이아웃의 가짜 보유 쿠폰 카드 3장 삭제. 받기 쿠폰 중 뉴베러 신상품(2026.12.30까지)·겨울 긴소매(2026.11.30까지)는 받을 수 있고 전상품 5%는 만료 상태
 
 ## 5. 정답 테스트 (반드시 통과)
 
@@ -325,11 +337,11 @@ match_score(body, item) -> {
 - [x] 앱(안드로이드) 홈을 /api/feed/scroll·/api/feed/event에 연결 (4-10, feature/seoyeon-android-connect)
 - [x] Android Studio 에뮬레이터에서 실제 실행 확인 (Pixel 6 API 35: 홈에 서버 상품·추천 이유·토글 표시)
   - API 37 에뮬레이터는 친구들 3D 라이브러리(Filament)가 16KB 페이지를 지원하지 않아 앱이 꺼진다 → API 35(16KB 아닌 이미지)로 실행
-- [ ] 서버 상품의 사진(image_url) 표시, 상세 화면의 옵션·장바구니 (찜 탭·상세 하트는 연결됨)
+- [x] 서버 상품의 옵션·장바구니·바로 구매 (4-14). 사진은 image_url이 오면 표시 — DB에 사진 주소 넣기는 남음
 - [x] 11단계: DB 저장 (store.py, Supabase) — 상품을 DB에서, 체형·반응을 body_profiles·user_events에. test_db.py 8개
 - [x] Supabase 프로젝트(서연 계정, 조직 hanyang-capstone, 싱가포르) 만들고 db.sql 실행, seed_db.py로 시연 상품 30개 → 서버 "데이터 DB" 연결 확인
   - 접속 주소는 Session pooler(`aws-0-ap-southeast-1.pooler.supabase.com:5432`). 비밀번호는 각자 database_url.txt에만
-- [ ] 앱 상단 탭(신상·베스트·카테고리)·카테고리 화면·검색·장바구니는 아직 DummyData → 서버 상품으로 바꿀지 팀 결정
+- [x] 상단 탭·카테고리·검색·장바구니에 서버 상품 합침 (4-14). DummyData 40개는 그대로 같이 보임 — 뺄지는 팀 결정
 - [ ] 로그인 사용자와 추천 user_id(app-…) 연결 (로그인이 서버·DB와 연결된 뒤)
 - [ ] 실제 상품 데이터(products + product_tags) 넣기, popularity 산식 정하기
 - [ ] B 파트 server.py의 상품 저장소는 아직 메모리 (B API를 쓸 때만 해당)
@@ -338,6 +350,7 @@ match_score(body, item) -> {
 - [x] 12단계: 체형 채점을 서버 하나로 (/api/diagnose, 앱 채점 삭제) + 카메라 치수는 진단에 안 씀(설문만) — test_api 3개 추가
 - [x] 버그 수정(10/26, feature/seoyeon-bugfix): 스크롤 겹침·빠짐(shown), DB 연결 풀·왕복 줄이기, 취향 최근 50개, "자주 본" 기준 0.65, NaN 비율 400, 503 문구, 스크롤 실패 시 다시 시도, profile.is_mixed·page 입력 검사 — test_feed 3·test_api 3·test_db 1 추가
 - [x] 10/31 통합(feature/integration-1031): main + feature/seoyeon + feature/jihyun-merge(찜 한 번만·재진단·구매반품·요청 줄·상품 정보 갱신) + feature/hyerim(장바구니·마이페이지·계정별 저장·서버 주소 설정·대표 카드 설문 답). 겹친 수정(NaN·DB 문구·스크롤 다시 시도)은 하나만 남김. 개발용 데모 체형·치수 수정 화면(BodyEditActivity) 삭제는 유지 — main에서도 데모 버튼으로만 열리던 화면
+- [x] 11/03 통합(feature/integration-1103): feature/hyerim(서버 상품을 카테고리·검색에, 주문·결제·장바구니·찜) + feature/jihyun-merge(기기 계정·비밀번호 해시·쿠폰 기간·주문 옵션) + feature/yeonoh 중 판매자 기능을 뺀 수정(사진 모델 측정 뒤 메모리 해제, 사진 분석 실패 안내, 안드로이드 7 호환 tint·padding, 안내 문구). **판매자 센터·판매자 API·사진 올리기는 화면 설계 전이라 넣지 않음** (feature/yeonoh에 남아 있음). feature/yubin-update는 지현 장바구니와 내용이 같아 넣지 않음
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend
