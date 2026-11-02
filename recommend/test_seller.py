@@ -153,6 +153,21 @@ def test_b_form_rules_still_apply():
     assert "달라요" in error_of(fresh(attrs={"category": "pants", "fit": "슬림"}))
 
 
+def test_item_type_and_length_conflicts_are_rejected():
+    """롱 카디건은 기장이 기본·크롭이면 안 되고, 크롭 팬츠는 풀 길이·쇼츠면 안 된다 (앱 화면도 같은 조합을 막는다)."""
+    bad_top = fresh(attrs={"fit": "슬림", "length_top": "기본", "item_type": "롱 카디건"})
+    assert error_of(bad_top)
+    ok_top = fresh(attrs={"fit": "슬림", "length_top": "롱", "item_type": "롱 카디건"})
+    assert client.post("/api/seller/products", json=ok_top).status_code == 201
+    pants = dict(clothing_type="pants", sizes=["M"], measurements={"M": {"waist": 38, "thigh": 30, "total_length": 98}})
+    assert error_of(fresh(attrs={"fit": "레귤러", "length_pants": "풀 길이", "item_type": "크롭 팬츠"}, **pants))
+    assert client.post("/api/seller/products", json=fresh(attrs={"fit": "레귤러", "length_pants": "발목 길이", "item_type": "크롭 팬츠"}, **pants)).status_code == 201
+    # 화면이 규칙을 그릴 수 있게 양식에 option_conflicts가 실려 온다
+    form = client.get("/api/seller/form").get_json()
+    item_type = [a for a in form["attributes"] if a["key"] == "item_type"][0]
+    assert item_type["option_conflicts"]["롱 카디건"] == {"length_top": ["기본", "크롭"]}
+
+
 def test_pants_and_dress_measurements():
     pants = fresh(clothing_type="pants", attrs={"fit": "레귤러", "length_pants": "발목 길이"}, sizes=["M"],
                   measurements={"M": {"waist": 38, "thigh": 30, "total_length": 98}})

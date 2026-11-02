@@ -36,6 +36,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +74,10 @@ public class SellerProductActivity extends AppCompatActivity {
 
     // 속성: 단일 선택은 Spinner, 복수 선택은 CheckBox 목록
     private final Map<String, Spinner> attrSpinners = new LinkedHashMap<>();
+    private final Map<String, List<String>> attrBaseOptions = new HashMap<>();   // 칸 키 → 선택지 (자리표시 문구 제외)
+    private final Map<String, String> attrPlaceholder = new HashMap<>();
+    // 서버 양식의 option_conflicts: 칸 키 → {선택지 → {다른 칸 키 → 함께 못 고르는 값들}} (예: 롱 카디건 ↔ 기장 기본·크롭)
+    private final Map<String, JSONObject> conflictRules = new LinkedHashMap<>();
     private final Map<String, List<CheckBox>> attrChecks = new LinkedHashMap<>();
     private final List<Spinner> fiberSpinners = new ArrayList<>();
     private final List<EditText> fiberPercents = new ArrayList<>();
@@ -302,6 +307,9 @@ public class SellerProductActivity extends AppCompatActivity {
     private void rebuildAttributes() {
         attrBox.removeAllViews();
         attrSpinners.clear();
+        attrBaseOptions.clear();
+        attrPlaceholder.clear();
+        conflictRules.clear();
         attrChecks.clear();
         fiberSpinners.clear();
         fiberPercents.clear();
@@ -334,12 +342,107 @@ public class SellerProductActivity extends AppCompatActivity {
                     items.addAll(options);
                     Spinner spinner = spinner(items);
                     attrBox.addView(spinner, SellerUi.matchWidth(this, 0));
-                    attrSpinners.put(field.getString("key"), spinner);
+                    String key = field.getString("key");
+                    attrSpinners.put(key, spinner);
+                    attrBaseOptions.put(key, options);
+                    attrPlaceholder.put(key, items.get(0));
+                    JSONObject conflicts = field.optJSONObject("option_conflicts");
+                    if (conflicts != null) {
+                        conflictRules.put(key, conflicts);
+                        attrBox.addView(SellerUi.text(this, "기장과 어울리지 않는 조합은 고를 수 없어요. 먼저 고른 쪽에 맞춰 다른 쪽 선택지가 줄어요. (예: 롱 카디건은 기장이 롱일 때만)",
+                                12, SellerUi.GRAY, false), SellerUi.matchWidth(this, 2));
+                    }
+                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                            refreshAttributeOptions();
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parent) {
+                        }
+                    });
                 }
             }
         } catch (JSONException e) {
             attrBox.addView(SellerUi.text(this, "속성 양식을 읽지 못했어요.", 13, SellerUi.RED, false));
         }
+    }
+
+    /** 칸에서 고른 값. 고르지 않았으면 빈 문자열 */
+    private String selectedValue(String key) {
+        Spinner spinner = attrSpinners.get(key);
+        if (spinner == null || spinner.getSelectedItem() == null) {
+            return "";
+        }
+        String value = String.valueOf(spinner.getSelectedItem());
+        return PICK.equals(value) || NONE.equals(value) ? "" : value;
+    }
+
+    /** 이 칸의 option이, 지금 다른 칸에서 고른 값과 함께 쓸 수 없는 조합인지 (서버 option_conflicts와 같은 규칙) */
+    private boolean conflicts(String key, String option) {
+        for (Map.Entry<String, JSONObject> owner : conflictRules.entrySet()) {
+            JSONObject byOption = owner.getValue();
+            if (owner.getKey().equals(key)) {
+                // 이 칸이 규칙을 가진 칸(아이템 종류): option이 이미 고른 다른 칸의 값과 모순이면 막는다
+                JSONObject targets = byOption.optJSONObject(option);
+                if (targets == null) {
+                    continue;
+                }
+                for (Iterator<String> it = targets.keys(); it.hasNext(); ) {
+                    String target = it.next();
+                    String chosen = selectedValue(target);
+                    if (!chosen.isEmpty() && contains(targets.optJSONArray(target), chosen)) {
+                        return true;
+                    }
+                }
+            } else {
+                // 규칙을 가진 칸에서 이미 고른 값이 이 칸의 option을 막는가
+                String chosen = selectedValue(owner.getKey());
+                JSONObject targets = chosen.isEmpty() ? null : byOption.optJSONObject(chosen);
+                if (targets != null && contains(targets.optJSONArray(key), option)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** 고른 값에 따라 맞지 않는 선택지를 각 칸의 목록에서 뺀다. 고른 값 자체는 항상 목록에 남는다 */
+    private void refreshAttributeOptions() {
+        for (Map.Entry<String, Spinner> entry : attrSpinners.entrySet()) {
+            String key = entry.getKey();
+            Spinner spinner = entry.getValue();
+            List<String> base = attrBaseOptions.get(key);
+            if (base == null) {
+                continue;
+            }
+            String current = selectedValue(key);
+            List<String> items = new ArrayList<>();
+            items.add(attrPlaceholder.get(key));
+            for (String option : base) {
+                if (option.equals(current) || !conflicts(key, option)) {
+                    items.add(option);
+                }
+            }
+            if (sameItems(spinner, items)) {
+                continue;
+            }
+            spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items));
+            spinner.setSelection(Math.max(0, items.indexOf(current)));
+        }
+    }
+
+    private static boolean sameItems(Spinner spinner, List<String> items) {
+        if (spinner.getAdapter() == null || spinner.getAdapter().getCount() != items.size()) {
+            return false;
+        }
+        for (int i = 0; i < items.size(); i++) {
+            if (!items.get(i).equals(String.valueOf(spinner.getAdapter().getItem(i)))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private List<String> optionsFor(JSONObject field, String category) throws JSONException {
@@ -500,6 +603,9 @@ public class SellerProductActivity extends AppCompatActivity {
     }
 
     private static boolean contains(JSONArray array, String value) {
+        if (array == null) {
+            return false;
+        }
         for (int i = 0; i < array.length(); i++) {
             if (value.equals(array.optString(i))) {
                 return true;

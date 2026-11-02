@@ -295,7 +295,7 @@ match_score(body, item) -> {
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
 `cd recommend && python test_api.py` — 현재 28개 통과 (Flask 필요: `pip install -r requirements.txt`).
-`cd recommend && python test_seller.py` — 현재 19개 통과 (Flask 필요. 판매자 상품 등록·사진 올리기·치수 검사·DB 저장 SQL 순서. 임시 폴더만 씀).
+`cd recommend && python test_seller.py` — 현재 20개 통과 (Flask 필요. 판매자 상품 등록·사진 올리기·치수 검사·DB 저장 SQL 순서. 임시 폴더만 씀).
 `TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 10개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
@@ -372,7 +372,7 @@ match_score(body, item) -> {
 - [x] 12단계: 체형 채점을 서버 하나로 (/api/diagnose, 앱 채점 삭제) + 카메라 치수는 진단에 안 씀(설문만) — test_api 3개 추가
 - [x] 버그 수정(10/26, feature/seoyeon-bugfix): 스크롤 겹침·빠짐(shown), DB 연결 풀·왕복 줄이기, 취향 최근 50개, "자주 본" 기준 0.65, NaN 비율 400, 503 문구, 스크롤 실패 시 다시 시도, profile.is_mixed·page 입력 검사 — test_feed 3·test_api 3·test_db 1 추가
 - [x] 10/31 통합(feature/integration-1031): main + feature/seoyeon + feature/jihyun-merge(찜 한 번만·재진단·구매반품·요청 줄·상품 정보 갱신) + feature/hyerim(장바구니·마이페이지·계정별 저장·서버 주소 설정·대표 카드 설문 답). 겹친 수정(NaN·DB 문구·스크롤 다시 시도)은 하나만 남김. 개발용 데모 체형·치수 수정 화면(BodyEditActivity) 삭제는 유지 — main에서도 데모 버튼으로만 열리던 화면
-- [x] 14단계: 판매자 상품 등록 (seller_api.py, image_storage.py, store.add_product, 앱 판매자 센터·상품 등록 화면) — test_seller 19개, 앱 단위 테스트 8개 추가
+- [x] 14단계: 판매자 상품 등록 (seller_api.py, image_storage.py, store.add_product, 앱 판매자 센터·상품 등록 화면) — test_seller 20개, 앱 단위 테스트 8개 추가
 - [ ] 판매자 상품 등록 마무리: API 인증, 상품 수정·삭제·품절, 앱 홈·상세에서 등록 상품의 사이즈·치수 사용, Supabase 키·DB 연결 후 실제 등록 확인, 판매자 권한(DB)
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
