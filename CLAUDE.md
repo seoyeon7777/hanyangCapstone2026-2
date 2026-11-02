@@ -219,7 +219,8 @@ match_score(body, item) -> {
   - 연결 실패 → StoreError → API 503 `{"ok": false, "error": "DB에 잠시 연결할 수 없어요. 잠시 후 다시 시도해 주세요"}` (자세한 원인은 서버 로그에만). psycopg는 `prepare_threshold=None`(Supabase 풀러 대응)
   - 연결 풀: 연결을 최대 `DB_POOL_SIZE`(4)개 열어 두고 요청마다 빌려 씀 (예전에는 하나를 모두가 차례로 써서 동시 6명이면 3.4초 → 지금 0.3초, 왕복 80ms 가정). 끊긴 연결은 버리고 새 연결로 한 번 다시
   - DB 왕복 줄이기: 읽기는 트랜잭션 없이, 사용자+현재 체형은 한 쿼리. API는 체형이 바뀌었을 때만 save_body하고 저장 뒤 사용자를 다시 읽지 않는다(event도 응답 pref를 직접 계산) → 스크롤 13번 → 2번, 찜 13번 → 3번 (PostgreSQL 로그로 셈)
-- 응답 상품에 DB의 `price`, `brand`, `image_url`을 더해 보낸다 (`feed_api.for_screen`). feed.py 결과 모양은 그대로
+- 응답 상품에 DB의 `price`, `brand`, `image_url`과 모든 상품의 `seasons`를 더해 보낸다 (`feed_api.for_screen`). feed.py 결과 모양은 그대로
+  - `seasons`는 11/03 추가: 앱 카테고리 화면의 계절 필터가 상품의 seasons로 거르는데, 서버가 안 보내서 계절을 고르면 서버 상품이 전부 사라졌다 (`test_items_carry_seasons_for_app_filter`)
 - 앱(RecommendApi.toProduct)은 응답의 price·brand를 카드에 쓴다 (없으면 가격 숨김·브랜드 자리에 종류). image_url은 아직 안 씀 (사진 불러오기 라이브러리 필요)
 
 ### 4-11. 안드로이드 카메라·치수 변경 (10/21)
@@ -273,7 +274,7 @@ match_score(body, item) -> {
 `python -m pytest` (맨 위에서) — 255개 중 253개 통과 (`tests/test_a_connection.py`의 2개는 main에서도 실패 중, B 담당. pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 28개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_api.py` — 현재 29개 통과 (Flask 필요: `pip install -r requirements.txt`).
 `TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 10개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
