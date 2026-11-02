@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.example.capstone.data.AccountPrefs;
+import com.example.capstone.data.CartStore;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.ProfilePhotoStore;
@@ -69,6 +70,7 @@ public final class LoginSession {
         for (String from : new String[]{oldPhone, oldPhone.replaceAll("[^0-9]", "")}) {
             BodyProfileStore.adoptAccount(context, from, to);
             AccountPrefs.adoptAccount(context, from, to);
+            CartStore.adoptAccount(context, from, to);
             ProfilePhotoStore.adoptAccount(context, from, to);
         }
     }

@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
 import com.example.capstone.adapter.CartAdapter;
+import com.example.capstone.data.CartStore;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.Product;
@@ -173,9 +174,7 @@ public class CartActivity extends AppCompatActivity {
 
             boolean checked = selectAllCheck.isChecked();
 
-            for (Product product : cartProducts) {
-                product.setCartSelected(checked);
-            }
+            CartStore.setAllSelected(this, checked);
 
             showCartProducts();
         });
@@ -338,7 +337,7 @@ public class CartActivity extends AppCompatActivity {
 
         for (Product product : DummyData.getProducts()) {
 
-            if (product.isInCart()) continue;
+            if (CartStore.contains(this, product)) continue;
             if (added >= 6) break;
 
             added++;
@@ -540,10 +539,7 @@ public class CartActivity extends AppCompatActivity {
             int totalPrice = 0;
             List<Product> ordered = new ArrayList<>();
 
-            for (Product product : DummyData.getProducts()) {
-
-                if (!product.isInCart()) continue;
-                if (!product.isCartSelected()) continue;
+            for (Product product : CartStore.selectedLines(this)) {
 
                 int quantity = product.getCartQuantity();
 
@@ -576,12 +572,17 @@ public class CartActivity extends AppCompatActivity {
 
             final String names = productNames.toString();
             final String option = DummyData.orderedOptionText(ordered);
+            // 주문할 장바구니 줄 번호. 결제를 마치면 이 줄만 장바구니에서 빠진다
+            final long[] lineIds = new long[ordered.size()];
+            for (int i = 0; i < lineIds.length; i++) {
+                lineIds[i] = ordered.get(i).getCartLineId();
+            }
             final int quantity = totalQuantity;
             final int price = totalPrice;
 
             // 기존 체형 적합도 경고 유지
             List<FitResult> warnings =
-                    SizeFitChecker.checkCart();
+                    SizeFitChecker.checkCart(this);
 
             if (!warnings.isEmpty()) {
 
@@ -590,14 +591,14 @@ public class CartActivity extends AppCompatActivity {
                         warnings,
                         SizeWarningDialog.Action.ORDER,
                         () -> goOrder(
-                                names, option, quantity, price
+                                names, option, quantity, price, lineIds
                         )
                 );
 
                 return;
             }
 
-            goOrder(names, option, quantity, price);
+            goOrder(names, option, quantity, price, lineIds);
         });
     }
 
@@ -606,13 +607,16 @@ public class CartActivity extends AppCompatActivity {
             String productNames,
             String productOption,
             int totalQuantity,
-            int totalPrice
+            int totalPrice,
+            long[] lineIds
     ) {
 
         Intent intent = new Intent(
                 CartActivity.this,
                 OrderActivity.class
         );
+
+        intent.putExtra(OrderActivity.EXTRA_CART_LINE_IDS, lineIds);
 
         intent.putExtra(
                 "productNames", productNames
@@ -643,9 +647,8 @@ public class CartActivity extends AppCompatActivity {
         int totalPrice = 0;
         int selectedCount = 0;
 
-        for (Product product : DummyData.getProducts()) {
-
-            if (!product.isInCart()) continue;
+        // 앱을 꺼도 남는 계정별 장바구니 (같은 상품도 옵션이 다르면 줄이 따로)
+        for (Product product : CartStore.lines(this)) {
 
             int quantity = product.getCartQuantity();
 

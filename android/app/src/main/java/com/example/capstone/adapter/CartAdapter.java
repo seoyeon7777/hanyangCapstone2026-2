@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.R;
+import com.example.capstone.data.CartStore;
 import com.example.capstone.data.Product;
 import com.example.capstone.ui.ProductOptionSheet;
 
@@ -66,7 +67,8 @@ public class CartAdapter
 
         holder.cbSelect.setOnClickListener(v -> {
 
-            product.setCartSelected(holder.cbSelect.isChecked());
+            // 장바구니 값은 CartStore로 바꾼다 (그래야 앱을 꺼도 남는다)
+            CartStore.setSelected(v.getContext(), product, holder.cbSelect.isChecked());
             notifyCartChanged();
         });
 
@@ -80,13 +82,19 @@ public class CartAdapter
                         "옵션 변경",
                         (size, color, quantity) -> {
 
-                            product.setSelectedSize(size);
-                            product.setSelectedColor(color);
-                            product.setCartQuantity(quantity);
+                            // 바꾼 옵션이 이미 다른 줄에 있으면 CartStore가 그 줄로 합친다
+                            boolean sameAsNow = size.equals(product.getSelectedSize())
+                                    && color.equals(product.getSelectedColor());
+                            boolean merged = !sameAsNow
+                                    && CartStore.containsOption(v.getContext(), product, size, color);
+
+                            CartStore.changeOption(v.getContext(), product, size, color, quantity);
 
                             Toast.makeText(
                                     v.getContext(),
-                                    "옵션을 " + size + " / " + color
+                                    merged
+                                            ? "같은 옵션(" + size + " / " + color + ")이 이미 있어서 수량을 합쳤습니다."
+                                            : "옵션을 " + size + " / " + color
                                             + " / " + quantity + "개로 변경했습니다.",
                                     Toast.LENGTH_SHORT
                             ).show();
@@ -132,7 +140,11 @@ public class CartAdapter
 
             int quantity = product.getCartQuantity();
 
-            product.setCartQuantity(quantity + 1);
+            if (quantity >= CartStore.MAX_QUANTITY) {
+                return;
+            }
+
+            CartStore.setQuantity(v.getContext(), product, quantity + 1);
 
             holder.textQuantity.setText(
                     String.valueOf(product.getCartQuantity())
@@ -149,7 +161,7 @@ public class CartAdapter
 
             if (quantity > 1) {
 
-                product.setCartQuantity(quantity - 1);
+                CartStore.setQuantity(v.getContext(), product, quantity - 1);
 
                 holder.textQuantity.setText(
                         String.valueOf(product.getCartQuantity())
@@ -174,7 +186,7 @@ public class CartAdapter
             Product currentProduct =
                     cartList.get(currentPosition);
 
-            currentProduct.removeFromCart();
+            CartStore.remove(v.getContext(), currentProduct);
 
             cartList.remove(currentPosition);
 

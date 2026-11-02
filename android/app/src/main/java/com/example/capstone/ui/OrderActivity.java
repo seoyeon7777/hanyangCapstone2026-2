@@ -20,9 +20,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.widget.NestedScrollView;
 
 import com.example.capstone.R;
-import com.example.capstone.data.DummyData;
+import com.example.capstone.data.CartStore;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.MyPageStore;
+import com.example.capstone.data.Product;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.SizeFitChecker;
 import com.example.capstone.data.CheckoutCoupons;
@@ -30,10 +31,16 @@ import com.example.capstone.mypage.DeliveryAddressActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 public class OrderActivity extends AppCompatActivity {
+
+    /** 장바구니에서 주문할 때: 주문하는 장바구니 줄 번호 (long[]). 결제를 마치면 이 줄만 장바구니에서 뺀다 */
+    public static final String EXTRA_CART_LINE_IDS = "cart_line_ids";
+    /** 상세 화면 "바로 구매"일 때: 그 상품의 서버 번호 (서버 상품만). 장바구니는 건드리지 않는다 */
+    public static final String EXTRA_BUY_NOW_SERVER_ID = "buy_now_server_id";
 
     private TextView btnBack;
     private TextView tvProductName;
@@ -351,8 +358,8 @@ public class OrderActivity extends AppCompatActivity {
             return;
         }
 
-        // 결제 직전 사이즈 주의 팝업
-        List<FitResult> warnings = SizeFitChecker.checkCart();
+        // 결제 직전 사이즈 주의 팝업 (주문하는 장바구니 줄만. 바로 구매는 상세 화면에서 이미 확인했다)
+        List<FitResult> warnings = SizeFitChecker.checkLines(orderedLines());
 
         if (!warnings.isEmpty()) {
 
@@ -367,6 +374,11 @@ public class OrderActivity extends AppCompatActivity {
         }
 
         completeOrder();
+    }
+
+    /** 이번에 주문하는 장바구니 줄 (바로 구매면 빈 목록) */
+    private List<Product> orderedLines() {
+        return CartStore.linesById(this, getIntent().getLongArrayExtra(EXTRA_CART_LINE_IDS));
     }
 
     private String orderOption() {
@@ -411,11 +423,21 @@ public class OrderActivity extends AppCompatActivity {
         // 주문 저장
         MyPageStore.addOrder(newOrder);
 
-        // 구매는 추천 학습에 반영 (장바구니의 서버 상품마다 purchase, 반품 때 쓰려고 주문번호와 함께 저장)
-        RecommendApi.recordPurchase(this, orderNo);
+        // 구매는 추천 학습에 반영 (주문한 서버 상품마다 purchase, 반품 때 쓰려고 주문번호와 함께 저장)
+        List<String> serverIds = new ArrayList<>();
+        for (Product line : orderedLines()) {
+            if (line.isFromServer()) {
+                serverIds.add(line.getServerId());
+            }
+        }
+        String buyNowServerId = getIntent().getStringExtra(EXTRA_BUY_NOW_SERVER_ID);
+        if (buyNowServerId != null && !buyNowServerId.isEmpty()) {
+            serverIds.add(buyNowServerId);
+        }
+        RecommendApi.recordPurchase(this, orderNo, serverIds);
 
-        // 결제한 상품은 장바구니에서 뺀다
-        DummyData.removeOrderedFromCart();
+        // 결제한 줄만 장바구니에서 뺀다 (체크했지만 이번에 주문하지 않은 줄·바로 구매는 그대로)
+        CartStore.removeLines(this, getIntent().getLongArrayExtra(EXTRA_CART_LINE_IDS));
 
         // 주문 완료 화면으로 이동
         Intent intent = new Intent(

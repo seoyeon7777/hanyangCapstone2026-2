@@ -3,6 +3,7 @@ package com.example.capstone.mypage;
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.AccountPrefs;
+import com.example.capstone.data.CartStore;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.MyPageStore;
@@ -244,6 +245,7 @@ public class EditProfileActivity extends AppCompatActivity {
             BodyProfileStore.moveAccount(this, before, after);
             ProfilePhotoStore.moveAccount(this, before, after);
             AccountPrefs.moveAccount(this, before, after);
+            CartStore.moveAccount(this, before, after);
             moveMarketingSettings(before, after);
             setupMarketingSwitches();
         }

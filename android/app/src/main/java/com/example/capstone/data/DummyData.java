@@ -287,15 +287,6 @@ public class DummyData {
         return PRODUCTS;
     }
 
-    /** 결제를 마친 상품(장바구니에서 체크한 상품)을 장바구니에서 뺀다. 체크 안 한 상품은 남는다 */
-    public static void removeOrderedFromCart() {
-        for (Product product : PRODUCTS) {
-            if (product.isInCart() && product.isCartSelected()) {
-                product.removeFromCart();
-            }
-        }
-    }
-
     /** 체크한 상품들의 옵션. 한 개면 "L / NAVY", 여러 개면 "이름: L / NAVY, 이름: M / BLACK" */
     public static String orderedOptionText(List<Product> ordered) {
         if (ordered.size() == 1) {
