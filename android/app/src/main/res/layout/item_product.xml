@@ -11,17 +11,26 @@
 
     <!-- 상품 이미지 영역 -->
     <FrameLayout
+        android:id="@+id/frameProductImage"
         android:layout_width="match_parent"
         android:layout_height="220dp"
         android:background="#EEEEEE">
 
         <TextView
+            android:id="@+id/textImageLabel"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
             android:text="상품 이미지"
             android:textColor="#BBBBBB"
             android:textSize="12sp"/>
+
+        <ImageView
+            android:id="@+id/imgProduct"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:visibility="gone"/>
 
         <!-- NEW 배지 -->
         <TextView

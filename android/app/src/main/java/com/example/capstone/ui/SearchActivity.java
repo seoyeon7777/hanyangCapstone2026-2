@@ -28,6 +28,7 @@ import com.example.capstone.R;
 import com.example.capstone.adapter.ProductAdapter;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.Product;
+import com.example.capstone.data.RecommendApi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -89,6 +90,8 @@ public class SearchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_search);
+
+        RecommendApi.loadCatalog(this, null);
 
         // 메인과 같은 하단 메뉴 유지
         BottomMenu.setup(this, BottomMenu.TAB_HOME);

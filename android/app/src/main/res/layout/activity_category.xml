@@ -45,6 +45,18 @@
             android:textColor="#111111"
             android:textSize="30sp"
             android:contentDescription="검색"/>
+
+        <ImageView
+            android:id="@+id/btnCategoryCart"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="4dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_shopping_bag"
+            android:tint="#111111"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="장바구니"/>
     </LinearLayout>
 
     <!-- 세부 카테고리 -->
