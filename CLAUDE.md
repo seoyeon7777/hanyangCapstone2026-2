@@ -246,7 +246,7 @@ match_score(body, item) -> {
 ### 4-14. 앱 상품 목록·사진 정리 (11/1)
 - 서버 상품: `RecommendApi.loadCatalog`가 `/api/feed/scroll`(general 전체 + 체형이 있으면 body)로 전체 순서를 받아 `DummyData.getProducts()`에 합친다 → 카테고리·검색·신상·베스트에도 나온다. 서버 상품 id는 1000번대. 베스트=general 순서, 카테고리 추천순·홈 "전체보기"=body 순서
 - 사진: `data/ProductImages` — `image_url`이 있으면 불러오고, 없으면 종류별 색 카드
-- 상품 상세: "바로 구매"(장바구니에 담고 결제 화면으로), 사이즈 추천 문구. 장바구니·주문·쿠폰·계정은 feature/jihyun-merge(4-13) 쪽 구현을 쓴다
+- 상품 상세: "바로 구매"(11/03부터 장바구니를 거치지 않고 바로 결제 화면으로, 4-15), 사이즈 추천 문구. 주문·쿠폰·계정은 feature/jihyun-merge(4-13) 쪽 구현, 장바구니 저장은 4-15
 - 카메라 화면은 11/1 커밋에서 삭제됨(사진 선택만). CAMERA 권한·CameraX 의존성·`BodySilhouetteAnalyzer` 제거
 
 ### 4-15. 장바구니 저장 (11/03)
