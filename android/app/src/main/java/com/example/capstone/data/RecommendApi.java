@@ -76,6 +76,7 @@ public final class RecommendApi {
     private static final int SERVER_ID_BASE = 1000;
     private static final int CATALOG_PAGE_SIZE = 50;
     private static final List<String> CATALOG_ORDER = new ArrayList<>();
+    private static final List<Runnable> CATALOG_WAITERS = new ArrayList<>();
     private static final List<String> BODY_ORDER = new ArrayList<>();
     private static volatile boolean catalogLoading = false;
     private static volatile long catalogLoadedAt = 0L;
@@ -199,6 +200,15 @@ public final class RecommendApi {
         } catch (JSONException e) {
             return false;
         }
+    }
+
+    /** 서버 체형 진단 결과가 있는지 (대표 체형 카드 또는 최근 설문 결과). 답만 저장된 설문은 아니다 */
+    public static boolean hasDiagnosis(Context context) {
+
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
+
+        return (active != null && typeCode(active.bodyType) != null)
+                || BodyTypeActivity.lastSurveyType(context) >= 0;
     }
 
     /** 홈이 체형이 바뀌었는지 알아챌 때 쓰는 값 (계정 + 설문 시각 + 대표 체형 카드) */
@@ -465,8 +475,13 @@ public final class RecommendApi {
     }
 
     public static void loadCatalog(Context context, Runnable onDone) {
-        if (catalogLoading
-                || (catalogLoadedAt > 0 && System.currentTimeMillis() - catalogLoadedAt < CATALOG_REFRESH_MILLIS)) {
+        if (catalogLoading) {
+            if (onDone != null) {
+                CATALOG_WAITERS.add(onDone);
+            }
+            return;
+        }
+        if (catalogLoadedAt > 0 && System.currentTimeMillis() - catalogLoadedAt < CATALOG_REFRESH_MILLIS) {
             if (onDone != null) {
                 MAIN.post(onDone);
             }
@@ -491,6 +506,15 @@ public final class RecommendApi {
         if (onDone != null) {
             onDone.run();
         }
+        List<Runnable> waiters = new ArrayList<>(CATALOG_WAITERS);
+        CATALOG_WAITERS.clear();
+        for (Runnable waiter : waiters) {
+            waiter.run();
+        }
+    }
+
+    public static boolean isCatalogLoading() {
+        return catalogLoading;
     }
 
     private static void loadCatalogPage(Context context, String mode, List<String> shown, Runnable onDone) {
