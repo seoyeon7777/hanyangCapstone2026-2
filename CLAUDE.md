@@ -275,6 +275,7 @@ match_score(body, item) -> {
 - (11/06) 마이페이지의 "내 체형관리" 메뉴를 없애고 **하단 "체형분석" 탭 = 내 체형관리 화면(`MyBodyActivity`)** 으로 바꿨다 (`BottomMenu.TAB_FITTING`). 마이페이지에서 보던 것과 같은 목록·현재 체형 선택·이름 변경·삭제·설정에 하단 메뉴가 붙고 뒤로 버튼은 숨김. 맨 위 **"+ 새 체형 추가하기"** → `FittingActivity`(제목 "새 체형 추가", 뒤로 버튼): 키·몸무게·나이 → 설문 → 결과 화면에서 정밀 분석/이대로 저장/나가기. 비로그인은 목록 자리에 로그인 안내
   - 저장한 체형이 없으면(처음 가입·비로그인) 체형분석 탭은 바로 분석 화면(`FittingActivity`, `EXTRA_AS_TAB`: 제목 "체형 분석", 뒤로 버튼 숨김). 판단은 `BottomMenu.hasSavedBody`
   - 설문만 한 카드에는 "사진 분석 이어서 하기 ›" → `PhotoMeasurementActivity.continueIntent`(카드 id, 카드의 키) → `MeasurementSession.continueProfileId` → 측정 결과 저장 때 **그 카드에 치수를 채움**(이름·골격·설문 답은 카드 것, 새 카드 안 생김). 치수가 이미 있는 카드면 새 카드
+  - 새 체형 분석 화면(`FittingActivity`)에서 "이전 설문 불러오기"·"내 체형 피드백 보기" 버튼 삭제 (피드백은 체형 카드의 "피드백 보기")
 - (11/06) ✕·뒤로 버튼이 한 번에 안 눌리던 문제: targetSdk 35 앱은 Android 15에서 화면이 상태바 밑까지 그려져(edge-to-edge 강제) 맨 위 제목 줄이 상태바와 겹쳤다. `values-v35/themes.xml`의 `windowOptOutEdgeToEdgeEnforcement`로 API 34 이하처럼 상태바 아래에서 시작. targetSdk를 36으로 올리면 이 옵션이 안 먹으니 그때는 화면마다 여백(insets)을 줘야 한다. ✕ 버튼들에 눌림 표시, 검색 지우기 ×는 30→40dp
 
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)

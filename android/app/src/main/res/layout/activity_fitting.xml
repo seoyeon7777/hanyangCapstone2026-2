@@ -145,41 +145,6 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <!-- 지난번 답이 선택된 채로 설문을 다시 연다 -->
-            <Button
-                android:id="@+id/btnLoadSurvey"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="10dp"
-                android:backgroundTint="#EEEEEE"
-                android:text="이전 설문 불러오기"
-                android:textAllCaps="false"
-                android:textColor="#111111"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvLastSurvey"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center"
-                android:text="아직 저장된 설문이 없어요."
-                android:textColor="#888888"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/btnShowFeedback"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="10dp"
-                android:backgroundTint="#EEEEEE"
-                android:text="내 체형 피드백 보기"
-                android:textAllCaps="false"
-                android:textColor="#111111"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
             <!-- ============================= -->
             <!-- 분석 과정 안내 -->
             <!-- ============================= -->

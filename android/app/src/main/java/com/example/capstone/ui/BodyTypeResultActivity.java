@@ -132,7 +132,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
     private void confirmLeave() {
         AppDialog.show(this, false,
                 "저장하지 않고 나갈까요?",
-                "이번 결과는 '내 체형'에 저장되지 않아요. 피팅 화면의 '이전 설문 불러오기'로 다시 볼 수 있어요.",
+                "이번 결과는 '내 체형'에 저장되지 않아요.",
                 "나가기", this::finish,
                 "이대로 저장하기", this::saveSurvey);
     }
