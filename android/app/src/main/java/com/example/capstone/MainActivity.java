@@ -12,6 +12,7 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.widget.NestedScrollView;
@@ -88,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int LOAD_MORE_DISTANCE_DP = 600;
     // 스크롤 도중 다음 묶음을 못 받으면 이만큼 쉬었다가 다시 시도한다
     private static final long HOME_RETRY_DELAY_MS = 5000;
+    private static final long EXIT_BACK_WINDOW_MS = 2000;
 
     private SwitchCompat switchBodyMode;
     private TextView textHomeRecTitle;
@@ -105,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
     // 홈을 불러올 때의 체형 정보 (설문 시각 + 대표 체형). 바뀌면 다시 불러온다
     private String loadedBodyKey = "";
     private boolean bodyModeAvailable = false;
+    private long lastBackAt = 0;
 
     private final CompoundButton.OnCheckedChangeListener modeListener =
             (button, isChecked) -> {
@@ -157,6 +160,27 @@ public class MainActivity extends AppCompatActivity {
         btnRetryCatalog.setOnClickListener(v -> {
             loadCatalog();
             updateProducts();
+        });
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (!"홈".equals(selectedMenu)) {
+                    showHomeTab();
+                    return;
+                }
+                long now = SystemClock.elapsedRealtime();
+                if (lastBackAt > 0 && now - lastBackAt < EXIT_BACK_WINDOW_MS) {
+                    finish();
+                    return;
+                }
+                lastBackAt = now;
+                Toast.makeText(
+                        MainActivity.this,
+                        "뒤로 버튼을 한 번 더 누르면 종료돼요",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
         });
 
         homeScrollView.setOnScrollChangeListener(
@@ -223,6 +247,21 @@ public class MainActivity extends AppCompatActivity {
 
         updateScreen();
         loadCatalog();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        showHomeTab();
+    }
+
+    public void showHomeTab() {
+        if (!"홈".equals(selectedMenu)) {
+            selectedMenu = "홈";
+            resetFilters();
+            updateScreen();
+        }
+        homeScrollView.smoothScrollTo(0, 0);
     }
 
     private void loadCatalog() {

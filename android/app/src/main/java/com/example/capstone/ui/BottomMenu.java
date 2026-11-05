@@ -145,6 +145,9 @@ public final class BottomMenu {
         }
 
         if (activity.getClass() == target) {
+            if (activity instanceof MainActivity) {
+                ((MainActivity) activity).showHomeTab();
+            }
             return;
         }
 
