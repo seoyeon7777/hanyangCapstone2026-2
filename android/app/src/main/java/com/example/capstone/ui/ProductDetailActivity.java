@@ -222,7 +222,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
             showOptionSheet(
                     "장바구니 담기",
-                    () -> checkFitThen(this::addToCart, "장바구니 담기")
+                    () -> checkFitThen(this::addToCart, "장바구니 담기", SizeWarningDialog.Action.CART)
             );
         });
 
@@ -244,18 +244,15 @@ public class ProductDetailActivity extends AppCompatActivity {
 
                 showOptionSheet(
                         "바로 구매",
-                        () -> checkFitThen(this::buyNow, "바로 구매")
+                        () -> checkFitThen(this::buyNow, "바로 구매", SizeWarningDialog.Action.ORDER)
                 );
 
                 return;
             }
 
 
-            checkFitThen(this::buyNow, "바로 구매");
+            checkFitThen(this::buyNow, "바로 구매", SizeWarningDialog.Action.ORDER);
         });
-
-
-        textSizeRecommend.setOnClickListener(v -> showSizeRecommendation());
 
 
         // =========================
@@ -328,38 +325,18 @@ public class ProductDetailActivity extends AppCompatActivity {
             return;
         }
         UserBodyProfile profile = UserBodyProfile.getInstance();
-        if (!profile.hasMeasurement()) {
+        if (!RecommendApi.hasBodyInput(this) || !profile.hasMeasurement()) {
             textSizeRecommend.setText("체형을 측정하면 내 사이즈를 추천해 드려요  ›");
+            textSizeRecommend.setOnClickListener(v ->
+                    startActivity(new Intent(this, FittingActivity.class)));
             return;
         }
+        textSizeRecommend.setOnClickListener(null);
+        textSizeRecommend.setClickable(false);
         String recommended = SizeFitChecker.recommendSize(SizeChart.categoryOf(currentProduct), profile);
         textSizeRecommend.setText(recommended == null
                 ? "이 상품은 사이즈 비교 정보가 없어요"
-                : "내 치수 기준 추천 사이즈: " + recommended + "  ›");
-    }
-
-    private void showSizeRecommendation() {
-        UserBodyProfile profile = UserBodyProfile.getInstance();
-        if (!profile.hasMeasurement()) {
-            AppDialog.show(this, false, "체형 측정이 필요해요",
-                    "피팅 메뉴에서 키·몸무게와 전신 사진으로 치수를 재면, 상품마다 맞는 사이즈를 알려 드려요.",
-                    "닫기", null,
-                    "측정하러 가기", () -> startActivity(new Intent(this, FittingActivity.class)));
-            return;
-        }
-        String recommended = SizeFitChecker.recommendSize(SizeChart.categoryOf(currentProduct), profile);
-        if (recommended == null) {
-            AppDialog.alert(this, "사이즈 추천", "이 상품은 사이즈 비교 정보가 없어요.", "확인");
-            return;
-        }
-        AppDialog.show(this, false, "사이즈 추천",
-                "저장한 치수로 보면 " + recommended + " 사이즈가 가장 잘 맞아요.",
-                "닫기", null,
-                recommended + " 선택", () -> {
-                    selectedSize = recommended;
-                    updateOptionSummary();
-                    showOptionSheet("선택 완료", null);
-                });
+                : "내 치수 기준 추천 사이즈: " + recommended);
     }
 
 
@@ -401,7 +378,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     // 사이즈 적합도 확인 후 장바구니에 담기
     // =========================
 
-    private void checkFitThen(Runnable action, String confirmText) {
+    private void checkFitThen(Runnable action, String confirmText, SizeWarningDialog.Action warningAction) {
 
         FitResult fitResult =
                 SizeFitChecker.check(
@@ -416,7 +393,7 @@ public class ProductDetailActivity extends AppCompatActivity {
             SizeWarningDialog.show(
                     ProductDetailActivity.this,
                     fitResult,
-                    SizeWarningDialog.Action.CART,
+                    warningAction,
                     new SizeWarningDialog.OnActionListener() {
 
                         @Override
@@ -436,7 +413,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
                             showOptionSheet(
                                     confirmText,
-                                    () -> checkFitThen(action, confirmText)
+                                    () -> checkFitThen(action, confirmText, warningAction)
                             );
                         }
                     }
