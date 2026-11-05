@@ -44,6 +44,7 @@
         android:layout_marginTop="16dp"/>
 
     <TextView
+        android:id="@+id/tvGuide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="본인확인 후 새 비밀번호를 설정할 수 있습니다."
@@ -57,7 +58,7 @@
         android:id="@+id/tvContactLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="이메일주소"
+        android:text="아이디"
         android:textSize="12sp"
         android:textColor="@color/black"
         android:layout_marginBottom="6dp"/>
@@ -73,8 +74,8 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:hint="example@gmail.com"
-            android:inputType="textEmailAddress"
+            android:hint="가입한 아이디"
+            android:inputType="text"
             android:background="@drawable/bg_edit"
             android:paddingHorizontal="16dp"
             android:textSize="14sp"
@@ -101,17 +102,35 @@
         android:textColor="@color/black"
         android:layout_marginBottom="6dp"/>
 
-    <EditText
-        android:id="@+id/etAuthCode"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="인증번호를 입력해주세요."
-        android:inputType="number"
-        android:maxLength="4"
-        android:background="@drawable/bg_edit"
-        android:paddingHorizontal="16dp"
-        android:textSize="14sp"
-        android:layout_marginBottom="12dp"/>
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp">
+
+        <EditText
+            android:id="@+id/etAuthCode"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="인증번호를 입력해주세요."
+            android:inputType="number"
+            android:maxLength="4"
+            android:background="@drawable/bg_edit"
+            android:paddingStart="16dp"
+            android:paddingEnd="72dp"
+            android:textSize="14sp"/>
+
+        <!-- 인증번호 남은 시간 (인증받기를 누르면 보인다) -->
+        <TextView
+            android:id="@+id/tvTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="18dp"
+            android:textColor="#E5542F"
+            android:textSize="14sp"
+            android:visibility="gone"/>
+
+    </FrameLayout>
 
     <!-- ============ 인증확인 버튼 (인증번호 입력 시 표시) ============ -->
     <Button
@@ -151,6 +170,7 @@
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
+                android:maxLength="20"
                 android:hint="영문, 숫자, 특수문자포함 8자 이상"
                 android:inputType="textPassword"
                 android:background="@drawable/bg_edit"
@@ -186,6 +206,7 @@
                 android:id="@+id/etPasswordConfirm"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
+                android:maxLength="20"
                 android:hint="비밀번호를 한 번 더 입력해주세요"
                 android:inputType="textPassword"
                 android:background="@drawable/bg_edit"

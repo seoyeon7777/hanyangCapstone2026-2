@@ -29,8 +29,6 @@
         <activity android:name=".ui.ProductDetailActivity" />
         <activity android:name=".login.LoginMainActivity" />
         <activity android:name=".login.LoginPhoneActivity" />
-        <activity android:name=".login.LoginEmailActivity" />
-        <activity android:name=".login.SigninMainActivity" />
         <activity android:name=".login.PhoneVerifyActivity" />
         <activity android:name=".login.SigninActivity" />
         <activity android:name=".login.SigninCompleteActivity" />

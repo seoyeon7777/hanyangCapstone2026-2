@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
 import com.example.capstone.data.CartStore;
+import com.example.capstone.login.LoginGate;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.ProductImages;
 import com.example.capstone.data.RecommendApi;
@@ -190,13 +191,16 @@ public class ProductDetailActivity extends AppCompatActivity {
                 return;
             }
 
-            currentProduct.setLiked(
-                    !currentProduct.isLiked()
-            );
+            // 찜은 로그인해야 할 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 이어서 찜)
+            LoginGate.require(this, () -> {
+                currentProduct.setLiked(
+                        !currentProduct.isLiked()
+                );
 
-            // 서버 상품: 찜 상태 저장 + 추천 서버에 like
-            RecommendApi.saveLike(this, currentProduct);
-            updateHeart();
+                // 서버 상품: 찜 상태 저장 + 추천 서버에 like
+                RecommendApi.saveLike(this, currentProduct);
+                updateHeart();
+            });
         });
 
 
@@ -212,15 +216,18 @@ public class ProductDetailActivity extends AppCompatActivity {
                 return;
             }
 
-            selectedSize = "";
-            selectedColor = "";
-            selectedQuantity = 1;
-            updateOptionSummary();
+            // 장바구니는 로그인해야 쓸 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 이어서 옵션 선택)
+            LoginGate.require(this, () -> {
+                selectedSize = "";
+                selectedColor = "";
+                selectedQuantity = 1;
+                updateOptionSummary();
 
-            showOptionSheet(
-                    "장바구니 담기",
-                    () -> checkFitThen(this::addToCart, "장바구니 담기")
-            );
+                showOptionSheet(
+                        "장바구니 담기",
+                        () -> checkFitThen(this::addToCart, "장바구니 담기")
+                );
+            });
         });
 
 
@@ -236,19 +243,22 @@ public class ProductDetailActivity extends AppCompatActivity {
                 return;
             }
 
+            // 주문은 로그인해야 할 수 있다 (비회원이 주문하면 기록이 비회원 몫으로 남는다)
+            LoginGate.require(this, () -> {
 
-            if (!isOptionSelected()) {
+                if (!isOptionSelected()) {
 
-                showOptionSheet(
-                        "바로 구매",
-                        () -> checkFitThen(this::buyNow, "바로 구매")
-                );
+                    showOptionSheet(
+                            "바로 구매",
+                            () -> checkFitThen(this::buyNow, "바로 구매")
+                    );
 
-                return;
-            }
+                    return;
+                }
 
 
-            checkFitThen(this::buyNow, "바로 구매");
+                checkFitThen(this::buyNow, "바로 구매");
+            });
         });
 
 

@@ -154,7 +154,7 @@ public class LoginPhoneActivity extends AppCompatActivity {
 
         tvSignup.setOnClickListener(v -> {
             Intent intent =
-                    new Intent(LoginPhoneActivity.this, SigninMainActivity.class);
+                    new Intent(LoginPhoneActivity.this, PhoneVerifyActivity.class);
             startActivity(intent);
         });
 
