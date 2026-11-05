@@ -216,8 +216,22 @@ public final class BodyProfileStore {
         return null;
     }
 
+    /** "내 체형 N" 중 아직 안 쓴 가장 작은 번호 (지운 뒤 다시 저장해도 이름이 겹치지 않게) */
     public static String nextDefaultName(Context context) {
-        return "내 체형 " + (getProfiles(context).size() + 1);
+        List<Profile> list = getProfiles(context);
+        for (int n = list.size() + 1; ; n++) {
+            String name = "내 체형 " + n;
+            boolean used = false;
+            for (Profile p : list) {
+                if (name.equals(p.name)) {
+                    used = true;
+                    break;
+                }
+            }
+            if (!used) {
+                return name;
+            }
+        }
     }
 
     public static Profile save(Context context, String editId, String name, float heightCm,
@@ -295,50 +309,24 @@ public final class BodyProfileStore {
         syncActiveProfile(context);
     }
 
-    /**
-     * 설문을 다시 해서 서버가 새로 진단했을 때 부른다. 대표 체형 카드의 설문 답·골격 이름을 새 값으로 바꾼다.
-     * 홈은 대표 카드의 설문 답으로 추천하므로, 이걸 안 하면 결과 화면은 새 체형인데 홈은 예전 체형이 된다.
-     * 치수(parts)·이름·저장 시각은 그대로 둔다. 대표 체형이 없으면 아무것도 안 한다.
-     */
-    public static void updateActiveSurvey(Context context, int[] answers, String bodyType) {
-        String activeId = getActiveId(context);
-        if (activeId == null || answers == null) {
-            return;
-        }
-        List<Profile> list = getProfiles(context);
-        for (Profile p : list) {
-            if (activeId.equals(p.id)) {
-                p.surveyAnswers = answers.clone();
-                p.bodyType = bodyType;
-                writeProfiles(context, list);
-                return;
-            }
-        }
+    /** 저장할 수 있는 체형 개수 (배송지처럼 여러 개 저장하고 하나를 현재 체형으로 고른다) */
+    public static final int MAX_PROFILES = 10;
+
+    public static boolean canAddProfile(Context context) {
+        return getProfiles(context).size() < MAX_PROFILES;
     }
 
     /**
-     * 설문 진단이 끝났을 때 부른다. 설문만 해도 '내 체형 관리'에 체형이 남게 한다.
-     * - 대표 체형이 있으면 그 카드의 설문 답·골격 이름을 바꾼다 (치수 카드면 치수는 그대로).
-     *   설문만 한 카드면 키도 이번 설문 때 키로 바꾼다
-     * - 대표 체형이 없으면 설문만 한 카드(치수 없음)를 새로 만들어 대표로 둔다
-     * 전에는 사진 측정까지 해야 저장돼서, 설문만 하면 '저장된 체형 0개'인데 홈 추천·피드백은 설문 체형으로 나왔다.
+     * 설문 결과 화면의 "이대로 저장하기": 설문만 한 카드(치수 없음)를 **새로** 만든다.
+     * 예전 카드는 그대로 남고(여러 개 저장), 현재 체형은 설정('새 체형을 현재 체형으로 자동 선택')을 따른다.
+     * 이미 MAX_PROFILES개면 저장하지 않고 null
      */
     public static Profile saveSurvey(Context context, int[] answers, String bodyType, float heightCm) {
-        if (answers == null) {
+        if (answers == null || !canAddProfile(context)) {
             return null;
         }
-        Profile active = getActive(context);
-        if (active == null) {
-            return save(context, null, nextDefaultName(context), heightCm, 0f, bodyType,
-                    new JSONObject(), answers.clone());
-        }
-        if (active.isSurveyOnly()) {
-            return save(context, active.id, active.name,
-                    heightCm > 0f ? heightCm : active.heightCm, 0f, bodyType,
-                    new JSONObject(), answers.clone());
-        }
-        updateActiveSurvey(context, answers, bodyType);
-        return getActive(context);
+        return save(context, null, nextDefaultName(context), heightCm, 0f, bodyType,
+                new JSONObject(), answers.clone());
     }
 
     public static void syncActiveProfile(Context context) {

@@ -105,6 +105,14 @@ public class BodyTypeResultActivity extends AppCompatActivity {
             return;
         }
 
+        if (!BodyProfileStore.canAddProfile(this)) {
+            AppDialog.alert(this, "체형 저장",
+                    "체형은 최대 " + BodyProfileStore.MAX_PROFILES
+                            + "개까지 저장할 수 있어요. '내 체형 관리'에서 안 쓰는 체형을 지운 뒤 다시 저장해 주세요.",
+                    "확인");
+            return;
+        }
+
         BodyProfileStore.Profile saved = BodyTypeActivity.saveSurveyProfile(this);
 
         if (saved == null) {
@@ -136,12 +144,13 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         // 로그인하고 돌아오면: 로그인할 때 이미 저장됐다(BodyTypeActivity.adoptSurveyOnLogin) → 완료 화면으로
         if (waitingForLogin && LoginSession.isLoggedIn(this)) {
             waitingForLogin = false;
-            BodyProfileStore.Profile active = BodyProfileStore.getActive(this);
-            if (active == null) {
-                active = BodyTypeActivity.saveSurveyProfile(this);
-            }
-            if (active != null) {
-                openSaved(active);
+            // 로그인할 때 방금 저장된 카드 = 목록 맨 앞
+            java.util.List<BodyProfileStore.Profile> list = BodyProfileStore.getProfiles(this);
+            BodyProfileStore.Profile saved = list.isEmpty()
+                    ? BodyTypeActivity.saveSurveyProfile(this)
+                    : list.get(0);
+            if (saved != null) {
+                openSaved(saved);
             }
         }
     }

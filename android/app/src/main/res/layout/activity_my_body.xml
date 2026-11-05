@@ -74,7 +74,7 @@
             <TextView
                 style="@style/MyPageSubText"
                 android:layout_marginBottom="12dp"
-                android:text="대표 체형은 장바구니·주문 시 사이즈 확인에 사용돼요."
+                android:text="체형을 여러 개 저장하고 하나를 현재 체형으로 고를 수 있어요. 현재 체형은 홈 골격 맞춤 추천과 장바구니·주문 사이즈 확인에 쓰여요."
                 android:textSize="12sp" />
 
             <LinearLayout
@@ -201,7 +201,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="새 체형 대표로 자동 설정"
+                            android:text="새 체형을 현재 체형으로 자동 선택"
                             android:textColor="#333333"
                             android:textSize="13sp" />
 
@@ -209,7 +209,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="체형을 추가하면 자동으로 대표 체형이 바뀌어요"
+                            android:text="체형을 저장하면 자동으로 현재 체형이 바뀌어요"
                             android:textColor="#999999"
                             android:textSize="11sp" />
                     </LinearLayout>

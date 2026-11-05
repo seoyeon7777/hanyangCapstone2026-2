@@ -68,35 +68,67 @@ public class BodyProfileSurveyTest {
     }
 
     @Test
-    public void surveyAgainUpdatesSameCard() {
+    public void eachSaveAddsCardAndNewestBecomesCurrent() {
         LoginSession.login(context, "가", "a@test.com", "");
         finishSurvey(ANSWERS, BodyTypeActivity.TYPE_WAVE, System.currentTimeMillis());
-        BodyTypeActivity.saveSurveyProfile(context);
+        BodyProfileStore.Profile first = BodyTypeActivity.saveSurveyProfile(context);
 
         finishSurvey(NEW_ANSWERS, BodyTypeActivity.TYPE_NATURAL, System.currentTimeMillis());
-        BodyTypeActivity.saveSurveyProfile(context);
+        BodyProfileStore.Profile second = BodyTypeActivity.saveSurveyProfile(context);
 
         List<BodyProfileStore.Profile> list = BodyProfileStore.getProfiles(context);
-        assertEquals(1, list.size());                        // 새 카드가 쌓이지 않는다
+        assertEquals(2, list.size());                        // 배송지처럼 여러 개 저장
         assertEquals("내추럴", list.get(0).bodyType);
-        assertEquals(2, list.get(0).surveyAnswers[0]);
+        assertEquals("웨이브", list.get(1).bodyType);         // 예전 체형은 그대로
+        assertEquals("내 체형 1", first.name);
+        assertEquals("내 체형 2", second.name);
+        assertEquals(second.id, BodyProfileStore.getActiveId(context));   // 새 체형이 현재 체형 (기본 설정)
+
+        BodyProfileStore.setActive(context, first.id);       // '내 체형 관리'에서 예전 체형을 현재 체형으로 선택
+        assertEquals("웨이브", BodyProfileStore.getActive(context).bodyType);
+        assertEquals(ANSWERS[2], BodyProfileStore.getActive(context).surveyAnswers[2]);   // 홈 추천도 이 답으로
     }
 
     @Test
-    public void surveyKeepsMeasuredCardParts() throws Exception {
+    public void newSaveKeepsCurrentWhenAutoSelectOff() throws Exception {
         LoginSession.login(context, "가", "a@test.com", "");
         JSONObject parts = new JSONObject();
         parts.put("SHOULDER", 40.0);
-        BodyProfileStore.save(context, null, "측정", 165f, 0f, "스트레이트", parts, ANSWERS);
+        BodyProfileStore.Profile measured =
+                BodyProfileStore.save(context, null, "측정", 165f, 0f, "스트레이트", parts, ANSWERS);
+        BodyProfileStore.setSetting(context, BodyProfileStore.SETTING_AUTO_ACTIVE, false);
 
         finishSurvey(NEW_ANSWERS, BodyTypeActivity.TYPE_WAVE, System.currentTimeMillis());
         BodyTypeActivity.saveSurveyProfile(context);
 
-        List<BodyProfileStore.Profile> list = BodyProfileStore.getProfiles(context);
-        assertEquals(1, list.size());
-        assertEquals("웨이브", list.get(0).bodyType);
-        assertEquals(40f, list.get(0).part("SHOULDER"), 0.01f);   // 치수는 그대로
-        assertFalse(list.get(0).isSurveyOnly());
+        assertEquals(2, BodyProfileStore.getProfiles(context).size());
+        BodyProfileStore.Profile current = BodyProfileStore.getActive(context);
+        assertEquals(measured.id, current.id);                // 자동 선택을 끄면 현재 체형 유지
+        assertEquals(40f, current.part("SHOULDER"), 0.01f);   // 치수 카드도 그대로
+    }
+
+    @Test
+    public void atMostTenProfiles() {
+        LoginSession.login(context, "가", "a@test.com", "");
+        finishSurvey(ANSWERS, BodyTypeActivity.TYPE_WAVE, System.currentTimeMillis());
+        for (int i = 0; i < BodyProfileStore.MAX_PROFILES; i++) {
+            assertNotNull(BodyTypeActivity.saveSurveyProfile(context));
+        }
+        assertFalse(BodyProfileStore.canAddProfile(context));
+        assertEquals(null, BodyTypeActivity.saveSurveyProfile(context));
+        assertEquals(BodyProfileStore.MAX_PROFILES, BodyProfileStore.getProfiles(context).size());
+    }
+
+    @Test
+    public void defaultNameSkipsUsedNumbers() {
+        LoginSession.login(context, "가", "a@test.com", "");
+        finishSurvey(ANSWERS, BodyTypeActivity.TYPE_WAVE, System.currentTimeMillis());
+        BodyProfileStore.Profile one = BodyTypeActivity.saveSurveyProfile(context);
+        BodyTypeActivity.saveSurveyProfile(context);           // 내 체형 2
+        BodyProfileStore.setActive(context, null);
+        BodyProfileStore.delete(context, one.id);              // 1번을 지우면 목록 1개
+
+        assertEquals("내 체형 3", BodyTypeActivity.saveSurveyProfile(context).name);   // "내 체형 2"와 안 겹침
     }
 
     @Test

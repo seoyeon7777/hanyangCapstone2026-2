@@ -519,13 +519,18 @@ public class MeasurementResultActivity extends AppCompatActivity {
         String bodyType = surveyTypeLabel();
         int[] surveyAnswers = BodyTypeActivity.lastSurveyAnswers(this);
 
-        // 대표 체형이 설문만 한 카드면 새 카드를 만들지 않고 그 카드에 치수를 채운다 (같은 체형이 두 장 생기지 않게)
-        BodyProfileStore.Profile active = BodyProfileStore.getActive(this);
-        final String editId = active != null && active.isSurveyOnly() ? active.id : null;
+        // 체형은 저장할 때마다 새 카드로 남는다 (여러 개 저장하고 '내 체형 관리'에서 현재 체형을 고름)
+        if (!BodyProfileStore.canAddProfile(this)) {
+            AppDialog.alert(this, "체형 저장",
+                    "체형은 최대 " + BodyProfileStore.MAX_PROFILES
+                            + "개까지 저장할 수 있어요. '내 체형 관리'에서 안 쓰는 체형을 지운 뒤 다시 저장해 주세요.",
+                    "확인");
+            return;
+        }
+        final String editId = null;
 
-        String defaultName = editId != null
-                ? active.name
-                : BodyProfileStore.nextDefaultName(this);
+        String defaultName =
+                BodyProfileStore.nextDefaultName(this);
 
         BodySaveConfirmDialog.show(this, heightCm, bodyType, parts, defaultName,
                 new BodySaveConfirmDialog.Listener() {

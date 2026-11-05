@@ -45,7 +45,7 @@
             android:background="@drawable/bg_badge_black"
             android:paddingHorizontal="6dp"
             android:paddingVertical="2dp"
-            android:text="대표"
+            android:text="현재 체형"
             android:textColor="#FFFFFF"
             android:textSize="11sp" />
 
@@ -116,7 +116,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_dialog_btn_light"
             android:gravity="center"
-            android:text="대표로 설정"
+            android:text="현재 체형으로 선택"
             android:textColor="#111111"
             android:textSize="13sp"
             android:textStyle="bold" />

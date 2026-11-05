@@ -127,19 +127,19 @@ public class MyBodyActivity extends AppCompatActivity {
         boolean skipActive = targets.size() < selectedIds.size();
         if (targets.isEmpty()) {
             AppDialog.alert(this, "선택 삭제",
-                    "대표 체형은 삭제할 수 없어요. 다른 체형을 대표로 설정한 뒤 삭제해 주세요.", "확인");
+                    "현재 체형은 삭제할 수 없어요. 다른 체형을 현재 체형으로 선택한 뒤 삭제해 주세요.", "확인");
             return;
         }
         String message = "선택한 체형 " + targets.size() + "개를 삭제하시겠습니까?";
         if (skipActive) {
-            message += "\n대표 체형은 삭제되지 않아요.";
+            message += "\n현재 체형은 삭제되지 않아요.";
         }
         MyPageUi.confirm(this, "선택 삭제", message, () -> {
             for (String id : targets) {
                 BodyProfileStore.delete(this, id);
             }
             Toast.makeText(this, "체형 " + targets.size() + "개를 삭제했어요."
-                            + (skipActive ? " 대표 체형은 제외했어요." : ""),
+                            + (skipActive ? " 현재 체형은 제외했어요." : ""),
                     Toast.LENGTH_SHORT).show();
             setSelectMode(false);
         });
@@ -224,13 +224,11 @@ public class MyBodyActivity extends AppCompatActivity {
         });
 
         TextView btnSetActive = card.findViewById(R.id.btnSetActive);
-        btnSetActive.setText(active ? "대표 체형" : "대표로 설정");
+        btnSetActive.setText(active ? "현재 체형" : "현재 체형으로 선택");
         btnSetActive.setEnabled(!active);
         btnSetActive.setAlpha(active ? 0.5f : 1f);
         btnSetActive.setOnClickListener(v -> {
-            BodyProfileStore.setActive(this, profile.id);
-            Toast.makeText(this, "'" + profile.name + "'을(를) 대표 체형으로 설정했어요.", Toast.LENGTH_SHORT).show();
-            loadProfiles();
+            selectAsCurrent(profile);
         });
 
         CheckBox cbSelect = card.findViewById(R.id.cbSelect);
@@ -239,6 +237,14 @@ public class MyBodyActivity extends AppCompatActivity {
         card.findViewById(R.id.tvRename).setVisibility(selectMode ? View.GONE : View.VISIBLE);
         card.findViewById(R.id.tvDelete).setVisibility(selectMode ? View.GONE : View.VISIBLE);
         card.findViewById(R.id.layoutProfileActions).setVisibility(selectMode ? View.GONE : View.VISIBLE);
+        if (!selectMode) {
+            // 배송지처럼: 카드를 누르면 그 체형을 현재 체형으로 고른다
+            card.setOnClickListener(v -> {
+                if (!active) {
+                    selectAsCurrent(profile);
+                }
+            });
+        }
         if (selectMode) {
             card.setOnClickListener(v -> {
                 if (!selectedIds.remove(profile.id)) {
@@ -253,7 +259,7 @@ public class MyBodyActivity extends AppCompatActivity {
         card.findViewById(R.id.tvDelete).setOnClickListener(v -> {
             if (active) {
                 AppDialog.alert(this, "체형 삭제",
-                        "대표 체형은 삭제할 수 없어요. 다른 체형을 대표로 설정한 뒤 삭제해 주세요.", "확인");
+                        "현재 체형은 삭제할 수 없어요. 다른 체형을 현재 체형으로 선택한 뒤 삭제해 주세요.", "확인");
                 return;
             }
             MyPageUi.confirm(this, "체형 삭제", "'" + profile.name + "'을(를) 삭제하시겠습니까?", () -> {
@@ -261,6 +267,13 @@ public class MyBodyActivity extends AppCompatActivity {
                 loadProfiles();
             });
         });
+    }
+
+    private void selectAsCurrent(BodyProfileStore.Profile profile) {
+        BodyProfileStore.setActive(this, profile.id);
+        Toast.makeText(this, "'" + profile.name + "'을(를) 현재 체형으로 선택했어요. 홈 추천도 이 체형으로 바뀌어요.",
+                Toast.LENGTH_SHORT).show();
+        loadProfiles();
     }
 
     private void openFeedback(BodyProfileStore.Profile profile) {
