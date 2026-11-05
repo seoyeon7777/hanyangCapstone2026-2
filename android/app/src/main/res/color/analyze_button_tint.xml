@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 사진 두 장을 고르기 전(버튼 꺼짐)에는 회색으로 보여서 누를 수 없다는 걸 알 수 있게 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#C8C8C8" android:state_enabled="false" />
+    <item android:color="#000000" />
+</selector>

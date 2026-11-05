@@ -65,6 +65,11 @@ public final class BodyProfileStore {
             return parts == null ? -1f : (float) parts.optDouble(key, -1d);
         }
 
+        /** 설문만 하고 사진 측정은 안 한 체형 (치수가 없다) */
+        public boolean isSurveyOnly() {
+            return parts == null || parts.length() == 0;
+        }
+
         public String savedDate() {
             SimpleDateFormat format = new SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.KOREA);
             format.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
@@ -309,6 +314,31 @@ public final class BodyProfileStore {
                 return;
             }
         }
+    }
+
+    /**
+     * 설문 진단이 끝났을 때 부른다. 설문만 해도 '내 체형 관리'에 체형이 남게 한다.
+     * - 대표 체형이 있으면 그 카드의 설문 답·골격 이름을 바꾼다 (치수 카드면 치수는 그대로).
+     *   설문만 한 카드면 키도 이번 설문 때 키로 바꾼다
+     * - 대표 체형이 없으면 설문만 한 카드(치수 없음)를 새로 만들어 대표로 둔다
+     * 전에는 사진 측정까지 해야 저장돼서, 설문만 하면 '저장된 체형 0개'인데 홈 추천·피드백은 설문 체형으로 나왔다.
+     */
+    public static Profile saveSurvey(Context context, int[] answers, String bodyType, float heightCm) {
+        if (answers == null) {
+            return null;
+        }
+        Profile active = getActive(context);
+        if (active == null) {
+            return save(context, null, nextDefaultName(context), heightCm, 0f, bodyType,
+                    new JSONObject(), answers.clone());
+        }
+        if (active.isSurveyOnly()) {
+            return save(context, active.id, active.name,
+                    heightCm > 0f ? heightCm : active.heightCm, 0f, bodyType,
+                    new JSONObject(), answers.clone());
+        }
+        updateActiveSurvey(context, answers, bodyType);
+        return getActive(context);
     }
 
     public static void syncActiveProfile(Context context) {

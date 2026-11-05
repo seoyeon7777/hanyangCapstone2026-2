@@ -20,6 +20,7 @@ import com.example.capstone.R;
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.RecommendApi;
+import com.example.capstone.login.LoginSession;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
@@ -410,13 +411,9 @@ public class BodyTypeActivity extends AppCompatActivity {
 
                         saveLastSurvey(resultType);
 
-                        // 대표 체형 카드도 새 설문으로 바꾼다 (홈은 대표 카드의 설문 답으로 추천하므로,
-                        // 안 바꾸면 결과 화면과 홈 체형이 달라진다)
-                        BodyProfileStore.updateActiveSurvey(
-                                BodyTypeActivity.this,
-                                selectedAnswers,
-                                skeletonLabel(resultType)
-                        );
+                        // 설문만 해도 체형을 저장한다: 대표 카드가 있으면 그 카드의 설문 답·골격을 바꾸고,
+                        // 없으면 설문만 한 카드를 새로 만든다 (홈은 대표 카드로 추천하므로 결과 화면과 같아진다)
+                        saveSurveyProfile(BodyTypeActivity.this);
 
                         Intent intent =
                                 new Intent(
@@ -466,7 +463,34 @@ public class BodyTypeActivity extends AppCompatActivity {
         );
     }
 
-    /** 서버 체형 코드 S / W / N → TYPE_ 값 */
+    /**
+     * 최근 설문(서버 진단까지 끝난 것)을 '내 체형 관리' 카드로 저장한다. 로그인했을 때만 (체형 카드는 계정에 저장).
+     * 비로그인으로 한 설문은 로그인할 때 adoptSurveyOnLogin이 카드로 만든다.
+     */
+    public static void saveSurveyProfile(Context context) {
+
+        if (!LoginSession.isLoggedIn(context)) {
+            return;
+        }
+
+        int[] answers = lastSurveyAnswers(context);
+        int type = lastSurveyType(context);
+
+        if (answers == null || type < 0) {
+            return;     // 답이 없거나 아직 진단 전
+        }
+
+        BodyProfileStore.saveSurvey(context, answers, skeletonLabel(type), lastSurveyHeight(context));
+    }
+
+    /** 로그인 직후: 저장된 체형이 하나도 없고 진단까지 끝난 설문이 있으면 그 설문을 카드로 만든다 */
+    public static void adoptSurveyOnLogin(Context context) {
+
+        if (BodyProfileStore.getProfiles(context).isEmpty()) {
+            saveSurveyProfile(context);
+        }
+    }
+
     /** 대표 체형 카드에 저장하는 골격 이름 (MeasurementResultActivity와 같은 글자) */
     private static String skeletonLabel(int type) {
 
@@ -481,6 +505,7 @@ public class BodyTypeActivity extends AppCompatActivity {
         }
     }
 
+    /** 서버 체형 코드 S / W / N → TYPE_ 값 */
     private static int typeOf(String primary) {
 
         switch (primary) {

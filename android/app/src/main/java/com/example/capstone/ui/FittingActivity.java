@@ -44,7 +44,8 @@ public class FittingActivity extends AppCompatActivity {
     private void showFeedback() {
         BodyProfileStore.Profile active = BodyProfileStore.getActive(this);
 
-        if (active != null && active.parts != null && active.parts.length() > 0) {
+        // 대표 체형이 있으면(설문만 한 카드도) 그 카드로 보여 준다 → '내 체형 관리'와 같은 체형
+        if (active != null) {
             startActivity(BodyFeedbackActivity.profileIntent(this, active));
         } else if (BodyTypeActivity.hasLastSurvey(this)) {
             startActivity(BodyFeedbackActivity.surveyIntent(this));
