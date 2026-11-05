@@ -108,6 +108,26 @@ public class BodyProfileSurveyTest {
     }
 
     @Test
+    public void continuePhotoFillsSameSurveyCard() throws Exception {
+        // 설문 카드에서 "사진 분석 이어서 하기" → MeasurementResultActivity가 그 카드 id로 저장 (새 카드 안 생김)
+        LoginSession.login(context, "가", "a@test.com", "");
+        finishSurvey(ANSWERS, BodyTypeActivity.TYPE_WAVE, System.currentTimeMillis());
+        BodyProfileStore.Profile card = BodyTypeActivity.saveSurveyProfile(context);
+        assertTrue(card.isSurveyOnly());
+
+        JSONObject parts = new JSONObject();
+        parts.put("SHOULDER", 38.5);
+        BodyProfileStore.save(context, card.id, card.name, 165f, 0f, card.bodyType, parts, card.surveyAnswers);
+
+        List<BodyProfileStore.Profile> list = BodyProfileStore.getProfiles(context);
+        assertEquals(1, list.size());
+        assertEquals(card.id, list.get(0).id);
+        assertFalse(list.get(0).isSurveyOnly());
+        assertEquals("웨이브", list.get(0).bodyType);
+        assertEquals(38.5f, list.get(0).part("SHOULDER"), 0.01f);
+    }
+
+    @Test
     public void atMostTenProfiles() {
         LoginSession.login(context, "가", "a@test.com", "");
         finishSurvey(ANSWERS, BodyTypeActivity.TYPE_WAVE, System.currentTimeMillis());

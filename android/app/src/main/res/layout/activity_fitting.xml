@@ -40,6 +40,7 @@
                     android:tint="#000000" />
 
                 <TextView
+                    android:id="@+id/tvFittingTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"

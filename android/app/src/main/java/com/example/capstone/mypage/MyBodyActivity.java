@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
 import com.example.capstone.R;
+import com.example.capstone.data.BodyInput;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.login.LoginMainActivity;
 import com.example.capstone.ui.BottomMenu;
@@ -24,6 +25,7 @@ import com.example.capstone.ui.AppDialog;
 import com.example.capstone.ui.BodyFeedbackActivity;
 import com.example.capstone.ui.BodyValueTable;
 import com.example.capstone.ui.FittingActivity;
+import com.example.capstone.ui.PhotoMeasurementActivity;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -221,14 +223,19 @@ public class MyBodyActivity extends AppCompatActivity {
         }
 
         TextView tvToggle = card.findViewById(R.id.tvToggleDetail);
-        tvToggle.setVisibility(surveyOnly ? View.GONE : View.VISIBLE);
-        tvToggle.setText(expanded ? "간단히 보기 ⌃" : "전체 치수 보기 ⌄");
-        tvToggle.setOnClickListener(v -> {
-            if (!expandedIds.remove(profile.id)) {
-                expandedIds.add(profile.id);
-            }
-            loadProfiles();
-        });
+        if (surveyOnly) {
+            // 설문만 한 체형 → 사진 분석을 이어서 하면 이 카드에 치수가 채워진다
+            tvToggle.setText("사진 분석 이어서 하기 ›");
+            tvToggle.setOnClickListener(v -> continuePhoto(profile));
+        } else {
+            tvToggle.setText(expanded ? "간단히 보기 ⌃" : "전체 치수 보기 ⌄");
+            tvToggle.setOnClickListener(v -> {
+                if (!expandedIds.remove(profile.id)) {
+                    expandedIds.add(profile.id);
+                }
+                loadProfiles();
+            });
+        }
 
         TextView btnSetActive = card.findViewById(R.id.btnSetActive);
         btnSetActive.setText(active ? "현재 체형" : "현재 체형으로 선택");
@@ -274,6 +281,16 @@ public class MyBodyActivity extends AppCompatActivity {
                 loadProfiles();
             });
         });
+    }
+
+    private void continuePhoto(BodyProfileStore.Profile profile) {
+        float height = profile.heightCm > 0f ? profile.heightCm : BodyInput.height(this);
+        if (height < 100f || height > 230f) {
+            Toast.makeText(this, "키 정보가 없어요. '새 체형 추가하기'에서 키를 입력해 주세요.",
+                    Toast.LENGTH_LONG).show();
+            return;
+        }
+        startActivity(PhotoMeasurementActivity.continueIntent(this, profile.id, height));
     }
 
     private void selectAsCurrent(BodyProfileStore.Profile profile) {

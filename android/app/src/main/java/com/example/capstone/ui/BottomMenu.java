@@ -93,6 +93,12 @@ public final class BottomMenu {
         }
     }
 
+    /** 로그인했고 저장한 체형이 하나라도 있으면 true */
+    static boolean hasSavedBody(Activity activity) {
+        return LoginSession.isLoggedIn(activity)
+                && !com.example.capstone.data.BodyProfileStore.getProfiles(activity).isEmpty();
+    }
+
     public static void openCart(Activity activity) {
         activity.startActivity(
                 new Intent(activity, CartActivity.class)
@@ -131,8 +137,23 @@ public final class BottomMenu {
                 break;
 
             case TAB_FITTING:
-                // 체형분석 탭 = 저장한 체형 목록(예전 마이페이지 '내 체형관리'). 새 분석은 그 화면의 "새 체형 추가하기"
-                target = com.example.capstone.mypage.MyBodyActivity.class;
+                // 체형분석 탭: 저장한 체형이 있으면 체형 목록(예전 마이페이지 '내 체형관리'),
+                // 없으면(처음 가입한 사람·비로그인) 바로 새 분석 화면
+                if (hasSavedBody(activity)) {
+                    target = com.example.capstone.mypage.MyBodyActivity.class;
+                } else {
+                    if (activity.getClass() == FittingActivity.class) {
+                        return;
+                    }
+                    Intent first = new Intent(activity, FittingActivity.class)
+                            .putExtra(FittingActivity.EXTRA_AS_TAB, true)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    activity.startActivity(first);
+                    if (!(activity instanceof MainActivity)) {
+                        activity.finish();
+                    }
+                    return;
+                }
                 break;
 
             case TAB_CART:

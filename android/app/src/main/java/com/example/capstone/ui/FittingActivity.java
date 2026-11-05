@@ -2,6 +2,7 @@ package com.example.capstone.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,6 +19,9 @@ import com.example.capstone.data.BodyProfileStore;
 /** 팀원 피팅 진입: 키·몸무게·나이 → 체형 자가진단. */
 public class FittingActivity extends AppCompatActivity {
 
+    /** true면 체형분석 탭의 첫 화면(저장한 체형이 없을 때)으로 연 것 → 뒤로 버튼을 숨기고 제목 "체형 분석" */
+    public static final String EXTRA_AS_TAB = "fitting_as_tab";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,6 +35,20 @@ public class FittingActivity extends AppCompatActivity {
         findViewById(R.id.btnShowFeedback).setOnClickListener(v -> showFeedback());
         // 체형분석 탭(내 체형관리)으로 돌아가기
         findViewById(R.id.btnFittingBack).setOnClickListener(v -> finish());
+        applyTabMode(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        applyTabMode(intent);
+    }
+
+    private void applyTabMode(Intent intent) {
+        boolean asTab = intent.getBooleanExtra(EXTRA_AS_TAB, false);
+        findViewById(R.id.btnFittingBack).setVisibility(asTab ? View.INVISIBLE : View.VISIBLE);
+        ((TextView) findViewById(R.id.tvFittingTitle)).setText(asTab ? "체형 분석" : "새 체형 추가");
     }
 
     @Override
