@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
+import com.example.capstone.login.LoginGate;
 import com.example.capstone.login.LoginMainActivity;
 import com.example.capstone.login.LoginSession;
 import com.example.capstone.login.MyPageActivity;
@@ -100,12 +101,19 @@ public final class BottomMenu {
     }
 
     public static void openCart(Activity activity) {
-        activity.startActivity(
+        // 장바구니 보기는 로그인해야 한다 (비회원이면 로그인 안내 → 로그인 뒤 장바구니로)
+        LoginGate.require(activity, () -> activity.startActivity(
                 new Intent(activity, CartActivity.class)
-        );
+        ));
     }
 
     private static void moveTo(Activity activity, int tab) {
+
+        // 찜·장바구니 탭은 로그인해야 열 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 그 탭으로)
+        if ((tab == TAB_WISH || tab == TAB_CART) && !LoginSession.isLoggedIn(activity)) {
+            LoginGate.require(activity, () -> moveTo(activity, tab));
+            return;
+        }
 
         if (tab == TAB_MY) {
 

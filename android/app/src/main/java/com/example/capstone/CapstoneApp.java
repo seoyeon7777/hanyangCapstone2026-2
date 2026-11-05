@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.example.capstone.data.LocalLikes;
 import com.example.capstone.data.RecommendApi;
+import com.example.capstone.login.LoginGate;
 import com.example.capstone.login.LoginSession;
 
 /**
@@ -25,6 +26,7 @@ public class CapstoneApp extends Application {
         super.onCreate();
 
         LoginSession.normalizeSavedPhone(this);
+        LoginSession.reloadAccountData(this);
 
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
             @Override
@@ -43,6 +45,7 @@ public class CapstoneApp extends Application {
                 hideNavigationBar(activity.getWindow());
                 LocalLikes.refresh(activity);
                 RecommendApi.refreshLikes(activity);
+                LoginGate.onActivityResumed(activity);
             }
 
             @Override public void onActivityStarted(Activity activity) { }

@@ -153,6 +153,53 @@ public final class LocalAccounts {
         return new Account(j);
     }
 
+    /** 아이디와 비밀번호가 맞으면 회원 정보, 틀리면 null */
+    public static Account loginWithId(Context context, String id, String password) {
+        JSONObject j = findById(load(context), id);
+        if (j == null || !passwordMatches(j, password)) {
+            return null;
+        }
+        return new Account(j);
+    }
+
+    /** 아이디로 회원을 찾는다. 없으면 null */
+    public static Account findAccountById(Context context, String id) {
+        JSONObject j = id == null ? null : findById(load(context), id);
+        return j == null ? null : new Account(j);
+    }
+
+    /** 이 휴대폰 번호로 가입한 회원을 찾는다 (하이픈 유무는 상관없다). 없으면 null */
+    public static Account findAccountByPhone(Context context, String phone) {
+        String normalized = normalizePhone(phone);
+        if (normalized == null) {
+            return null;
+        }
+        JSONArray accounts = load(context);
+        for (int i = 0; i < accounts.length(); i++) {
+            JSONObject j = accounts.optJSONObject(i);
+            if (j != null && normalized.equals(normalizePhone(j.optString("phone")))) {
+                return new Account(j);
+            }
+        }
+        return null;
+    }
+
+    /** 이 이메일을 등록한 회원을 찾는다 (대소문자는 상관없다). 없으면 null */
+    public static Account findAccountByEmail(Context context, String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return null;
+        }
+        JSONArray accounts = load(context);
+        for (int i = 0; i < accounts.length(); i++) {
+            JSONObject j = accounts.optJSONObject(i);
+            if (j != null && !j.optString("email").isEmpty()
+                    && email.trim().equalsIgnoreCase(j.optString("email"))) {
+                return new Account(j);
+            }
+        }
+        return null;
+    }
+
     public static boolean idExists(Context context, String id) {
         return findById(load(context), id) != null;
     }

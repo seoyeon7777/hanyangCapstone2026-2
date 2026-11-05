@@ -45,7 +45,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="계정에 등록한 정보로 본인확인을 할 수 있습니다."
+        android:text="인증번호를 어디로 받을지 골라주세요."
         android:textSize="13sp"
         android:textColor="@color/black"
         android:layout_marginTop="8dp"
@@ -61,7 +61,7 @@
         android:drawablePadding="12dp"
         android:paddingStart="24dp"
         android:paddingEnd="24dp"
-        android:text="핸드폰 번호로 찾기"
+        android:text="휴대전화로 인증받기"
         android:textColor="@color/white"
         app:backgroundTint="@null" />
 
@@ -74,7 +74,7 @@
         android:drawablePadding="12dp"
         android:paddingStart="24dp"
         android:paddingEnd="24dp"
-        android:text="이메일로 찾기"
+        android:text="이메일로 인증받기"
         android:textColor="@color/white"
         app:backgroundTint="@null" />
 

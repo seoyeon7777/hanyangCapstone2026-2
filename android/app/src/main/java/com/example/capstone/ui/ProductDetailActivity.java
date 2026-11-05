@@ -15,6 +15,7 @@ import com.example.capstone.login.LoginSession;
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.CartStore;
+import com.example.capstone.login.LoginGate;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.LocalLikes;
 import com.example.capstone.data.ProductImages;
@@ -209,20 +210,18 @@ public class ProductDetailActivity extends AppCompatActivity {
                 return;
             }
 
-            if (!LoginSession.isLoggedIn(this)) {
-                startActivity(new Intent(this, LoginMainActivity.class));
-                return;
-            }
+            // 찜은 로그인해야 할 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 이어서 찜)
+            LoginGate.require(this, () -> {
+                currentProduct.setLiked(
+                        !currentProduct.isLiked()
+                );
 
-            currentProduct.setLiked(
-                    !currentProduct.isLiked()
-            );
+                LocalLikes.save(this, currentProduct);
 
-            LocalLikes.save(this, currentProduct);
-
-            // 서버 상품: 찜 상태 저장 + 추천 서버에 like
-            RecommendApi.saveLike(this, currentProduct);
-            updateHeart();
+                // 서버 상품: 찜 상태 저장 + 추천 서버에 like
+                RecommendApi.saveLike(this, currentProduct);
+                updateHeart();
+            });
         });
 
 

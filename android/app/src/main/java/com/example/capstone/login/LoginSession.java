@@ -5,6 +5,9 @@ import android.content.SharedPreferences;
 
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.CartStore;
+import com.example.capstone.data.DummyData;
+import com.example.capstone.data.MyPageStore;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.ProfilePhotoStore;
@@ -48,9 +51,21 @@ public final class LoginSession {
                 .putString(KEY_PHONE, savedPhone)
                 .apply();
         adoptOldPhoneData(context, phone);
-        AccountPrefs.adoptGuest(context);
-        // 비로그인으로 한 설문(방금 옮긴 것) 또는 예전에 설문만 하고 체형 카드가 없는 계정 → 설문 카드를 만든다
+        // 비회원일 때의 기록은 새로 로그인한 계정으로 가져오지 않는다 (계정마다 따로)
+        reloadAccountData(context);
+        // 비회원 결과 화면에서 "이대로 저장하기" → 로그인한 경우에만 그 설문을 카드로 저장
         BodyTypeActivity.adoptSurveyOnLogin(context);
+    }
+
+    /**
+     * 계정이 바뀌었을 때(로그인·로그아웃·앱 시작): 메모리에 남은 이전 계정의 기록을 버리고
+     * 지금 계정의 기록(주문·리뷰·배송지·카드·찜 …)을 다시 읽는다.
+     * 체형·설문·장바구니는 읽을 때마다 지금 계정 것을 쓰므로 여기서 할 일이 없다.
+     */
+    public static void reloadAccountData(Context context) {
+        MyPageStore.init(context);
+        DummyData.clearLikes();
+        RecommendApi.refreshLikes(context);
     }
 
     /** 앱을 켤 때 호출. 예전에 하이픈 없이 저장한 로그인 번호도 같은 계정이 되게 바꾼다. */
@@ -72,6 +87,7 @@ public final class LoginSession {
         String to = BodyProfileStore.accountKey(context);
         for (String from : new String[]{oldPhone, oldPhone.replaceAll("[^0-9]", "")}) {
             BodyProfileStore.adoptAccount(context, from, to);
+            MyPageStore.adoptAccount(context, from, to);
             AccountPrefs.adoptAccount(context, from, to);
             CartStore.adoptAccount(context, from, to);
             ProfilePhotoStore.adoptAccount(context, from, to);
@@ -97,6 +113,9 @@ public final class LoginSession {
     public static void logout(Context context) {
         // [여기에 DB 입력] 서버 쪽 로그인 세션/토큰 만료 처리
         prefs(context).edit().clear().apply();
+        MyPageStore.logout();   // 메모리의 이전 계정 기록을 비우고 비로그인 기록을 읽는다
+        DummyData.clearLikes();
+        RecommendApi.refreshLikes(context);
     }
 
     public static boolean isLoggedIn(Context context) {

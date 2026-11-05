@@ -1,5 +1,6 @@
 package com.example.capstone.adapter;
 
+import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +19,7 @@ import com.example.capstone.data.LocalLikes;
 import com.example.capstone.data.Product;
 import com.example.capstone.data.ProductImages;
 import com.example.capstone.data.RecommendApi;
+import com.example.capstone.login.LoginGate;
 import com.example.capstone.ui.ProductDetailActivity;
 
 import java.text.NumberFormat;
@@ -141,40 +143,8 @@ public class ProductAdapter
             Product currentProduct =
                     productList.get(currentPosition);
 
-            currentProduct.setLiked(
-                    !currentProduct.isLiked()
-            );
-
-            // 서버 상품이면 찜 상태를 저장하고, 찜할 때 추천 서버가 취향을 배운다
-            LocalLikes.save(
-                    v.getContext(),
-                    currentProduct
-            );
-
-            RecommendApi.saveLike(
-                    v.getContext(),
-                    currentProduct
-            );
-
-            if (isWishMode && !currentProduct.isLiked()) {
-
-                productList.remove(currentPosition);
-
-                notifyItemRemoved(currentPosition);
-
-                notifyItemRangeChanged(
-                        currentPosition,
-                        productList.size() - currentPosition
-                );
-
-                if (onWishRemovedListener != null) {
-                    onWishRemovedListener.run();
-                }
-
-            } else {
-
-                notifyItemChanged(currentPosition);
-            }
+            // 찜은 로그인해야 할 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 이어서 찜)
+            LoginGate.require(v.getContext(), () -> toggleLike(v.getContext(), currentProduct));
         });
 
         // 상품 클릭 → 상세페이지 이동
@@ -242,6 +212,53 @@ public class ProductAdapter
             holder.textHeart.setImageResource(R.drawable.ic_heart_filled);
         } else {
             holder.textHeart.setImageResource(R.drawable.ic_heart_outline);
+        }
+    }
+
+    /** 찜을 켜고 끈다 (로그인한 뒤에만 부른다). 로그인하고 돌아온 뒤에도 쓰므로 목록에서 위치를 다시 찾는다 */
+    private void toggleLike(Context context, Product product) {
+
+        int position = productList.indexOf(product);
+
+        product.setLiked(
+                !product.isLiked()
+        );
+
+        // 내장 상품 찜은 계정별로 저장 (혜림, LocalLikes)
+        LocalLikes.save(
+                context,
+                product
+        );
+
+        // 서버 상품이면 찜 상태를 저장하고, 찜할 때 추천 서버가 취향을 배운다
+        RecommendApi.saveLike(
+                context,
+                product
+        );
+
+        if (position == RecyclerView.NO_POSITION || position < 0) {
+            notifyDataSetChanged();
+            return;
+        }
+
+        if (isWishMode && !product.isLiked()) {
+
+            productList.remove(position);
+
+            notifyItemRemoved(position);
+
+            notifyItemRangeChanged(
+                    position,
+                    productList.size() - position
+            );
+
+            if (onWishRemovedListener != null) {
+                onWishRemovedListener.run();
+            }
+
+        } else {
+
+            notifyItemChanged(position);
         }
     }
 

@@ -301,6 +301,18 @@ match_score(body, item) -> {
 - 찜 제목은 `찜 N`, 상단 탭은 3등분, 장바구니 체크박스는 `app:buttonTint`·`app:buttonIconTint`(Material3에서 `android:buttonTint`는 전체가 칠해짐)
 - 확인: 서버 상품 번호 겹침은 서버 없이 에뮬레이터에 테스트 데이터를 넣어 확인. 서버를 켠 동작은 아직 확인 못 함
 - 단위 테스트: 51개 중 `CartStoreTest`·`LocalLikesTest` 11개 실패. `org.json`이 테스트 환경에 없어서 나는 오류(`not mocked`)이고 앱 동작 문제는 아니다. 해결하려면 `build.gradle.kts`에 테스트 의존성 추가 필요(팀 공용 파일)
+### 4-19. 로그인·계정별 기록 (11/05, 로그인/계정 담당)
+- 로그인 화면은 한 장 (`LoginMainActivity`: 아이디·비밀번호 입력, 로그인, 아이디 찾기 | 비밀번호 찾기, 소셜 아이콘, 회원가입). 옛 `LoginEmailActivity`와 "반가워요! 회원가입하기" 화면(`SigninMainActivity`)은 없앴고, 회원가입 버튼은 바로 `PhoneVerifyActivity`(휴대전화 인증)로 간다
+- 로그인은 **아이디 + 비밀번호**만 (인증 없음, `LocalAccounts.loginWithId`). 가입은 아이디를 따로 받고 휴대전화는 가입 때 인증한 번호(수정 불가), 이메일은 선택(넣으려면 인증). 로그인 화면의 "핸드폰 번호로 로그인"·"이메일 확인" 버튼은 뺐다 (`LoginPhoneActivity`는 어디서도 열리지 않음)
+- 계정(아이디) 찾기 (`FindIdActivity`): "휴대전화로 찾기"/"이메일로 찾기" 중 골라 입력 → 그 번호·이메일로 가입한 계정이 있으면 인증번호 발송, 없으면 "가입된 계정이 없습니다" → 인증번호가 맞으면 아이디를 보여 준다
+- 비밀번호 재설정 (`ResetPwMainActivity` → `ResetPwActivity`): 인증 방식(휴대전화/이메일)을 고르고 **아이디**를 입력 → 없는 아이디면 막고, 있으면 그 계정에 등록된 번호·이메일(가려서 표시)로 인증번호 발송 → 맞으면 새 비밀번호 설정
+- 인증번호 (`login/AuthCode`): 4자리, 5분 유효, 받은 연락처와 확인할 때 연락처가 같아야 통과. 문자·메일을 실제로 보낼 수 없어 **안내 창(닫기 X만 있는 모달)에 인증번호를 보여 준다 (시연용)**. 실제 발송이 생기면 `AuthCode.issue`의 show만 빼면 된다. 인증번호 입력칸 옆에 남은 시간(mm:ss)이 줄어들고, "재전송"은 시간과 상관없이 언제든 눌러 새 번호를 받으며 시간이 5분으로 처음부터 시작한다
+- `MyPageStore`(주문·리뷰·반품/교환·배송지·결제 카드·환불 계좌·문의·받은 쿠폰·간편결제 연결)를 계정별로 저장: `capstone_order_review_store`의 `data@계정`(JSON 하나). 계정 = `BodyProfileStore.accountKey`. 예전에 계정 구분 없이 저장한 `orders`·`reviews`는 처음 불러오는 로그인 계정으로 한 번 옮기고 지운다
+- `MyPageStore.init(context)`는 계정이 바뀌었을 때만 메모리를 비우고 새 계정 것을 읽는다. `LoginSession.reloadAccountData`(앱 시작·로그인)와 `LoginSession.logout`이 부른다. 로그인 때 더미/서버 상품의 찜 표시도 끄고 그 계정 찜을 다시 읽는다 (`DummyData.clearLikes`, `RecommendApi.refreshLikes`)
+- 이메일·전화번호가 바뀌면 `MyPageStore.moveAccount`로 기록을 새 이름으로 옮긴다 (`EditProfileActivity`)
+- 비회원일 때 만든 체형·설문·찜을 로그인한 계정이 이어받던 `AccountPrefs.adoptGuest` 호출을 뺐다 (새 계정은 비어서 시작). 비회원 장바구니를 로그인 계정에 합치는 동작(`CartStore`)은 그대로
+- 비회원 제한 (`login/LoginGate.require`): 찜(카드·상세 하트), 장바구니 담기, 바로 구매, 하단 찜·장바구니 탭과 장바구니 아이콘은 로그인해야 한다. 비회원이면 "로그인이 필요해요 / 로그인하러 가기" 모달 → 로그인(또는 회원가입)을 마치면 로그인 화면들을 닫고 원래 화면으로 돌아와 하려던 동작을 이어서 한다 (`CapstoneApp`이 화면 onResume마다 `LoginGate.onActivityResumed`를 부름, `LoginMainActivity.goToMyPage`는 이어서 할 동작이 있으면 마이페이지로 안 감). 로그인 없이 돌아오면 동작은 취소. 둘러보기·상품 상세 보기는 비회원도 된다
+- 한계: 더미 상품(DummyData)의 찜은 앱을 끄면 사라진다 (원래 저장 안 됨). `CartStoreTest`는 `org.json`이 단위 테스트에서 비어 있어 main에서도 실패한다
 
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제

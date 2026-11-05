@@ -35,7 +35,12 @@ public class ResetPwActivity extends AppCompatActivity {
 
     private LinearLayout containerNewPw;
 
-    private boolean isCodeSent = false;
+    private final AuthCode authCode = new AuthCode();
+
+    /** 인증번호를 보낸 아이디와, 그 아이디의 회원 정보 */
+    private String sentId;
+    private LocalAccounts.Account account;
+
     private boolean isCodeVerified = false;
 
     private boolean isPwVisible = false;
@@ -75,15 +80,24 @@ public class ResetPwActivity extends AppCompatActivity {
         btnTogglePw2 = findViewById(R.id.btnTogglePw2);
 
         containerNewPw = findViewById(R.id.containerNewPw);
+
+        authCode.bindTimer(findViewById(R.id.tvTimer));
     }
 
+    @Override
+    protected void onDestroy() {
+        authCode.clear();       // 남은 시간 갱신을 멈춘다
+        super.onDestroy();
+    }
+
+    /** 아이디를 입력받는다. 휴대전화/이메일은 인증번호를 어디로 받을지만 정한다 */
     private void applyContactType() {
-        if (!byPhone) {
-            return;
-        }
-        ((TextView) findViewById(R.id.tvContactLabel)).setText("휴대폰 번호");
-        etEmail.setHint("010-0000-0000");
-        etEmail.setInputType(InputType.TYPE_CLASS_PHONE);
+        ((TextView) findViewById(R.id.tvContactLabel)).setText("아이디");
+        etEmail.setHint("가입한 아이디");
+        etEmail.setInputType(InputType.TYPE_CLASS_TEXT);
+        ((TextView) findViewById(R.id.tvGuide)).setText(byPhone
+                ? "아이디를 입력하면 가입한 휴대전화로 인증번호를 보내드려요."
+                : "아이디를 입력하면 등록한 이메일로 인증번호를 보내드려요.");
     }
 
     private void setListeners() {
@@ -94,6 +108,22 @@ public class ResetPwActivity extends AppCompatActivity {
 
         // 인증받기 버튼
         btnRequestAuth.setOnClickListener(v -> requestAuthCode());
+
+        // 아이디를 고치면 처음부터 다시 인증받아야 한다.
+        etEmail.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (sentId != null) {
+                    resetFlow();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
         // 인증번호를 입력하면 인증확인 버튼을 보여준다.
         etAuthCode.addTextChangedListener(new TextWatcher() {
@@ -154,49 +184,71 @@ public class ResetPwActivity extends AppCompatActivity {
         btnConfirm.setOnClickListener(v -> resetPassword());
     }
 
-    /** 입력한 이메일 또는 휴대폰 번호로 인증번호를 보낸다. */
-    private void requestAuthCode() {
-        String contact = normalizeContact();
+    /** 인증 전 상태로 되돌린다 */
+    private void resetFlow() {
+        authCode.clear();
+        sentId = null;
+        account = null;
+        isCodeVerified = false;
+        etAuthCode.setText("");
+        btnVerifyCode.setText("인증확인");
+        btnVerifyCode.setEnabled(true);
+        btnVerifyCode.setVisibility(View.GONE);
+        containerNewPw.setVisibility(View.GONE);
+        btnRequestAuth.setText("인증받기");
+    }
 
-        if (contact == null) {
+    /** 입력한 아이디의 회원이 있으면, 그 회원의 휴대전화(또는 이메일)로 인증번호를 보낸다. */
+    private void requestAuthCode() {
+        String id = etEmail.getText().toString().trim();
+
+        if (TextUtils.isEmpty(id)) {
+            Toast.makeText(this, "아이디를 입력해주세요.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // [여기에 DB 입력] 가입된 아이디인지 확인 (users)
+        LocalAccounts.Account found = LocalAccounts.findAccountById(this, id);
+        if (found == null) {
+            Toast.makeText(this, "존재하지 않는 아이디입니다.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String target = byPhone ? found.phone : found.email;
+        if (TextUtils.isEmpty(target)) {
             Toast.makeText(this, byPhone
-                            ? "휴대폰 번호를 정확히 입력해주세요."
-                            : "올바른 이메일 형식이 아닙니다. (예: example@gmail.com)",
+                            ? "이 계정에 등록된 휴대전화 번호가 없습니다."
+                            : "이 계정에 등록된 이메일이 없습니다. 휴대전화로 인증해주세요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }
 
-        etEmail.setText(contact);
-        etEmail.setSelection(contact.length());
-
-        // [여기에 DB 입력] 가입된 이메일·휴대폰 번호인지 확인 (users)
-        if (!LocalAccounts.contactExists(this, contact)) {
-            Toast.makeText(this, notRegisteredMessage(), Toast.LENGTH_SHORT).show();
-            return;
-        }
+        resetFlow();
 
         // [여기에 DB 입력] 발송한 인증번호를 만료시각과 함께 저장 (auth_codes)
-        isCodeSent = true;
-        Toast.makeText(this, contact + " (으)로 인증번호가 발송되었습니다.", Toast.LENGTH_SHORT).show();
+        account = found;
+        sentId = id;
+        authCode.issue(this, id, byPhone ? AuthCode.maskPhone(target) : AuthCode.maskEmail(target));
+        btnRequestAuth.setText("재전송");      // 언제든 다시 받을 수 있고, 받으면 시간이 처음부터 시작된다
     }
 
     /** 입력한 인증번호를 확인하고, 통과하면 새 비밀번호 입력란을 연다. */
     private void verifyAuthCode() {
-        String authCode = etAuthCode.getText().toString().trim();
+        String input = etAuthCode.getText().toString().trim();
 
-        if (!isCodeSent) {
-            Toast.makeText(this, "먼저 인증받기를 눌러주세요.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (TextUtils.isEmpty(authCode) || authCode.length() != AUTH_CODE_LENGTH) {
+        if (input.length() != AUTH_CODE_LENGTH) {
             Toast.makeText(this, "인증번호 " + AUTH_CODE_LENGTH + "자리를 입력해주세요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // [여기에 DB 입력] 저장된 인증번호와 입력값이 같은지, 만료되지 않았는지 확인 (auth_codes)
-        //                 틀리거나 만료됐으면 안내 후 return
+        String error = authCode.check(input, etEmail.getText().toString().trim());
+
+        if (error != null) {
+            Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         isCodeVerified = true;
         btnVerifyCode.setText("인증완료");
         btnVerifyCode.setEnabled(false);
@@ -210,11 +262,12 @@ public class ResetPwActivity extends AppCompatActivity {
         String pw = etPassword.getText().toString().trim();
         String pw2 = etPasswordConfirm.getText().toString().trim();
 
-        if (!isCodeVerified) {
+        if (!isCodeVerified || account == null) {
             Toast.makeText(this, "인증확인을 완료해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // 가입할 때와 같은 비밀번호 규칙 (SigninActivity: 8자 이상)
         if (TextUtils.isEmpty(pw) || pw.length() < PASSWORD_MIN_LENGTH) {
             Toast.makeText(this, "비밀번호는 " + PASSWORD_MIN_LENGTH + "자 이상 입력해주세요.",
                     Toast.LENGTH_SHORT).show();
@@ -227,54 +280,18 @@ public class ResetPwActivity extends AppCompatActivity {
         }
 
         // [여기에 DB 입력] 새 비밀번호 저장 - 암호화(해시)해서 저장 (users)
-        String contact = normalizeContact();
-        if (contact == null || !LocalAccounts.resetPassword(this, contact, pw)) {
-            Toast.makeText(this, notRegisteredMessage(), Toast.LENGTH_SHORT).show();
+        if (!LocalAccounts.changePassword(this, account.id, pw)) {
+            Toast.makeText(this, "존재하지 않는 아이디입니다.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         // [여기에 DB 입력] 사용한 인증번호 만료 처리 (auth_codes)
+        authCode.clear();
         Toast.makeText(this, "비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.",
                 Toast.LENGTH_SHORT).show();
 
         // 비밀번호가 바뀌었으니 기존 로그인 상태는 지우고 로그인 화면으로 돌아간다.
         LoginSession.logout(this);
         LoginMainActivity.backToLogin(this);
-    }
-
-    private String notRegisteredMessage() {
-        return byPhone ? "가입되지 않은 휴대폰 번호입니다." : "가입되지 않은 이메일입니다.";
-    }
-
-    /** 입력값을 정규화해 돌려준다. 올바르지 않으면 null */
-    private String normalizeContact() {
-        return byPhone
-                ? LocalAccounts.normalizePhone(etEmail.getText().toString())
-                : normalizeEmail();
-    }
-
-    /**
-     * etEmail의 입력값을 정규화한 이메일 주소로 돌려준다.
-     * 공백을 없애고 소문자로 바꾼 뒤 형식을 검사하며, 올바르지 않으면 null을 돌려준다.
-     */
-    private String normalizeEmail() {
-        String input = etEmail.getText().toString().replaceAll("\\s", "");
-
-        if (TextUtils.isEmpty(input)) {
-            return null;
-        }
-
-        String email = input.toLowerCase(Locale.ROOT);
-
-        // @가 없거나 두 개 이상이면 잘못된 주소
-        if (email.indexOf('@') <= 0 || email.indexOf('@') != email.lastIndexOf('@')) {
-            return null;
-        }
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            return null;
-        }
-
-        return email;
     }
 }

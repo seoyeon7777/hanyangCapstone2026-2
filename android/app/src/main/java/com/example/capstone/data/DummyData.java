@@ -287,6 +287,13 @@ public class DummyData {
         return PRODUCTS;
     }
 
+    /** 로그인·로그아웃으로 계정이 바뀔 때: 메모리의 찜 표시를 모두 끈다 (계정별 찜은 다시 불러온다) */
+    public static void clearLikes() {
+        for (Product product : PRODUCTS) {
+            product.setLiked(false);
+        }
+    }
+
     /** 체크한 상품들의 옵션. 한 개면 "L / NAVY", 여러 개면 "이름: L / NAVY, 이름: M / BLACK" */
     public static String orderedOptionText(List<Product> ordered) {
         if (ordered.size() == 1) {
