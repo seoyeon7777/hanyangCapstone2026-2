@@ -28,6 +28,8 @@
 
         <TextView
             android:id="@+id/btnFilterClose"
+                android:contentDescription="닫기"
+                android:background="?attr/selectableItemBackgroundBorderless"
             android:layout_width="44dp"
             android:layout_height="match_parent"
             android:gravity="center"

@@ -29,6 +29,10 @@
 
             <TextView
                 android:id="@+id/btnCloseSheet"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="닫기"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:gravity="center"

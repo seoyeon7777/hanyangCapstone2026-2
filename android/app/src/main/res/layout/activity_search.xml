@@ -50,7 +50,11 @@
 
             <TextView
                 android:id="@+id/btnClearSearch"
-                android:layout_width="30dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="닫기"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_width="40dp"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="×"
