@@ -140,7 +140,7 @@ public final class RecommendApi {
      * 홈 추천에 보낼 체형 입력. 순서:
      * 1) 대표 체형 카드에 저장한 설문 답 → 서버가 진단 (설문을 다시 하면 결과 화면과 홈 체형이 같아진다)
      * 2) 옛 카드라 설문 답이 없으면 카드의 체형 이름을 100%로
-     * 3) 대표 체형이 없으면 최근 설문 답. 아무것도 없으면 null
+     * 3) 대표 체형이 없으면: 비로그인은 최근 설문 답, 로그인했으면 null (저장한 체형만 쓴다). 아무것도 없으면 null
      */
     private static JSONObject bodyInput(Context context) throws JSONException {
 
@@ -169,7 +169,7 @@ public final class RecommendApi {
             }
         }
 
-        int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
+        int[] answers = BodyTypeActivity.homeSurveyAnswers(context);
 
         if (answers == null) {
             return null;

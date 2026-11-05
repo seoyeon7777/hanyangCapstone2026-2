@@ -411,9 +411,7 @@ public class BodyTypeActivity extends AppCompatActivity {
 
                         saveLastSurvey(resultType);
 
-                        // 설문만 해도 체형을 저장한다: 대표 카드가 있으면 그 카드의 설문 답·골격을 바꾸고,
-                        // 없으면 설문만 한 카드를 새로 만든다 (홈은 대표 카드로 추천하므로 결과 화면과 같아진다)
-                        saveSurveyProfile(BodyTypeActivity.this);
+                        // 체형 카드 저장은 결과 화면에서 고른다 (정밀 분석 / 이대로 저장 / 나가기)
 
                         Intent intent =
                                 new Intent(
@@ -464,31 +462,60 @@ public class BodyTypeActivity extends AppCompatActivity {
     }
 
     /**
-     * 최근 설문(서버 진단까지 끝난 것)을 '내 체형 관리' 카드로 저장한다. 로그인했을 때만 (체형 카드는 계정에 저장).
-     * 비로그인으로 한 설문은 로그인할 때 adoptSurveyOnLogin이 카드로 만든다.
+     * 최근 설문(서버 진단까지 끝난 것)을 '내 체형 관리' 카드로 저장한다. 결과 화면의 "이대로 저장하기"가 부른다.
+     * 로그인했을 때만 (체형 카드는 계정에 저장). 저장했으면 그 카드, 아니면 null
      */
-    public static void saveSurveyProfile(Context context) {
+    public static BodyProfileStore.Profile saveSurveyProfile(Context context) {
 
         if (!LoginSession.isLoggedIn(context)) {
-            return;
+            return null;
         }
 
         int[] answers = lastSurveyAnswers(context);
         int type = lastSurveyType(context);
 
         if (answers == null || type < 0) {
-            return;     // 답이 없거나 아직 진단 전
+            return null;     // 답이 없거나 아직 진단 전
         }
 
-        BodyProfileStore.saveSurvey(context, answers, skeletonLabel(type), lastSurveyHeight(context));
+        return BodyProfileStore.saveSurvey(context, answers, skeletonLabel(type), lastSurveyHeight(context));
     }
 
-    /** 로그인 직후: 저장된 체형이 하나도 없고 진단까지 끝난 설문이 있으면 그 설문을 카드로 만든다 */
-    public static void adoptSurveyOnLogin(Context context) {
+    // 비로그인으로 결과 화면에서 "이대로 저장하기"를 눌러 로그인하러 갔다는 표시 (기기 단위, 로그인하면 지움)
+    private static final String PREF_PENDING_SAVE = "survey_save_pending";
+    private static final String KEY_PENDING_SAVE_AT = "pending_at";
 
-        if (BodyProfileStore.getProfiles(context).isEmpty()) {
-            saveSurveyProfile(context);
+    public static void markSurveySavePending(Context context) {
+
+        context.getApplicationContext()
+                .getSharedPreferences(PREF_PENDING_SAVE, MODE_PRIVATE)
+                .edit()
+                .putLong(KEY_PENDING_SAVE_AT, System.currentTimeMillis())
+                .apply();
+    }
+
+    /** 저장하려고 로그인하러 간 적이 있으면(24시간 안) true를 돌려주고 표시를 지운다 */
+    static boolean takeSurveySavePending(Context context) {
+
+        SharedPreferences prefs = context.getApplicationContext()
+                .getSharedPreferences(PREF_PENDING_SAVE, MODE_PRIVATE);
+        long at = prefs.getLong(KEY_PENDING_SAVE_AT, 0L);
+        prefs.edit().remove(KEY_PENDING_SAVE_AT).apply();
+        long now = System.currentTimeMillis();
+        return at > 0L && at <= now && now - at <= AccountPrefs.GUEST_SURVEY_ADOPT_MS;
+    }
+
+    /**
+     * 로그인 직후: 비로그인 결과 화면에서 "이대로 저장하기"를 누르고 로그인한 경우에만 그 설문을 카드로 저장한다.
+     * "저장하지 않고 나가기"를 고른 설문은 카드로 만들지 않는다.
+     * @return 저장했으면 true
+     */
+    public static boolean adoptSurveyOnLogin(Context context) {
+
+        if (!takeSurveySavePending(context)) {
+            return false;
         }
+        return saveSurveyProfile(context) != null;
     }
 
     /** 대표 체형 카드에 저장하는 골격 이름 (MeasurementResultActivity와 같은 글자) */
@@ -613,6 +640,16 @@ public class BodyTypeActivity extends AppCompatActivity {
         }
 
         return answers;
+    }
+
+    /**
+     * 대표 체형이 없을 때 홈 추천에 쓸 설문 답 (RecommendApi.bodyInput).
+     * 로그인한 사람은 '내 체형'에 저장한 체형만 쓰므로 null (설문 후 "저장하지 않고 나가기"를 고르면 홈에도 안 씀).
+     * 비로그인은 체형을 저장할 수 없으니 최근 설문 답
+     */
+    public static int[] homeSurveyAnswers(Context context) {
+
+        return LoginSession.isLoggedIn(context) ? null : lastSurveyAnswers(context);
     }
 
     public static int lastSurveyType(Context context) {
