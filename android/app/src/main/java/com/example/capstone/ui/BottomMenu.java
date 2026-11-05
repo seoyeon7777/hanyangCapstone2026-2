@@ -131,7 +131,8 @@ public final class BottomMenu {
                 break;
 
             case TAB_FITTING:
-                target = FittingActivity.class;
+                // 체형분석 탭 = 저장한 체형 목록(예전 마이페이지 '내 체형관리'). 새 분석은 그 화면의 "새 체형 추가하기"
+                target = com.example.capstone.mypage.MyBodyActivity.class;
                 break;
 
             case TAB_CART:

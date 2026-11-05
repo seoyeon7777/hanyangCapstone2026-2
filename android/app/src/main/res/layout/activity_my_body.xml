@@ -61,13 +61,7 @@
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/tvNewMeasure"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="새로 측정 ›"
-                    android:textColor="#5A5A5A"
-                    android:textSize="12sp" />
+
 
             </LinearLayout>
 
@@ -76,6 +70,13 @@
                 android:layout_marginBottom="12dp"
                 android:text="체형을 여러 개 저장하고 하나를 현재 체형으로 고를 수 있어요. 현재 체형은 홈 골격 맞춤 추천과 장바구니·주문 사이즈 확인에 쓰여요."
                 android:textSize="12sp" />
+
+            <!-- 새 체형 추가하기: 키·몸무게·나이 → 설문 → (선택) 사진 정밀 분석 (FittingActivity) -->
+            <Button
+                android:id="@+id/tvNewMeasure"
+                style="@style/MyPageButtonPrimary"
+                android:layout_marginBottom="14dp"
+                android:text="+ 새 체형 추가하기" />
 
             <LinearLayout
                 android:id="@+id/layoutProfiles"
@@ -87,7 +88,7 @@
                 android:id="@+id/tvEmptyProfiles"
                 style="@style/MyPageEmpty"
                 android:paddingVertical="40dp"
-                android:text="저장된 체형 정보가 없어요.&#10;체형 분석에서 체형을 측정해 보세요." />
+                android:text="저장된 체형 정보가 없어요.&#10;'새 체형 추가하기'로 체형을 분석해 보세요." />
 
             <View
                 android:layout_width="match_parent"
@@ -235,5 +236,7 @@
         android:layout_marginBottom="16dp"
         android:text="선택 삭제"
         android:visibility="gone" />
+
+    <include layout="@layout/view_bottom_menu" />
 
 </LinearLayout>

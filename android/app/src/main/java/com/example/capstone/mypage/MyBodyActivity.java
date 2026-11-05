@@ -18,6 +18,7 @@ import androidx.appcompat.widget.SwitchCompat;
 import com.example.capstone.R;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.login.LoginMainActivity;
+import com.example.capstone.ui.BottomMenu;
 import com.example.capstone.login.LoginSession;
 import com.example.capstone.ui.AppDialog;
 import com.example.capstone.ui.BodyFeedbackActivity;
@@ -52,14 +53,11 @@ public class MyBodyActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (!LoginSession.isLoggedIn(this)) {
-            startActivity(new Intent(this, LoginMainActivity.class));
-            finish();
-            return;
-        }
-
+        // 하단 '체형분석' 탭 화면이다 (11/06, 예전 마이페이지 '내 체형관리'). 탭이라 뒤로 버튼은 숨긴다
         setContentView(R.layout.activity_my_body);
-        MyPageUi.setupToolbar(this, "체형 관리");
+        MyPageUi.setupToolbar(this, "내 체형관리");
+        findViewById(R.id.btnBack).setVisibility(View.INVISIBLE);
+        BottomMenu.setup(this, BottomMenu.TAB_FITTING);
 
         layoutProfiles = findViewById(R.id.layoutProfiles);
         tvProfileCount = findViewById(R.id.tvProfileCount);
@@ -177,6 +175,15 @@ public class MyBodyActivity extends AppCompatActivity {
 
         tvProfileCount.setText("저장된 체형 " + profiles.size() + "개");
         tvEmptyProfiles.setVisibility(profiles.isEmpty() ? View.VISIBLE : View.GONE);
+        if (!LoginSession.isLoggedIn(this)) {
+            // 비로그인: 체형은 계정에 저장되므로 로그인 안내 (새 체형 추가하기로 설문은 해 볼 수 있음)
+            tvEmptyProfiles.setText("로그인하면 체형을 여러 개 저장하고\n그중 하나를 현재 체형으로 고를 수 있어요.\n눌러서 로그인하기 ›");
+            tvEmptyProfiles.setOnClickListener(v ->
+                    startActivity(new Intent(this, LoginMainActivity.class)));
+        } else {
+            tvEmptyProfiles.setText("저장된 체형 정보가 없어요.\n'새 체형 추가하기'로 체형을 분석해 보세요.");
+            tvEmptyProfiles.setOnClickListener(null);
+        }
         updateSelectBar(profiles.size());
 
         layoutProfiles.removeAllViews();
