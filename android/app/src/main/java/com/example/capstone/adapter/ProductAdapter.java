@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.R;
 import com.example.capstone.data.DummyData;
+import com.example.capstone.data.LocalLikes;
 import com.example.capstone.data.Product;
 import com.example.capstone.data.ProductImages;
 import com.example.capstone.data.RecommendApi;
@@ -26,6 +27,7 @@ public class ProductAdapter
 
     private final List<Product> productList;
     private final boolean isWishMode;
+    private Runnable onWishRemovedListener;
 
     public ProductAdapter(List<Product> productList) {
         this(productList, false);
@@ -37,6 +39,10 @@ public class ProductAdapter
     ) {
         this.productList = productList;
         this.isWishMode = isWishMode;
+    }
+
+    public void setOnWishRemovedListener(Runnable listener) {
+        onWishRemovedListener = listener;
     }
 
     @NonNull
@@ -131,6 +137,11 @@ public class ProductAdapter
             );
 
             // 서버 상품이면 찜 상태를 저장하고, 찜할 때 추천 서버가 취향을 배운다
+            LocalLikes.save(
+                    v.getContext(),
+                    currentProduct
+            );
+
             RecommendApi.saveLike(
                     v.getContext(),
                     currentProduct
@@ -146,6 +157,10 @@ public class ProductAdapter
                         currentPosition,
                         productList.size() - currentPosition
                 );
+
+                if (onWishRemovedListener != null) {
+                    onWishRemovedListener.run();
+                }
 
             } else {
 

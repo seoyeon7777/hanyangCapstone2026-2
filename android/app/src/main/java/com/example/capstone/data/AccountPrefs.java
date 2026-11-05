@@ -16,13 +16,14 @@ public final class AccountPrefs {
     public static final String RECOMMEND_PREF = "recommend";
     public static final String RECOMMEND_USER_ID = "user_id";
     public static final String RECOMMEND_LIKED = "liked_products";
+    public static final String RECOMMEND_LIKED_LOCAL = "liked_local_products";
 
     private static final String[] SURVEY_KEYS = {
             SURVEY_ANSWERS, SURVEY_TYPE, SURVEY_HEIGHT, SURVEY_AT
     };
 
     private static final String[] RECOMMEND_KEYS = {
-            RECOMMEND_USER_ID, RECOMMEND_LIKED
+            RECOMMEND_USER_ID, RECOMMEND_LIKED, RECOMMEND_LIKED_LOCAL
     };
 
     private static final String GUEST = "guest";

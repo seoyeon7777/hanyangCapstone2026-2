@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.CartStore;
 import com.example.capstone.data.DummyData;
+import com.example.capstone.data.LocalLikes;
 import com.example.capstone.data.ProductImages;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.FitResult;
@@ -193,6 +194,8 @@ public class ProductDetailActivity extends AppCompatActivity {
             currentProduct.setLiked(
                     !currentProduct.isLiked()
             );
+
+            LocalLikes.save(this, currentProduct);
 
             // 서버 상품: 찜 상태 저장 + 추천 서버에 like
             RecommendApi.saveLike(this, currentProduct);

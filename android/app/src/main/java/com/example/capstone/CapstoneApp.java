@@ -9,6 +9,8 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import com.example.capstone.data.LocalLikes;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.login.LoginSession;
 
 /**
@@ -39,6 +41,8 @@ public class CapstoneApp extends Application {
             @Override
             public void onActivityResumed(Activity activity) {
                 hideNavigationBar(activity.getWindow());
+                LocalLikes.refresh(activity);
+                RecommendApi.refreshLikes(activity);
             }
 
             @Override public void onActivityStarted(Activity activity) { }
