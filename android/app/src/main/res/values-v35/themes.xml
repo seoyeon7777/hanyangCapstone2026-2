@@ -1,0 +1,11 @@
+<resources>
+    <!--
+        Android 15(API 35)부터 targetSdk 35 앱은 화면이 상태바·내비게이션 바 밑까지 그려진다(edge-to-edge 강제).
+        우리 화면들은 그 여백을 따로 두지 않아서, 맨 위 제목 줄(✕·뒤로 버튼)이 상태바 아래로 들어가
+        버튼 윗부분을 누르면 시스템이 터치를 가져갔다 ("X가 바로 안 눌림").
+        API 34 이하처럼 상태바 아래에서 화면이 시작하게 한다.
+    -->
+    <style name="Theme.Capstone" parent="Base.Theme.Capstone">
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+    </style>
+</resources>

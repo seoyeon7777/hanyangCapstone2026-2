@@ -270,6 +270,7 @@ match_score(body, item) -> {
 - 비로그인 설문은 **24시간 안의 것만** 로그인 계정으로 옮긴다 (`AccountPrefs.GUEST_SURVEY_ADOPT_MS`). 전에는 같은 기기에서 예전에 해 본 비로그인 설문이 방금 가입한 계정으로 넘어와 "가입하자마자 내 체형이 있음"으로 보였다
 - 신체 정밀 측정(`PhotoMeasurementActivity`): 제목 옆 나가기 버튼(`btnPhotoBack`). "신체 분석 시작하기"는 사진 두 장 전에는 꺼져 있었지만 검은색이라 켜진 것처럼 보였다 → 꺼지면 회색(`color/analyze_button_tint`)
 - 단위 테스트 `BodyProfileSurveyTest` 7개
+- (11/06) ✕·뒤로 버튼이 한 번에 안 눌리던 문제: targetSdk 35 앱은 Android 15에서 화면이 상태바 밑까지 그려져(edge-to-edge 강제) 맨 위 제목 줄이 상태바와 겹쳤다. `values-v35/themes.xml`의 `windowOptOutEdgeToEdgeEnforcement`로 API 34 이하처럼 상태바 아래에서 시작. targetSdk를 36으로 올리면 이 옵션이 안 먹으니 그때는 화면마다 여백(insets)을 줘야 한다. ✕ 버튼들에 눌림 표시, 검색 지우기 ×는 30→40dp
 
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
