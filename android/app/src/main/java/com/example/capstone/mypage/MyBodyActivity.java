@@ -59,7 +59,7 @@ public class MyBodyActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_my_body);
-        MyPageUi.setupToolbar(this, "내 체형관리");
+        MyPageUi.setupToolbar(this, "체형 관리");
 
         layoutProfiles = findViewById(R.id.layoutProfiles);
         tvProfileCount = findViewById(R.id.tvProfileCount);

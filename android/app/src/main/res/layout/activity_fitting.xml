@@ -162,6 +162,56 @@
                 android:textStyle="bold" />
 
             <!-- ============================= -->
+            <!-- 내 체형 (예전 마이페이지 '내 체형관리'를 여기로 옮김) -->
+            <!-- 저장한 체형 목록, 누르면 현재 체형으로 선택 -->
+            <!-- ============================= -->
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvMyBodyTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="내 체형"
+                    android:textColor="#111111"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/btnManageBodies"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center"
+                    android:paddingHorizontal="8dp"
+                    android:text="관리 ›"
+                    android:textColor="#555555"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvMyBodyHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="여러 체형을 저장해 두고, 누르면 현재 체형으로 바뀌어요. 홈 추천과 사이즈 확인은 현재 체형으로 해요."
+                android:textColor="#888888"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:id="@+id/layoutMyBodies"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" />
+
+            <!-- ============================= -->
             <!-- 분석 과정 안내 -->
             <!-- ============================= -->
 
