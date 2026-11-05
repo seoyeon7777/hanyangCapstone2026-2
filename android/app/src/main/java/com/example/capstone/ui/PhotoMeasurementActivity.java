@@ -279,6 +279,10 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                         R.id.btnAnalyzePhotos
                 );
 
+        // 나가기 (전에는 화면에 나가는 버튼이 없어 시스템 뒤로가기로만 나갈 수 있었다)
+        findViewById(R.id.btnPhotoBack)
+                .setOnClickListener(v -> finish());
+
 
         // =================================================
         // 키 받아오기

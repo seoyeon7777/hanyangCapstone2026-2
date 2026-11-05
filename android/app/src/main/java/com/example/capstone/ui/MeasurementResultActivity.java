@@ -519,8 +519,13 @@ public class MeasurementResultActivity extends AppCompatActivity {
         String bodyType = surveyTypeLabel();
         int[] surveyAnswers = BodyTypeActivity.lastSurveyAnswers(this);
 
-        String defaultName =
-                BodyProfileStore.nextDefaultName(this);
+        // 대표 체형이 설문만 한 카드면 새 카드를 만들지 않고 그 카드에 치수를 채운다 (같은 체형이 두 장 생기지 않게)
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(this);
+        final String editId = active != null && active.isSurveyOnly() ? active.id : null;
+
+        String defaultName = editId != null
+                ? active.name
+                : BodyProfileStore.nextDefaultName(this);
 
         BodySaveConfirmDialog.show(this, heightCm, bodyType, parts, defaultName,
                 new BodySaveConfirmDialog.Listener() {
@@ -528,7 +533,7 @@ public class MeasurementResultActivity extends AppCompatActivity {
                     public void onSave(String name) {
                         BodyProfileStore.Profile saved = BodyProfileStore.save(
                                 MeasurementResultActivity.this,
-                                null,
+                                editId,
                                 name, heightCm, 0f, bodyType, parts, surveyAnswers);
                         startActivity(BodySaveCompleteActivity.newIntent(
                                 MeasurementResultActivity.this, saved.name));

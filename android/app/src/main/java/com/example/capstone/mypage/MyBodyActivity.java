@@ -195,16 +195,26 @@ public class MyBodyActivity extends AppCompatActivity {
         card.setBackgroundResource(active ? R.drawable.bg_card_active : R.drawable.bg_card);
         card.findViewById(R.id.layoutProfileValues)
                 .setBackgroundResource(active ? R.drawable.bg_card : R.drawable.bg_info_box);
+        boolean surveyOnly = profile.isSurveyOnly();
         ((TextView) card.findViewById(R.id.tvProfileSummary)).setText(
-                "키 " + BodyValueTable.cm(profile.heightCm)
+                "키 " + (profile.heightCm > 0f ? BodyValueTable.cm(profile.heightCm) : "-")
                         + " · 체형 " + profile.bodyType
+                        + (surveyOnly ? " (설문)" : "")
                         + " · " + profile.savedDate());
 
         boolean expanded = expandedIds.contains(profile.id);
-        BodyValueTable.fill(card.findViewById(R.id.layoutProfileValues),
-                BodyValueTable.rows(-1f, profile.parts, !expanded));
+        if (surveyOnly) {
+            // 설문만 한 체형: 치수가 없으니 빈 표 대신 안내 한 줄
+            List<String[]> rows = new ArrayList<>();
+            rows.add(new String[]{"치수", "사진 측정 전"});
+            BodyValueTable.fill(card.findViewById(R.id.layoutProfileValues), rows);
+        } else {
+            BodyValueTable.fill(card.findViewById(R.id.layoutProfileValues),
+                    BodyValueTable.rows(-1f, profile.parts, !expanded));
+        }
 
         TextView tvToggle = card.findViewById(R.id.tvToggleDetail);
+        tvToggle.setVisibility(surveyOnly ? View.GONE : View.VISIBLE);
         tvToggle.setText(expanded ? "간단히 보기 ⌃" : "전체 치수 보기 ⌄");
         tvToggle.setOnClickListener(v -> {
             if (!expandedIds.remove(profile.id)) {

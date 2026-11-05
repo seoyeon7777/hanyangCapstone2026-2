@@ -261,6 +261,16 @@ match_score(body, item) -> {
 - 배송비: 결제 화면에 "무료", 결제 금액 = 상품 금액 − 쿠폰 (배송비 계산 없음)
 - 단위 테스트 `CartStoreTest` 8개 (다시 켜도 남음·옵션별 줄·계정별·비로그인 합치기·옵션 변경 합치기·주문한 줄만 빼기·계정 이름 변경·수량 범위)
 
+### 4-16. 설문만 해도 체형 저장 (11/05)
+- 문제(테스트 보고): 설문만 하면 '내 체형 관리'는 "저장된 체형 0개"인데, 피드백 화면·홈 추천은 설문 체형으로 나왔다. 체형 카드는 사진 측정(`MeasurementResultActivity`)에서만 만들어졌기 때문
+- `BodyProfileStore.saveSurvey(context, answers, bodyType, heightCm)`: 대표 카드가 없으면 **설문만 한 카드**(parts 비어 있음, `Profile.isSurveyOnly()`)를 새로 만들어 대표로. 대표가 설문 카드면 그 카드를 갱신, 치수 카드면 설문 답·골격만 바꿈(치수 유지) → 카드가 쌓이지 않는다
+- `BodyTypeActivity.saveSurveyProfile`: 서버 진단 성공 직후 부른다. 로그인했을 때만(체형 카드는 계정에 저장). 비로그인 설문은 로그인할 때 `adoptSurveyOnLogin`이 카드로 만든다(저장된 체형이 없을 때만)
+- 사진 측정 저장: 대표 카드가 설문 카드면 새 카드 대신 그 카드에 치수를 채운다
+- 내 체형 관리: 설문 카드는 "체형 ○○ (설문)", 치수 칸에 "사진 측정 전". 피팅 화면 "내 체형 피드백"은 대표 카드가 있으면 항상 그 카드로 연다
+- 비로그인 설문은 **24시간 안의 것만** 로그인 계정으로 옮긴다 (`AccountPrefs.GUEST_SURVEY_ADOPT_MS`). 전에는 같은 기기에서 예전에 해 본 비로그인 설문이 방금 가입한 계정으로 넘어와 "가입하자마자 내 체형이 있음"으로 보였다
+- 신체 정밀 측정(`PhotoMeasurementActivity`): 제목 옆 나가기 버튼(`btnPhotoBack`). "신체 분석 시작하기"는 사진 두 장 전에는 꺼져 있었지만 검은색이라 켜진 것처럼 보였다 → 꺼지면 회색(`color/analyze_button_tint`)
+- 단위 테스트 `BodyProfileSurveyTest` 7개
+
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
   - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)
@@ -365,6 +375,7 @@ match_score(body, item) -> {
 - [x] 10/31 통합(feature/integration-1031): main + feature/seoyeon + feature/jihyun-merge(찜 한 번만·재진단·구매반품·요청 줄·상품 정보 갱신) + feature/hyerim(장바구니·마이페이지·계정별 저장·서버 주소 설정·대표 카드 설문 답). 겹친 수정(NaN·DB 문구·스크롤 다시 시도)은 하나만 남김. 개발용 데모 체형·치수 수정 화면(BodyEditActivity) 삭제는 유지 — main에서도 데모 버튼으로만 열리던 화면
 - [x] 11/03 통합(feature/integration-1103): feature/hyerim(서버 상품을 카테고리·검색에, 주문·결제·장바구니·찜) + feature/jihyun-merge(기기 계정·비밀번호 해시·쿠폰 기간·주문 옵션) + feature/yeonoh 중 판매자 기능을 뺀 수정(사진 모델 측정 뒤 메모리 해제, 사진 분석 실패 안내, 안드로이드 7 호환 tint·padding, 안내 문구). **판매자 센터·판매자 API·사진 올리기는 화면 설계 전이라 넣지 않음** (feature/yeonoh에 남아 있음). feature/yubin-update는 지현 장바구니와 내용이 같아 넣지 않음
 - [x] 장바구니 저장(4-15): 앱을 꺼도 남음·계정별·옵션별 줄·주문한 줄만 빼기, 배송비 무료 — CartStoreTest 8개
+- [x] 설문만 해도 체형 저장(4-16), 오래된 비로그인 설문은 새 계정으로 안 옮김, 측정 화면 나가기·시작 버튼 회색 — BodyProfileSurveyTest 7개
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend

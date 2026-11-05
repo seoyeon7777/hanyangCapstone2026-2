@@ -16,14 +16,34 @@
         android:paddingEnd="24dp"
         android:paddingBottom="40dp">
 
-        <!-- 제목 -->
-        <TextView
+        <!-- 제목 + 나가기 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="신체 정밀 측정"
-            android:textColor="#000000"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnPhotoBack"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="-8dp"
+                android:background="@null"
+                android:contentDescription="나가기"
+                android:padding="4dp"
+                android:src="@drawable/ic_back"
+                android:tint="#000000" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:text="신체 정밀 측정"
+                android:textColor="#000000"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <!-- 입력 키 -->
         <TextView
@@ -196,7 +216,7 @@
             android:layout_width="match_parent"
             android:layout_height="58dp"
             android:layout_marginTop="16dp"
-            android:backgroundTint="#000000"
+            android:backgroundTint="@color/analyze_button_tint"
             android:enabled="false"
             android:text="신체 분석 시작하기"
             android:textAllCaps="false"

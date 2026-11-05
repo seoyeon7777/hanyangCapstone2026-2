@@ -8,6 +8,7 @@ import com.example.capstone.data.CartStore;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.ProfilePhotoStore;
+import com.example.capstone.ui.BodyTypeActivity;
 
 /**
  * 로그인 상태를 기기에 기억해 둔다. (앱을 껐다 켜도 유지)
@@ -48,6 +49,8 @@ public final class LoginSession {
                 .apply();
         adoptOldPhoneData(context, phone);
         AccountPrefs.adoptGuest(context);
+        // 비로그인으로 한 설문(방금 옮긴 것) 또는 예전에 설문만 하고 체형 카드가 없는 계정 → 설문 카드를 만든다
+        BodyTypeActivity.adoptSurveyOnLogin(context);
     }
 
     /** 앱을 켤 때 호출. 예전에 하이픈 없이 저장한 로그인 번호도 같은 계정이 되게 바꾼다. */
