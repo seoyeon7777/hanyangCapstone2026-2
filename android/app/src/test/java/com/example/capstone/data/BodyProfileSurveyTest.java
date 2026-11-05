@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** 설문만 해도 '내 체형 관리'에 체형이 저장된다 (사진 측정을 안 해도) */
+/** 설문 결과 화면의 "이대로 저장하기"로 사진 없이도 '내 체형'에 저장된다. "나가기"는 저장 안 함 */
 public class BodyProfileSurveyTest {
 
     private static final int[] ANSWERS = {1, 2, 3, 1, 2, 3, 1};
@@ -100,17 +100,45 @@ public class BodyProfileSurveyTest {
     }
 
     @Test
-    public void guestSurveyBecomesCardOnLogin() {
+    public void guestSaveChoiceBecomesCardOnLogin() {
         finishSurvey(ANSWERS, BodyTypeActivity.TYPE_STRAIGHT, System.currentTimeMillis() - 60_000L);
         BodyTypeActivity.saveSurveyProfile(context);              // 비로그인은 카드를 만들지 않는다
         assertEquals(0, BodyProfileStore.getProfiles(context).size());
 
+        BodyTypeActivity.markSurveySavePending(context);          // 결과 화면 "이대로 저장하기" → 로그인하러 감
         LoginSession.login(context, "가", "a@test.com", "");
 
         BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
         assertNotNull(active);
         assertEquals("스트레이트", active.bodyType);
         assertTrue(BodyTypeActivity.hasLastSurvey(context));
+    }
+
+    @Test
+    public void guestLeaveChoiceIsNotSavedOnLogin() {
+        // "저장하지 않고 나가기"를 고른 비로그인 설문 → 로그인해도 카드로 만들지 않고, 홈 추천에도 안 쓴다
+        finishSurvey(ANSWERS, BodyTypeActivity.TYPE_WAVE, System.currentTimeMillis() - 60_000L);
+        assertNotNull(BodyTypeActivity.homeSurveyAnswers(context));   // 비로그인은 최근 설문으로 추천
+
+        LoginSession.login(context, "가", "a@test.com", "");
+
+        assertEquals(0, BodyProfileStore.getProfiles(context).size());
+        assertEquals(null, BodyTypeActivity.homeSurveyAnswers(context));  // 저장한 체형이 없으니 골격 맞춤 없음
+        assertEquals(null, BodyProfileStore.getActive(context));
+    }
+
+    @Test
+    public void savedSurveyCardIsUsedForHome() {
+        LoginSession.login(context, "가", "a@test.com", "");
+        finishSurvey(ANSWERS, BodyTypeActivity.TYPE_WAVE, System.currentTimeMillis());
+        assertEquals(null, BodyTypeActivity.homeSurveyAnswers(context));  // 진단만 하고 저장 전 → 홈에 안 씀
+        assertEquals(null, BodyProfileStore.getActive(context));
+
+        BodyTypeActivity.saveSurveyProfile(context);              // "이대로 저장하기"
+
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);   // 홈은 대표 카드의 설문 답으로 추천
+        assertNotNull(active);
+        assertEquals(ANSWERS[1], active.surveyAnswers[1]);
     }
 
     @Test

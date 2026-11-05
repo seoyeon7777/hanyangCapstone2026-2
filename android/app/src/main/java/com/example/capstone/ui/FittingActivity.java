@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.login.LoginSession;
 import com.example.capstone.data.BodyInput;
 import com.example.capstone.data.BodyMeasurementContract;
 import com.example.capstone.data.BodyPrior;
@@ -47,10 +48,11 @@ public class FittingActivity extends AppCompatActivity {
         // 대표 체형이 있으면(설문만 한 카드도) 그 카드로 보여 준다 → '내 체형 관리'와 같은 체형
         if (active != null) {
             startActivity(BodyFeedbackActivity.profileIntent(this, active));
-        } else if (BodyTypeActivity.hasLastSurvey(this)) {
+        } else if (BodyTypeActivity.hasLastSurvey(this) && !LoginSession.isLoggedIn(this)) {
+            // 비로그인은 체형을 저장할 수 없어 최근 설문으로 보여 준다. 로그인했으면 저장한 체형만 (홈 추천과 같게)
             startActivity(BodyFeedbackActivity.surveyIntent(this));
         } else {
-            Toast.makeText(this, "아직 체형 분석 기록이 없어요. '체형 분석 시작하기'로 먼저 분석해 주세요.",
+            Toast.makeText(this, "아직 저장된 체형이 없어요. '체형 분석 시작하기'로 분석한 뒤 저장해 주세요.",
                     Toast.LENGTH_SHORT).show();
         }
     }

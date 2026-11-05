@@ -10,10 +10,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.data.BodyProfileStore;
+import com.example.capstone.login.LoginMainActivity;
+import com.example.capstone.login.LoginSession;
 
 public class BodyTypeResultActivity extends AppCompatActivity {
 
@@ -83,6 +87,65 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 .show();
     }
 
+    // 비로그인으로 "이대로 저장하기"를 눌러 로그인 화면에 간 상태
+    private boolean waitingForLogin;
+
+    private void saveSurvey() {
+
+        if (!LoginSession.isLoggedIn(this)) {
+            AppDialog.show(this, false,
+                    "로그인이 필요해요",
+                    "체형은 로그인한 계정에 저장돼요. 로그인하면 지금 결과가 바로 저장돼요.",
+                    "취소", null,
+                    "로그인하기", () -> {
+                        BodyTypeActivity.markSurveySavePending(this);
+                        waitingForLogin = true;
+                        startActivity(new Intent(this, LoginMainActivity.class));
+                    });
+            return;
+        }
+
+        BodyProfileStore.Profile saved = BodyTypeActivity.saveSurveyProfile(this);
+
+        if (saved == null) {
+            Toast.makeText(this, "저장할 진단 결과가 없어요. 설문을 다시 해 주세요.",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        openSaved(saved);
+    }
+
+    private void openSaved(BodyProfileStore.Profile saved) {
+        startActivity(BodySaveCompleteActivity.newIntent(this, saved.name));
+        finish();
+    }
+
+    private void confirmLeave() {
+        AppDialog.show(this, false,
+                "저장하지 않고 나갈까요?",
+                "이번 결과는 '내 체형'에 저장되지 않아요. 피팅 화면의 '이전 설문 불러오기'로 다시 볼 수 있어요.",
+                "나가기", this::finish,
+                "이대로 저장하기", this::saveSurvey);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // 로그인하고 돌아오면: 로그인할 때 이미 저장됐다(BodyTypeActivity.adoptSurveyOnLogin) → 완료 화면으로
+        if (waitingForLogin && LoginSession.isLoggedIn(this)) {
+            waitingForLogin = false;
+            BodyProfileStore.Profile active = BodyProfileStore.getActive(this);
+            if (active == null) {
+                active = BodyTypeActivity.saveSurveyProfile(this);
+            }
+            if (active != null) {
+                openSaved(active);
+            }
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,7 +157,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         resultFeatures = findViewById(R.id.resultFeatures);
 
         Button btnYes = findViewById(R.id.btnYes);
-        Button btnNo = findViewById(R.id.btnNo);
+        View btnNo = findViewById(R.id.btnNo);
         View btnRetry = findViewById(R.id.btnRetry);
 
         // 설문 결과 가져오기
@@ -209,8 +272,17 @@ public class BodyTypeResultActivity extends AppCompatActivity {
             }
         });
 
-        // 아니오: 결과 화면 종료
-        btnNo.setOnClickListener(v -> finish());
+        // 이대로 저장하기: 사진 없이 지금 결과만 '내 체형'으로 저장
+        findViewById(R.id.btnSaveSurvey).setOnClickListener(v -> saveSurvey());
+
+        // 저장하지 않고 나가기 (뒤로가기도 같음)
+        btnNo.setOnClickListener(v -> confirmLeave());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                confirmLeave();
+            }
+        });
 
         // 다시 검사하기
         btnRetry.setOnClickListener(v -> {
