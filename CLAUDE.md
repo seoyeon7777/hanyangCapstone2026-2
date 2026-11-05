@@ -204,7 +204,7 @@ match_score(body, item) -> {
 - `ProductAdapter`: 서버 상품 클릭 → click, 찜 → like, 찜 해제 → unlike. 카드에 추천 이유(`textReason`), 가격 0이면 숨김
 - 요청 줄: 홈 불러오기(`FEED_IO`)와 클릭·찜 기록(`EVENT_IO`, 3초 제한)을 다른 스레드로 보낸다. 서버에 연결하지 못하면 30초 동안 기록을 보내지 않는다 (`RecommendTiming.isOffline`)
 - 재진단 안내 토스트는 한 번 보이면 3일 동안 다시 안 띄운다. 그 사이 설문을 다시 하면 다시 띄울 수 있다 (`RecommendTiming.shouldShowRediagNotice`, SharedPreferences `rediag_notice_shown_at`). 단위 테스트 `RecommendTimingTest`
-- 구매·반품: 주문 완료(`OrderActivity`) → `RecommendApi.recordPurchase`(장바구니의 서버 상품마다 purchase, 주문번호별 상품 id를 기기에 저장), 반품 신청(`OrderListActivity`) → `recordReturn`(그 주문 상품마다 return). 지금은 서버 상품을 장바구니에 담을 수 없어 실제로 보내지는 않는다
+- 구매·반품: 주문 완료(`OrderActivity`) → `RecommendApi.recordPurchase(context, orderNo, serverIds)`(**이번에 주문한** 서버 상품마다 purchase, 주문번호별 상품 id를 기기에 저장), 반품 신청(`OrderListActivity`) → `recordReturn`(그 주문 상품마다 return)
 - 서버 상품을 다시 받을 때마다 이름·브랜드·가격을 새 값으로 바꾼다 (`Product.updateServerDetails`). 찜·장바구니 상태는 유지, 찜한 상품은 찜 탭용 저장 정보도 갱신
 - `Product`: `serverId`·`reason` 추가 (서버 상품은 id −1)
 - 찜(서버 상품): `RecommendApi.saveLike` — 찜 상태를 계정별(SharedPreferences "recommend"의 `liked_products@계정`)로 저장 + 찜할 때 like 전송. 서버 상품 Product는 product_id마다 하나만 만들어 다시 불러와도 하트 유지
@@ -223,7 +223,8 @@ match_score(body, item) -> {
   - 연결 실패 → StoreError → API 503 `{"ok": false, "error": "DB에 잠시 연결할 수 없어요. 잠시 후 다시 시도해 주세요"}` (자세한 원인은 서버 로그에만). psycopg는 `prepare_threshold=None`(Supabase 풀러 대응)
   - 연결 풀: 연결을 최대 `DB_POOL_SIZE`(4)개 열어 두고 요청마다 빌려 씀 (예전에는 하나를 모두가 차례로 써서 동시 6명이면 3.4초 → 지금 0.3초, 왕복 80ms 가정). 끊긴 연결은 버리고 새 연결로 한 번 다시
   - DB 왕복 줄이기: 읽기는 트랜잭션 없이, 사용자+현재 체형은 한 쿼리. API는 체형이 바뀌었을 때만 save_body하고 저장 뒤 사용자를 다시 읽지 않는다(event도 응답 pref를 직접 계산) → 스크롤 13번 → 2번, 찜 13번 → 3번 (PostgreSQL 로그로 셈)
-- 응답 상품에 DB의 `price`, `brand`, `image_url`을 더해 보낸다 (`feed_api.for_screen`). feed.py 결과 모양은 그대로
+- 응답 상품에 DB의 `price`, `brand`, `image_url`과 모든 상품의 `seasons`를 더해 보낸다 (`feed_api.for_screen`). feed.py 결과 모양은 그대로
+  - `seasons`는 11/03 추가: 앱 카테고리 화면의 계절 필터가 상품의 seasons로 거르는데, 서버가 안 보내서 계절을 고르면 서버 상품이 전부 사라졌다 (`test_items_carry_seasons_for_app_filter`)
 - 앱(RecommendApi.toProduct)은 응답의 price·brand를 카드에 쓴다 (없으면 가격 숨김·브랜드 자리에 종류). image_url은 아직 안 씀 (사진 불러오기 라이브러리 필요)
 
 ### 4-11. 안드로이드 카메라·치수 변경 (10/21)
@@ -245,6 +246,24 @@ match_score(body, item) -> {
 - 사진 확인 대화상자: 세로 사진이 버튼을 화면 밖으로 밀어내던 문제를 사진 높이를 화면 55%로 제한해 해결
 - 웹 테스트 버전: `web/` (아이폰 Safari용, 같은 계산식). 사용법은 `web/README.md`
 - 알려진 한계(미수정): 길이 환산이 발목 기준이라 약 5% 크게 나올 수 있음, 정면 가슴 폭에 팔이 섞일 수 있음, 측면 사진이 옆모습인지 검사 안 함
+
+### 4-14. 앱 상품 목록·사진 정리 (11/1)
+- 서버 상품: `RecommendApi.loadCatalog`가 `/api/feed/scroll`(general 전체 + 체형이 있으면 body)로 전체 순서를 받아 `DummyData.getProducts()`에 합친다 → 카테고리·검색·신상·베스트에도 나온다. 서버 상품 id는 1000번대. 베스트=general 순서, 카테고리 추천순·홈 "전체보기"=body 순서
+- 사진: `data/ProductImages` — `image_url`이 있으면 불러오고, 없으면 종류별 색 카드
+- 상품 상세: "바로 구매"(11/03부터 장바구니를 거치지 않고 바로 결제 화면으로, 4-15), 사이즈 추천 문구. 주문·쿠폰·계정은 feature/jihyun-merge(4-13) 쪽 구현, 장바구니 저장은 4-15
+- 카메라 화면은 11/1 커밋에서 삭제됨(사진 선택만). CAMERA 권한·CameraX 의존성·`BodySilhouetteAnalyzer` 제거
+
+### 4-15. 장바구니 저장 (11/03)
+- 요구사항(서연): 장바구니는 앱을 꺼도 남고, 계정마다 따로 저장되고, 같은 상품도 옵션이 다르면 따로 담긴다. 배송비는 전부 무료
+- `data/CartStore`: 한 줄 = 상품 + 사이즈·색상 + 수량 + 체크. SharedPreferences `cart_store`의 `cart@계정`(계정 = `BodyProfileStore.accountKey`, 비로그인 guest)에 JSON으로 저장
+  - 같은 상품·같은 옵션을 또 담으면 그 줄 수량을 더하고, 옵션이 다르면 새 줄. 옵션 변경으로 같은 옵션이 되면 한 줄로 합친다. 수량 1~99
+  - 비로그인으로 담은 장바구니는 로그인한 계정 장바구니에 합친다. 전화번호 형식 통일(`LoginSession.adoptOldPhoneData`)·이메일/전화 변경(`EditProfileActivity`) 때 장바구니도 옮긴다
+  - 화면에는 줄마다 만든 `Product` 복사본(`Product.copyForCart`, `getCartLineId`)을 준다. 다시 켤 때는 상품 목록(DummyData·서버 상품)에서 찾아 복원하고, 못 찾으면 저장해 둔 이름·가격으로 보여 준다
+  - 예전 방식(상품 객체에 inCart 표시, `DummyData.removeOrderedFromCart`)은 없앴다 — 혜림이 만든 ShopStore를 jihyun-merge와 겹친다고 뺀 뒤로 장바구니가 저장되지 않았다
+- 주문: 장바구니 → 결제 화면에 **주문하는 줄 번호**(`OrderActivity.EXTRA_CART_LINE_IDS`)를 넘긴다. 결제를 마치면 그 줄만 장바구니에서 빼고, 그 줄의 서버 상품만 purchase로 보낸다 (전에는 체크 안 한 장바구니 상품까지 purchase로 보냈음). 사이즈 경고도 그 줄만
+- 바로 구매: 장바구니를 건드리지 않고 결제 화면으로 간다 (서버 상품이면 `EXTRA_BUY_NOW_SERVER_ID`로 purchase)
+- 배송비: 결제 화면에 "무료", 결제 금액 = 상품 금액 − 쿠폰 (배송비 계산 없음)
+- 단위 테스트 `CartStoreTest` 8개 (다시 켜도 남음·옵션별 줄·계정별·비로그인 합치기·옵션 변경 합치기·주문한 줄만 빼기·계정 이름 변경·수량 범위)
 
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
@@ -289,12 +308,18 @@ match_score(body, item) -> {
   - 판매자 센터·상품 등록 화면을 에뮬레이터에서 눌러 보는 확인 (컴파일·단위 테스트·실제 서버 HTTP 시험까지만 했다)
 - 같이 고친 것 (앱): 설문 안내 문구를 실제 버튼 이름("체형 분석 시작하기")으로, 성인인데 사진 모델 결과가 없으면 결과 화면에 안내, 사진 모델은 측정이 끝나면 닫아 메모리(약 45MB)를 돌려줌, lint 오류 7개(`paddingHorizontal/Vertical` → `paddingLeft/Right/Top/Bottom`, `android:tint` → `app:tint`)
 
+### 4-13. 앱 계정·주문·쿠폰 (11/01)
+- 휴대폰 번호는 `LocalAccounts.normalizePhone`으로 010-0000-0000 모양 하나로 저장 → 하이픈 유무와 상관없이 같은 계정. 다른 형식으로 저장된 체형·설문·찜·사진은 로그인·앱 시작 때, 지금 계정에 기록이 없을 때만 옮긴다 (`LoginSession.adoptOldPhoneData`)
+- 로그인은 가입한 비밀번호만 통과: `data/LocalAccounts`가 회원을 기기(SharedPreferences `local_accounts`)에 PBKDF2 해시로 저장. **가입한 기기에서만 로그인된다.** 서버 users 표와 연결되면 대체할 임시 저장소. 가입을 마치면 바로 로그인된다. 생년월일·성별은 아직 저장하지 않는다. 이메일 로그인은 프로필에 이메일을 등록한 뒤에 된다. 비밀번호 재설정은 핸드폰 번호·이메일 중 고르는 화면(`ResetPwMainActivity`) → 입력 화면(`ResetPwActivity`, `EXTRA_BY_PHONE`). 인증번호는 아직 가짜(4자리면 통과)
+- 결제 완료 → 체크한 상품만 장바구니에서 뺀다 (`DummyData.removeOrderedFromCart`). 주문 화면·주문 내역 옵션은 고른 값 그대로 (`Product.getOptionLabel`, 여러 상품이면 `이름: L / NAVY, …`)
+- 기간 지난 쿠폰은 보유 탭에서 빠지고 받기 버튼은 "기간만료" (`CouponExpiry`). 레이아웃의 가짜 보유 쿠폰 카드 3장 삭제. 받기 쿠폰 중 뉴베러 신상품(2026.12.30까지)·겨울 긴소매(2026.11.30까지)는 받을 수 있고 전상품 5%는 만료 상태
+
 ## 5. 정답 테스트 (반드시 통과)
 
 `python -m pytest` (맨 위에서) — 255개 중 253개 통과 (`tests/test_a_connection.py`의 2개는 main에서도 실패 중, B 담당. pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 28개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_api.py` — 현재 29개 통과 (Flask 필요: `pip install -r requirements.txt`).
 `cd recommend && python test_seller.py` — 현재 20개 통과 (Flask 필요. 판매자 상품 등록·사진 올리기·치수 검사·DB 저장 SQL 순서. 임시 폴더만 씀).
 `TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 10개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
@@ -359,11 +384,11 @@ match_score(body, item) -> {
 - [x] 앱(안드로이드) 홈을 /api/feed/scroll·/api/feed/event에 연결 (4-10, feature/seoyeon-android-connect)
 - [x] Android Studio 에뮬레이터에서 실제 실행 확인 (Pixel 6 API 35: 홈에 서버 상품·추천 이유·토글 표시)
   - API 37 에뮬레이터는 친구들 3D 라이브러리(Filament)가 16KB 페이지를 지원하지 않아 앱이 꺼진다 → API 35(16KB 아닌 이미지)로 실행
-- [ ] 서버 상품의 사진(image_url) 표시, 상세 화면의 옵션·장바구니 (찜 탭·상세 하트는 연결됨)
+- [x] 서버 상품의 옵션·장바구니·바로 구매 (4-14). 사진은 image_url이 오면 표시 — DB에 사진 주소 넣기는 남음
 - [x] 11단계: DB 저장 (store.py, Supabase) — 상품을 DB에서, 체형·반응을 body_profiles·user_events에. test_db.py 8개
 - [x] Supabase 프로젝트(서연 계정, 조직 hanyang-capstone, 싱가포르) 만들고 db.sql 실행, seed_db.py로 시연 상품 30개 → 서버 "데이터 DB" 연결 확인
   - 접속 주소는 Session pooler(`aws-0-ap-southeast-1.pooler.supabase.com:5432`). 비밀번호는 각자 database_url.txt에만
-- [ ] 앱 상단 탭(신상·베스트·카테고리)·카테고리 화면·검색·장바구니는 아직 DummyData → 서버 상품으로 바꿀지 팀 결정
+- [x] 상단 탭·카테고리·검색·장바구니에 서버 상품 합침 (4-14). DummyData 40개는 그대로 같이 보임 — 뺄지는 팀 결정
 - [ ] 로그인 사용자와 추천 user_id(app-…) 연결 (로그인이 서버·DB와 연결된 뒤)
 - [ ] 실제 상품 데이터(products + product_tags) 넣기, popularity 산식 정하기
 - [ ] B 파트 server.py의 상품 저장소는 아직 메모리 (B API를 쓸 때만 해당)
@@ -372,6 +397,8 @@ match_score(body, item) -> {
 - [x] 12단계: 체형 채점을 서버 하나로 (/api/diagnose, 앱 채점 삭제) + 카메라 치수는 진단에 안 씀(설문만) — test_api 3개 추가
 - [x] 버그 수정(10/26, feature/seoyeon-bugfix): 스크롤 겹침·빠짐(shown), DB 연결 풀·왕복 줄이기, 취향 최근 50개, "자주 본" 기준 0.65, NaN 비율 400, 503 문구, 스크롤 실패 시 다시 시도, profile.is_mixed·page 입력 검사 — test_feed 3·test_api 3·test_db 1 추가
 - [x] 10/31 통합(feature/integration-1031): main + feature/seoyeon + feature/jihyun-merge(찜 한 번만·재진단·구매반품·요청 줄·상품 정보 갱신) + feature/hyerim(장바구니·마이페이지·계정별 저장·서버 주소 설정·대표 카드 설문 답). 겹친 수정(NaN·DB 문구·스크롤 다시 시도)은 하나만 남김. 개발용 데모 체형·치수 수정 화면(BodyEditActivity) 삭제는 유지 — main에서도 데모 버튼으로만 열리던 화면
+- [x] 11/03 통합(feature/integration-1103): feature/hyerim(서버 상품을 카테고리·검색에, 주문·결제·장바구니·찜) + feature/jihyun-merge(기기 계정·비밀번호 해시·쿠폰 기간·주문 옵션) + feature/yeonoh 중 판매자 기능을 뺀 수정(사진 모델 측정 뒤 메모리 해제, 사진 분석 실패 안내, 안드로이드 7 호환 tint·padding, 안내 문구). **판매자 센터·판매자 API·사진 올리기는 화면 설계 전이라 넣지 않음** (feature/yeonoh에 남아 있음). feature/yubin-update는 지현 장바구니와 내용이 같아 넣지 않음
+- [x] 장바구니 저장(4-15): 앱을 꺼도 남음·계정별·옵션별 줄·주문한 줄만 빼기, 배송비 무료 — CartStoreTest 8개
 - [x] 14단계: 판매자 상품 등록 (seller_api.py, image_storage.py, store.add_product, 앱 판매자 센터·상품 등록 화면) — test_seller 20개, 앱 단위 테스트 8개 추가
 - [ ] 판매자 상품 등록 마무리: API 인증, 상품 수정·삭제·품절, 앱 홈·상세에서 등록 상품의 사이즈·치수 사용, Supabase 키·DB 연결 후 실제 등록 확인, 판매자 권한(DB)
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)

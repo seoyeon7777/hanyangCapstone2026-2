@@ -398,6 +398,17 @@ def test_more_bad_inputs_are_400():
     assert client.post("/api/feed/scroll", json={"mode": "general", "shown": ["t01"] * 5001}).status_code == 400
 
 
+def test_items_carry_seasons_for_app_filter():
+    # 앱 카테고리 화면의 계절 필터는 상품의 seasons로 거른다 → 홈·카탈로그 응답의 모든 상품에 seasons가 있어야 한다
+    reset()
+    items = {i["product_id"]: i for i in load_items()}
+    for mode in ("general", "body"):
+        d = client.post("/api/feed/scroll", json={"mode": mode, "size": 50, "body": {"ratio": {"S": 1}}}).get_json()
+        assert d["items"] and all(r["seasons"] == items[r["product_id"]]["seasons"] for r in d["items"]), mode
+    look = client.get("/api/feed?S=1").get_json()["sections"][-1]["items"][0]
+    assert look["top"]["seasons"] and look["bottom"]["seasons"]
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     failed = 0

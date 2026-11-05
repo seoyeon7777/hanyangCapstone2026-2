@@ -135,7 +135,9 @@ public class OrderListActivity extends AppCompatActivity {
         ((TextView) view.findViewById(R.id.tvOrderStatus)).setText(order.getStatusLabel());
         ((TextView) view.findViewById(R.id.tvBrand)).setText(order.brand);
         ((TextView) view.findViewById(R.id.tvProductName)).setText(order.productName);
-        ((TextView) view.findViewById(R.id.tvOption)).setText(order.option + " / " + order.quantity + "개");
+        // 장바구니 주문은 option에 "총 n개"까지 들어 있어 수량을 또 붙이지 않는다
+        ((TextView) view.findViewById(R.id.tvOption)).setText(order.option.contains("총 ")
+                ? order.option : order.option + " / " + order.quantity + "개");
         ((TextView) view.findViewById(R.id.tvPrice)).setText(MyPageStore.formatPrice(order.getTotalPrice()));
 
         Button btnCancel = view.findViewById(R.id.btnCancel);

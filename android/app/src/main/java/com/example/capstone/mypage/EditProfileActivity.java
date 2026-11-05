@@ -3,7 +3,9 @@ package com.example.capstone.mypage;
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.AccountPrefs;
+import com.example.capstone.data.CartStore;
 import com.example.capstone.data.BodyProfileStore;
+import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.ProfilePhotoStore;
 import com.example.capstone.login.LoginSession;
@@ -184,6 +186,10 @@ public class EditProfileActivity extends AppCompatActivity {
                         return false;
                     }
                     // [여기에 DB 입력] 다른 회원이 쓰는 이메일인지 중복 확인 + 이메일 인증 후 저장 (users)
+                    if (LocalAccounts.isTaken(this, LoginSession.getUserId(this), email)) {
+                        toast("이미 가입된 이메일입니다.");
+                        return false;
+                    }
                     confirmChange("이메일 변경", user.email, email, () -> {
                         saveProfile(user.name, email, user.phone);
                         toast("이메일이 변경되었습니다.");
@@ -201,6 +207,10 @@ public class EditProfileActivity extends AppCompatActivity {
                     String phone = MyPageUi.normalizePhone(input);
                     if (phone == null) {
                         toast("휴대폰 번호를 정확히 입력해주세요.");
+                        return false;
+                    }
+                    if (LocalAccounts.isTaken(this, LoginSession.getUserId(this), phone)) {
+                        toast("이미 가입된 휴대폰 번호입니다.");
                         return false;
                     }
                     // [여기에 DB 입력] 실제 서비스에서는 바꾼 번호로 본인 인증(문자 인증) 후 저장
@@ -228,12 +238,14 @@ public class EditProfileActivity extends AppCompatActivity {
         // [여기에 DB 입력] 회원 정보 수정 (users)
         MyPageStore.updateProfile(name, email, phone);
         LoginSession.updateProfile(this, name, email, phone);
+        LocalAccounts.updateProfile(this, LoginSession.getUserId(this), name, email, phone);
 
         String after = BodyProfileStore.accountKey(this);
         if (!before.equals(after)) {
             BodyProfileStore.moveAccount(this, before, after);
             ProfilePhotoStore.moveAccount(this, before, after);
             AccountPrefs.moveAccount(this, before, after);
+            CartStore.moveAccount(this, before, after);
             moveMarketingSettings(before, after);
             setupMarketingSwitches();
         }
@@ -274,6 +286,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
     private void withdraw() {
         // [여기에 DB 입력] 회원 탈퇴 처리 + 로그인 세션 삭제 (users)
+        LocalAccounts.delete(this, LoginSession.getUserId(this));
         LoginSession.logout(this);
         MyPageStore.logout();
         toast("탈퇴가 완료되었습니다.");

@@ -51,6 +51,15 @@ public final class AccountPrefs {
         adopt(recommend(context), RECOMMEND_KEYS, suffix(GUEST), suffix(account));
     }
 
+    /** to 계정에 기록이 없을 때만 from의 설문·추천 기록을 옮긴다. */
+    public static void adoptAccount(Context context, String fromAccount, String toAccount) {
+        if (fromAccount.equals(toAccount)) {
+            return;
+        }
+        adopt(survey(context), SURVEY_KEYS, suffix(fromAccount), suffix(toAccount));
+        adopt(recommend(context), RECOMMEND_KEYS, suffix(fromAccount), suffix(toAccount));
+    }
+
     private static void adopt(SharedPreferences prefs, String[] keys, String from, String to) {
         if (!hasAny(prefs, keys, from) || hasAny(prefs, keys, to)) {
             return;

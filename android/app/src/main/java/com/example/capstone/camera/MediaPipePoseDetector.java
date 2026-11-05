@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.PointF;
 
-import androidx.camera.core.ImageProxy;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
@@ -69,14 +68,6 @@ public class MediaPipePoseDetector implements Closeable {
                     new IllegalArgumentException("비트맵 이미지가 아닙니다."));
         }
         return process(bitmap, image.getRotationDegrees(), 0L);
-    }
-
-    /** 카메라 프레임. ImageProxy 닫기는 호출한 쪽이 한다. */
-    public Task<Pose> process(ImageProxy proxy) {
-        Bitmap bitmap = proxy.toBitmap();
-        int rotation = proxy.getImageInfo().getRotationDegrees();
-        long timestampMs = proxy.getImageInfo().getTimestamp() / 1_000_000L;
-        return process(bitmap, rotation, timestampMs);
     }
 
     private Task<Pose> process(Bitmap bitmap, int rotationDegrees, long timestampMs) {

@@ -25,8 +25,7 @@ public class CategoryMenuActivity extends AppCompatActivity {
 
     private static final String[] CATEGORIES = {
             "상의", "바지", "아우터", "원피스",
-            "스커트", "수영복", "트레이닝",
-            "신발", "가방·잡화"
+            "스커트"
     };
 
     private static final String[][] SUBCATEGORIES = {
@@ -54,24 +53,6 @@ public class CategoryMenuActivity extends AppCompatActivity {
                     "전체 스커트", "미니 스커트",
                     "미디 스커트", "롱 스커트",
                     "데님 스커트"
-            },
-            {
-                    "전체 수영복", "비키니",
-                    "원피스 수영복", "래시가드"
-            },
-            {
-                    "전체 트레이닝", "트레이닝 상의",
-                    "트레이닝 하의", "레깅스",
-                    "스포츠웨어"
-            },
-            {
-                    "전체 신발", "운동화",
-                    "스니커즈", "로퍼",
-                    "샌들", "부츠"
-            },
-            {
-                    "전체 가방·잡화", "가방",
-                    "모자", "벨트", "양말"
             }
     };
 

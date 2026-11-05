@@ -24,6 +24,13 @@ public class DeliveryAddressActivity extends AppCompatActivity {
     /** 등록 가능한 배송지 최대 개수 */
     private static final int MAX_ADDRESS = 10;
 
+    public static final String EXTRA_SELECT_MODE = "select_mode";
+    public static final String EXTRA_ADDRESS_ID = "address_id";
+
+    private boolean selectMode;
+    private long selectedId = -1;
+    private int knownCount = -1;
+
     private TextView tvAddressCount, tvEmpty;
     private LinearLayout containerAddresses;
     private Button btnAddAddress;
@@ -33,7 +40,10 @@ public class DeliveryAddressActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_delivery_address);
 
-        MyPageUi.setupToolbar(this, "배송지 관리");
+        selectMode = getIntent().getBooleanExtra(EXTRA_SELECT_MODE, false);
+        selectedId = getIntent().getLongExtra(EXTRA_ADDRESS_ID, -1);
+
+        MyPageUi.setupToolbar(this, selectMode ? "배송지 선택" : "배송지 관리");
 
         tvAddressCount = findViewById(R.id.tvAddressCount);
         tvEmpty = findViewById(R.id.tvEmpty);
@@ -46,13 +56,32 @@ public class DeliveryAddressActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
                 return;
             }
+            knownCount = MyPageStore.getAddresses().size();
             startActivity(new Intent(this, AddressEditActivity.class));
         });
+    }
+
+    private void returnAddress(long id) {
+        Intent data = new Intent();
+        data.putExtra(EXTRA_ADDRESS_ID, id);
+        setResult(RESULT_OK, data);
+        finish();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        List<Address> addresses = MyPageStore.getAddresses();
+        if (selectMode && knownCount >= 0 && addresses.size() > knownCount) {
+            long newest = -1;
+            for (Address address : addresses) {
+                newest = Math.max(newest, address.id);
+            }
+            returnAddress(newest);
+            return;
+        }
+
         // 추가/수정 화면에서 돌아오면 목록을 다시 그린다.
         renderAddresses();
     }
@@ -82,6 +111,13 @@ public class DeliveryAddressActivity extends AppCompatActivity {
 
         view.findViewById(R.id.tvDefaultBadge)
                 .setVisibility(address.isDefault ? View.VISIBLE : View.GONE);
+
+        if (selectMode) {
+            if (address.id == selectedId) {
+                view.setBackgroundResource(R.drawable.bg_card_active);
+            }
+            view.setOnClickListener(v -> returnAddress(address.id));
+        }
 
         Button btnSetDefault = view.findViewById(R.id.btnSetDefault);
         btnSetDefault.setVisibility(address.isDefault ? View.GONE : View.VISIBLE);

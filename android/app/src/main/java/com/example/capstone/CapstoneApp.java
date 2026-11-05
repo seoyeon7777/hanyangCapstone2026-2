@@ -9,6 +9,8 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import com.example.capstone.login.LoginSession;
+
 /**
  * 모든 화면에서 하단 내비게이션 바(뒤로·홈 버튼 줄)를 숨긴다.
  * 화면 아래쪽 버튼이 바에 가려지는 문제 해결. 아래에서 위로 쓸어올리면 잠깐 나타난다.
@@ -19,6 +21,8 @@ public class CapstoneApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        LoginSession.normalizeSavedPhone(this);
 
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {
             @Override

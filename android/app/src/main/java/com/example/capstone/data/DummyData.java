@@ -2,10 +2,12 @@ package com.example.capstone.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DummyData {
 
-    private static final List<Product> PRODUCTS = new ArrayList<>();
+    private static final List<Product> PRODUCTS = new CopyOnWriteArrayList<>();
+    private static final int NEW_COUNT = 6;
 
     static {
         // 기존 상품 1~6
@@ -285,6 +287,31 @@ public class DummyData {
         return PRODUCTS;
     }
 
+    /** 체크한 상품들의 옵션. 한 개면 "L / NAVY", 여러 개면 "이름: L / NAVY, 이름: M / BLACK" */
+    public static String orderedOptionText(List<Product> ordered) {
+        if (ordered.size() == 1) {
+            return ordered.get(0).getOptionLabel();
+        }
+
+        StringBuilder text = new StringBuilder();
+
+        for (Product product : ordered) {
+            String option = product.getOptionLabel();
+
+            if (option.isEmpty()) {
+                continue;
+            }
+
+            if (text.length() > 0) {
+                text.append(", ");
+            }
+
+            text.append(product.getName()).append(": ").append(option);
+        }
+
+        return text.toString();
+    }
+
     public static Product getProductById(int id) {
         for (Product product : PRODUCTS) {
             if (product.getId() == id) {
@@ -292,5 +319,24 @@ public class DummyData {
             }
         }
         return null;
+    }
+
+    public static void addServerProduct(Product product) {
+        if (product != null && !PRODUCTS.contains(product)) {
+            PRODUCTS.add(product);
+        }
+    }
+
+    public static boolean isNew(Product product) {
+        if (product == null || product.isFromServer()) {
+            return false;
+        }
+        int localCount = 0;
+        for (Product p : PRODUCTS) {
+            if (!p.isFromServer()) {
+                localCount++;
+            }
+        }
+        return product.getId() > localCount - NEW_COUNT;
     }
 }

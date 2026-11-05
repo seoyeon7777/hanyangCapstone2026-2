@@ -54,11 +54,6 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
     implementation(libs.material)
-    // CameraX 1.5+ requires AGP 8.9.1 / compileSdk 36, which Android Studio Hedgehog cannot sync.
-    implementation("androidx.camera:camera-core:1.4.2")
-    implementation("androidx.camera:camera-camera2:1.4.2")
-    implementation("androidx.camera:camera-lifecycle:1.4.2")
-    implementation("androidx.camera:camera-view:1.4.2")
     // 관절 인식: MediaPipe Pose Landmarker (모델은 assets/models/pose_landmarker_full.task)
     implementation("com.google.mediapipe:tasks-vision:0.10.33")
     implementation("com.google.mlkit:segmentation-selfie:16.0.0-beta6")

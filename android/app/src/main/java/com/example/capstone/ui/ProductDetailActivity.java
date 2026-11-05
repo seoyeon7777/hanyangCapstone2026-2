@@ -10,11 +10,15 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.data.CartStore;
 import com.example.capstone.data.DummyData;
+import com.example.capstone.data.ProductImages;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.Product;
+import com.example.capstone.data.SizeChart;
 import com.example.capstone.data.SizeFitChecker;
+import com.example.capstone.data.UserBodyProfile;
 
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -30,14 +34,12 @@ public class ProductDetailActivity extends AppCompatActivity {
     private TextView btnAddCart;
     private TextView btnFitting;
     private TextView btnReview;
+    private TextView textSizeRecommend;
 
     private View layoutOptionSelect;
     private TextView textOptionSummary;
 
     private Product currentProduct;
-
-    // 추천 서버 상품 (DummyData에 없음). 찜만 된다 — 옵션·장바구니는 아직 DummyData 상품만
-    private Product serverProduct;
 
     private String selectedSize = "";
     private String selectedColor = "";
@@ -64,6 +66,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         btnAddCart = findViewById(R.id.btnAddCart);
         btnFitting = findViewById(R.id.btnFitting);
         btnReview = findViewById(R.id.btnReview);
+        textSizeRecommend = findViewById(R.id.textSizeRecommend);
 
         layoutOptionSelect = findViewById(R.id.layoutOptionSelect);
         textOptionSummary = findViewById(R.id.textOptionSummary);
@@ -95,6 +98,27 @@ public class ProductDetailActivity extends AppCompatActivity {
                         0
                 );
 
+        String serverId = getIntent().getStringExtra("server_product_id");
+
+
+        // =========================
+        // DummyData에서 실제 Product 찾기
+        // =========================
+
+        if (serverId != null && !serverId.isEmpty()) {
+            currentProduct = RecommendApi.serverProduct(serverId);
+        }
+
+        if (currentProduct == null) {
+            currentProduct = DummyData.getProductById(productId);
+        }
+
+        if (currentProduct != null) {
+            brand = currentProduct.getBrand();
+            name = currentProduct.getName();
+            price = currentProduct.getPrice();
+        }
+
 
         // =========================
         // 화면에 상품 정보 표시
@@ -117,51 +141,17 @@ public class ProductDetailActivity extends AppCompatActivity {
                 formattedPrice + "원"
         );
 
-
-        // =========================
-        // DummyData에서 실제 Product 찾기
-        // =========================
-
-        for (Product product : DummyData.getProducts()) {
-
-            if (product.getId() == productId) {
-
-                currentProduct = product;
-                break;
-            }
-        }
-
-        if (currentProduct == null) {
-            serverProduct = RecommendApi.serverProduct(
-                    getIntent().getStringExtra("server_product_id")
-            );
-        }
-
         // 추천 서버 상품은 DB에 가격이 없으면 0으로 온다 → "0원" 대신 안내
-        if (serverProduct != null && price == 0) {
+        if (price == 0) {
             textDetailPrice.setText("가격 정보 준비 중");
         }
 
-
-        // =========================
-        // 이미 장바구니 옵션이 있으면
-        // 다시 상세에 들어왔을 때 선택 복구
-        // =========================
-
-        if (currentProduct != null) {
-
-            selectedSize =
-                    currentProduct.getSelectedSize();
-
-            selectedColor =
-                    currentProduct.getSelectedColor();
-
-            if (currentProduct.getCartQuantity() > 0) {
-
-                selectedQuantity =
-                        currentProduct.getCartQuantity();
-            }
-        }
+        ProductImages.bind(
+                findViewById(R.id.frameDetailImage),
+                findViewById(R.id.textDetailImageLabel),
+                findViewById(R.id.imgDetailProduct),
+                currentProduct
+        );
 
         updateOptionSummary();
 
@@ -172,11 +162,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         layoutOptionSelect.setOnClickListener(v -> {
 
-            if (showServerProductNotice()) {
-                return;
-            }
-
-            if (currentProduct == null) {
+            if (!checkProduct()) {
                 return;
             }
 
@@ -200,18 +186,6 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         btnDetailHeart.setOnClickListener(v -> {
 
-            // 서버 상품: 찜 상태 저장 + 추천 서버에 like
-            if (currentProduct == null && serverProduct != null) {
-
-                serverProduct.setLiked(
-                        !serverProduct.isLiked()
-                );
-
-                RecommendApi.saveLike(this, serverProduct);
-                updateHeart();
-                return;
-            }
-
             if (currentProduct == null) {
                 return;
             }
@@ -220,6 +194,8 @@ public class ProductDetailActivity extends AppCompatActivity {
                     !currentProduct.isLiked()
             );
 
+            // 서버 상품: 찜 상태 저장 + 추천 서버에 like
+            RecommendApi.saveLike(this, currentProduct);
             updateHeart();
         });
 
@@ -227,39 +203,23 @@ public class ProductDetailActivity extends AppCompatActivity {
         // =========================
         // 장바구니 버튼
         //
-        // 옵션을 이미 골랐으면 바로 체형과 맞는지 확인하고,
-        // 아직 안 골랐으면 옵션 선택 창부터 띄운다.
+        // 담을 때마다 옵션 선택 창을 처음 상태로 띄운다.
         // =========================
 
         btnAddCart.setOnClickListener(v -> {
 
-            if (showServerProductNotice()) {
+            if (!checkProduct()) {
                 return;
             }
 
-            if (currentProduct == null) {
-
-                Toast.makeText(
-                        ProductDetailActivity.this,
-                        "상품 정보를 찾을 수 없습니다.",
-                        Toast.LENGTH_SHORT
-                ).show();
-
-                return;
-            }
-
-
-            if (isOptionSelected()) {
-
-                checkFitAndAddToCart();
-
-                return;
-            }
-
+            selectedSize = "";
+            selectedColor = "";
+            selectedQuantity = 1;
+            updateOptionSummary();
 
             showOptionSheet(
                     "장바구니 담기",
-                    this::checkFitAndAddToCart
+                    () -> checkFitThen(this::addToCart, "장바구니 담기")
             );
         });
 
@@ -272,18 +232,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         btnFitting.setOnClickListener(v -> {
 
-            if (showServerProductNotice()) {
-                return;
-            }
-
-            if (currentProduct == null) {
-
-                Toast.makeText(
-                        ProductDetailActivity.this,
-                        "상품 정보를 찾을 수 없습니다.",
-                        Toast.LENGTH_SHORT
-                ).show();
-
+            if (!checkProduct()) {
                 return;
             }
 
@@ -291,16 +240,19 @@ public class ProductDetailActivity extends AppCompatActivity {
             if (!isOptionSelected()) {
 
                 showOptionSheet(
-                        "3D 가상피팅 하기",
-                        this::goFitting
+                        "바로 구매",
+                        () -> checkFitThen(this::buyNow, "바로 구매")
                 );
 
                 return;
             }
 
 
-            goFitting();
+            checkFitThen(this::buyNow, "바로 구매");
         });
+
+
+        textSizeRecommend.setOnClickListener(v -> showSizeRecommendation());
 
 
         // =========================
@@ -320,6 +272,11 @@ public class ProductDetailActivity extends AppCompatActivity {
                         "product_id",
                         currentProduct.getId()
                 );
+
+                intent.putExtra(
+                        "server_product_id",
+                        currentProduct.getServerId()
+                );
             }
 
             startActivity(intent);
@@ -333,6 +290,73 @@ public class ProductDetailActivity extends AppCompatActivity {
         btnBack.setOnClickListener(
                 v -> finish()
         );
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateHeart();
+        updateReviewCount();
+        updateSizeRecommendText();
+    }
+
+    private boolean checkProduct() {
+        if (currentProduct != null) {
+            return true;
+        }
+        Toast.makeText(
+                ProductDetailActivity.this,
+                "상품 정보를 찾을 수 없습니다.",
+                Toast.LENGTH_SHORT
+        ).show();
+        return false;
+    }
+
+    private void updateReviewCount() {
+        if (currentProduct == null) {
+            return;
+        }
+        btnReview.setText("리뷰 보기  ›");
+    }
+
+    private void updateSizeRecommendText() {
+        if (currentProduct == null) {
+            textSizeRecommend.setVisibility(View.GONE);
+            return;
+        }
+        UserBodyProfile profile = UserBodyProfile.getInstance();
+        if (!profile.hasMeasurement()) {
+            textSizeRecommend.setText("체형을 측정하면 내 사이즈를 추천해 드려요  ›");
+            return;
+        }
+        String recommended = SizeFitChecker.recommendSize(SizeChart.categoryOf(currentProduct), profile);
+        textSizeRecommend.setText(recommended == null
+                ? "이 상품은 사이즈 비교 정보가 없어요"
+                : "내 치수 기준 추천 사이즈: " + recommended + "  ›");
+    }
+
+    private void showSizeRecommendation() {
+        UserBodyProfile profile = UserBodyProfile.getInstance();
+        if (!profile.hasMeasurement()) {
+            AppDialog.show(this, false, "체형 측정이 필요해요",
+                    "피팅 메뉴에서 키·몸무게와 전신 사진으로 치수를 재면, 상품마다 맞는 사이즈를 알려 드려요.",
+                    "닫기", null,
+                    "측정하러 가기", () -> startActivity(new Intent(this, FittingActivity.class)));
+            return;
+        }
+        String recommended = SizeFitChecker.recommendSize(SizeChart.categoryOf(currentProduct), profile);
+        if (recommended == null) {
+            AppDialog.alert(this, "사이즈 추천", "이 상품은 사이즈 비교 정보가 없어요.", "확인");
+            return;
+        }
+        AppDialog.show(this, false, "사이즈 추천",
+                "저장한 치수로 보면 " + recommended + " 사이즈가 가장 잘 맞아요.",
+                "닫기", null,
+                recommended + " 선택", () -> {
+                    selectedSize = recommended;
+                    updateOptionSummary();
+                    showOptionSheet("선택 완료", null);
+                });
     }
 
 
@@ -374,7 +398,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     // 사이즈 적합도 확인 후 장바구니에 담기
     // =========================
 
-    private void checkFitAndAddToCart() {
+    private void checkFitThen(Runnable action, String confirmText) {
 
         FitResult fitResult =
                 SizeFitChecker.check(
@@ -395,7 +419,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                         @Override
                         public void onContinue() {
 
-                            addToCart();
+                            action.run();
                         }
 
                         @Override
@@ -408,8 +432,8 @@ public class ProductDetailActivity extends AppCompatActivity {
                             updateOptionSummary();
 
                             showOptionSheet(
-                                    "장바구니 담기",
-                                    ProductDetailActivity.this::checkFitAndAddToCart
+                                    confirmText,
+                                    () -> checkFitThen(action, confirmText)
                             );
                         }
                     }
@@ -419,7 +443,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
 
 
-        addToCart();
+        action.run();
     }
 
 
@@ -436,95 +460,41 @@ public class ProductDetailActivity extends AppCompatActivity {
             return;
         }
 
+        // 같은 옵션이 이미 있으면 그 줄의 수량을 더하고, 옵션이 다르면 줄을 따로 만든다 (CartStore)
+        boolean sameOption = CartStore.containsOption(this, currentProduct, selectedSize, selectedColor);
+        boolean otherOption = !sameOption && CartStore.contains(this, currentProduct);
 
-        // 장바구니 상태
-        currentProduct.setInCart(true);
-        currentProduct.setCartSelected(true);
+        Product line = CartStore.add(this, currentProduct, selectedSize, selectedColor, selectedQuantity);
 
-        // ERD product_options 역할을 임시 저장
-        currentProduct.setSelectedSize(
-                selectedSize
-        );
+        String message = selectedSize + " / " + selectedColor + " / " + line.getCartQuantity() + "개";
+        if (sameOption) {
+            message += "\n같은 옵션이 이미 있어서 수량을 더했어요.";
+        } else if (otherOption) {
+            message += "\n다른 옵션과 따로 담았어요.";
+        }
 
-        currentProduct.setSelectedColor(
-                selectedColor
-        );
-
-        currentProduct.setCartQuantity(
-                selectedQuantity
-        );
-
-
-        btnAddCart.setText(
-                "장바구니에 담김"
-        );
-
-
-        Toast.makeText(
-                ProductDetailActivity.this,
-                selectedSize
-                        + " / "
-                        + selectedColor
-                        + " / "
-                        + selectedQuantity
-                        + "개를 장바구니에 담았습니다.",
-                Toast.LENGTH_SHORT
-        ).show();
+        AppDialog.show(this, false,
+                "장바구니에 담았어요",
+                message,
+                "계속 쇼핑", null,
+                "장바구니 보기", () -> startActivity(new Intent(this, CartActivity.class)));
     }
 
+    // 바로 구매: 장바구니는 건드리지 않고 이 상품·옵션만 결제 화면으로 넘긴다
+    private void buyNow() {
 
-    // =========================
-    // 3D 가상 피팅으로 이동
-    // =========================
+        if (currentProduct == null) {
+            return;
+        }
 
-    private void goFitting() {
-
-        Intent intent = new Intent(
-                ProductDetailActivity.this,
-                FittingActivity.class
-        );
-
-
-        // =========================
-        // products 정보 전달
-        // =========================
-
-        intent.putExtra(
-                "product_id",
-                currentProduct.getId()
-        );
-
-        intent.putExtra(
-                "product_name",
-                currentProduct.getName()
-        );
-
-        intent.putExtra(
-                "product_brand",
-                currentProduct.getBrand()
-        );
-
-        intent.putExtra(
-                "product_price",
-                currentProduct.getPrice()
-        );
-
-
-        // =========================
-        // product_options 정보 전달
-        // =========================
-
-        intent.putExtra(
-                "selected_size",
-                selectedSize
-        );
-
-        intent.putExtra(
-                "selected_color",
-                selectedColor
-        );
-
-
+        Intent intent = new Intent(this, OrderActivity.class);
+        intent.putExtra("productNames", currentProduct.getName());
+        intent.putExtra("productOption", selectedSize + " / " + selectedColor);
+        intent.putExtra("totalQuantity", selectedQuantity);
+        intent.putExtra("totalPrice", currentProduct.getPrice() * selectedQuantity);
+        if (currentProduct.isFromServer()) {
+            intent.putExtra(OrderActivity.EXTRA_BUY_NOW_SERVER_ID, currentProduct.getServerId());
+        }
         startActivity(intent);
     }
 
@@ -576,25 +546,9 @@ public class ProductDetailActivity extends AppCompatActivity {
     // 찜 하트 표시
     // =========================
 
-    /** 추천 서버 상품이면 아직 안 되는 기능이라고 알리고 true (옵션·사이즈 정보가 DB에 들어오면 연결) */
-    private boolean showServerProductNotice() {
-
-        if (currentProduct != null || serverProduct == null) {
-            return false;
-        }
-
-        Toast.makeText(
-                this,
-                "추천 상품은 아직 옵션 선택·장바구니·피팅이 안 돼요 (찜은 돼요)",
-                Toast.LENGTH_SHORT
-        ).show();
-
-        return true;
-    }
-
     private void updateHeart() {
 
-        Product product = currentProduct != null ? currentProduct : serverProduct;
+        Product product = currentProduct;
 
         if (product == null) {
 

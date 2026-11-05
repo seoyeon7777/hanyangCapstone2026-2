@@ -16,8 +16,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
+import com.example.capstone.data.LocalAccounts;
 
 public class SigninActivity extends AppCompatActivity {
+
+    public static final String EXTRA_PHONE = "extra_phone";
 
     private ImageButton btnBack, btnHome;
 
@@ -168,7 +171,16 @@ public class SigninActivity extends AppCompatActivity {
             }
 
             // [여기에 DB 입력] 같은 아이디로 가입한 회원이 있는지 확인 (users)
-            //                 있으면 "이미 사용 중인 아이디입니다." 안내 후 return
+            if (LocalAccounts.idExists(this, id)) {
+                Toast.makeText(
+                        this,
+                        "이미 사용 중인 아이디입니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
             isIdChecked = true;
 
             Toast.makeText(
@@ -403,6 +415,29 @@ public class SigninActivity extends AppCompatActivity {
 
             // [여기에 DB 입력] 회원가입 정보 저장 - 아이디, 비밀번호(암호화), 이름, 생년월일, 성별, 휴대폰 (users)
             //                 저장에 성공했을 때만 아래 완료 화면으로 이동할 것
+            String phone = getIntent().getStringExtra(EXTRA_PHONE);
+
+            boolean saved = LocalAccounts.register(
+                    this,
+                    id,
+                    pw,
+                    name,
+                    phone
+            );
+
+            if (!saved) {
+                Toast.makeText(
+                        this,
+                        "이미 가입된 아이디 또는 휴대폰 번호입니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            // 가입하면 바로 로그인된 상태로 완료 화면에 간다
+            LoginSession.login(this, id, name, "", phone);
+
             Toast.makeText(
                     this,
                     name + "님, 회원가입 완료! (" +

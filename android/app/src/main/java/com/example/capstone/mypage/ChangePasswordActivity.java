@@ -1,7 +1,8 @@
 package com.example.capstone.mypage;
 
 import com.example.capstone.R;
-import com.example.capstone.data.MyPageStore;
+import com.example.capstone.data.LocalAccounts;
+import com.example.capstone.login.LoginSession;
 
 import android.os.Bundle;
 import android.widget.Button;
@@ -47,7 +48,12 @@ public class ChangePasswordActivity extends AppCompatActivity {
             finish();
             return;
         }
-        if (!MyPageStore.checkPassword(currentPw)) {
+        String userId = LoginSession.getUserId(this);
+        if (!LocalAccounts.idExists(this, userId)) {
+            toast("가입 정보가 없어 변경할 수 없습니다. 로그아웃 후 회원가입해주세요.");
+            return;
+        }
+        if (!LocalAccounts.checkPassword(this, userId, currentPw)) {
             toast("현재 비밀번호가 일치하지 않습니다.");
             return;
         }
@@ -64,7 +70,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
             return;
         }
 
-        MyPageStore.changePassword(newPw);
+        LocalAccounts.changePassword(this, userId, newPw);
         toast("비밀번호가 변경되었습니다.");
         finish();
     }
