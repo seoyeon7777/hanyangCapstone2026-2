@@ -292,39 +292,7 @@ public class CategoryActivity extends AppCompatActivity {
                 this::showNewFilterDialog
         );
 
-        addFilterChip(
-                selectedColor.isEmpty()
-                        ? "색상⌄"
-                        : selectedColor + "⌄",
-                !selectedColor.isEmpty(),
-                this::showNewFilterDialog
-        );
-
-        addFilterChip(
-                selectedSize.isEmpty()
-                        ? "사이즈⌄"
-                        : selectedSize + "⌄",
-                !selectedSize.isEmpty(),
-                this::showSizeDialog
-        );
-
-        addFilterChip(
-                minPrice == 0 && maxPrice == 0
-                        ? "가격⌄"
-                        : "가격 적용 ✓",
-                minPrice > 0 || maxPrice > 0,
-                this::showNewFilterDialog
-        );
-
-        addFilterChip(
-                selectedStyles.isEmpty()
-                        && selectedSeason.isEmpty()
-                        ? "상세옵션⌄"
-                        : "상세옵션 ✓",
-                !selectedStyles.isEmpty()
-                        || !selectedSeason.isEmpty(),
-                this::showNewFilterDialog
-        );
+        // 색상·사이즈·가격·상세옵션 바로가기 칩은 없앴다 (11/06). 모든 조건은 "필터" 창 하나에서 고른다
     }
 
     private boolean hasActiveFilter() {

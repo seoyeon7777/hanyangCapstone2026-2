@@ -172,10 +172,11 @@
                 android:layout_marginBottom="12dp"
                 android:background="#E7E7E7"/>
 
-            <!-- 키 / 몸무게 -->
+            <!-- 키 / 몸무게: 11/06 화면에서 숨김 (체형은 체형분석에서 입력). 코드가 id를 쓰므로 뷰는 남겨 둠 -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="44dp"
+                android:visibility="gone"
                 android:gravity="center_vertical"
                 android:text="키 / 몸무게"
                 android:textSize="14sp"
@@ -185,6 +186,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="44dp"
+                android:visibility="gone"
                 android:orientation="horizontal">
 
                 <EditText
@@ -222,6 +224,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:visibility="gone"
                 android:layout_marginTop="22dp"
                 android:layout_marginBottom="12dp"
                 android:background="#E7E7E7"/>

@@ -276,6 +276,7 @@ match_score(body, item) -> {
   - 저장한 체형이 없으면(처음 가입·비로그인) 체형분석 탭은 바로 분석 화면(`FittingActivity`, `EXTRA_AS_TAB`: 제목 "체형 분석", 뒤로 버튼 숨김). 판단은 `BottomMenu.hasSavedBody`
   - 설문만 한 카드에는 "사진 분석 이어서 하기 ›" → `PhotoMeasurementActivity.continueIntent`(카드 id, 카드의 키) → `MeasurementSession.continueProfileId` → 측정 결과 저장 때 **그 카드에 치수를 채움**(이름·골격·설문 답은 카드 것, 새 카드 안 생김). 치수가 이미 있는 카드면 새 카드
   - 새 체형 분석 화면(`FittingActivity`)에서 "이전 설문 불러오기"·"내 체형 피드백 보기" 버튼 삭제 (피드백은 체형 카드의 "피드백 보기")
+- (11/06) 카테고리 화면(`CategoryActivity`, 모든 카테고리·탭이 이 화면): 필터 줄에 "☰ 필터"만 남기고 색상·사이즈·가격·상세옵션 칩 삭제. 필터 창(`dialog_category_filter`)의 키/몸무게 입력은 숨김(id는 코드가 써서 뷰는 남김)
 - (11/06) ✕·뒤로 버튼이 한 번에 안 눌리던 문제: targetSdk 35 앱은 Android 15에서 화면이 상태바 밑까지 그려져(edge-to-edge 강제) 맨 위 제목 줄이 상태바와 겹쳤다. `values-v35/themes.xml`의 `windowOptOutEdgeToEdgeEnforcement`로 API 34 이하처럼 상태바 아래에서 시작. targetSdk를 36으로 올리면 이 옵션이 안 먹으니 그때는 화면마다 여백(insets)을 줘야 한다. ✕ 버튼들에 눌림 표시, 검색 지우기 ×는 30→40dp
 
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
