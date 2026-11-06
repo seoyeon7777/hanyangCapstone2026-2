@@ -2,6 +2,7 @@ package com.example.capstone.login;
 
 import com.example.capstone.R;
 import com.example.capstone.data.LocalAccounts;
+import com.example.capstone.data.PasswordRule;
 
 import android.os.Bundle;
 import android.os.LocaleList;
@@ -50,7 +51,6 @@ public class ResetPwActivity extends AppCompatActivity {
     /** 인증번호 자릿수 */
     private static final int AUTH_CODE_LENGTH = 4;
     /** 비밀번호 최소 길이 */
-    private static final int PASSWORD_MIN_LENGTH = 8;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -266,10 +266,9 @@ public class ResetPwActivity extends AppCompatActivity {
             return;
         }
 
-        // 가입할 때와 같은 비밀번호 규칙 (SigninActivity: 8자 이상)
-        if (TextUtils.isEmpty(pw) || pw.length() < PASSWORD_MIN_LENGTH) {
-            Toast.makeText(this, "비밀번호는 " + PASSWORD_MIN_LENGTH + "자 이상 입력해주세요.",
-                    Toast.LENGTH_SHORT).show();
+        // 프로필 수정의 비밀번호 변경과 같은 규칙 (영문·숫자·특수문자 포함 8~20자)
+        if (!PasswordRule.isValid(pw)) {
+            Toast.makeText(this, PasswordRule.MESSAGE, Toast.LENGTH_SHORT).show();
             return;
         }
 

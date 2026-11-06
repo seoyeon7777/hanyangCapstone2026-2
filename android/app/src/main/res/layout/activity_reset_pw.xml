@@ -171,7 +171,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:maxLength="20"
-                android:hint="영문, 숫자, 특수문자포함 8자 이상"
+                android:hint="영문, 숫자, 특수문자 포함 8~20자"
                 android:inputType="textPassword"
                 android:background="@drawable/bg_edit"
                 android:paddingStart="16dp"

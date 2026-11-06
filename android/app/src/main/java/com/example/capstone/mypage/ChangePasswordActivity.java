@@ -2,6 +2,7 @@ package com.example.capstone.mypage;
 
 import com.example.capstone.R;
 import com.example.capstone.data.LocalAccounts;
+import com.example.capstone.data.PasswordRule;
 import com.example.capstone.login.LoginSession;
 
 import android.os.Bundle;
@@ -16,10 +17,6 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
     private EditText etCurrentPw, etNewPw, etNewPwConfirm;
     private Button btnSave;
-
-    /** 영문 + 숫자 + 특수문자 포함 8~20자 */
-    private static final String PASSWORD_RULE =
-            "^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,20}$";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,8 +54,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
             toast("현재 비밀번호가 일치하지 않습니다.");
             return;
         }
-        if (!newPw.matches(PASSWORD_RULE)) {
-            toast("새 비밀번호는 영문, 숫자, 특수문자를 포함해 8~20자로 입력해주세요.");
+        if (!PasswordRule.isValid(newPw)) {
+            toast(PasswordRule.MESSAGE);
             return;
         }
         if (newPw.equals(currentPw)) {
