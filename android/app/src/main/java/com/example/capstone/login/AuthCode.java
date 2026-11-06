@@ -22,9 +22,9 @@ import java.security.SecureRandom;
  * - 인증번호를 받은 연락처(target)와 확인할 때의 연락처가 같아야 통과한다
  * - 화면(Activity)마다 하나씩 만들어 쓴다
  */
-final class AuthCode {
+public final class AuthCode {
 
-    static final int LENGTH = 4;
+    public static final int LENGTH = 4;
     private static final long VALID_MILLIS = 5 * 60 * 1000L;
 
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -38,12 +38,12 @@ final class AuthCode {
     private final Runnable tick = this::updateTimer;
 
     /** 남은 시간을 보여 줄 글자칸. 인증번호를 받으면 보이고 1초마다 줄어든다 */
-    void bindTimer(TextView view) {
+    public void bindTimer(TextView view) {
         timerView = view;
     }
 
     /** 인증번호를 새로 만들어 안내 창으로 보여 준다. 전에 만든 번호는 못 쓴다 */
-    void issue(Activity activity, String target, String shownTarget) {
+    public void issue(Activity activity, String target, String shownTarget) {
         this.code = String.format("%0" + LENGTH + "d", RANDOM.nextInt((int) Math.pow(10, LENGTH)));
         this.target = target;
         this.expiresAt = System.currentTimeMillis() + VALID_MILLIS;   // 다시 받으면 시간도 처음부터
@@ -51,12 +51,12 @@ final class AuthCode {
         show(activity, shownTarget);
     }
 
-    boolean isIssued() {
+    public boolean isIssued() {
         return code != null;
     }
 
     /** 맞으면 null, 아니면 화면에 보여 줄 문구 */
-    String check(String input, String target) {
+    public String check(String input, String target) {
         if (code == null) {
             return "먼저 인증받기를 눌러주세요.";
         }
@@ -73,7 +73,7 @@ final class AuthCode {
     }
 
     /** 다시 인증받아야 하는 상태로 되돌린다 */
-    void clear() {
+    public void clear() {
         code = null;
         target = null;
         expiresAt = 0;
@@ -120,7 +120,7 @@ final class AuthCode {
     }
 
     /** 010-1234-5678 → 010-****-5678 */
-    static String maskPhone(String phone) {
+    public static String maskPhone(String phone) {
         if (phone == null) {
             return "";
         }
@@ -132,7 +132,7 @@ final class AuthCode {
     }
 
     /** example@gmail.com → ex*****@gmail.com */
-    static String maskEmail(String email) {
+    public static String maskEmail(String email) {
         if (email == null) {
             return "";
         }

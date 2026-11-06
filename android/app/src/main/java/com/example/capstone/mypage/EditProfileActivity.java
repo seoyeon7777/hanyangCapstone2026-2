@@ -8,6 +8,8 @@ import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.ProfilePhotoStore;
+import com.example.capstone.login.AuthCode;
+import com.example.capstone.login.PhoneInput;
 import com.example.capstone.login.LoginSession;
 import com.example.capstone.ui.AppDialog;
 
@@ -15,8 +17,16 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.util.Patterns;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -29,6 +39,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
 import java.util.Locale;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /** 마이페이지 > 프로필 수정 (users) */
 public class EditProfileActivity extends AppCompatActivity {
@@ -72,6 +84,9 @@ public class EditProfileActivity extends AppCompatActivity {
         showValue(tvUserId, LoginSession.getUserId(this));
         showValue(tvName, user.name);
         showValue(tvEmail, user.email);
+        // 이메일을 등록했을 때만 삭제 버튼을 보여 준다
+        findViewById(R.id.btnDeleteEmail).setVisibility(
+                user.email != null && !user.email.isEmpty() ? View.VISIBLE : View.GONE);
 
         String phone = MyPageUi.normalizePhone(user.phone == null ? "" : user.phone);
         showValue(tvPhone, phone != null ? com.example.capstone.data.LocalAccounts.formatPhone(phone) : user.phone);
@@ -90,6 +105,7 @@ public class EditProfileActivity extends AppCompatActivity {
         findViewById(R.id.btnEditName).setOnClickListener(v -> editName());
         findViewById(R.id.btnEditEmail).setOnClickListener(v -> editEmail());
         findViewById(R.id.btnEditPhone).setOnClickListener(v -> editPhone());
+        findViewById(R.id.btnDeleteEmail).setOnClickListener(v -> deleteEmail());
 
         findViewById(R.id.menuChangePw).setOnClickListener(v ->
                 startActivity(new Intent(this, ChangePasswordActivity.class)));
@@ -173,55 +189,181 @@ public class EditProfileActivity extends AppCompatActivity {
                 });
     }
 
+    /** 이메일 등록·변경: 새 이메일을 인증받아야 저장된다 */
     private void editEmail() {
         MyPageStore.User user = MyPageStore.getUser();
+        boolean registered = user.email != null && !user.email.isEmpty();
 
-        AppDialog.input(this, "이메일 변경", "주문 안내와 소식을 받을 이메일이에요.",
-                user.email, "example@gmail.com",
-                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
-                "변경", input -> {
-                    String email = input.replaceAll("\\s", "").toLowerCase(Locale.ROOT);
-                    if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                        toast("이메일 형식이 올바르지 않습니다.");
-                        return false;
-                    }
-                    // [여기에 DB 입력] 다른 회원이 쓰는 이메일인지 중복 확인 + 이메일 인증 후 저장 (users)
-                    if (LocalAccounts.isTaken(this, LoginSession.getUserId(this), email)) {
-                        toast("이미 가입된 이메일입니다.");
-                        return false;
-                    }
-                    confirmChange("이메일 변경", user.email, email, () -> {
-                        saveProfile(user.name, email, user.phone);
-                        toast("이메일이 변경되었습니다.");
-                    });
-                    return true;
+        showVerifyDialog(
+                registered ? "이메일 변경" : "이메일 등록",
+                "주문 안내와 소식을 받을 이메일이에요.\n인증을 받아야 저장돼요.",
+                "example@gmail.com", false,
+                registered ? user.email : "",
+                user.email,
+                input -> {
+                    String email = cleanEmail(input);
+                    return Patterns.EMAIL_ADDRESS.matcher(email).matches() ? email : null;
+                },
+                "이메일 형식이 올바르지 않습니다.",
+                "이미 등록된 이메일입니다.",
+                "이미 가입된 이메일입니다.",
+                AuthCode::maskEmail,
+                email -> {
+                    saveProfile(user.name, email, user.phone);
+                    toast("이메일이 변경되었습니다.");
                 });
     }
 
+    /** 휴대폰 번호 변경: 새 번호를 인증받아야 저장된다 */
     private void editPhone() {
         MyPageStore.User user = MyPageStore.getUser();
 
-        AppDialog.input(this, "휴대폰 번호 변경", "주문·배송 안내를 받을 번호예요.",
-                com.example.capstone.data.LocalAccounts.formatPhone(user.phone), "010-0000-0000", InputType.TYPE_CLASS_PHONE,
-                "변경", input -> {
-                    String phone = MyPageUi.normalizePhone(input);
-                    if (phone == null) {
-                        toast("휴대폰 번호를 정확히 입력해주세요.");
-                        return false;
-                    }
-                    if (LocalAccounts.isTaken(this, LoginSession.getUserId(this), phone)) {
-                        toast("이미 가입된 휴대폰 번호입니다.");
-                        return false;
-                    }
-                    // [여기에 DB 입력] 실제 서비스에서는 바꾼 번호로 본인 인증(문자 인증) 후 저장
-                    confirmChange("휴대폰 번호 변경",
-                            com.example.capstone.data.LocalAccounts.formatPhone(user.phone),
-                            com.example.capstone.data.LocalAccounts.formatPhone(phone), () -> {
-                        saveProfile(user.name, user.email, phone);
-                        toast("휴대폰 번호가 변경되었습니다.");
-                    });
-                    return true;
+        showVerifyDialog(
+                "휴대폰 번호 변경",
+                "주문·배송 안내를 받을 번호예요.\n새 번호로 인증을 받아야 저장돼요.",
+                "010-0000-0000", true,
+                LocalAccounts.formatPhone(user.phone),
+                user.phone,
+                LocalAccounts::normalizePhone,
+                "휴대폰 번호를 정확히 입력해주세요.",
+                "이미 등록된 번호입니다.",
+                "이미 가입된 휴대폰 번호입니다.",
+                AuthCode::maskPhone,
+                phone -> {
+                    saveProfile(user.name, user.email, phone);
+                    toast("휴대폰 번호가 변경되었습니다.");
                 });
+    }
+
+    /** 이메일 삭제: 등록을 없앤다 (이메일은 선택 항목이라 없어도 된다) */
+    private void deleteEmail() {
+        MyPageStore.User user = MyPageStore.getUser();
+
+        AppDialog.show(this, false, "이메일 삭제",
+                "등록한 이메일을 삭제할까요?",
+                "취소", null,
+                "삭제", () -> {
+                    saveProfile(user.name, "", user.phone);
+                    toast("이메일이 삭제되었습니다.");
+                });
+    }
+
+    /**
+     * 이메일·휴대폰 번호 변경용 인증 창: 입력 → 인증받기(인증번호는 안내 창) → 인증번호 입력 → 변경.
+     * 인증번호는 4자리·5분 유효, 재전송은 언제든 가능(시간은 처음부터).
+     *
+     * @param normalize  입력을 저장·비교용 값으로 바꾼다 (올바르지 않으면 null)
+     * @param current    지금 등록된 값 (같은 값으로는 못 바꾼다)
+     * @param onVerified 인증을 마친 새 값을 저장한다
+     */
+    private void showVerifyDialog(String title, String desc, String hint, boolean phone,
+                                  String initialText, String current,
+                                  Function<String, String> normalize,
+                                  String invalidMessage, String sameMessage, String takenMessage,
+                                  Function<String, String> mask,
+                                  Consumer<String> onVerified) {
+
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_contact_verify, null, false);
+        ((TextView) view.findViewById(R.id.tvContactDialogTitle)).setText(title);
+        ((TextView) view.findViewById(R.id.tvContactDialogDesc)).setText(desc);
+
+        EditText etContact = view.findViewById(R.id.etDialogContact);
+        EditText etCode = view.findViewById(R.id.etDialogCode);
+        Button btnSend = view.findViewById(R.id.btnDialogSendCode);
+
+        etContact.setHint(hint);
+        if (phone) {
+            PhoneInput.attach(etContact);           // 숫자만 받고 하이픈은 자동으로 붙는다
+        } else {
+            etContact.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        }
+        if (initialText != null && !initialText.isEmpty()) {
+            etContact.setText(initialText);
+            etContact.setSelection(etContact.getText().length());
+        }
+
+        AuthCode authCode = new AuthCode();
+        authCode.bindTimer(view.findViewById(R.id.tvDialogTimer));
+        String[] sent = {null};
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(view).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        }
+        dialog.setOnDismissListener(d -> authCode.clear());     // 남은 시간 갱신을 멈춘다
+
+        // 입력을 고치면 처음부터 다시 인증받아야 한다
+        etContact.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (sent[0] != null && !sent[0].equals(normalize.apply(s.toString()))) {
+                    authCode.clear();
+                    sent[0] = null;
+                    etCode.setText("");
+                    btnSend.setText("인증받기");
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
+        btnSend.setOnClickListener(v -> {
+            String value = normalize.apply(etContact.getText().toString());
+            if (value == null) {
+                toast(invalidMessage);
+                return;
+            }
+            if (value.equalsIgnoreCase(current)) {
+                toast(sameMessage);
+                return;
+            }
+            // [여기에 DB 입력] 다른 회원이 쓰는 값인지 중복 확인 (users)
+            if (LocalAccounts.isTaken(this, LoginSession.getUserId(this), value)) {
+                toast(takenMessage);
+                return;
+            }
+            // [여기에 DB 입력] 발송한 인증번호를 만료시각과 함께 저장 (auth_codes)
+            etCode.setText("");
+            sent[0] = value;
+            authCode.issue(this, value, mask.apply(value));
+            btnSend.setText("재전송");
+        });
+
+        view.findViewById(R.id.btnContactCancel).setOnClickListener(v -> dialog.dismiss());
+        view.findViewById(R.id.btnContactOk).setOnClickListener(v -> {
+            if (sent[0] == null) {
+                toast("값을 입력하고 인증받기를 눌러주세요.");
+                return;
+            }
+            String input = etCode.getText().toString().trim();
+            if (input.length() != AuthCode.LENGTH) {
+                toast("인증번호 " + AuthCode.LENGTH + "자리를 입력해주세요.");
+                return;
+            }
+            String error = authCode.check(input, sent[0]);
+            if (error != null) {
+                toast(error);
+                return;
+            }
+            // [여기에 DB 입력] 사용한 인증번호 만료 처리 (auth_codes)
+            String value = sent[0];
+            dialog.dismiss();
+            onVerified.accept(value);
+        });
+
+        dialog.show();
+    }
+
+    /** 공백을 없애고 소문자로 */
+    private static String cleanEmail(String input) {
+        return input.trim().replace(" ", "").toLowerCase(Locale.ROOT);
     }
 
     private void confirmChange(String title, String before, String after, Runnable onConfirm) {
