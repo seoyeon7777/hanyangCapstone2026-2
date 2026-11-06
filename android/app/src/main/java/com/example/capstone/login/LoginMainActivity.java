@@ -3,6 +3,7 @@ package com.example.capstone.login;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.LocaleList;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.widget.Button;
@@ -16,6 +17,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.LocalAccounts;
+
+import java.util.Locale;
 
 public class LoginMainActivity extends AppCompatActivity {
 
@@ -39,6 +42,9 @@ public class LoginMainActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
 
         etId = findViewById(R.id.etId);
+        // 아이디는 영문·숫자라 영문 키보드로 시작한다 (한글로 바꿀 수는 있다). 자동 수정은 끈다
+        etId.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        etId.setImeHintLocales(new LocaleList(Locale.ENGLISH));
         etPassword = findViewById(R.id.etPassword);
         btnTogglePw = findViewById(R.id.btnTogglePw);
         btnLogin = findViewById(R.id.btnLogin);
