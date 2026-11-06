@@ -60,6 +60,12 @@
         android:textStyle="bold"
         android:textAllCaps="false" />
 
+    <include
+        layout="@layout/view_login_required"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
     <include layout="@layout/view_bottom_menu" />
 
 </LinearLayout>

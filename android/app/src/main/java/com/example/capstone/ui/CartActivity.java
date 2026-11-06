@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
 import com.example.capstone.adapter.CartAdapter;
+import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.CartStore;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.FitResult;
@@ -50,6 +51,7 @@ public class CartActivity extends AppCompatActivity {
     private TextView totalPriceText;
     private TextView totalQuantityText;
 
+    private LinearLayout cartContent;
     private FrameLayout cartFrame;
     private LinearLayout emptyLayout;
     private LinearLayout recommendationSection;
@@ -95,6 +97,7 @@ public class CartActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        BodyProfileStore.syncActiveProfile(this);
         showCartProducts();
     }
 
@@ -116,6 +119,8 @@ public class CartActivity extends AppCompatActivity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(WHITE);
+
+        cartContent = root;
 
         parent.addView(root, index, oldParams);
 
@@ -639,6 +644,16 @@ public class CartActivity extends AppCompatActivity {
 
     // 장바구니 상품과 금액 갱신
     private void showCartProducts() {
+
+        if (!LoginRequiredView.update(
+                this,
+                R.drawable.ic_shopping_bag,
+                "장바구니는 로그인 후 이용할 수 있어요.",
+                cartContent)) {
+            titleCount.setText("장바구니");
+            btnGoOrder.setVisibility(View.GONE);
+            return;
+        }
 
         cartProducts.clear();
 

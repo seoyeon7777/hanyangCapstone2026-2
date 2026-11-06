@@ -157,22 +157,13 @@
                     android:paddingEnd="16dp">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="옵션"
                         android:textColor="#111111"
                         android:textSize="15sp"
                         android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/textOptionSummary"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="16dp"
-                        android:text="사이즈 / 색상을 선택해주세요"
-                        android:textColor="#888888"
-                        android:textSize="14sp" />
 
                     <TextView
                         android:layout_width="wrap_content"

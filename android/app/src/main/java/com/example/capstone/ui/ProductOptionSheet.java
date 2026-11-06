@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 
 import com.example.capstone.R;
+import com.example.capstone.data.CartStore;
 import com.example.capstone.data.Product;
 import com.example.capstone.data.SizeChart;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
@@ -45,9 +46,6 @@ public class ProductOptionSheet {
             "NAVY"
     };
 
-    private static final int MAX_QUANTITY = 10;
-
-
     // 지금 떠 있는 옵션 창 (버튼을 연달아 눌러도 한 번만 뜨도록)
     private static BottomSheetDialog showingDialog;
 
@@ -79,6 +77,22 @@ public class ProductOptionSheet {
             String initialSize,
             String initialColor,
             int initialQuantity,
+            String confirmText,
+            OnConfirmListener listener
+    ) {
+
+        show(context, product, initialSize, initialColor, initialQuantity,
+                null, null, confirmText, listener);
+    }
+
+    public static void show(
+            Context context,
+            Product product,
+            String initialSize,
+            String initialColor,
+            int initialQuantity,
+            String secondaryText,
+            OnConfirmListener secondaryListener,
             String confirmText,
             OnConfirmListener listener
     ) {
@@ -141,6 +155,9 @@ public class ProductOptionSheet {
 
         TextView btnConfirm =
                 view.findViewById(R.id.btnOptionConfirm);
+
+        TextView btnSecondary =
+                view.findViewById(R.id.btnOptionSecondary);
 
 
         int price =
@@ -247,10 +264,18 @@ public class ProductOptionSheet {
 
         btnPlus.setOnClickListener(v -> {
 
-            if (quantity[0] < MAX_QUANTITY) {
+            if (quantity[0] < CartStore.MAX_QUANTITY) {
 
                 quantity[0]++;
                 refresh.run();
+
+            } else {
+
+                Toast.makeText(
+                        context,
+                        CartStore.MAX_QUANTITY_MESSAGE,
+                        Toast.LENGTH_SHORT
+                ).show();
             }
         });
 
@@ -262,7 +287,39 @@ public class ProductOptionSheet {
         // 확인
         // =========================
 
-        btnConfirm.setOnClickListener(v -> {
+        bindConfirm(btnConfirm, context, dialog, selectedSize, selectedColor, quantity, listener);
+
+        if (secondaryText != null) {
+
+            btnSecondary.setText(secondaryText);
+            btnSecondary.setVisibility(View.VISIBLE);
+
+            bindConfirm(btnSecondary, context, dialog, selectedSize, selectedColor, quantity, secondaryListener);
+        }
+
+
+        // 처음부터 전체 내용이 보이도록 펼친 상태로 연다
+        dialog.getBehavior().setState(
+                BottomSheetBehavior.STATE_EXPANDED
+        );
+
+        dialog.getBehavior().setSkipCollapsed(true);
+
+        dialog.show();
+    }
+
+
+    private static void bindConfirm(
+            TextView button,
+            Context context,
+            BottomSheetDialog dialog,
+            String[] selectedSize,
+            String[] selectedColor,
+            int[] quantity,
+            OnConfirmListener listener
+    ) {
+
+        button.setOnClickListener(v -> {
 
             if (selectedSize[0] == null
                     || selectedSize[0].isEmpty()) {
@@ -300,16 +357,6 @@ public class ProductOptionSheet {
                 );
             }
         });
-
-
-        // 처음부터 전체 내용이 보이도록 펼친 상태로 연다
-        dialog.getBehavior().setState(
-                BottomSheetBehavior.STATE_EXPANDED
-        );
-
-        dialog.getBehavior().setSkipCollapsed(true);
-
-        dialog.show();
     }
 
 

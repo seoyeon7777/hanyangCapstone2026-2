@@ -11,6 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.R;
+import com.example.capstone.login.LoginMainActivity;
+import com.example.capstone.login.LoginSession;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.LocalLikes;
 import com.example.capstone.data.Product;
@@ -120,6 +122,13 @@ public class ProductAdapter
 
         // 찜 버튼 클릭
         holder.textHeart.setOnClickListener(v -> {
+
+            if (!LoginSession.isLoggedIn(v.getContext())) {
+                v.getContext().startActivity(
+                        new Intent(v.getContext(), LoginMainActivity.class)
+                );
+                return;
+            }
 
             int currentPosition =
                     holder.getBindingAdapterPosition();

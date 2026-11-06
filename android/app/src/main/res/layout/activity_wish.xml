@@ -17,10 +17,11 @@
         android:paddingEnd="12dp">
 
         <TextView
+            android:id="@+id/textWishTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="찜 목록"
+            android:text="찜"
             android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="#111111"/>
@@ -43,6 +44,12 @@
         android:layout_weight="1"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"/>
+
+    <include
+        layout="@layout/view_login_required"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
     <!-- 공통 하단 메뉴 (view_bottom_menu.xml) -->
     <include layout="@layout/view_bottom_menu" />

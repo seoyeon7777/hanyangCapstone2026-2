@@ -42,8 +42,7 @@ public class WishActivity extends AppCompatActivity {
     private FrameLayout contentFrame;
     private LinearLayout emptyView;
     private LinearLayout categoryContainer;
-
-    private TextView titleCount;
+    private LinearLayout wishContent;
 
     private ProductAdapter adapter;
 
@@ -114,51 +113,12 @@ public class WishActivity extends AppCompatActivity {
 
         root.setBackgroundColor(WHITE);
 
+        wishContent = root;
+
         parent.addView(
                 root,
                 index,
                 oldParams
-        );
-
-        // 상단 제목
-        LinearLayout header =
-                new LinearLayout(this);
-
-        header.setGravity(
-                Gravity.CENTER_VERTICAL
-        );
-
-        header.setPadding(
-                dp(16), 0,
-                dp(16), 0
-        );
-
-        root.addView(
-                header,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(54)
-                )
-        );
-
-        titleCount = makeText(
-                "찜 목록 0",
-                18,
-                true,
-                BLACK
-        );
-
-        titleCount.setGravity(
-                Gravity.CENTER_VERTICAL
-        );
-
-        header.addView(
-                titleCount,
-                new LinearLayout.LayoutParams(
-                        0,
-                        -1,
-                        1f
-                )
         );
 
         // 카테고리 가로 스크롤
@@ -400,11 +360,18 @@ public class WishActivity extends AppCompatActivity {
 
     private void showWishProducts() {
 
-        int total = getCategoryCount("전체");
+        TextView title = findViewById(R.id.textWishTitle);
 
-        titleCount.setText(
-                "찜 목록 " + total
-        );
+        if (!LoginRequiredView.update(
+                this,
+                R.drawable.ic_wish_empty,
+                "찜 목록은 로그인 후 이용할 수 있어요.",
+                wishContent)) {
+            title.setText("찜");
+            return;
+        }
+
+        title.setText("찜 " + getCategoryCount("전체"));
 
         renderCategories();
         renderProducts();
