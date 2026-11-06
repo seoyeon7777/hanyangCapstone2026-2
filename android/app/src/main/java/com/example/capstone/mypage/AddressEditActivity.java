@@ -87,14 +87,14 @@ public class AddressEditActivity extends AppCompatActivity {
             // 새 배송지는 회원 정보로 받는 분/연락처를 미리 채워둔다.
             MyPageStore.User user = MyPageStore.getUser();
             etReceiver.setText(user.name);
-            etPhone.setText(user.phone);
+            etPhone.setText(com.example.capstone.data.LocalAccounts.formatPhone(user.phone));
             cbDefault.setChecked(MyPageStore.getAddresses().isEmpty());
             return;
         }
 
         etLabel.setText(editing.label);
         etReceiver.setText(editing.receiver);
-        etPhone.setText(editing.phone);
+        etPhone.setText(com.example.capstone.data.LocalAccounts.formatPhone(editing.phone));
         etZipCode.setText(editing.zipCode);
         etAddress1.setText(editing.address1);
         etAddress2.setText(editing.address2);

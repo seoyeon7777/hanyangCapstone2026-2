@@ -124,7 +124,7 @@ final class AuthCode {
         if (phone == null) {
             return "";
         }
-        String[] parts = phone.split("-");
+        String[] parts = com.example.capstone.data.LocalAccounts.formatPhone(phone).split("-");
         if (parts.length == 3) {
             return parts[0] + "-****-" + parts[2];
         }

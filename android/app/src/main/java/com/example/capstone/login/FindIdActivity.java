@@ -205,8 +205,9 @@ public class FindIdActivity extends AppCompatActivity {
             return;
         }
 
-        etPhone.setText(contact);
-        etPhone.setSelection(contact.length());
+        String shown = byPhone ? LocalAccounts.formatPhone(contact) : contact;
+        etPhone.setText(shown);
+        etPhone.setSelection(shown.length());
         resetFlow();
 
         // [여기에 DB 입력] 발송한 인증번호를 만료시각과 함께 저장 (auth_codes)

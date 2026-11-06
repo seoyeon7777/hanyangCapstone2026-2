@@ -115,7 +115,7 @@ final class MyPageUi {
                 "확인", onConfirm);
     }
 
-    /** 010-1234-5678 형태로 맞춘다. 숫자 자릿수가 맞지 않으면 null */
+    /** 저장용으로 숫자만 남긴다 (01012345678). 자릿수가 맞지 않으면 null. 화면에는 LocalAccounts.formatPhone */
     static String normalizePhone(String input) {
         return com.example.capstone.data.LocalAccounts.normalizePhone(input);
     }
