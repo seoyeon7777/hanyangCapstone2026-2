@@ -228,7 +228,7 @@ public class PhoneVerifyActivity extends AppCompatActivity {
 
     /**
      * 입력한 번호를 010-XXXX-XXXX 모양으로 돌려준다.
-     * 010 + 숫자 7~8자리(가운데 3~4, 끝 4)만 받는다. 틀렸거나 이미 가입된 번호면 안내하고 null
+     * 010 + 숫자 8자리(가운데 4, 끝 4) = 11자리만 받는다. 틀렸거나 이미 가입된 번호면 안내하고 null
      */
     private String checkedPhone() {
         String mid = etPhoneMid.getText().toString().trim();
@@ -239,7 +239,7 @@ public class PhoneVerifyActivity extends AppCompatActivity {
             return null;
         }
 
-        if (!mid.matches("[0-9]{3,4}") || !last.matches("[0-9]{4}")) {
+        if (!mid.matches("[0-9]{4}") || !last.matches("[0-9]{4}")) {
             toast("휴대폰 번호를 정확히 입력해주세요. (010-0000-0000)");
             return null;
         }
