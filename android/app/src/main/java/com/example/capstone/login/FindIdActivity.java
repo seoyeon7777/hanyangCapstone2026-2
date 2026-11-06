@@ -93,10 +93,11 @@ public class FindIdActivity extends AppCompatActivity {
         if (byPhone) {
             tvContactLabel.setText("휴대전화 번호");
             etPhone.setHint("010-0000-0000");
-            etPhone.setInputType(InputType.TYPE_CLASS_PHONE);
+            PhoneInput.attach(etPhone);
         } else {
             tvContactLabel.setText("이메일");
             etPhone.setHint("example@gmail.com");
+            PhoneInput.detach(etPhone);
             etPhone.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
         }
     }
@@ -118,8 +119,15 @@ public class FindIdActivity extends AppCompatActivity {
         btnVerifyCode.setEnabled(true);
         btnVerifyCode.setVisibility(View.GONE);
         containerResult.setVisibility(View.GONE);
-        btnConfirm.setText("계정 찾기");
+        btnConfirm.setText("아이디 찾기");
+        setConfirmEnabled(false);
         btnRequestAuth.setText("인증받기");
+    }
+
+    /** 인증확인을 마쳐야 넘어갈 수 있다. 마치기 전에는 버튼을 눌러도 반응하지 않고 흐리게 보인다 */
+    private void setConfirmEnabled(boolean enabled) {
+        btnConfirm.setEnabled(enabled);
+        btnConfirm.setAlpha(enabled ? 1f : 0.4f);
     }
 
     private void setMethod(boolean phone) {
@@ -144,16 +152,6 @@ public class FindIdActivity extends AppCompatActivity {
         // 인증받기 버튼
         btnRequestAuth.setOnClickListener(v -> requestAuthCode());
 
-        // 연락처를 고치면 처음부터 다시 인증받아야 한다.
-        etPhone.addTextChangedListener(new SimpleWatcher() {
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (sentTarget != null) {
-                    resetFlow();
-                }
-            }
-        });
-
         // 인증번호를 입력하면 인증확인 버튼을 보여준다.
         etAuthCode.addTextChangedListener(new SimpleWatcher() {
             @Override
@@ -168,7 +166,8 @@ public class FindIdActivity extends AppCompatActivity {
                     btnVerifyCode.setText("인증확인");
                     btnVerifyCode.setEnabled(true);
                     containerResult.setVisibility(View.GONE);
-                    btnConfirm.setText("계정 찾기");
+                    btnConfirm.setText("아이디 찾기");
+                    setConfirmEnabled(false);
                 }
             }
         });
@@ -176,8 +175,9 @@ public class FindIdActivity extends AppCompatActivity {
         // 인증확인 버튼
         btnVerifyCode.setOnClickListener(v -> verifyAuthCode());
 
-        // 계정 찾기 버튼
+        // 아이디 찾기 버튼
         btnConfirm.setOnClickListener(v -> findAccount());
+        setConfirmEnabled(false);
     }
 
     /** 입력한 연락처로 가입한 계정이 있으면 인증번호를 보낸다. 없으면 없다고 알려 준다. */
@@ -205,7 +205,7 @@ public class FindIdActivity extends AppCompatActivity {
             return;
         }
 
-        etPhone.setText(contact);          // (글자를 바꾸면 흐름이 처음으로 돌아가므로 먼저 한다)
+        etPhone.setText(contact);
         etPhone.setSelection(contact.length());
         resetFlow();
 
@@ -226,7 +226,8 @@ public class FindIdActivity extends AppCompatActivity {
             return;
         }
 
-        String error = authCode.check(input, normalizedContact());
+        // 칸의 번호가 아니라 마지막으로 인증받기를 눌러 인증번호가 나간 번호로 확인한다
+        String error = authCode.check(input, sentTarget);
 
         if (error != null) {
             Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
@@ -236,13 +237,14 @@ public class FindIdActivity extends AppCompatActivity {
         isCodeVerified = true;
         btnVerifyCode.setText("인증완료");
         btnVerifyCode.setEnabled(false);
+        setConfirmEnabled(true);
         Toast.makeText(this, "인증이 완료되었습니다.", Toast.LENGTH_SHORT).show();
     }
 
     /** 본인확인을 마친 뒤 아이디를 화면에 보여준다. */
     private void findAccount() {
 
-        // 이미 계정을 찾은 뒤에는 로그인 화면으로 돌아간다.
+        // 이미 아이디를 찾은 뒤에는 로그인 화면으로 돌아간다.
         if (isAccountFound) {
             LoginMainActivity.backToLogin(this);
             return;
