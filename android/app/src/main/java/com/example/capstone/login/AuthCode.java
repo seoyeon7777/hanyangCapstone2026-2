@@ -80,6 +80,14 @@ public final class AuthCode {
         updateTimer();
     }
 
+    /** 인증을 마친 뒤: 남은 시간 표시를 멈추고 없앤다 (인증번호는 그대로 둔다) */
+    public void hideTimer() {
+        handler.removeCallbacks(tick);
+        if (timerView != null) {
+            timerView.setVisibility(View.GONE);
+        }
+    }
+
     /** 남은 시간을 mm:ss로 보여 준다 (끝나면 00:00). 인증번호가 없으면 숨긴다 */
     private void updateTimer() {
         handler.removeCallbacks(tick);

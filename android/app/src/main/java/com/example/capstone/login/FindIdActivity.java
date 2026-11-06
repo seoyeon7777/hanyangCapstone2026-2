@@ -236,6 +236,7 @@ public class FindIdActivity extends AppCompatActivity {
         }
 
         isCodeVerified = true;
+        authCode.hideTimer();       // 인증을 마쳤으니 남은 시간은 더 보여 줄 필요가 없다
         btnVerifyCode.setText("인증완료");
         btnVerifyCode.setEnabled(false);
         setConfirmEnabled(true);

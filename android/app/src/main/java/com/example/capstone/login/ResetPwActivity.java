@@ -4,6 +4,7 @@ import com.example.capstone.R;
 import com.example.capstone.data.LocalAccounts;
 
 import android.os.Bundle;
+import android.os.LocaleList;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -94,7 +95,9 @@ public class ResetPwActivity extends AppCompatActivity {
     private void applyContactType() {
         ((TextView) findViewById(R.id.tvContactLabel)).setText("아이디");
         etEmail.setHint("가입한 아이디");
-        etEmail.setInputType(InputType.TYPE_CLASS_TEXT);
+        // 아이디는 영문·숫자라 영문 키보드로 시작한다 (한글로 바꿀 수는 있다). 자동 수정은 끈다
+        etEmail.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        etEmail.setImeHintLocales(new LocaleList(Locale.ENGLISH));
         ((TextView) findViewById(R.id.tvGuide)).setText(byPhone
                 ? "아이디를 입력하면 가입한 휴대전화로 인증번호를 보내드려요."
                 : "아이디를 입력하면 등록한 이메일로 인증번호를 보내드려요.");
@@ -244,6 +247,7 @@ public class ResetPwActivity extends AppCompatActivity {
         }
 
         isCodeVerified = true;
+        authCode.hideTimer();       // 인증을 마쳤으니 남은 시간은 더 보여 줄 필요가 없다
         btnVerifyCode.setText("인증완료");
         btnVerifyCode.setEnabled(false);
 
