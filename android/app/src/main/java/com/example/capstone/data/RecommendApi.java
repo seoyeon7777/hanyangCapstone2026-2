@@ -962,6 +962,80 @@ public final class RecommendApi {
     }
 
     // =========================
+    // 이메일 인증 (서버 email_verify.py: 인증 메일 → 메일 속 링크 클릭 → 인증확인)
+    // =========================
+
+    /** 인증 메일을 보낸다. 성공하면 인증 요청 번호(request_id) */
+    public static void sendEmailVerification(String email, Callback<String> callback) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put("email", email);
+        } catch (JSONException e) {
+            callback.onError(0, "이메일을 보낼 수 없어요");
+            return;
+        }
+        // 메일 서버를 거치느라 오래 걸릴 수 있어 넉넉히 기다린다
+        post("/api/email/send", body, 20000, EVENT_IO, new Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                callback.onSuccess(result.optString("request_id"));
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                callback.onError(code, code == 0 ? "서버에 연결할 수 없어요" : message);
+            }
+        });
+    }
+
+    /**
+     * 이메일 @ 뒤 도메인이 실제로 있는지 서버가 확인한다 (회원가입 이메일용, 메일은 보내지 않는다).
+     * 없는 도메인이면 onError(400, 안내 문구). 서버에 연결을 못 하면 onError(0, …)
+     */
+    public static void checkEmailDomain(String email, Callback<Boolean> callback) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put("email", email);
+        } catch (JSONException e) {
+            callback.onError(0, "이메일을 확인할 수 없어요");
+            return;
+        }
+        post("/api/email/check", body, TIMEOUT_MS, EVENT_IO, new Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                callback.onSuccess(true);
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                callback.onError(code, message);
+            }
+        });
+    }
+
+    /** 메일 속 링크를 눌렀는지 확인한다. 눌렀으면 true */
+    public static void checkEmailVerification(String requestId, Callback<Boolean> callback) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put("request_id", requestId);
+        } catch (JSONException e) {
+            callback.onError(0, "인증 요청을 확인할 수 없어요");
+            return;
+        }
+        post("/api/email/status", body, TIMEOUT_MS, EVENT_IO, new Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                callback.onSuccess(result.optBoolean("verified"));
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                callback.onError(code, code == 0 ? "서버에 연결할 수 없어요" : message);
+            }
+        });
+    }
+
+    // =========================
     // HTTP (백그라운드 스레드에서 보내고, 결과는 메인 스레드로)
     // =========================
 

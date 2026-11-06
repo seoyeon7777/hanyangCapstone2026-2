@@ -33,7 +33,20 @@ public final class AppDialog {
     }
 
     public static void alert(Context context, String title, String message, String buttonText) {
-        View view = inflate(context, false, title, message);
+        showOneButton(context, inflate(context, false, title, message), buttonText);
+    }
+
+    /** 제목 없이 안내 문장(굵지 않게) + 버튼 하나 */
+    public static void notice(Context context, String message, String buttonText) {
+        View view = inflate(context, false, message, null);
+        TextView tvTitle = view.findViewById(R.id.tvDialogTitle);
+        tvTitle.setTypeface(android.graphics.Typeface.DEFAULT);
+        tvTitle.setTextSize(16);
+        tvTitle.setLineSpacing(0, 1.3f);
+        showOneButton(context, view, buttonText);
+    }
+
+    private static void showOneButton(Context context, View view, String buttonText) {
         view.findViewById(R.id.btnDialogLight).setVisibility(View.GONE);
 
         TextView btnDark = view.findViewById(R.id.btnDialogDark);

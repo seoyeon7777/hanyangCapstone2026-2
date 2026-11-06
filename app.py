@@ -10,6 +10,7 @@
 B (server.py)        GET /api/form, POST /api/items/validate, GET·POST /api/items, POST /api/recommend
 C (recommend/)       GET·POST /api/feed, GET·POST /api/feed/scroll, POST /api/feed/event, GET /feed-demo
 A (body_profile.py)  POST /api/feed에 "answers"(설문)를 보내면 C가 A를 불러 진단한다
+이메일 인증 (email_verify.py)  POST /api/email/send, GET /api/email/confirm, POST /api/email/status
 오류는 모두 JSON {"ok": false, "error": "..."} 로 돌려준다 (앱이 HTML 오류 화면을 받지 않게).
 """
 import os
@@ -26,9 +27,11 @@ from flask import jsonify  # noqa: E402
 
 from server import create_app  # noqa: E402  B 파트 서버
 from feed_api import feed_bp, STORE   # noqa: E402  C 파트 API
+from email_verify import email_bp      # noqa: E402  프로필 이메일 인증 메일
 
 app = create_app()
 app.register_blueprint(feed_bp)
+app.register_blueprint(email_bp)
 
 
 @app.errorhandler(HTTPException)

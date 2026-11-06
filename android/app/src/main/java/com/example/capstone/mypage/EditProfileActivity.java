@@ -8,8 +8,10 @@ import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.ProfilePhotoStore;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.login.LoginSession;
 import com.example.capstone.ui.AppDialog;
+import com.example.capstone.ui.EmailDomainInput;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,7 +19,8 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
-import android.util.Patterns;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,10 +28,9 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
-
-import java.util.Locale;
 
 /** 마이페이지 > 프로필 수정 (users) */
 public class EditProfileActivity extends AppCompatActivity {
@@ -89,7 +91,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
         findViewById(R.id.btnEditName).setOnClickListener(v -> editName());
         findViewById(R.id.btnEditEmail).setOnClickListener(v -> editEmail());
-        findViewById(R.id.btnEditPhone).setOnClickListener(v -> editPhone());
+        // 휴대폰 번호는 가입할 때 본인확인한 번호라 바꿀 수 없다 (변경 버튼 없음)
 
         findViewById(R.id.menuChangePw).setOnClickListener(v ->
                 startActivity(new Intent(this, ChangePasswordActivity.class)));
@@ -173,53 +175,114 @@ public class EditProfileActivity extends AppCompatActivity {
                 });
     }
 
+    /**
+     * 이메일 변경: 주소를 [앞부분] @ [도메인]으로 받고, 그 주소로 인증 메일을 실제로 보낸다.
+     * 메일 속 "이메일 인증하기"를 누른 뒤 "인증확인"을 눌러야 바뀐다. (서버 email_verify.py)
+     */
     private void editEmail() {
         MyPageStore.User user = MyPageStore.getUser();
 
-        AppDialog.input(this, "이메일 변경", "주문 안내와 소식을 받을 이메일이에요.",
-                user.email, "example@gmail.com",
-                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
-                "변경", input -> {
-                    String email = input.replaceAll("\\s", "").toLowerCase(Locale.ROOT);
-                    if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                        toast("이메일 형식이 올바르지 않습니다.");
-                        return false;
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_email_change, null, false);
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(view).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView btnSendMail = view.findViewById(R.id.btnSendMail);
+        TextView btnVerify = view.findViewById(R.id.btnVerifyEmail);
+        TextView tvNotice = view.findViewById(R.id.tvMailNotice);
+        // [0] = 인증 요청 번호, [1] = 메일을 보낸 주소. 주소를 고치면 비운다
+        String[] sent = {null, null};
+
+        EmailDomainInput input = new EmailDomainInput(this,
+                view.findViewById(R.id.etEmailId),
+                view.findViewById(R.id.spEmailDomain),
+                view.findViewById(R.id.etEmailDomain),
+                () -> {
+                    if (sent[0] != null) {
+                        sent[0] = null;
+                        sent[1] = null;
+                        btnSendMail.setText("인증메일 보내기");
+                        tvNotice.setVisibility(View.GONE);
+                        setVerifyEnabled(btnVerify, false);
                     }
-                    // [여기에 DB 입력] 다른 회원이 쓰는 이메일인지 중복 확인 + 이메일 인증 후 저장 (users)
-                    if (LocalAccounts.isTaken(this, LoginSession.getUserId(this), email)) {
-                        toast("이미 가입된 이메일입니다.");
-                        return false;
-                    }
-                    confirmChange("이메일 변경", user.email, email, () -> {
-                        saveProfile(user.name, email, user.phone);
-                        toast("이메일이 변경되었습니다.");
-                    });
-                    return true;
                 });
+        input.setEmail(user.email);
+
+        btnSendMail.setOnClickListener(v -> {
+            String email = input.email();
+            if (email == null || email.isEmpty()) {
+                toast(input.isDomainMissing() ? "이메일 주소(@ 뒤)를 선택해주세요." : "이메일 형식이 올바르지 않습니다.");
+                return;
+            }
+            if (email.equals(user.email)) {
+                toast("지금 등록된 이메일과 같아요.");
+                return;
+            }
+            // [여기에 DB 입력] 다른 회원이 쓰는 이메일인지 중복 확인 (users)
+            if (LocalAccounts.isTaken(this, LoginSession.getUserId(this), email)) {
+                toast("이미 가입된 이메일입니다.");
+                return;
+            }
+            btnSendMail.setEnabled(false);
+            btnSendMail.setText("보내는 중…");
+            RecommendApi.sendEmailVerification(email, new RecommendApi.Callback<String>() {
+                @Override
+                public void onSuccess(String requestId) {
+                    btnSendMail.setEnabled(true);
+                    btnSendMail.setText("인증메일 다시 보내기");
+                    sent[0] = requestId;
+                    sent[1] = email;
+                    tvNotice.setText(email + " (으)로 인증 메일을 보냈어요.\n"
+                            + "메일의 '이메일 인증하기'를 누른 뒤 아래 인증확인을 눌러 주세요. (30분 동안 유효)");
+                    tvNotice.setVisibility(View.VISIBLE);
+                    setVerifyEnabled(btnVerify, true);
+                }
+
+                @Override
+                public void onError(int code, String message) {
+                    btnSendMail.setEnabled(true);
+                    btnSendMail.setText(sent[0] == null ? "인증메일 보내기" : "인증메일 다시 보내기");
+                    toast(message);
+                }
+            });
+        });
+
+        btnVerify.setOnClickListener(v -> {
+            if (sent[0] == null) {
+                return;
+            }
+            String requestId = sent[0];
+            String email = sent[1];
+            RecommendApi.checkEmailVerification(requestId, new RecommendApi.Callback<Boolean>() {
+                @Override
+                public void onSuccess(Boolean verified) {
+                    if (!requestId.equals(sent[0])) {
+                        return;   // 확인하는 사이 주소를 고쳤다
+                    }
+                    if (!verified) {
+                        toast("아직 인증되지 않았어요. 메일함에서 '이메일 인증하기'를 눌러 주세요.");
+                        return;
+                    }
+                    saveProfile(user.name, email, user.phone);
+                    toast("이메일이 변경되었습니다.");
+                    dialog.dismiss();
+                }
+
+                @Override
+                public void onError(int code, String message) {
+                    toast(message);
+                }
+            });
+        });
+
+        view.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
-    private void editPhone() {
-        MyPageStore.User user = MyPageStore.getUser();
-
-        AppDialog.input(this, "휴대폰 번호 변경", "주문·배송 안내를 받을 번호예요.",
-                user.phone, "010-0000-0000", InputType.TYPE_CLASS_PHONE,
-                "변경", input -> {
-                    String phone = MyPageUi.normalizePhone(input);
-                    if (phone == null) {
-                        toast("휴대폰 번호를 정확히 입력해주세요.");
-                        return false;
-                    }
-                    if (LocalAccounts.isTaken(this, LoginSession.getUserId(this), phone)) {
-                        toast("이미 가입된 휴대폰 번호입니다.");
-                        return false;
-                    }
-                    // [여기에 DB 입력] 실제 서비스에서는 바꾼 번호로 본인 인증(문자 인증) 후 저장
-                    confirmChange("휴대폰 번호 변경", user.phone, phone, () -> {
-                        saveProfile(user.name, user.email, phone);
-                        toast("휴대폰 번호가 변경되었습니다.");
-                    });
-                    return true;
-                });
+    private static void setVerifyEnabled(TextView button, boolean enabled) {
+        button.setEnabled(enabled);
+        button.setBackgroundResource(enabled ? R.drawable.bg_dialog_btn_dark : R.drawable.bg_button_gray);
     }
 
     private void confirmChange(String title, String before, String after, Runnable onConfirm) {
