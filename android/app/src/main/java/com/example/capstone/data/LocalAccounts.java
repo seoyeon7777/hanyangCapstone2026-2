@@ -49,14 +49,23 @@ public final class LocalAccounts {
     private LocalAccounts() {
     }
 
-    /** 010-1234-5678 모양으로 바꾼다. 휴대폰 번호가 아니면 null */
+    /**
+     * 저장·비교용 휴대폰 번호: 숫자만 (01012345678). 하이픈·공백은 떼어 낸다.
+     * 휴대폰 번호가 아니면 null. 화면에 보여 줄 때는 formatPhone을 쓴다
+     */
     public static String normalizePhone(String input) {
         if (input == null) {
             return null;
         }
         String digits = input.replaceAll("[^0-9]", "");
-        if (!digits.matches("01[016789][0-9]{7,8}")) {
-            return null;
+        return digits.matches("01[016789][0-9]{7,8}") ? digits : null;
+    }
+
+    /** 화면에 보여 줄 모양 (010-1234-5678). 휴대폰 번호가 아니면 받은 그대로 돌려준다 */
+    public static String formatPhone(String phone) {
+        String digits = normalizePhone(phone);
+        if (digits == null) {
+            return phone == null ? "" : phone;
         }
         int midEnd = digits.length() - 4;
         return digits.substring(0, 3) + "-" + digits.substring(3, midEnd) + "-" + digits.substring(midEnd);
@@ -91,6 +100,36 @@ public final class LocalAccounts {
             return null;
         }
         return new Account(j);
+    }
+
+    /**
+     * 예전에 하이픈 붙여·공백 섞어 저장한 회원의 휴대폰 번호를 숫자만 남기는 모양(01012345678)으로 고쳐 저장한다.
+     * 바뀐 회원마다 {예전 번호, 새 번호, 이메일}을 돌려준다 (번호로 저장해 둔 다른 기록을 옮길 때 쓴다).
+     * 이미 맞는 모양이면 아무것도 안 바꾸고, 여러 번 불러도 결과가 같다.
+     */
+    public static List<String[]> normalizeStoredPhones(Context context) {
+        List<String[]> changed = new ArrayList<>();
+        JSONArray accounts = load(context);
+        try {
+            for (int i = 0; i < accounts.length(); i++) {
+                JSONObject j = accounts.optJSONObject(i);
+                if (j == null) {
+                    continue;
+                }
+                String old = j.optString("phone");
+                String normalized = normalizePhone(old);
+                if (normalized != null && !normalized.equals(old)) {
+                    j.put("phone", normalized);
+                    changed.add(new String[]{old, normalized, j.optString("email")});
+                }
+            }
+        } catch (JSONException ignored) {
+            // 문자열만 넣으므로 일어나지 않는다
+        }
+        if (!changed.isEmpty()) {
+            save(context, accounts);
+        }
+        return changed;
     }
 
     /** 아이디와 비밀번호가 맞으면 회원 정보, 틀리면 null */
@@ -270,7 +309,7 @@ public final class LocalAccounts {
             if (j == null) {
                 continue;
             }
-            if (phone != null ? phone.equals(j.optString("phone"))
+            if (phone != null ? phone.equals(normalizePhone(j.optString("phone")))
                     : phoneOrEmail.equalsIgnoreCase(j.optString("email"))) {
                 return j;
             }

@@ -266,7 +266,7 @@ match_score(body, item) -> {
 - 단위 테스트 `CartStoreTest` 8개 (다시 켜도 남음·옵션별 줄·계정별·비로그인 합치기·옵션 변경 합치기·주문한 줄만 빼기·계정 이름 변경·수량 범위)
 
 ### 4-16. 로그인·계정별 기록 (11/05, 로그인/계정 담당)
-- 로그인 화면은 한 장 (`LoginMainActivity`: 아이디·비밀번호 입력, 로그인, 아이디 찾기 | 비밀번호 찾기, 소셜 아이콘, 회원가입). 옛 `LoginEmailActivity`와 "반가워요! 회원가입하기" 화면(`SigninMainActivity`)은 없앴고, 회원가입 버튼은 바로 `PhoneVerifyActivity`(휴대전화 인증)로 간다
+- 로그인 화면은 한 장 (`LoginMainActivity`: 아이디·비밀번호 입력, 로그인, 아이디 찾기 | 비밀번호 찾기, 회원가입. 소셜 로그인 아이콘은 동작하지 않아 11/06에 뺐다). 옛 `LoginEmailActivity`와 "반가워요! 회원가입하기" 화면(`SigninMainActivity`)은 없앴고, 회원가입 버튼은 바로 `PhoneVerifyActivity`(휴대전화 인증)로 간다
 - 로그인은 **아이디 + 비밀번호**만 (인증 없음, `LocalAccounts.loginWithId`). 가입은 아이디를 따로 받고 휴대전화는 가입 때 인증한 번호(수정 불가), 이메일은 선택(넣으려면 인증). 로그인 화면의 "핸드폰 번호로 로그인"·"이메일 확인" 버튼은 뺐다 (`LoginPhoneActivity`는 어디서도 열리지 않음)
 - 계정(아이디) 찾기 (`FindIdActivity`): "휴대전화로 찾기"/"이메일로 찾기" 중 골라 입력 → 그 번호·이메일로 가입한 계정이 있으면 인증번호 발송, 없으면 "가입된 계정이 없습니다" → 인증번호가 맞으면 아이디를 보여 준다
 - 비밀번호 재설정 (`ResetPwMainActivity` → `ResetPwActivity`): 인증 방식(휴대전화/이메일)을 고르고 **아이디**를 입력 → 없는 아이디면 막고, 있으면 그 계정에 등록된 번호·이메일(가려서 표시)로 인증번호 발송 → 맞으면 새 비밀번호 설정
@@ -276,6 +276,7 @@ match_score(body, item) -> {
 - 이메일·전화번호가 바뀌면 `MyPageStore.moveAccount`로 기록을 새 이름으로 옮긴다 (`EditProfileActivity`)
 - 비회원일 때 만든 체형·설문·찜을 로그인한 계정이 이어받던 `AccountPrefs.adoptGuest` 호출을 뺐다 (새 계정은 비어서 시작). 비회원 장바구니를 로그인 계정에 합치는 동작(`CartStore`)은 그대로
 - 비회원 제한 (`login/LoginGate.require`): 찜(카드·상세 하트), 장바구니 담기, 바로 구매, 하단 찜·장바구니 탭과 장바구니 아이콘은 로그인해야 한다. 비회원이면 "로그인이 필요해요 / 로그인하러 가기" 모달 → 로그인(또는 회원가입)을 마치면 로그인 화면들을 닫고 원래 화면으로 돌아와 하려던 동작을 이어서 한다 (`CapstoneApp`이 화면 onResume마다 `LoginGate.onActivityResumed`를 부름, `LoginMainActivity.goToMyPage`는 이어서 할 동작이 있으면 마이페이지로 안 감). 로그인 없이 돌아오면 동작은 취소. 둘러보기·상품 상세 보기는 비회원도 된다
+- 휴대전화 번호: 저장·비교는 숫자만, 입력칸(`login/PhoneInput`)은 하이픈을 자동으로 붙여 보여 주고 저장 직전에 `normalizePhone`으로 숫자만 남긴다. 앱을 켤 때 `LoginSession.migrateStoredPhones`가 예전(하이픈 포함)으로 저장된 회원 번호와, 그 번호를 계정 이름으로 쓴 기록(체형·설문·찜·장바구니·주문·사진)을 숫자만 이름으로 옮긴다 (여러 번 실행해도 같음, 새 이름에 기록이 있으면 안 덮음). 배송지 연락처에 이미 저장된 하이픈 번호는 그대로 두고 화면에서 `formatPhone`으로 맞춰 보여 준다
 - 한계: 더미 상품(DummyData)의 찜은 앱을 끄면 사라진다 (원래 저장 안 됨). `CartStoreTest`는 `org.json`이 단위 테스트에서 비어 있어 main에서도 실패한다
 
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
@@ -322,7 +323,7 @@ match_score(body, item) -> {
 - 같이 고친 것 (앱): 설문 안내 문구를 실제 버튼 이름("체형 분석 시작하기")으로, 성인인데 사진 모델 결과가 없으면 결과 화면에 안내, 사진 모델은 측정이 끝나면 닫아 메모리(약 45MB)를 돌려줌, lint 오류 7개(`paddingHorizontal/Vertical` → `paddingLeft/Right/Top/Bottom`, `android:tint` → `app:tint`)
 
 ### 4-13. 앱 계정·주문·쿠폰 (11/01)
-- 휴대폰 번호는 `LocalAccounts.normalizePhone`으로 010-0000-0000 모양 하나로 저장 → 하이픈 유무와 상관없이 같은 계정. 다른 형식으로 저장된 체형·설문·찜·사진은 로그인·앱 시작 때, 지금 계정에 기록이 없을 때만 옮긴다 (`LoginSession.adoptOldPhoneData`)
+- 휴대폰 번호는 `LocalAccounts.normalizePhone`으로 **숫자만(01012345678)** 하나로 저장 → 하이픈 유무와 상관없이 같은 계정 (11/06에 하이픈 포함에서 숫자만으로 바꿈. 화면에는 `LocalAccounts.formatPhone`으로 010-0000-0000 모양을 보여 줌). 다른 형식으로 저장된 체형·설문·찜·사진은 로그인·앱 시작 때, 지금 계정에 기록이 없을 때만 옮긴다 (`LoginSession.adoptOldPhoneData`)
 - 로그인은 가입한 비밀번호만 통과: `data/LocalAccounts`가 회원을 기기(SharedPreferences `local_accounts`)에 PBKDF2 해시로 저장. **가입한 기기에서만 로그인된다.** 서버 users 표와 연결되면 대체할 임시 저장소. 가입을 마치면 바로 로그인된다. 생년월일·성별은 아직 저장하지 않는다. 이메일 로그인은 프로필에 이메일을 등록한 뒤에 된다. 비밀번호 재설정은 핸드폰 번호·이메일 중 고르는 화면(`ResetPwMainActivity`) → 입력 화면(`ResetPwActivity`, `EXTRA_BY_PHONE`). 인증번호는 아직 가짜(4자리면 통과)
 - 결제 완료 → 체크한 상품만 장바구니에서 뺀다 (`DummyData.removeOrderedFromCart`). 주문 화면·주문 내역 옵션은 고른 값 그대로 (`Product.getOptionLabel`, 여러 상품이면 `이름: L / NAVY, …`)
 - 기간 지난 쿠폰은 보유 탭에서 빠지고 받기 버튼은 "기간만료" (`CouponExpiry`). 레이아웃의 가짜 보유 쿠폰 카드 3장 삭제. 받기 쿠폰 중 뉴베러 신상품(2026.12.30까지)·겨울 긴소매(2026.11.30까지)는 받을 수 있고 전상품 5%는 만료 상태

@@ -65,7 +65,21 @@ public final class LoginSession {
         RecommendApi.refreshLikes(context);
     }
 
-    /** 앱을 켤 때 호출. 예전에 하이픈 없이 저장한 로그인 번호도 같은 계정이 되게 바꾼다. */
+    /**
+     * 앱을 켤 때 호출. 예전에 하이픈 붙여 저장한 회원의 번호를 모두 숫자만 남기는 모양으로 고치고,
+     * 그 번호를 계정 이름으로 써서 저장해 둔 체형·설문·찜·장바구니·주문 기록·사진도 새 이름으로 옮긴다.
+     * (이메일이 있는 회원은 기록이 이메일 이름이라 옮길 것이 없다. 여러 번 불러도 결과가 같다)
+     */
+    public static void migrateStoredPhones(Context context) {
+        for (String[] change : LocalAccounts.normalizeStoredPhones(context)) {
+            if (!change[2].isEmpty()) {
+                continue;
+            }
+            moveOldKeys(context, change[0], change[1]);
+        }
+    }
+
+    /** 앱을 켤 때 호출. 예전 모양(하이픈 있는 번호)으로 저장한 로그인 번호도 숫자만 남기는 모양으로 바꾼다. */
     public static void normalizeSavedPhone(Context context) {
         String phone = getPhone(context);
         String normalized = LocalAccounts.normalizePhone(phone);
@@ -81,8 +95,15 @@ public final class LoginSession {
         if (oldPhone == null || LocalAccounts.normalizePhone(oldPhone) == null) {
             return;
         }
-        String to = BodyProfileStore.accountKey(context);
+        moveOldKeys(context, oldPhone, BodyProfileStore.accountKey(context));
+    }
+
+    /** 옛 이름(번호 모양이 다른 것, 숫자만 있는 것)으로 저장된 기록을 to로 옮긴다. to에 기록이 있으면 안 옮긴다 */
+    private static void moveOldKeys(Context context, String oldPhone, String to) {
         for (String from : new String[]{oldPhone, oldPhone.replaceAll("[^0-9]", "")}) {
+            if (from.equals(to)) {
+                continue;
+            }
             BodyProfileStore.adoptAccount(context, from, to);
             MyPageStore.adoptAccount(context, from, to);
             AccountPrefs.adoptAccount(context, from, to);

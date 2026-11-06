@@ -10,10 +10,21 @@ public class LocalAccountsTest {
 
     @Test
     public void phoneFormatsBecomeSameAccount() {
-        assertEquals("010-3945-8685", LocalAccounts.normalizePhone("01039458685"));
-        assertEquals("010-3945-8685", LocalAccounts.normalizePhone("010-3945-8685"));
-        assertEquals("010-3945-8685", LocalAccounts.normalizePhone(" 010 3945 8685 "));
-        assertEquals("011-123-4567", LocalAccounts.normalizePhone("0111234567"));
+        // 저장·비교는 숫자만
+        assertEquals("01039458685", LocalAccounts.normalizePhone("01039458685"));
+        assertEquals("01039458685", LocalAccounts.normalizePhone("010-3945-8685"));
+        assertEquals("01039458685", LocalAccounts.normalizePhone(" 010 3945 8685 "));
+        assertEquals("0111234567", LocalAccounts.normalizePhone("0111234567"));
+    }
+
+    @Test
+    public void phoneIsShownWithHyphens() {
+        // 화면에 보여 줄 때만 하이픈을 붙인다
+        assertEquals("010-3945-8685", LocalAccounts.formatPhone("01039458685"));
+        assertEquals("010-3945-8685", LocalAccounts.formatPhone("010-3945-8685"));
+        assertEquals("011-123-4567", LocalAccounts.formatPhone("0111234567"));
+        assertEquals("1234", LocalAccounts.formatPhone("1234"));       // 번호가 아니면 그대로
+        assertEquals("", LocalAccounts.formatPhone(null));
     }
 
     @Test

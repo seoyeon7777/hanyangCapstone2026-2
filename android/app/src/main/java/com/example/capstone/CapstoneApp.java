@@ -23,6 +23,7 @@ public class CapstoneApp extends Application {
     public void onCreate() {
         super.onCreate();
 
+        LoginSession.migrateStoredPhones(this);
         LoginSession.normalizeSavedPhone(this);
         LoginSession.reloadAccountData(this);
 

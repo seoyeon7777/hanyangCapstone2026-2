@@ -74,7 +74,7 @@ public class EditProfileActivity extends AppCompatActivity {
         showValue(tvEmail, user.email);
 
         String phone = MyPageUi.normalizePhone(user.phone == null ? "" : user.phone);
-        showValue(tvPhone, phone != null ? phone : user.phone);
+        showValue(tvPhone, phone != null ? com.example.capstone.data.LocalAccounts.formatPhone(phone) : user.phone);
     }
 
     private void showValue(TextView view, String value) {
@@ -202,7 +202,7 @@ public class EditProfileActivity extends AppCompatActivity {
         MyPageStore.User user = MyPageStore.getUser();
 
         AppDialog.input(this, "휴대폰 번호 변경", "주문·배송 안내를 받을 번호예요.",
-                user.phone, "010-0000-0000", InputType.TYPE_CLASS_PHONE,
+                com.example.capstone.data.LocalAccounts.formatPhone(user.phone), "010-0000-0000", InputType.TYPE_CLASS_PHONE,
                 "변경", input -> {
                     String phone = MyPageUi.normalizePhone(input);
                     if (phone == null) {
@@ -214,7 +214,9 @@ public class EditProfileActivity extends AppCompatActivity {
                         return false;
                     }
                     // [여기에 DB 입력] 실제 서비스에서는 바꾼 번호로 본인 인증(문자 인증) 후 저장
-                    confirmChange("휴대폰 번호 변경", user.phone, phone, () -> {
+                    confirmChange("휴대폰 번호 변경",
+                            com.example.capstone.data.LocalAccounts.formatPhone(user.phone),
+                            com.example.capstone.data.LocalAccounts.formatPhone(phone), () -> {
                         saveProfile(user.name, user.email, phone);
                         toast("휴대폰 번호가 변경되었습니다.");
                     });

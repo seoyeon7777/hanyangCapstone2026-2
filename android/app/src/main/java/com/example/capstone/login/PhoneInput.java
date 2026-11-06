@@ -5,6 +5,7 @@ import android.text.InputFilter;
 import android.text.InputType;
 import android.text.Selection;
 import android.text.Spanned;
+import android.text.method.DigitsKeyListener;
 import android.text.TextWatcher;
 import android.widget.EditText;
 
@@ -27,6 +28,9 @@ public final class PhoneInput {
         Formatter formatter = new Formatter();
         edit.setTag(formatter);
         edit.setInputType(InputType.TYPE_CLASS_NUMBER);
+        // 숫자 입력 종류에는 숫자만 받는 필터가 자동으로 붙어 자동으로 넣는 하이픈을 지워 버린다.
+        // 하이픈도 받게 바꿔야 한다 (안 그러면 하이픈을 채우는 순간 앱이 꺼진다)
+        edit.setKeyListener(DigitsKeyListener.getInstance("0123456789-"));
         edit.setFilters(new InputFilter[]{formatter});
         edit.addTextChangedListener(formatter);
         formatter.apply(edit.getText());           // 이미 들어 있던 글자도 모양을 맞춘다
@@ -143,7 +147,7 @@ public final class PhoneInput {
                     }
                     pos++;
                 }
-                Selection.setSelection(s, pos);
+                Selection.setSelection(s, Math.max(0, Math.min(pos, s.length())));   // 글자 수를 넘으면 앱이 꺼진다
             } finally {
                 formatting = false;
             }

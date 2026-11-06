@@ -102,7 +102,7 @@ public class DeliveryAddressActivity extends AppCompatActivity {
         View view = inflater.inflate(R.layout.item_address, containerAddresses, false);
 
         ((TextView) view.findViewById(R.id.tvLabel)).setText(address.label);
-        ((TextView) view.findViewById(R.id.tvReceiver)).setText(address.receiver + " · " + address.phone);
+        ((TextView) view.findViewById(R.id.tvReceiver)).setText(address.receiver + " · " + com.example.capstone.data.LocalAccounts.formatPhone(address.phone));
         ((TextView) view.findViewById(R.id.tvAddress)).setText(address.getFullAddress());
 
         TextView tvRequest = view.findViewById(R.id.tvRequest);

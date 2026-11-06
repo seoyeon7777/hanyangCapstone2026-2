@@ -22,7 +22,6 @@ public class LoginMainActivity extends AppCompatActivity {
     private ImageButton btnBack, btnTogglePw;
     private EditText etId, etPassword;
     private Button btnLogin, btnSignup;
-    private ImageButton btnKakao, btnNaver, btnGmail;
     private TextView tvResetPw, tvFindId;
 
     private boolean isPwVisible = false;
@@ -43,10 +42,6 @@ public class LoginMainActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.etPassword);
         btnTogglePw = findViewById(R.id.btnTogglePw);
         btnLogin = findViewById(R.id.btnLogin);
-
-        btnKakao = findViewById(R.id.btnKakao);
-        btnNaver = findViewById(R.id.btnNaver);
-        btnGmail = findViewById(R.id.btnGmail);
 
         btnSignup = findViewById(R.id.btnSignup);
         tvResetPw = findViewById(R.id.tvResetPw);
@@ -74,16 +69,6 @@ public class LoginMainActivity extends AppCompatActivity {
 
         // 로그인: 아이디 + 비밀번호 (인증 없음)
         btnLogin.setOnClickListener(v -> login());
-
-        // 소셜 로그인 - 나중에 연동
-        btnKakao.setOnClickListener(v -> {
-        });
-
-        btnNaver.setOnClickListener(v -> {
-        });
-
-        btnGmail.setOnClickListener(v -> {
-        });
 
         // 회원가입 → 휴대전화 본인인증부터
         btnSignup.setOnClickListener(v ->

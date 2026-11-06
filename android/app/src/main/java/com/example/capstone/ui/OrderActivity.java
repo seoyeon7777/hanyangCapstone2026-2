@@ -182,7 +182,7 @@ public class OrderActivity extends AppCompatActivity {
         View card = LayoutInflater.from(this).inflate(R.layout.item_address, parent, false);
 
         ((TextView) card.findViewById(R.id.tvLabel)).setText(address.label);
-        ((TextView) card.findViewById(R.id.tvReceiver)).setText(address.receiver + " · " + address.phone);
+        ((TextView) card.findViewById(R.id.tvReceiver)).setText(address.receiver + " · " + com.example.capstone.data.LocalAccounts.formatPhone(address.phone));
         ((TextView) card.findViewById(R.id.tvAddress)).setText(address.getFullAddress());
 
         TextView tvRequest = card.findViewById(R.id.tvRequest);
