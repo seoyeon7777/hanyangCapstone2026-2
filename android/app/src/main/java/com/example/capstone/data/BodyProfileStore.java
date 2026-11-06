@@ -311,6 +311,39 @@ public final class BodyProfileStore {
         }
     }
 
+    /**
+     * 설문을 마치고 서버 진단이 왔을 때 부른다: 설문 결과를 "내 체형"으로 저장한다.
+     * - 대표 체형이 이미 있으면 그 체형의 설문 답·골격 이름만 새 값으로 바꾼다 (치수는 그대로)
+     * - 없으면 새 체형을 만든다. 치수는 비워 두고, 사진 측정을 저장할 때 채운다 (로그인한 경우만.
+     *   비회원은 저장하지 않고, 설문 결과는 지금처럼 임시로만 쓴다)
+     * 이렇게 하면 내 체형 관리, 내 체형 피드백, 홈 체형 맞춤 추천이 같은 기록을 본다.
+     */
+    public static void saveFromSurvey(Context context, float heightCm, String bodyType, int[] answers) {
+        if (answers == null) {
+            return;
+        }
+        if (getActive(context) != null) {
+            updateActiveSurvey(context, answers, bodyType);
+            return;
+        }
+        if (!LoginSession.isLoggedIn(context)) {
+            return;
+        }
+        save(context, null, nextDefaultName(context), heightCm, 0f, bodyType,
+                new JSONObject(), answers);
+    }
+
+    /** 탈퇴: 이 계정의 저장한 체형·대표 체형·체형 설정을 지운다 */
+    public static void deleteAccount(Context context, String account) {
+        SharedPreferences.Editor editor = prefs(context).edit()
+                .remove("profiles_" + account)
+                .remove("active_" + account);
+        for (String key : SETTING_KEYS) {
+            editor.remove("setting_" + key + "_" + account);
+        }
+        editor.apply();
+    }
+
     public static void syncActiveProfile(Context context) {
         UserBodyProfile profile = UserBodyProfile.getInstance();
         profile.clear();

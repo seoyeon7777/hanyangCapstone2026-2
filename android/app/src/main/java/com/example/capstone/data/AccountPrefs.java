@@ -42,6 +42,25 @@ public final class AccountPrefs {
         return base + suffix(BodyProfileStore.accountKey(context));
     }
 
+    /** 예전 버전이 기기에 남긴 비회원 설문 기록을 지운다 (이제 비회원 설문은 메모리에만 둔다) */
+    public static void clearGuestSurvey(Context context) {
+        SharedPreferences prefs = survey(context);
+        SharedPreferences.Editor editor = prefs.edit();
+        remove(editor, SURVEY_KEYS, suffix(GUEST));
+        editor.apply();
+    }
+
+    /** 탈퇴: 이 계정의 설문 답·결과·키, 추천 사용자 ID, 찜을 지운다 */
+    public static void deleteAccount(Context context, String account) {
+        SharedPreferences.Editor survey = survey(context).edit();
+        remove(survey, SURVEY_KEYS, suffix(account));
+        survey.apply();
+
+        SharedPreferences.Editor recommend = recommend(context).edit();
+        remove(recommend, RECOMMEND_KEYS, suffix(account));
+        recommend.apply();
+    }
+
     public static void adoptGuest(Context context) {
         String account = BodyProfileStore.accountKey(context);
         if (GUEST.equals(account)) {

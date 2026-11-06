@@ -25,6 +25,11 @@ public final class SellerStore {
         return "brand@" + BodyProfileStore.accountKey(context);
     }
 
+    /** 탈퇴: 이 계정이 마지막으로 쓴 브랜드 이름을 지운다 */
+    public static void deleteAccount(Context context, String account) {
+        prefs(context).edit().remove("brand@" + account).apply();
+    }
+
     /** 마지막으로 쓴 브랜드 이름. 없으면 빈 문자열 */
     public static String getBrand(Context context) {
         return prefs(context).getString(key(context), "");

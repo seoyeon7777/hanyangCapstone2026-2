@@ -14,6 +14,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.data.BodyProfileStore;
+import com.example.capstone.login.LoginGate;
+import com.example.capstone.login.LoginSession;
 
 public class BodyTypeResultActivity extends AppCompatActivity {
 
@@ -22,6 +25,13 @@ public class BodyTypeResultActivity extends AppCompatActivity {
     private TextView resultFeatures;
 
     private float userHeightCm;
+
+    /** 이 설문의 답과 결과 (비회원이 사진 측정 때문에 로그인하면 계정에 저장하려고 들고 있는다) */
+    private int[] surveyAnswers;
+    private int resultType;
+
+    /** 이 결과가 지금 계정에 이미 저장됐는가 (로그인한 채 설문했으면 true) */
+    private boolean savedToAccount;
 
     private static final String PREF_TIPS = "measure_tips";
     private static final String KEY_SKIP_CLOTHES_TIP = "skip_clothes_tip";
@@ -39,6 +49,20 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         );
 
         startActivity(intent);
+    }
+
+    /** 비회원이 사진 측정 때문에 로그인했을 때: 방금 한 설문 결과를 계정에 저장한다 (이 경로에서만 저장된다) */
+    private void saveSurveyToAccountIfNeeded() {
+
+        if (savedToAccount || surveyAnswers == null || !LoginSession.isLoggedIn(this)) {
+            return;
+        }
+
+        BodyTypeActivity.persistSurvey(this, surveyAnswers, userHeightCm, resultType);
+        BodyProfileStore.saveFromSurvey(this, userHeightCm,
+                BodyTypeActivity.skeletonLabel(resultType), surveyAnswers);
+        savedToAccount = true;
+        findViewById(R.id.resultGuestNotice).setVisibility(View.GONE);
     }
 
     /** 사진을 고르기 전 옷차림 안내. 몸에 붙는 옷이 정확하다는 것을 알려 준다. */
@@ -104,6 +128,13 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 BodyTypeActivity.EXTRA_RESULT_TYPE,
                 BodyTypeActivity.TYPE_STRAIGHT
         );
+
+        this.resultType = resultType;
+        surveyAnswers = receivedIntent.getIntArrayExtra(BodyTypeActivity.EXTRA_ANSWERS);
+        savedToAccount = LoginSession.isLoggedIn(this);
+
+        // 비회원은 결과가 저장되지 않는다는 안내를 보여 준다 (로그인한 채 설문한 결과만 저장된다)
+        findViewById(R.id.resultGuestNotice).setVisibility(savedToAccount ? View.GONE : View.VISIBLE);
 
         userHeightCm = receivedIntent.getFloatExtra(
                 "USER_HEIGHT_CM",
@@ -188,8 +219,10 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         resultFeatures.setText(KoreanLineBreak.keepWords(features));
         KoreanLineBreak.apply(findViewById(R.id.resultNotice));
 
-        // 자세한 신체 분석 → 정면·옆면 사진 고르기
-        btnYes.setOnClickListener(v -> {
+        // 자세한 신체 분석 → 정면·옆면 사진 고르기. 로그인해야 할 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 이어서 시작)
+        btnYes.setOnClickListener(v -> LoginGate.require(this,
+                "사진으로 치수를 측정하려면 로그인해야 해요.\n로그인하면 방금 한 설문 결과도 내 체형으로 저장돼요.",
+                () -> {
 
             if (userHeightCm < 100f || userHeightCm > 230f) {
                 Toast.makeText(
@@ -200,6 +233,9 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 return;
             }
 
+            // 비회원이 여기서 로그인하고 이어가는 경우: 방금 한 설문 결과를 지금 계정의 내 체형으로 저장한다
+            saveSurveyToAccountIfNeeded();
+
             // 사진을 고르기 전에 옷차림 안내 (다시 보지 않기를 고르면 건너뜀)
             if (getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
                     .getBoolean(KEY_SKIP_CLOTHES_TIP, false)) {
@@ -207,7 +243,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
             } else {
                 showClothesTip();
             }
-        });
+        }));
 
         // 아니오: 결과 화면 종료
         btnNo.setOnClickListener(v -> finish());

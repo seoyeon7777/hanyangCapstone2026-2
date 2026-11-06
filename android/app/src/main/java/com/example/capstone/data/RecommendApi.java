@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.widget.Toast;
 
 import com.example.capstone.BuildConfig;
+import com.example.capstone.login.LoginSession;
 import com.example.capstone.ui.BodyTypeActivity;
 
 import org.json.JSONArray;
@@ -280,7 +281,7 @@ public final class RecommendApi {
         JSONObject body = new JSONObject();
 
         try {
-            body.put("user_id", userId(context));
+            putUserId(context, body);
             body.put("mode", mode);
             body.put("page", page);
             body.put("size", PAGE_SIZE);
@@ -496,7 +497,7 @@ public final class RecommendApi {
     private static void loadCatalogPage(Context context, String mode, List<String> shown, Runnable onDone) {
         JSONObject body = new JSONObject();
         try {
-            body.put("user_id", userId(context));
+            putUserId(context, body);
             body.put("mode", mode);
             body.put("page", 0);
             body.put("size", CATALOG_PAGE_SIZE);
@@ -841,7 +842,19 @@ public final class RecommendApi {
         sendEvent(context, product.getServerId(), event);
     }
 
+    /** 로그인한 사용자만 서버에 사용자 ID를 보낸다. 비회원은 보내지 않아서 서버에 체형·반응이 저장되지 않는다 */
+    private static void putUserId(Context context, JSONObject body) throws JSONException {
+        if (LoginSession.isLoggedIn(context)) {
+            body.put("user_id", userId(context));
+        }
+    }
+
     private static void sendEvent(Context context, String serverId, String event) {
+
+        // 비회원은 클릭·찜 기록을 서버에 보내지 않는다
+        if (!LoginSession.isLoggedIn(context)) {
+            return;
+        }
 
         // 방금 서버에 연결하지 못했으면 잠시 기록을 보내지 않는다 (요청이 쌓여 앱이 느려지지 않게)
         if (RecommendTiming.isOffline(lastConnectFailAt, System.currentTimeMillis())) {
@@ -919,6 +932,18 @@ public final class RecommendApi {
             orders.put(orderNo, ids);
         } catch (JSONException e) {
             return;
+        }
+
+        prefs(context).edit().putString(KEY_ORDER_PRODUCTS, orders.toString()).apply();
+    }
+
+    /** 탈퇴: 지워지는 주문들의 "주문번호별 서버 상품" 기록을 지운다 */
+    public static void forgetOrders(Context context, List<String> orderNos) {
+
+        JSONObject orders = jsonPref(context, KEY_ORDER_PRODUCTS);
+
+        for (String orderNo : orderNos) {
+            orders.remove(orderNo);
         }
 
         prefs(context).edit().putString(KEY_ORDER_PRODUCTS, orders.toString()).apply();

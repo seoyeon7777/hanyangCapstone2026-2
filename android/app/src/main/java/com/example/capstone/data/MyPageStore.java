@@ -806,6 +806,20 @@ public class MyPageStore {
         }
     }
 
+    /** 탈퇴: 이 계정의 주문·리뷰·반품·배송지·카드·환불 계좌·문의·쿠폰을 모두 지운다 (메모리에 불러온 것도 비운다) */
+    public static synchronized void deleteAccount(Context context, String account) {
+        context.getApplicationContext()
+                .getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .remove(DATA_KEY + account)
+                .apply();
+
+        if (account.equals(loadedAccount)) {
+            clearMemory();
+            loadedAccount = null;
+        }
+    }
+
     /** 예전 형식 이름의 기록을, 새 이름에 기록이 없을 때만 옮긴다 */
     public static synchronized void adoptAccount(Context context, String from, String to) {
         SharedPreferences prefs = context.getApplicationContext()

@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.CartStore;
 import com.example.capstone.data.DummyData;
+import com.example.capstone.data.GuestSurvey;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.BodyProfileStore;
@@ -60,6 +61,7 @@ public final class LoginSession {
      * 체형·설문·장바구니는 읽을 때마다 지금 계정 것을 쓰므로 여기서 할 일이 없다.
      */
     public static void reloadAccountData(Context context) {
+        GuestSurvey.clear();        // 비회원 설문은 로그인·로그아웃하면 사라진다 (새 계정이 이어받지 않는다)
         MyPageStore.init(context);
         DummyData.clearLikes();
         RecommendApi.refreshLikes(context);
@@ -131,6 +133,7 @@ public final class LoginSession {
     public static void logout(Context context) {
         // [여기에 DB 입력] 서버 쪽 로그인 세션/토큰 만료 처리
         prefs(context).edit().clear().apply();
+        GuestSurvey.clear();
         MyPageStore.logout();   // 메모리의 이전 계정 기록을 비우고 비로그인 기록을 읽는다
         DummyData.clearLikes();
         RecommendApi.refreshLikes(context);

@@ -201,17 +201,28 @@ public class MyBodyActivity extends AppCompatActivity {
                         + " · " + profile.savedDate());
 
         boolean expanded = expandedIds.contains(profile.id);
-        BodyValueTable.fill(card.findViewById(R.id.layoutProfileValues),
-                BodyValueTable.rows(-1f, profile.parts, !expanded));
-
         TextView tvToggle = card.findViewById(R.id.tvToggleDetail);
-        tvToggle.setText(expanded ? "간단히 보기 ⌃" : "전체 치수 보기 ⌄");
-        tvToggle.setOnClickListener(v -> {
-            if (!expandedIds.remove(profile.id)) {
-                expandedIds.add(profile.id);
-            }
-            loadProfiles();
-        });
+
+        if (profile.parts == null || profile.parts.length() == 0) {
+            // 설문만 하고 치수는 아직 없는 체형: 빈 치수 칸 대신 안내를 보여 준다
+            card.findViewById(R.id.layoutProfileValues).setVisibility(View.GONE);
+            tvToggle.setText("치수는 사진을 찍으면 저장돼요");
+            tvToggle.setOnClickListener(null);
+            tvToggle.setClickable(false);
+        } else {
+            card.findViewById(R.id.layoutProfileValues).setVisibility(View.VISIBLE);
+            BodyValueTable.fill(card.findViewById(R.id.layoutProfileValues),
+                    BodyValueTable.rows(-1f, profile.parts, !expanded));
+
+            tvToggle.setText(expanded ? "간단히 보기 ⌃" : "전체 치수 보기 ⌄");
+            tvToggle.setClickable(true);
+            tvToggle.setOnClickListener(v -> {
+                if (!expandedIds.remove(profile.id)) {
+                    expandedIds.add(profile.id);
+                }
+                loadProfiles();
+            });
+        }
 
         TextView btnSetActive = card.findViewById(R.id.btnSetActive);
         btnSetActive.setText(active ? "대표 체형" : "대표로 설정");
