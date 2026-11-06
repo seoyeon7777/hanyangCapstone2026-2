@@ -801,17 +801,84 @@ public class MyPageStore {
         }
     }
 
-    /** 탈퇴: 이 계정의 주문·리뷰·반품·배송지·카드·환불 계좌·문의·쿠폰을 모두 지운다 (메모리에 불러온 것도 비운다) */
+    /** 탈퇴한 회원의 주문·반품 기록을 개인정보 없이 보관하는 곳 (어느 계정에도 연결하지 않고, 화면에서 읽지 않는다) */
+    private static final String ARCHIVE_KEY = "archived_orders";
+
+    /**
+     * 탈퇴: 이 계정의 기록을 지운다 (메모리에 불러온 것도 비운다).
+     * 다만 주문·반품 기록은 법령에 따라 보관해야 하므로, 이름·번호·주소 같은 개인정보와 계정 연결을 뺀 채
+     * 따로 남긴다 (ARCHIVE_KEY). 배송지·카드·환불 계좌·문의·리뷰·쿠폰은 모두 지운다.
+     */
     public static synchronized void deleteAccount(Context context, String account) {
-        context.getApplicationContext()
-                .getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE)
-                .edit()
-                .remove(DATA_KEY + account)
-                .apply();
+        SharedPreferences prefs = context.getApplicationContext()
+                .getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE);
+
+        archiveOrders(prefs, prefs.getString(DATA_KEY + account, null));
+
+        prefs.edit().remove(DATA_KEY + account).apply();
 
         if (account.equals(loadedAccount)) {
             clearMemory();
             loadedAccount = null;
+        }
+    }
+
+    /** 저장된 기록(JSON)에서 주문·반품만 골라, 개인정보를 뺀 보관용 기록으로 덧붙인다 */
+    private static void archiveOrders(SharedPreferences prefs, String savedData) {
+
+        if (savedData == null) {
+            return;
+        }
+
+        try {
+            JSONObject all = new JSONObject(savedData);
+            JSONArray orders = all.optJSONArray("orders");
+            JSONArray claims = all.optJSONArray("claims");
+
+            if (orders == null || orders.length() == 0) {
+                return;
+            }
+
+            JSONArray archive = new JSONArray(prefs.getString(ARCHIVE_KEY, "[]"));
+            long now = System.currentTimeMillis();
+
+            for (int i = 0; i < orders.length(); i++) {
+                JSONObject o = orders.getJSONObject(i);
+
+                // 거래 내용만 남긴다 (회원 이름·연락처·주소는 처음부터 주문 기록에 없다)
+                JSONObject record = new JSONObject();
+                record.put("no", o.optString("no"));
+                record.put("date", o.optString("date"));
+                record.put("brand", o.optString("brand"));
+                record.put("name", o.optString("name"));
+                record.put("option", o.optString("option"));
+                record.put("quantity", o.optInt("quantity", 1));
+                record.put("price", o.optInt("price"));
+                record.put("status", o.optInt("status"));
+                record.put("archivedAt", now);
+
+                // 같은 주문의 반품·교환·취소 기록 (사유 글에는 개인정보가 섞일 수 있어 뺀다)
+                JSONArray orderClaims = new JSONArray();
+                for (int j = 0; claims != null && j < claims.length(); j++) {
+                    JSONObject c = claims.getJSONObject(j);
+                    if (o.optString("no").equals(c.optString("orderNo"))) {
+                        JSONObject claim = new JSONObject();
+                        claim.put("no", c.optString("no"));
+                        claim.put("type", c.optString("type"));
+                        claim.put("date", c.optString("date"));
+                        claim.put("state", c.optString("state"));
+                        orderClaims.put(claim);
+                    }
+                }
+                record.put("claims", orderClaims);
+
+                archive.put(record);
+            }
+
+            prefs.edit().putString(ARCHIVE_KEY, archive.toString()).apply();
+
+        } catch (Exception e) {
+            Log.e("MyPageStore", "주문 기록 보관 실패", e);
         }
     }
 

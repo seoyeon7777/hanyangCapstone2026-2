@@ -106,7 +106,7 @@ public class EditProfileActivity extends AppCompatActivity {
         tvWithdraw.setPaintFlags(tvWithdraw.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
         tvWithdraw.setOnClickListener(v -> AppDialog.show(this, true,
                 "정말 탈퇴하시겠습니까?",
-                "탈퇴하면 주문 내역, 쿠폰, 리뷰 등 모든 정보가 삭제되며 복구할 수 없습니다.",
+                "탈퇴하면 배송지, 쿠폰, 찜, 체형 등 모든 정보가 삭제되며 복구할 수 없어요.\n단, 주문 내역은 관련 법령에 따라 일정 기간 보관돼요.",
                 "취소", null,
                 "탈퇴하기", this::withdraw));
     }
