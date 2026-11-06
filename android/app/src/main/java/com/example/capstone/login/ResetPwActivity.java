@@ -109,22 +109,6 @@ public class ResetPwActivity extends AppCompatActivity {
         // 인증받기 버튼
         btnRequestAuth.setOnClickListener(v -> requestAuthCode());
 
-        // 아이디를 고치면 처음부터 다시 인증받아야 한다.
-        etEmail.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (sentId != null) {
-                    resetFlow();
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-
         // 인증번호를 입력하면 인증확인 버튼을 보여준다.
         etAuthCode.addTextChangedListener(new TextWatcher() {
             @Override
@@ -144,6 +128,7 @@ public class ResetPwActivity extends AppCompatActivity {
                     btnVerifyCode.setText("인증확인");
                     btnVerifyCode.setEnabled(true);
                     containerNewPw.setVisibility(View.GONE);
+                    setConfirmEnabled(false);
                 }
             }
 
@@ -182,6 +167,13 @@ public class ResetPwActivity extends AppCompatActivity {
 
         // 비밀번호 변경 버튼
         btnConfirm.setOnClickListener(v -> resetPassword());
+        setConfirmEnabled(false);
+    }
+
+    /** 인증확인을 마쳐야 넘어갈 수 있다. 마치기 전에는 버튼을 눌러도 반응하지 않고 흐리게 보인다 */
+    private void setConfirmEnabled(boolean enabled) {
+        btnConfirm.setEnabled(enabled);
+        btnConfirm.setAlpha(enabled ? 1f : 0.4f);
     }
 
     /** 인증 전 상태로 되돌린다 */
@@ -195,6 +187,7 @@ public class ResetPwActivity extends AppCompatActivity {
         btnVerifyCode.setEnabled(true);
         btnVerifyCode.setVisibility(View.GONE);
         containerNewPw.setVisibility(View.GONE);
+        setConfirmEnabled(false);
         btnRequestAuth.setText("인증받기");
     }
 
@@ -242,7 +235,8 @@ public class ResetPwActivity extends AppCompatActivity {
             return;
         }
 
-        String error = authCode.check(input, etEmail.getText().toString().trim());
+        // 칸의 아이디가 아니라 마지막으로 인증받기를 눌러 인증번호가 나간 아이디로 확인한다
+        String error = authCode.check(input, sentId);
 
         if (error != null) {
             Toast.makeText(this, error, Toast.LENGTH_SHORT).show();
@@ -254,6 +248,7 @@ public class ResetPwActivity extends AppCompatActivity {
         btnVerifyCode.setEnabled(false);
 
         containerNewPw.setVisibility(View.VISIBLE);
+        setConfirmEnabled(true);
         Toast.makeText(this, "인증이 완료되었습니다. 새 비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
     }
 

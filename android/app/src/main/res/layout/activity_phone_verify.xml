@@ -71,7 +71,7 @@
             android:layout_weight="1"
             android:hint="010-0000-0000"
             android:background="@drawable/bg_edit"
-            android:inputType="phone"
+            android:inputType="number"
             android:paddingHorizontal="16dp"
             android:textSize="14sp"
             android:layout_marginEnd="8dp"/>

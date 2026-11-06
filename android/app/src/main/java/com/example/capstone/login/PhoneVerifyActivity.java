@@ -40,6 +40,7 @@ public class PhoneVerifyActivity extends AppCompatActivity {
         btnHome = findViewById(R.id.btnHome);
 
         etPhone = findViewById(R.id.etPhone);
+        PhoneInput.attach(etPhone);
         etAuthCode = findViewById(R.id.etAuthCode);
 
         btnVerify = findViewById(R.id.btnVerify);
