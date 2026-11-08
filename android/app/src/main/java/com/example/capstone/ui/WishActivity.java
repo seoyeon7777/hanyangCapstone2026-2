@@ -26,7 +26,9 @@ import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.Product;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class WishActivity extends AppCompatActivity {
 
@@ -40,9 +42,7 @@ public class WishActivity extends AppCompatActivity {
     private FrameLayout contentFrame;
     private LinearLayout emptyView;
     private LinearLayout categoryContainer;
-
-    private TextView titleCount;
-    private TextView editButton;
+    private LinearLayout wishContent;
 
     private ProductAdapter adapter;
 
@@ -50,11 +50,10 @@ public class WishActivity extends AppCompatActivity {
             new ArrayList<>();
 
     private String selectedCategory = "전체";
-    private boolean editMode = false;
 
     private final String[] categories = {
             "전체", "상의", "아우터",
-            "원피스", "바지", "치마"   // 치마: 추천 서버 상품(skirt)용
+            "원피스", "바지", "스커트"   // 치마: 추천 서버 상품(skirt)용
     };
 
     @Override
@@ -114,80 +113,13 @@ public class WishActivity extends AppCompatActivity {
 
         root.setBackgroundColor(WHITE);
 
+        wishContent = root;
+
         parent.addView(
                 root,
                 index,
                 oldParams
         );
-
-        // 상단 제목
-        LinearLayout header =
-                new LinearLayout(this);
-
-        header.setGravity(
-                Gravity.CENTER_VERTICAL
-        );
-
-        header.setPadding(
-                dp(16), 0,
-                dp(16), 0
-        );
-
-        root.addView(
-                header,
-                new LinearLayout.LayoutParams(
-                        -1,
-                        dp(54)
-                )
-        );
-
-        titleCount = makeText(
-                "찜 목록 0",
-                18,
-                true,
-                BLACK
-        );
-
-        titleCount.setGravity(
-                Gravity.CENTER_VERTICAL
-        );
-
-        header.addView(
-                titleCount,
-                new LinearLayout.LayoutParams(
-                        0,
-                        -1,
-                        1f
-                )
-        );
-
-        editButton = makeText(
-                "편집",
-                13,
-                false,
-                GRAY
-        );
-
-        editButton.setGravity(
-                Gravity.CENTER
-        );
-
-        editButton.setPadding(
-                dp(8), 0,
-                dp(8), 0
-        );
-
-        header.addView(editButton);
-
-        editButton.setOnClickListener(v -> {
-            editMode = !editMode;
-
-            editButton.setText(
-                    editMode ? "완료" : "편집"
-            );
-
-            renderProducts();
-        });
 
         // 카테고리 가로 스크롤
         HorizontalScrollView categoryScroll =
@@ -421,29 +353,25 @@ public class WishActivity extends AppCompatActivity {
     /** 찜 후보: 기존 더미 상품 + 홈(추천 서버)에서 찜한 상품 */
     private List<Product> allProducts() {
 
-        List<Product> products = new ArrayList<>(DummyData.getProducts());
+        Set<Product> products = new LinkedHashSet<>(DummyData.getProducts());
         products.addAll(RecommendApi.likedServerProducts(this));
-        return products;
+        return new ArrayList<>(products);
     }
 
     private void showWishProducts() {
 
-        int total = getCategoryCount("전체");
+        TextView title = findViewById(R.id.textWishTitle);
 
-        titleCount.setText(
-                "찜 목록 " + total
-        );
-
-        editButton.setVisibility(
-                total == 0
-                        ? View.INVISIBLE
-                        : View.VISIBLE
-        );
-
-        if (total == 0) {
-            editMode = false;
-            editButton.setText("편집");
+        if (!LoginRequiredView.update(
+                this,
+                R.drawable.ic_wish_empty,
+                "찜 목록은 로그인 후 이용할 수 있어요.",
+                wishContent)) {
+            title.setText("찜");
+            return;
         }
+
+        title.setText("찜 " + getCategoryCount("전체"));
 
         renderCategories();
         renderProducts();
@@ -489,16 +417,9 @@ public class WishActivity extends AppCompatActivity {
                 true
         );
 
+        adapter.setOnWishRemovedListener(this::showWishProducts);
+
         recyclerWish.setAdapter(adapter);
-
-        // 편집 모드에서는 상품을 길게 눌러 찜 해제
-        if (editMode) {
-
-            recyclerWish.addOnItemTouchListener(
-                    new RecyclerView.SimpleOnItemTouchListener() {
-                    }
-            );
-        }
     }
 
     private TextView makeText(

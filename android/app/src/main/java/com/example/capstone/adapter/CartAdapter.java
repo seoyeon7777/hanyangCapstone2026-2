@@ -1,5 +1,6 @@
 package com.example.capstone.adapter;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.capstone.R;
 import com.example.capstone.data.CartStore;
 import com.example.capstone.data.Product;
+import com.example.capstone.ui.ProductDetailActivity;
 import com.example.capstone.ui.ProductOptionSheet;
 
 import java.text.NumberFormat;
@@ -72,6 +74,19 @@ public class CartAdapter
             notifyCartChanged();
         });
 
+        holder.layoutProduct.setOnClickListener(v -> {
+
+            Intent intent = new Intent(v.getContext(), ProductDetailActivity.class);
+            intent.putExtra("product_id", product.getId());
+            intent.putExtra("product_brand", product.getBrand());
+            intent.putExtra("product_name", product.getName());
+            intent.putExtra("product_price", product.getPrice());
+            intent.putExtra("server_product_id", product.getServerId());
+            intent.putExtra("product_category", product.getCategory());
+            intent.putExtra("product_image_url", product.getImageUrl());
+            v.getContext().startActivity(intent);
+        });
+
         holder.btnChangeOption.setOnClickListener(v ->
                 ProductOptionSheet.show(
                         v.getContext(),
@@ -87,6 +102,18 @@ public class CartAdapter
                                     && color.equals(product.getSelectedColor());
                             boolean merged = !sameAsNow
                                     && CartStore.containsOption(v.getContext(), product, size, color);
+
+                            if (merged
+                                    && CartStore.quantityOf(v.getContext(), product, size, color) + quantity
+                                    > CartStore.MAX_QUANTITY) {
+
+                                Toast.makeText(
+                                        v.getContext(),
+                                        CartStore.MAX_QUANTITY_MESSAGE,
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                                return;
+                            }
 
                             CartStore.changeOption(v.getContext(), product, size, color, quantity);
 
@@ -141,6 +168,12 @@ public class CartAdapter
             int quantity = product.getCartQuantity();
 
             if (quantity >= CartStore.MAX_QUANTITY) {
+
+                Toast.makeText(
+                        v.getContext(),
+                        CartStore.MAX_QUANTITY_MESSAGE,
+                        Toast.LENGTH_SHORT
+                ).show();
                 return;
             }
 
@@ -241,6 +274,7 @@ public class CartAdapter
         TextView btnDelete;
         TextView btnChangeOption;
         CheckBox cbSelect;
+        View layoutProduct;
 
         public CartViewHolder(
                 @NonNull View itemView
@@ -250,6 +284,10 @@ public class CartAdapter
 
             cbSelect = itemView.findViewById(
                     R.id.cbCartSelect
+            );
+
+            layoutProduct = itemView.findViewById(
+                    R.id.layoutCartProduct
             );
 
             btnChangeOption = itemView.findViewById(

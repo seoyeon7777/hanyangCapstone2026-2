@@ -12,6 +12,7 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.widget.NestedScrollView;
@@ -23,9 +24,12 @@ import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.Product;
 import com.example.capstone.data.RecommendApi;
-import com.example.capstone.ui.BodyTypeActivity;
+import com.example.capstone.login.LoginMainActivity;
+import com.example.capstone.login.LoginSession;
+import com.example.capstone.ui.AppDialog;
 import com.example.capstone.ui.BottomMenu;
 import com.example.capstone.ui.CategoryFilterDialog;
+import com.example.capstone.ui.FittingActivity;
 import com.example.capstone.ui.SearchActivity;
 
 import java.util.ArrayList;
@@ -37,31 +41,22 @@ public class MainActivity extends AppCompatActivity {
     private static final int BLACK = Color.rgb(17, 17, 17);
     private static final int GRAY = Color.rgb(150, 150, 150);
 
-    private static final String MENU_ALL = "추천 전체";
+    private static final String MENU_ALL = "전체 상품";
 
     private static final String[] MENUS = {
-            "홈", "신상", "베스트", "상의",
-            "아우터", "원피스", "바지"
+            "홈", "신상", "베스트"
     };
 
     private final int[] TAB_IDS = {
             R.id.tabHome,
             R.id.tabNew,
-            R.id.tabBest,
-            R.id.tabTop,
-            R.id.tabOuter,
-            R.id.tabDress,
-            R.id.tabPants
+            R.id.tabBest
     };
 
     private final int[] INDICATOR_IDS = {
             R.id.indicatorHome,
             R.id.indicatorNew,
-            R.id.indicatorBest,
-            R.id.indicatorTop,
-            R.id.indicatorOuter,
-            R.id.indicatorDress,
-            R.id.indicatorPants
+            R.id.indicatorBest
     };
 
     private RecyclerView recyclerProducts;
@@ -74,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView textSelectedCategory;
     private TextView btnHomeFilter;
     private TextView textHomeEmpty;
+    private TextView btnRetryCatalog;
+    private CharSequence emptyText;
 
     private ProductAdapter productAdapter;
 
@@ -92,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int LOAD_MORE_DISTANCE_DP = 600;
     // 스크롤 도중 다음 묶음을 못 받으면 이만큼 쉬었다가 다시 시도한다
     private static final long HOME_RETRY_DELAY_MS = 5000;
+    private static final long EXIT_BACK_WINDOW_MS = 2000;
 
     private SwitchCompat switchBodyMode;
     private TextView textHomeRecTitle;
@@ -108,9 +106,19 @@ public class MainActivity extends AppCompatActivity {
     private int homeRequestId = 0;
     // 홈을 불러올 때의 체형 정보 (설문 시각 + 대표 체형). 바뀌면 다시 불러온다
     private String loadedBodyKey = "";
+    private boolean bodyModeAvailable = false;
+    private long lastBackAt = 0;
 
     private final CompoundButton.OnCheckedChangeListener modeListener =
-            (button, isChecked) -> reloadHomeFeed();
+            (button, isChecked) -> {
+                if (!canUseBodyMode()) {
+                    setModeSilently(false);
+                    switchBodyMode.jumpDrawablesToCurrentState();
+                    showBodyModeGuide();
+                    return;
+                }
+                reloadHomeFeed();
+            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,6 +142,8 @@ public class MainActivity extends AppCompatActivity {
         );
         btnHomeFilter = findViewById(R.id.btnHomeFilter);
         textHomeEmpty = findViewById(R.id.textHomeEmpty);
+        btnRetryCatalog = findViewById(R.id.btnRetryCatalog);
+        emptyText = textHomeEmpty.getText();
         switchBodyMode = findViewById(R.id.switchBodyMode);
         textHomeRecTitle = findViewById(R.id.textHomeRecTitle);
 
@@ -145,9 +155,33 @@ public class MainActivity extends AppCompatActivity {
                 ColorStateList.valueOf(Color.LTGRAY)
         );
 
-        setModeSilently(
-                RecommendApi.hasBodyInput(this)
-        );
+        syncBodyMode();
+
+        btnRetryCatalog.setOnClickListener(v -> {
+            loadCatalog();
+            updateProducts();
+        });
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (!"홈".equals(selectedMenu)) {
+                    showHomeTab();
+                    return;
+                }
+                long now = SystemClock.elapsedRealtime();
+                if (lastBackAt > 0 && now - lastBackAt < EXIT_BACK_WINDOW_MS) {
+                    finish();
+                    return;
+                }
+                lastBackAt = now;
+                Toast.makeText(
+                        MainActivity.this,
+                        "뒤로 버튼을 한 번 더 누르면 종료돼요",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        });
 
         homeScrollView.setOnScrollChangeListener(
                 (NestedScrollView.OnScrollChangeListener)
@@ -213,6 +247,21 @@ public class MainActivity extends AppCompatActivity {
 
         updateScreen();
         loadCatalog();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        showHomeTab();
+    }
+
+    public void showHomeTab() {
+        if (!"홈".equals(selectedMenu)) {
+            selectedMenu = "홈";
+            resetFilters();
+            updateScreen();
+        }
+        homeScrollView.smoothScrollTo(0, 0);
     }
 
     private void loadCatalog() {
@@ -335,7 +384,13 @@ public class MainActivity extends AppCompatActivity {
 
         for (Product product : DummyData.getProducts()) {
 
-            if (!matchesMenu(product)) {
+            if (MENU_ALL.equals(selectedMenu)
+                    && RecommendApi.catalogRank(product) == Integer.MAX_VALUE) {
+                continue;
+            }
+
+            if ("신상".equals(selectedMenu)
+                    && !DummyData.isNew(product)) {
                 continue;
             }
 
@@ -349,20 +404,10 @@ public class MainActivity extends AppCompatActivity {
         if ("신상".equals(selectedMenu)) {
             Collections.sort(
                     products,
-                    (a, b) -> {
-                        boolean newA = DummyData.isNew(a);
-                        boolean newB = DummyData.isNew(b);
-                        if (newA != newB) {
-                            return newA ? -1 : 1;
-                        }
-                        if (a.isFromServer() != b.isFromServer()) {
-                            return a.isFromServer() ? 1 : -1;
-                        }
-                        return Integer.compare(
-                                b.getId(),
-                                a.getId()
-                        );
-                    }
+                    (a, b) -> Integer.compare(
+                            b.getId(),
+                            a.getId()
+                    )
             );
         } else if ("베스트".equals(selectedMenu)) {
             Collections.sort(
@@ -395,27 +440,26 @@ public class MainActivity extends AppCompatActivity {
 
         boolean isEmpty = products.isEmpty();
 
+        boolean catalogMissing = MENU_ALL.equals(selectedMenu)
+                && !RecommendApi.hasCatalog();
+        boolean catalogLoading = catalogMissing
+                && RecommendApi.isCatalogLoading();
+
+        textHomeEmpty.setText(
+                catalogMissing ? "서버에 연결할 수 없어요" : emptyText
+        );
+
         textHomeEmpty.setVisibility(
-                isEmpty ? View.VISIBLE : View.GONE
+                isEmpty && !catalogLoading ? View.VISIBLE : View.GONE
+        );
+
+        btnRetryCatalog.setVisibility(
+                catalogMissing && !catalogLoading ? View.VISIBLE : View.GONE
         );
 
         recyclerProducts.setVisibility(
                 isEmpty ? View.GONE : View.VISIBLE
         );
-    }
-
-    private boolean matchesMenu(Product product) {
-
-        if ("홈".equals(selectedMenu)
-                || "신상".equals(selectedMenu)
-                || "베스트".equals(selectedMenu)
-                || MENU_ALL.equals(selectedMenu)) {
-            return true;
-        }
-
-        String productCategory = product.getCategory();
-
-        return selectedMenu.equals(productCategory);
     }
 
     private boolean matchesFilters(Product product) {
@@ -483,7 +527,9 @@ public class MainActivity extends AppCompatActivity {
         productAdapter = new ProductAdapter(homeProducts);
         recyclerProducts.setAdapter(productAdapter);
 
+        textHomeEmpty.setText(emptyText);
         textHomeEmpty.setVisibility(View.GONE);
+        btnRetryCatalog.setVisibility(View.GONE);
         recyclerProducts.setVisibility(View.VISIBLE);
 
         updateHomeTitle("");
@@ -670,6 +716,31 @@ public class MainActivity extends AppCompatActivity {
                 : typeName + "체형\n맞춤 추천");
     }
 
+    private boolean canUseBodyMode() {
+        return LoginSession.isLoggedIn(this)
+                && RecommendApi.hasDiagnosis(this);
+    }
+
+    private void syncBodyMode() {
+        bodyModeAvailable = canUseBodyMode();
+        setModeSilently(bodyModeAvailable);
+        switchBodyMode.setAlpha(bodyModeAvailable ? 1f : 0.4f);
+    }
+
+    private void showBodyModeGuide() {
+        if (!LoginSession.isLoggedIn(this)) {
+            AppDialog.show(this, false, "", "해당 기능은 로그인을 해야 쓸 수 있어요.",
+                    "닫기", null,
+                    "로그인하러 가기",
+                    () -> startActivity(new Intent(this, LoginMainActivity.class)));
+            return;
+        }
+        AppDialog.show(this, false, "", "해당 기능은 체형 진단을 해야 쓸 수 있어요.",
+                "닫기", null,
+                "체형 진단하러 가기",
+                () -> startActivity(new Intent(this, FittingActivity.class)));
+    }
+
     private void setModeSilently(boolean bodyMode) {
 
         switchBodyMode.setOnCheckedChangeListener(null);
@@ -730,20 +801,23 @@ public class MainActivity extends AppCompatActivity {
             productAdapter.notifyDataSetChanged();
         }
 
-        if (!loadedBodyKey.isEmpty()
-                && !RecommendApi.bodyInputKey(this).equals(loadedBodyKey)) {
+        String bodyKey = RecommendApi.bodyInputKey(this);
+        boolean bodyChanged = !bodyKey.equals(loadedBodyKey);
+
+        if (!loadedBodyKey.isEmpty() && bodyChanged) {
             RecommendApi.invalidateCatalog();
         }
         loadCatalog();
 
-        if ("홈".equals(selectedMenu)
-                && !RecommendApi.bodyInputKey(this).equals(loadedBodyKey)) {
+        if (bodyChanged || canUseBodyMode() != bodyModeAvailable) {
 
-            setModeSilently(
-                    RecommendApi.hasBodyInput(this)
-            );
+            syncBodyMode();
 
-            reloadHomeFeed();
+            if ("홈".equals(selectedMenu)) {
+                reloadHomeFeed();
+            } else {
+                loadedBodyKey = bodyKey;
+            }
         }
     }
 }

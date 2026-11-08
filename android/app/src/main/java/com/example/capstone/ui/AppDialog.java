@@ -81,7 +81,12 @@ public final class AppDialog {
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_app_confirm, null, false);
 
         view.findViewById(R.id.tvDialogIcon).setVisibility(warning ? View.VISIBLE : View.GONE);
-        ((TextView) view.findViewById(R.id.tvDialogTitle)).setText(title);
+        TextView tvTitle = view.findViewById(R.id.tvDialogTitle);
+        if (TextUtils.isEmpty(title)) {
+            tvTitle.setVisibility(View.GONE);
+        } else {
+            tvTitle.setText(title);
+        }
 
         TextView tvMessage = view.findViewById(R.id.tvDialogMessage);
         if (TextUtils.isEmpty(message)) {
