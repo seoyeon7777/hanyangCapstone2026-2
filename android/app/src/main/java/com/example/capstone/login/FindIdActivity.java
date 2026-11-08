@@ -103,7 +103,7 @@ public class FindIdActivity extends AppCompatActivity {
     }
 
     private void styleToggle(Button button, boolean selected) {
-        button.setBackgroundResource(selected ? R.drawable.bg_button : R.drawable.bg_button_outlin);
+        button.setBackgroundResource(selected ? R.drawable.bg_button_pill : R.drawable.bg_button_outlin);
         button.setTextColor(selected ? Color.WHITE : Color.BLACK);
     }
 
