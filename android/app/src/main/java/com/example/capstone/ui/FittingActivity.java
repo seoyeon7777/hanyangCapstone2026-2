@@ -2,11 +2,14 @@ package com.example.capstone.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
@@ -14,12 +17,17 @@ import com.example.capstone.data.BodyInput;
 import com.example.capstone.data.BodyMeasurementContract;
 import com.example.capstone.data.BodyPrior;
 import com.example.capstone.data.BodyProfileStore;
+import com.example.capstone.login.LoginGate;
+import com.example.capstone.login.LoginSession;
 
 /** 팀원 피팅 진입: 키·몸무게·나이 → 체형 자가진단. */
 public class FittingActivity extends AppCompatActivity {
 
     /** true면 체형분석 탭의 첫 화면(저장한 체형이 없을 때)으로 연 것 → 뒤로 버튼을 숨기고 제목 "체형 분석" */
     public static final String EXTRA_AS_TAB = "fitting_as_tab";
+
+    private static final String PREF_TIPS = "survey_tips";
+    private static final String KEY_SKIP_GUEST_NOTICE = "skip_guest_notice";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,9 +65,57 @@ public class FittingActivity extends AppCompatActivity {
             return;
         }
 
+        // 비회원이면 설문 전에 "결과는 앱을 실행하는 동안에만 저장돼요" 안내를 먼저 보여 준다
+        if (!LoginSession.isLoggedIn(this)
+                && !getSharedPreferences(PREF_TIPS, MODE_PRIVATE).getBoolean(KEY_SKIP_GUEST_NOTICE, false)) {
+            showGuestNotice(heightCm);
+            return;
+        }
+
+        beginSurvey(heightCm);
+    }
+
+    private void beginSurvey(float heightCm) {
         Intent intent = new Intent(this, BodyTypeActivity.class);
         intent.putExtra(BodyMeasurementContract.EXTRA_USER_HEIGHT_CM, heightCm);
         startActivity(intent);
+    }
+
+    /**
+     * 비회원 안내 창: 로그인하기(로그인하면 설문 시작으로 이어짐) / 그대로 진행.
+     * "다시 보지 않기"를 체크하면 다음부터 이 창을 건너뛴다 (결과 화면에는 같은 안내가 계속 보인다).
+     */
+    private void showGuestNotice(float heightCm) {
+
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_guest_survey_notice, null, false);
+        CheckBox skip = view.findViewById(R.id.cbSkipGuestNotice);
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(view).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        view.findViewById(R.id.btnGuestLogin).setOnClickListener(v -> {
+            rememberSkip(skip.isChecked());
+            dialog.dismiss();
+            LoginGate.startLogin(this, () -> beginSurvey(heightCm));
+        });
+        view.findViewById(R.id.btnGuestProceed).setOnClickListener(v -> {
+            rememberSkip(skip.isChecked());
+            dialog.dismiss();
+            beginSurvey(heightCm);
+        });
+
+        dialog.show();
+    }
+
+    private void rememberSkip(boolean skip) {
+        if (skip) {
+            getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
+                    .edit()
+                    .putBoolean(KEY_SKIP_GUEST_NOTICE, true)
+                    .apply();
+        }
     }
 
     /**

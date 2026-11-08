@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.BodyProfileStore;
+import com.example.capstone.data.GuestSurvey;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.login.LoginSession;
 import com.google.android.material.button.MaterialButton;
@@ -58,6 +59,7 @@ public class BodyTypeActivity extends AppCompatActivity {
     public static final String EXTRA_RATIO_W = "ratio_w";
     public static final String EXTRA_RATIO_N = "ratio_n";
     public static final String EXTRA_MIXED = "is_mixed";
+    public static final String EXTRA_ANSWERS = "survey_answers";
 
     private int currentQuestion = 0;
     private float userHeightCm;
@@ -424,6 +426,8 @@ public class BodyTypeActivity extends AppCompatActivity {
                         intent.putExtra(EXTRA_RATIO_W, result.ratioW);
                         intent.putExtra(EXTRA_RATIO_N, result.ratioN);
                         intent.putExtra(EXTRA_MIXED, result.mixed);
+                        // 비회원이 결과 화면에서 사진 측정 때문에 로그인하면 이 설문도 저장하므로 답을 넘긴다
+                        intent.putExtra(EXTRA_ANSWERS, selectedAnswers.clone());
 
                         // 처음 입력한 키도 결과 화면으로 전달
                         intent.putExtra(
@@ -481,45 +485,8 @@ public class BodyTypeActivity extends AppCompatActivity {
         return BodyProfileStore.saveSurvey(context, answers, skeletonLabel(type), lastSurveyHeight(context));
     }
 
-    // 비로그인으로 결과 화면에서 "이대로 저장하기"를 눌러 로그인하러 갔다는 표시 (기기 단위, 로그인하면 지움)
-    private static final String PREF_PENDING_SAVE = "survey_save_pending";
-    private static final String KEY_PENDING_SAVE_AT = "pending_at";
-
-    public static void markSurveySavePending(Context context) {
-
-        context.getApplicationContext()
-                .getSharedPreferences(PREF_PENDING_SAVE, MODE_PRIVATE)
-                .edit()
-                .putLong(KEY_PENDING_SAVE_AT, System.currentTimeMillis())
-                .apply();
-    }
-
-    /** 저장하려고 로그인하러 간 적이 있으면(24시간 안) true를 돌려주고 표시를 지운다 */
-    static boolean takeSurveySavePending(Context context) {
-
-        SharedPreferences prefs = context.getApplicationContext()
-                .getSharedPreferences(PREF_PENDING_SAVE, MODE_PRIVATE);
-        long at = prefs.getLong(KEY_PENDING_SAVE_AT, 0L);
-        prefs.edit().remove(KEY_PENDING_SAVE_AT).apply();
-        long now = System.currentTimeMillis();
-        return at > 0L && at <= now && now - at <= AccountPrefs.GUEST_SURVEY_ADOPT_MS;
-    }
-
-    /**
-     * 로그인 직후: 비로그인 결과 화면에서 "이대로 저장하기"를 누르고 로그인한 경우에만 그 설문을 카드로 저장한다.
-     * "저장하지 않고 나가기"를 고른 설문은 카드로 만들지 않는다.
-     * @return 저장했으면 true
-     */
-    public static boolean adoptSurveyOnLogin(Context context) {
-
-        if (!takeSurveySavePending(context)) {
-            return false;
-        }
-        return saveSurveyProfile(context) != null;
-    }
-
     /** 대표 체형 카드에 저장하는 골격 이름 (MeasurementResultActivity와 같은 글자) */
-    private static String skeletonLabel(int type) {
+    static String skeletonLabel(int type) {
 
         switch (type) {
             case TYPE_WAVE:
@@ -560,30 +527,42 @@ public class BodyTypeActivity extends AppCompatActivity {
 
     private void saveLastSurvey(int resultType) {
 
+        // 비회원은 기기에 저장하지 않고 앱이 켜져 있는 동안만 메모리에 둔다 (GuestSurvey)
+        if (!LoginSession.isLoggedIn(this)) {
+            GuestSurvey.set(selectedAnswers, userHeightCm, resultType);
+            return;
+        }
+
+        persistSurvey(this, selectedAnswers, userHeightCm, resultType);
+    }
+
+    /** 설문 답·키·체형을 지금 로그인한 계정에 저장한다 (resultType -1 = 아직 진단 전) */
+    public static void persistSurvey(Context context, int[] answerValues, float heightCm, int resultType) {
+
         StringBuilder answers = new StringBuilder();
 
-        for (int i = 0; i < selectedAnswers.length; i++) {
+        for (int i = 0; i < answerValues.length; i++) {
             if (i > 0) {
                 answers.append(",");
             }
-            answers.append(selectedAnswers[i]);
+            answers.append(answerValues[i]);
         }
 
-        AccountPrefs.survey(this)
+        AccountPrefs.survey(context)
                 .edit()
-                .putString(AccountPrefs.key(this, AccountPrefs.SURVEY_ANSWERS), answers.toString())
-                .putFloat(AccountPrefs.key(this, AccountPrefs.SURVEY_HEIGHT), userHeightCm)
-                .putLong(AccountPrefs.key(this, AccountPrefs.SURVEY_AT), System.currentTimeMillis())
+                .putString(AccountPrefs.key(context, AccountPrefs.SURVEY_ANSWERS), answers.toString())
+                .putFloat(AccountPrefs.key(context, AccountPrefs.SURVEY_HEIGHT), heightCm)
+                .putLong(AccountPrefs.key(context, AccountPrefs.SURVEY_AT), System.currentTimeMillis())
                 .apply();
 
         // 체형은 서버 진단 결과만 저장한다 (-1 = 아직 진단 전)
         SharedPreferences.Editor editor =
-                AccountPrefs.survey(this).edit();
+                AccountPrefs.survey(context).edit();
 
         if (resultType < 0) {
-            editor.remove(AccountPrefs.key(this, AccountPrefs.SURVEY_TYPE));
+            editor.remove(AccountPrefs.key(context, AccountPrefs.SURVEY_TYPE));
         } else {
-            editor.putInt(AccountPrefs.key(this, AccountPrefs.SURVEY_TYPE), resultType);
+            editor.putInt(AccountPrefs.key(context, AccountPrefs.SURVEY_TYPE), resultType);
         }
 
         editor.apply();
@@ -591,20 +570,22 @@ public class BodyTypeActivity extends AppCompatActivity {
 
     private void loadLastAnswers() {
 
-        String[] parts = AccountPrefs.survey(this)
-                .getString(AccountPrefs.key(this, AccountPrefs.SURVEY_ANSWERS), "")
-                .split(",");
+        int[] last = lastSurveyAnswers(this);
 
-        for (int i = 0; i < selectedAnswers.length && i < parts.length; i++) {
-            try {
-                int answer = Integer.parseInt(parts[i].trim());
-                selectedAnswers[i] = answer >= 1 && answer <= 3 ? answer : 0;
-            } catch (NumberFormatException ignored) {
-            }
+        if (last == null) {
+            return;
+        }
+
+        for (int i = 0; i < selectedAnswers.length && i < last.length; i++) {
+            selectedAnswers[i] = last[i];
         }
     }
 
     public static boolean hasLastSurvey(Context context) {
+
+        if (!LoginSession.isLoggedIn(context)) {
+            return GuestSurvey.has();
+        }
 
         return AccountPrefs.survey(context)
                 .contains(AccountPrefs.key(context, AccountPrefs.SURVEY_ANSWERS));
@@ -615,6 +596,10 @@ public class BodyTypeActivity extends AppCompatActivity {
      * 추천 서버(RecommendApi)가 체형 진단에 쓴다. 문항 순서와 번호는 서버 A 파트 설문과 같다.
      */
     public static int[] lastSurveyAnswers(Context context) {
+
+        if (!LoginSession.isLoggedIn(context)) {
+            return GuestSurvey.answers();
+        }
 
         String saved = AccountPrefs.survey(context)
                 .getString(AccountPrefs.key(context, AccountPrefs.SURVEY_ANSWERS), "");
@@ -654,6 +639,10 @@ public class BodyTypeActivity extends AppCompatActivity {
 
     public static int lastSurveyType(Context context) {
 
+        if (!LoginSession.isLoggedIn(context)) {
+            return GuestSurvey.type();
+        }
+
         SharedPreferences prefs =
                 AccountPrefs.survey(context);
 
@@ -665,11 +654,19 @@ public class BodyTypeActivity extends AppCompatActivity {
     /** 최근 설문 저장 시각 (없으면 0). 홈 화면이 설문을 새로 했는지 알아챌 때 쓴다 */
     public static long lastSurveyTime(Context context) {
 
+        if (!LoginSession.isLoggedIn(context)) {
+            return GuestSurvey.savedAt();
+        }
+
         return AccountPrefs.survey(context)
                 .getLong(AccountPrefs.key(context, AccountPrefs.SURVEY_AT), 0L);
     }
 
     public static float lastSurveyHeight(Context context) {
+
+        if (!LoginSession.isLoggedIn(context)) {
+            return GuestSurvey.heightCm();
+        }
 
         return AccountPrefs.survey(context)
                 .getFloat(AccountPrefs.key(context, AccountPrefs.SURVEY_HEIGHT), 0f);
@@ -678,11 +675,20 @@ public class BodyTypeActivity extends AppCompatActivity {
     /** 예) "웨이브 체형 · 키 170cm · 10.19 저장" */
     public static String lastSurveySummary(Context context) {
 
-        SharedPreferences prefs =
-                AccountPrefs.survey(context);
-
         SimpleDateFormat format =
                 new SimpleDateFormat("MM.dd", Locale.KOREA);
+
+        if (!LoginSession.isLoggedIn(context)) {
+            return (GuestSurvey.type() >= 0 ? typeName(GuestSurvey.type()) : "진단 전")
+                    + " · 키 "
+                    + Math.round(GuestSurvey.heightCm())
+                    + "cm · "
+                    + format.format(new Date(GuestSurvey.savedAt()))
+                    + " 저장";
+        }
+
+        SharedPreferences prefs =
+                AccountPrefs.survey(context);
 
         String type = prefs.contains(AccountPrefs.key(context, AccountPrefs.SURVEY_TYPE))
                 ? typeName(prefs.getInt(AccountPrefs.key(context, AccountPrefs.SURVEY_TYPE), TYPE_STRAIGHT))

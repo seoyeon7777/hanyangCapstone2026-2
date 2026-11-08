@@ -25,6 +25,7 @@ public class CapstoneApp extends Application {
     public void onCreate() {
         super.onCreate();
 
+        com.example.capstone.data.AccountPrefs.clearGuestSurvey(this);
         LoginSession.migrateStoredPhones(this);
         LoginSession.normalizeSavedPhone(this);
         LoginSession.reloadAccountData(this);

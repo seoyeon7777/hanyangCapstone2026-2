@@ -37,6 +37,15 @@ public final class BodyInput {
     }
 
     /** 없으면 -1 */
+    /** 탈퇴: 입력해 둔 키·몸무게·나이를 지운다 */
+    public static void clear(Context context) {
+        prefs(context).edit()
+                .remove(KEY_HEIGHT)
+                .remove(KEY_WEIGHT)
+                .remove(KEY_AGE)
+                .apply();
+    }
+
     public static float height(Context context) {
         return prefs(context).getFloat(KEY_HEIGHT, -1f);
     }

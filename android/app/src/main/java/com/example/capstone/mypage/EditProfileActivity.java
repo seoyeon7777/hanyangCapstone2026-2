@@ -2,6 +2,7 @@ package com.example.capstone.mypage;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
+import com.example.capstone.data.AccountData;
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.CartStore;
 import com.example.capstone.data.BodyProfileStore;
@@ -31,6 +32,11 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
+
+import java.util.Locale;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /** 마이페이지 > 프로필 수정 (users) */
 public class EditProfileActivity extends AppCompatActivity {
@@ -350,6 +356,10 @@ public class EditProfileActivity extends AppCompatActivity {
 
     private void withdraw() {
         // [여기에 DB 입력] 회원 탈퇴 처리 + 로그인 세션 삭제 (users)
+        // 이 계정으로 기기에 쌓인 기록(주문·배송지·장바구니·체형·설문·찜·사진 ...)을 모두 지우고, 회원 정보도 지운다
+        Set<String> accounts = AccountData.accountNames(this);
+        AccountData.deleteAll(this, accounts);
+        removeMarketingSettings(accounts);
         LocalAccounts.delete(this, LoginSession.getUserId(this));
         LoginSession.logout(this);
         MyPageStore.logout();
@@ -358,6 +368,15 @@ public class EditProfileActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
+    }
+
+    private void removeMarketingSettings(Set<String> accounts) {
+        SharedPreferences.Editor editor = getSharedPreferences(PREF_SETTINGS, MODE_PRIVATE).edit();
+        for (String account : accounts) {
+            editor.remove(KEY_MARKETING_SMS + account);
+            editor.remove(KEY_MARKETING_EMAIL + account);
+        }
+        editor.apply();
     }
 
     private void toast(String message) {

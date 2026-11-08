@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.widget.Toast;
 
 import com.example.capstone.BuildConfig;
+import com.example.capstone.login.LoginSession;
 import com.example.capstone.ui.BodyTypeActivity;
 
 import org.json.JSONArray;
@@ -85,7 +86,15 @@ public final class RecommendApi {
     // 홈 불러오기와 클릭·찜 기록을 다른 줄로 보낸다 (기록이 밀려도 홈 새로고침이 기다리지 않게)
     private static final ExecutorService FEED_IO = Executors.newSingleThreadExecutor();
     private static final ExecutorService EVENT_IO = Executors.newSingleThreadExecutor();
-    private static final Handler MAIN = new Handler(Looper.getMainLooper());
+    // 메인 스레드 핸들러는 처음 쓸 때 만든다 (클래스를 읽기만 해도 만들면 단위 테스트에서 로그인 경로가 깨진다)
+    private static Handler mainHandler;
+
+    private static synchronized Handler main() {
+        if (mainHandler == null) {
+            mainHandler = new Handler(Looper.getMainLooper());
+        }
+        return mainHandler;
+    }
 
     // 마지막으로 서버에 연결하지 못한 시각 (0이면 연결 문제 없음)
     private static volatile long lastConnectFailAt = 0L;
@@ -290,7 +299,7 @@ public final class RecommendApi {
         JSONObject body = new JSONObject();
 
         try {
-            body.put("user_id", userId(context));
+            putUserId(context, body);
             body.put("mode", mode);
             body.put("page", page);
             body.put("size", PAGE_SIZE);
@@ -483,7 +492,7 @@ public final class RecommendApi {
         }
         if (catalogLoadedAt > 0 && System.currentTimeMillis() - catalogLoadedAt < CATALOG_REFRESH_MILLIS) {
             if (onDone != null) {
-                MAIN.post(onDone);
+                main().post(onDone);
             }
             return;
         }
@@ -520,7 +529,7 @@ public final class RecommendApi {
     private static void loadCatalogPage(Context context, String mode, List<String> shown, Runnable onDone) {
         JSONObject body = new JSONObject();
         try {
-            body.put("user_id", userId(context));
+            putUserId(context, body);
             body.put("mode", mode);
             body.put("page", 0);
             body.put("size", CATALOG_PAGE_SIZE);
@@ -865,7 +874,19 @@ public final class RecommendApi {
         sendEvent(context, product.getServerId(), event);
     }
 
+    /** 로그인한 사용자만 서버에 사용자 ID를 보낸다. 비회원은 보내지 않아서 서버에 체형·반응이 저장되지 않는다 */
+    private static void putUserId(Context context, JSONObject body) throws JSONException {
+        if (LoginSession.isLoggedIn(context)) {
+            body.put("user_id", userId(context));
+        }
+    }
+
     private static void sendEvent(Context context, String serverId, String event) {
+
+        // 비회원은 클릭·찜 기록을 서버에 보내지 않는다
+        if (!LoginSession.isLoggedIn(context)) {
+            return;
+        }
 
         // 방금 서버에 연결하지 못했으면 잠시 기록을 보내지 않는다 (요청이 쌓여 앱이 느려지지 않게)
         if (RecommendTiming.isOffline(lastConnectFailAt, System.currentTimeMillis())) {
@@ -943,6 +964,18 @@ public final class RecommendApi {
             orders.put(orderNo, ids);
         } catch (JSONException e) {
             return;
+        }
+
+        prefs(context).edit().putString(KEY_ORDER_PRODUCTS, orders.toString()).apply();
+    }
+
+    /** 탈퇴: 지워지는 주문들의 "주문번호별 서버 상품" 기록을 지운다 */
+    public static void forgetOrders(Context context, List<String> orderNos) {
+
+        JSONObject orders = jsonPref(context, KEY_ORDER_PRODUCTS);
+
+        for (String orderNo : orderNos) {
+            orders.remove(orderNo);
         }
 
         prefs(context).edit().putString(KEY_ORDER_PRODUCTS, orders.toString()).apply();
@@ -1103,18 +1136,18 @@ public final class RecommendApi {
                 JSONObject json = new JSONObject(readAll(stream));
 
                 if (code < 400) {
-                    MAIN.post(() -> callback.onSuccess(json));
+                    main().post(() -> callback.onSuccess(json));
                 } else {
                     // 서버 오류는 {"ok": false, "error": "..."} 모양
                     String message = json.optString("error", "서버 오류 (" + code + ")");
-                    MAIN.post(() -> callback.onError(code, message));
+                    main().post(() -> callback.onError(code, message));
                 }
 
             } catch (IOException | JSONException e) {
                 if (e instanceof IOException) {
                     lastConnectFailAt = System.currentTimeMillis();
                 }
-                MAIN.post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
+                main().post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
             } finally {
                 if (connection != null) {
                     connection.disconnect();

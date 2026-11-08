@@ -30,6 +30,11 @@ public final class LoginGate {
 
     /** 로그인한 상태에서만 action을 실행한다. 아니면 로그인 안내 창을 띄운다. */
     public static void require(Context context, Runnable action) {
+        require(context, "로그인하거나 회원가입을 하면 이용할 수 있어요.", action);
+    }
+
+    /** 위와 같고, 안내 창의 문구를 직접 정한다 */
+    public static void require(Context context, String message, Runnable action) {
         if (LoginSession.isLoggedIn(context)) {
             action.run();
             return;
@@ -43,13 +48,19 @@ public final class LoginGate {
 
         AppDialog.show(activity, false,
                 "로그인이 필요해요",
-                "로그인하거나 회원가입을 하면 이용할 수 있어요.",
+                message,
                 "취소", null,
-                "로그인하러 가기", () -> {
-                    pending = action;
-                    owner = new WeakReference<>(activity);
-                    activity.startActivity(new Intent(activity, LoginMainActivity.class));
-                });
+                "로그인하러 가기", () -> startLogin(activity, action));
+    }
+
+    /**
+     * 안내 창 없이 바로 로그인 화면으로 보낸다. 로그인(가입)을 마치면 원래 화면으로 돌아와 action을 실행한다.
+     * (다른 안내 창에 "로그인하기" 버튼이 따로 있을 때 쓴다)
+     */
+    public static void startLogin(Activity activity, Runnable action) {
+        pending = action;
+        owner = new WeakReference<>(activity);
+        activity.startActivity(new Intent(activity, LoginMainActivity.class));
     }
 
     /** 로그인 화면에서 돌아와 이어서 할 동작이 있는가 (있으면 로그인 뒤 마이페이지로 가지 않는다) */

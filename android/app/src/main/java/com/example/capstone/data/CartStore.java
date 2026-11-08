@@ -228,6 +228,15 @@ public final class CartStore {
         loadedAccount = null;   // 다음에 읽을 때 새 이름으로 다시 불러온다
     }
 
+    /** 탈퇴: 이 계정의 장바구니를 지운다 (메모리에 불러온 것도 비운다) */
+    public static synchronized void deleteAccount(Context context, String account) {
+        prefs(context).edit().remove(key(account)).apply();
+        if (account.equals(loadedAccount)) {
+            LINES.clear();
+            loadedAccount = null;
+        }
+    }
+
     /** 예전 형식 이름(전화번호 하이픈 차이 등)의 장바구니를, 새 이름에 장바구니가 없을 때만 옮긴다 */
     public static synchronized void adoptAccount(Context context, String from, String to) {
         if (from.equals(to) || prefs(context).contains(key(to))) {

@@ -629,7 +629,6 @@ public class MyPageStore {
                             j.optString("type"),
                             j.optString("title"),
                             j.optString("content"),
-                            j.optString("email"),
                             j.optString("status"),
                             j.optString("date")
                     )
@@ -760,7 +759,6 @@ public class MyPageStore {
                 j.put("type", inquiry.type);
                 j.put("title", inquiry.title);
                 j.put("content", inquiry.content);
-                j.put("email", inquiry.email);
                 j.put("status", inquiry.status);
                 j.put("date", inquiry.date);
 
@@ -800,6 +798,20 @@ public class MyPageStore {
 
         if (from.equals(loadedAccount)) {
             loadedAccount = to;   // 메모리의 기록은 그대로 새 계정 것이 된다
+        }
+    }
+
+    /** 탈퇴: 이 계정의 주문·리뷰·반품·배송지·카드·환불 계좌·문의·쿠폰을 모두 지운다 (메모리에 불러온 것도 비운다) */
+    public static synchronized void deleteAccount(Context context, String account) {
+        context.getApplicationContext()
+                .getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .remove(DATA_KEY + account)
+                .apply();
+
+        if (account.equals(loadedAccount)) {
+            clearMemory();
+            loadedAccount = null;
         }
     }
 

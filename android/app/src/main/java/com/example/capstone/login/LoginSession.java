@@ -6,12 +6,12 @@ import android.content.SharedPreferences;
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.CartStore;
 import com.example.capstone.data.DummyData;
+import com.example.capstone.data.GuestSurvey;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.ProfilePhotoStore;
-import com.example.capstone.ui.BodyTypeActivity;
 
 /**
  * 로그인 상태를 기기에 기억해 둔다. (앱을 껐다 켜도 유지)
@@ -53,8 +53,6 @@ public final class LoginSession {
         adoptOldPhoneData(context, phone);
         // 비회원일 때의 기록은 새로 로그인한 계정으로 가져오지 않는다 (계정마다 따로)
         reloadAccountData(context);
-        // 비회원 결과 화면에서 "이대로 저장하기" → 로그인한 경우에만 그 설문을 카드로 저장
-        BodyTypeActivity.adoptSurveyOnLogin(context);
     }
 
     /**
@@ -63,6 +61,7 @@ public final class LoginSession {
      * 체형·설문·장바구니는 읽을 때마다 지금 계정 것을 쓰므로 여기서 할 일이 없다.
      */
     public static void reloadAccountData(Context context) {
+        GuestSurvey.clear();        // 비회원 설문은 로그인·로그아웃하면 사라진다 (새 계정이 이어받지 않는다)
         MyPageStore.init(context);
         DummyData.clearLikes();
         RecommendApi.refreshLikes(context);
@@ -134,6 +133,7 @@ public final class LoginSession {
     public static void logout(Context context) {
         // [여기에 DB 입력] 서버 쪽 로그인 세션/토큰 만료 처리
         prefs(context).edit().clear().apply();
+        GuestSurvey.clear();
         MyPageStore.logout();   // 메모리의 이전 계정 기록을 비우고 비로그인 기록을 읽는다
         DummyData.clearLikes();
         RecommendApi.refreshLikes(context);

@@ -34,6 +34,7 @@ public class BodyProfileSurveyTest {
     @Before
     public void setUp() {
         context = new FakeContext();
+        GuestSurvey.clear();
     }
 
     /** BodyTypeActivity가 서버 진단 뒤 저장하는 것과 같은 값 */
@@ -153,12 +154,15 @@ public class BodyProfileSurveyTest {
 
     @Test
     public void guestSaveChoiceBecomesCardOnLogin() {
-        finishSurvey(ANSWERS, BodyTypeActivity.TYPE_STRAIGHT, System.currentTimeMillis() - 60_000L);
-        BodyTypeActivity.saveSurveyProfile(context);              // 비로그인은 카드를 만들지 않는다
+        // 비회원 설문은 메모리에만 (연오 GuestSurvey). 결과 화면 "이대로 저장하기" → 로그인 →
+        // BodyTypeResultActivity가 들고 있던 답을 계정에 옮기고(persistSurvey) 카드로 저장한다
+        GuestSurvey.set(ANSWERS, 165f, BodyTypeActivity.TYPE_STRAIGHT);
+        assertEquals(null, BodyTypeActivity.saveSurveyProfile(context));   // 비로그인은 카드를 만들지 않는다
         assertEquals(0, BodyProfileStore.getProfiles(context).size());
 
-        BodyTypeActivity.markSurveySavePending(context);          // 결과 화면 "이대로 저장하기" → 로그인하러 감
         LoginSession.login(context, "가", "a@test.com", "");
+        BodyTypeActivity.persistSurvey(context, ANSWERS, 165f, BodyTypeActivity.TYPE_STRAIGHT);
+        BodyTypeActivity.saveSurveyProfile(context);
 
         BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
         assertNotNull(active);
@@ -168,15 +172,16 @@ public class BodyProfileSurveyTest {
 
     @Test
     public void guestLeaveChoiceIsNotSavedOnLogin() {
-        // "저장하지 않고 나가기"를 고른 비로그인 설문 → 로그인해도 카드로 만들지 않고, 홈 추천에도 안 쓴다
-        finishSurvey(ANSWERS, BodyTypeActivity.TYPE_WAVE, System.currentTimeMillis() - 60_000L);
-        assertNotNull(BodyTypeActivity.homeSurveyAnswers(context));   // 비로그인은 최근 설문으로 추천
+        // "저장하지 않고 나가기"를 고른 비회원 설문 → 로그인하면 사라지고, 카드도 없고, 홈 추천에도 안 쓴다
+        GuestSurvey.set(ANSWERS, 165f, BodyTypeActivity.TYPE_WAVE);
+        assertNotNull(BodyTypeActivity.homeSurveyAnswers(context));   // 비회원은 앱이 켜져 있는 동안 최근 설문으로 추천
 
         LoginSession.login(context, "가", "a@test.com", "");
 
         assertEquals(0, BodyProfileStore.getProfiles(context).size());
         assertEquals(null, BodyTypeActivity.homeSurveyAnswers(context));  // 저장한 체형이 없으니 골격 맞춤 없음
         assertEquals(null, BodyProfileStore.getActive(context));
+        assertFalse(BodyTypeActivity.hasLastSurvey(context));
     }
 
     @Test

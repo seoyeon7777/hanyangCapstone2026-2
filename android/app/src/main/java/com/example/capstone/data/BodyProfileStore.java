@@ -329,6 +329,17 @@ public final class BodyProfileStore {
                 new JSONObject(), answers.clone());
     }
 
+    /** 탈퇴: 이 계정의 저장한 체형·대표 체형·체형 설정을 지운다 */
+    public static void deleteAccount(Context context, String account) {
+        SharedPreferences.Editor editor = prefs(context).edit()
+                .remove("profiles_" + account)
+                .remove("active_" + account);
+        for (String key : SETTING_KEYS) {
+            editor.remove("setting_" + key + "_" + account);
+        }
+        editor.apply();
+    }
+
     public static void syncActiveProfile(Context context) {
         UserBodyProfile profile = UserBodyProfile.getInstance();
         profile.clear();

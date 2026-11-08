@@ -87,6 +87,12 @@ public final class ProfilePhotoStore {
         }
     }
 
+    /** 탈퇴: 이 계정의 프로필 사진 파일을 지운다 */
+    public static void deleteAccount(Context context, String account) {
+        //noinspection ResultOfMethodCallIgnored
+        file(context, account).delete();
+    }
+
     public static void delete(Context context) {
         //noinspection ResultOfMethodCallIgnored
         file(context).delete();
