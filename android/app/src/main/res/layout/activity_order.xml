@@ -140,6 +140,24 @@
             android:layout_height="wrap_content"
             android:paddingHorizontal="16dp" />
 
+        <!-- 주문 시 선택하는 배송 요청사항 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="16dp"
+            android:text="배송 요청사항"
+            android:textColor="#111111"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+        <Spinner
+            android:id="@+id/spOrderRequest"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_edit" />
+
         <LinearLayout
             android:id="@+id/btnAddAddress"
             android:layout_width="match_parent"

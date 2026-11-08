@@ -8,11 +8,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,18 +21,7 @@ public class AddressEditActivity extends AppCompatActivity {
     /** 수정할 배송지 id. 없으면 새 배송지 추가 */
     public static final String EXTRA_ADDRESS_ID = "EXTRA_ADDRESS_ID";
 
-    private static final String REQUEST_NONE = "선택 안 함";
-    private static final String[] REQUESTS = {
-            REQUEST_NONE,
-            "문 앞에 놓아주세요",
-            "경비실에 맡겨주세요",
-            "택배함에 넣어주세요",
-            "배송 전 연락 바랍니다",
-            "부재 시 문 앞에 놓아주세요"
-    };
-
     private EditText etLabel, etReceiver, etPhone, etZipCode, etAddress1, etAddress2;
-    private Spinner spRequest;
     private CheckBox cbDefault;
     private Button btnSearchZip, btnSave;
 
@@ -57,7 +44,6 @@ public class AddressEditActivity extends AppCompatActivity {
 
         MyPageUi.setupToolbar(this, editing == null ? "배송지 추가" : "배송지 수정");
         initViews();
-        setupRequestSpinner();
         fillForm();
         setListeners();
     }
@@ -69,18 +55,11 @@ public class AddressEditActivity extends AppCompatActivity {
         etZipCode = findViewById(R.id.etZipCode);
         etAddress1 = findViewById(R.id.etAddress1);
         etAddress2 = findViewById(R.id.etAddress2);
-        spRequest = findViewById(R.id.spRequest);
         cbDefault = findViewById(R.id.cbDefault);
         btnSearchZip = findViewById(R.id.btnSearchZip);
         btnSave = findViewById(R.id.btnSave);
     }
 
-    private void setupRequestSpinner() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_spinner_item, REQUESTS);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spRequest.setAdapter(adapter);
-    }
 
     private void fillForm() {
         if (editing == null) {
@@ -100,11 +79,6 @@ public class AddressEditActivity extends AppCompatActivity {
         etAddress2.setText(editing.address2);
         cbDefault.setChecked(editing.isDefault);
 
-        for (int i = 0; i < REQUESTS.length; i++) {
-            if (REQUESTS[i].equals(editing.request)) {
-                spRequest.setSelection(i);
-            }
-        }
     }
 
     private void setListeners() {
@@ -150,14 +124,25 @@ public class AddressEditActivity extends AppCompatActivity {
             return;
         }
 
-        String request = spRequest.getSelectedItem().toString();
-        if (REQUEST_NONE.equals(request)) {
-            request = "";
+
+        // 수정 중인 자기 자신은 제외하고 동일한 배송지 중복 검사
+        for (Address existing : MyPageStore.getAddresses()) {
+            if (editing != null && existing.id == editing.id) continue;
+            String oldPhone = existing.phone == null ? "" : existing.phone.replaceAll("[^0-9]", "");
+            String newPhone = phone.replaceAll("[^0-9]", "");
+            if (existing.receiver.trim().equals(receiver)
+                    && oldPhone.equals(newPhone)
+                    && existing.zipCode.trim().equals(zip)
+                    && existing.address1.trim().equals(address1)
+                    && existing.address2.trim().equals(address2)) {
+                toast("이미 등록된 동일한 배송지가 있습니다.");
+                return;
+            }
         }
 
         long id = editing == null ? MyPageStore.newId() : editing.id;
         MyPageStore.saveAddress(new Address(id, label, receiver, phone, zip,
-                address1, address2, request, cbDefault.isChecked()));
+                address1, address2, editing == null ? "" : editing.request, cbDefault.isChecked()));
 
         toast(editing == null ? "배송지가 추가되었습니다." : "배송지가 수정되었습니다.");
         finish();

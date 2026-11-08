@@ -8,6 +8,8 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.text.TextUtils;
@@ -66,6 +68,11 @@ public class OrderActivity extends AppCompatActivity {
 
     private boolean orderCompleted = false;
 
+    private Spinner spOrderRequest;
+    private static final String[] DELIVERY_REQUESTS = {
+            "선택 안 함", "문 앞에 놓아주세요", "경비실에 맡겨주세요",
+            "택배함에 넣어주세요", "배송 전 연락 바랍니다", "부재 시 문 앞에 놓아주세요"
+    };
     private long selectedAddressId = -1;
     private CheckoutCoupons.Coupon selectedCoupon;
 
@@ -97,6 +104,11 @@ public class OrderActivity extends AppCompatActivity {
         tvOrderPrice = findViewById(R.id.tvOrderPrice);
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
 
+        spOrderRequest = findViewById(R.id.spOrderRequest);
+        ArrayAdapter<String> requestAdapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_spinner_item, DELIVERY_REQUESTS);
+        requestAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spOrderRequest.setAdapter(requestAdapter);
         containerAddress = findViewById(R.id.containerAddress);
         btnAddAddress = findViewById(R.id.btnAddAddress);
         btnChangeAddress = findViewById(R.id.btnChangeAddress);
@@ -186,8 +198,8 @@ public class OrderActivity extends AppCompatActivity {
         ((TextView) card.findViewById(R.id.tvAddress)).setText(address.getFullAddress());
 
         TextView tvRequest = card.findViewById(R.id.tvRequest);
-        tvRequest.setText(address.request);
-        tvRequest.setVisibility(TextUtils.isEmpty(address.request) ? View.GONE : View.VISIBLE);
+        tvRequest.setText("");
+        tvRequest.setVisibility(View.GONE);
 
         card.findViewById(R.id.tvDefaultBadge)
                 .setVisibility(address.isDefault ? View.VISIBLE : View.GONE);
@@ -422,6 +434,11 @@ public class OrderActivity extends AppCompatActivity {
 
         // 주문 저장
         MyPageStore.addOrder(newOrder);
+        // 주문별 요청사항 저장: 배송지 자체의 요청사항과 분리
+        String deliveryRequest = spOrderRequest.getSelectedItemPosition() <= 0
+                ? "" : spOrderRequest.getSelectedItem().toString();
+        getSharedPreferences("order_delivery_requests", MODE_PRIVATE)
+                .edit().putString(orderNo, deliveryRequest).apply();
 
         // 구매는 추천 학습에 반영 (주문한 서버 상품마다 purchase, 반품 때 쓰려고 주문번호와 함께 저장)
         List<String> serverIds = new ArrayList<>();
