@@ -34,6 +34,7 @@
         <activity android:name=".login.PhoneVerifyActivity" />
         <activity android:name=".login.SigninActivity" />
         <activity android:name=".login.SigninCompleteActivity" />
+        <activity android:name=".login.TermsActivity" android:exported="false" />
         <activity android:name=".ui.OrderActivity" />
         <activity android:name=".ui.OrderCompleteActivity" />
         <activity android:name=".ui.ReviewActivity" />

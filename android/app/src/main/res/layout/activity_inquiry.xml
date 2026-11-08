@@ -213,26 +213,6 @@
                     android:textColor="#5A5A5A"
                     android:textSize="12sp" />
 
-                <!-- ============ 답변받을 이메일 ============ -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="6dp"
-                    android:text="답변받을 이메일"
-                    android:textColor="@color/black"
-                    android:textSize="12sp" />
-
-                <EditText
-                    android:id="@+id/etEmail"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginBottom="24dp"
-                    android:background="@drawable/bg_edit"
-                    android:hint="example@gmail.com"
-                    android:inputType="textEmailAddress"
-                    android:paddingHorizontal="16dp"
-                    android:textSize="14sp" />
-
                 <!-- ============ 하단 안내 ============ -->
                 <TextView
                     android:layout_width="match_parent"

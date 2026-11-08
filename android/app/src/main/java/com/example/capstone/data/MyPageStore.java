@@ -283,7 +283,6 @@ public class MyPageStore {
         public final String type;
         public final String title;
         public final String content;
-        public final String email;
         public String status;
         public final String date;
 
@@ -291,14 +290,12 @@ public class MyPageStore {
                 String type,
                 String title,
                 String content,
-                String email,
                 String status,
                 String date
         ) {
             this.type = type;
             this.title = title;
             this.content = content;
-            this.email = email;
             this.status = status;
             this.date = date;
         }
@@ -590,8 +587,7 @@ public class MyPageStore {
     public static void addInquiry(
             String type,
             String title,
-            String content,
-            String email
+            String content
     ) {
         inquiries.add(
                 0,
@@ -599,7 +595,6 @@ public class MyPageStore {
                         type,
                         title,
                         content,
-                        email,
                         INQUIRY_WAITING,
                         today()
                 )

@@ -23,8 +23,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+
 import java.util.List;
-import java.util.Locale;
 
 public class InquiryActivity extends AppCompatActivity {
 
@@ -38,7 +40,7 @@ public class InquiryActivity extends AppCompatActivity {
     private TextView tvInquiryCount, tvEmptyHistory;
 
     private Spinner spType;
-    private EditText etTitle, etContent, etEmail;
+    private EditText etTitle, etContent;
     private TextView tvContentCount;
     private Button btnSubmit;
 
@@ -85,7 +87,6 @@ public class InquiryActivity extends AppCompatActivity {
         spType = findViewById(R.id.spType);
         etTitle = findViewById(R.id.etTitle);
         etContent = findViewById(R.id.etContent);
-        etEmail = findViewById(R.id.etEmail);
 
         tvContentCount = findViewById(R.id.tvContentCount);
         btnSubmit = findViewById(R.id.btnSubmit);
@@ -195,11 +196,39 @@ public class InquiryActivity extends AppCompatActivity {
             ((TextView) card.findViewById(R.id.tvInquiryTitle)).setText(inquiry.title);
             ((TextView) card.findViewById(R.id.tvInquiryDate)).setText(inquiry.date + " 등록");
 
+            card.setOnClickListener(v -> showDetail(inquiry));
             containerInquiryList.addView(card);
         }
 
         tvInquiryCount.setText("문의 " + inquiries.size() + "건");
         tvEmptyHistory.setVisibility(inquiries.isEmpty() ? View.VISIBLE : View.GONE);
+    }
+
+    /** 문의내역에서 누른 문의의 상세 내용 (아래에서 올라오는 창) */
+    private void showDetail(MyPageStore.Inquiry inquiry) {
+        BottomSheetDialog sheet = new BottomSheetDialog(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_inquiry_detail, null, false);
+        sheet.setContentView(view);
+        sheet.getBehavior().setState(BottomSheetBehavior.STATE_EXPANDED);
+        sheet.getBehavior().setSkipCollapsed(true);
+
+        boolean answered = MyPageStore.INQUIRY_ANSWERED.equals(inquiry.status);
+        TextView tvStatus = view.findViewById(R.id.tvDetailStatus);
+        tvStatus.setText(inquiry.status);
+        tvStatus.setTextColor(answered ? COLOR_TAB_ACTIVE : COLOR_TAB_INACTIVE);
+
+        ((TextView) view.findViewById(R.id.tvDetailTitle)).setText(inquiry.title);
+        ((TextView) view.findViewById(R.id.tvDetailMeta)).setText(
+                "문의 유형  " + inquiry.type
+                        + "\n등록일  " + inquiry.date);
+        ((TextView) view.findViewById(R.id.tvDetailContent)).setText(inquiry.content);
+        // [여기에 DB 입력] 답변 내용 조회 (inquiry_answers) - 지금은 답변 저장소가 없어 안내 문구만
+        ((TextView) view.findViewById(R.id.tvDetailAnswer)).setText(answered
+                ? "답변이 등록되었어요."
+                : "아직 답변을 준비하고 있어요. 답변이 등록되면 여기에 보여 드릴게요.");
+
+        view.findViewById(R.id.btnCloseSheet).setOnClickListener(v -> sheet.dismiss());
+        sheet.show();
     }
 
     /** 탭을 바꿀 때 목록을 항상 맨 위에서 보여준다. */
@@ -236,15 +265,9 @@ public class InquiryActivity extends AppCompatActivity {
             return;
         }
 
-        String email = normalizeEmail();
-        if (email == null) {
-            Toast.makeText(this, "답변받을 이메일을 정확히 입력해주세요. (예: example@gmail.com)",
-                    Toast.LENGTH_SHORT).show();
-            return;
-        }
-
+        // 답변은 이메일이 아니라 앱의 문의내역에서 본다
         // [여기에 DB 입력] 저장에 성공했을 때만 아래 화면 전환을 할 것
-        MyPageStore.addInquiry(type, title, content, email);
+        MyPageStore.addInquiry(type, title, content);
         renderHistory();
         Toast.makeText(this, "문의가 등록되었습니다.", Toast.LENGTH_SHORT).show();
 
@@ -257,32 +280,6 @@ public class InquiryActivity extends AppCompatActivity {
         spType.setSelection(0);
         etTitle.setText("");
         etContent.setText("");
-        etEmail.setText("");
         updateContentCount(0);
-    }
-
-    /**
-     * etEmail의 입력값을 정규화한 이메일 주소로 돌려준다.
-     * 공백을 없애고 소문자로 바꾼 뒤 형식을 검사하며, 올바르지 않으면 null을 돌려준다.
-     */
-    private String normalizeEmail() {
-        String input = etEmail.getText().toString().replaceAll("\\s", "");
-
-        if (TextUtils.isEmpty(input)) {
-            return null;
-        }
-
-        String email = input.toLowerCase(Locale.ROOT);
-
-        // @가 없거나 두 개 이상이면 잘못된 주소
-        if (email.indexOf('@') <= 0 || email.indexOf('@') != email.lastIndexOf('@')) {
-            return null;
-        }
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            return null;
-        }
-
-        return email;
     }
 }
