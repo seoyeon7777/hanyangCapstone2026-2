@@ -25,6 +25,7 @@ import com.example.capstone.ui.AppDialog;
 import com.example.capstone.ui.BodyFeedbackActivity;
 import com.example.capstone.ui.BodyValueTable;
 import com.example.capstone.ui.FittingActivity;
+import com.example.capstone.ui.LoginRequiredView;
 import com.example.capstone.ui.PhotoMeasurementActivity;
 
 import java.util.ArrayList;
@@ -166,6 +167,11 @@ public class MyBodyActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // 체형은 로그인해야 쓸 수 있다 (찜 화면과 같음): 비로그인이면 로그인 안내만 보여 준다
+        if (!LoginRequiredView.update(this, R.drawable.ic_nav_fitting,
+                "체형 분석은 로그인 후 이용할 수 있어요.", findViewById(R.id.scrollMyBody))) {
+            return;
+        }
         if (layoutProfiles != null) {
             loadProfiles();
         }

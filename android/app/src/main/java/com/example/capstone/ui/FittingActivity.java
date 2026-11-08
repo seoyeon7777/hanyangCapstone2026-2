@@ -44,6 +44,14 @@ public class FittingActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // 체형 분석은 로그인해야 쓸 수 있다 (찜 화면과 같음). 상품 상세 "측정하러 가기" 등 다른 길로 와도 막는다
+        LoginRequiredView.update(this, R.drawable.ic_nav_fitting,
+                "체형 분석은 로그인 후 이용할 수 있어요.", findViewById(R.id.scrollFitting));
+    }
+
+    @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);

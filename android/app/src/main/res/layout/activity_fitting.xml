@@ -7,7 +7,15 @@
     android:orientation="vertical"
     android:background="#FFFFFF">
 
+    <!-- 비로그인이면 이 안내만 보이고 아래 내용은 숨김 (LoginRequiredView, 찜 화면과 같음) -->
+    <include
+        layout="@layout/view_login_required"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
     <ScrollView
+        android:id="@+id/scrollFitting"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"

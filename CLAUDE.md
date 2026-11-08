@@ -329,6 +329,7 @@ match_score(body, item) -> {
   - 비밀번호 규칙: 가입·변경·재설정 모두 지현 규칙(2가지 이상 8~16자). `PasswordRule`은 `LocalAccounts.isValidPassword`를 부름
   - 장바구니 담기·바로 구매: 혜림 4-18 "비로그인 허용(팀 결정)" 유지. 찜·하단 찜/장바구니 탭은 연오 `LoginGate`로 로그인 필요
   - 1:1 문의: 이메일 칸 없음(지현)
+- (11/08) **체형도 로그인해야 이용** (찜과 같게): 하단 체형 탭은 비로그인이면 `LoginGate` 로그인 안내 → 로그인 뒤 그 탭으로(`BottomMenu`). 다른 길(상품 상세 "측정하러 가기" 등)로 `MyBodyActivity`·`FittingActivity`에 와도 `LoginRequiredView`로 "체형 분석은 로그인 후 이용할 수 있어요"만 보여 준다. 그래서 비회원 설문 관련 코드(`GuestSurvey`, 비회원 안내 창, 결과 화면 로그인 이어가기)는 지금은 거의 쓰이지 않는다
 - `RecommendApi`의 메인 스레드 핸들러를 처음 쓸 때 만들도록 바꿈 (로그인 때 `refreshLikes`가 불리면서 단위 테스트가 깨지던 문제)
 - 확인: javac 컴파일 오류 0, 앱 단위 테스트 75개 통과, test_feed 41·test_integration 8·test_api 29 통과, pytest 262 통과(2개는 원래 실패하던 B 쪽). 실제 화면은 Android Studio에서 확인 필요
 
