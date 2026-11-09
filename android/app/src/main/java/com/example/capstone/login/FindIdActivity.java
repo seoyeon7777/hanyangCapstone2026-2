@@ -23,7 +23,7 @@ import java.util.Locale;
 
 /**
  * 계정(아이디) 찾기.
- * 휴대전화 번호 또는 이메일로 가입한 계정이 있으면 인증번호를 보내고(안내 창),
+ * 휴대폰 번호 또는 이메일로 가입한 계정이 있으면 인증번호를 보내고(안내 창),
  * 인증번호가 맞으면 아이디를 알려 준다. 계정이 없으면 없다고 알려 준다.
  */
 public class FindIdActivity extends AppCompatActivity {
@@ -85,13 +85,13 @@ public class FindIdActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    /** 찾는 방법(휴대전화/이메일)에 맞게 입력칸과 버튼 모양을 바꾼다 */
+    /** 찾는 방법(휴대폰/이메일)에 맞게 입력칸과 버튼 모양을 바꾼다 */
     private void applyMethod() {
         styleToggle(btnByPhone, byPhone);
         styleToggle(btnByEmail, !byPhone);
 
         if (byPhone) {
-            tvContactLabel.setText("휴대전화 번호");
+            tvContactLabel.setText("휴대폰 번호");
             etPhone.setHint("010-0000-0000");
             PhoneInput.attach(etPhone);
         } else {
@@ -186,20 +186,20 @@ public class FindIdActivity extends AppCompatActivity {
 
         if (contact == null) {
             Toast.makeText(this, byPhone
-                            ? "휴대전화 번호를 정확히 입력해주세요."
+                            ? "휴대폰 번호를 정확히 입력해주세요."
                             : "올바른 이메일 형식이 아닙니다. (예: example@gmail.com)",
                     Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // [여기에 DB 입력] 이 휴대전화·이메일로 가입된 회원 조회 (users)
+        // [여기에 DB 입력] 이 휴대폰·이메일로 가입된 회원 조회 (users)
         LocalAccounts.Account account = byPhone
                 ? LocalAccounts.findAccountByPhone(this, contact)
                 : LocalAccounts.findAccountByEmail(this, contact);
 
         if (account == null) {
             Toast.makeText(this, byPhone
-                            ? "이 휴대전화 번호로 가입된 계정이 없습니다."
+                            ? "이 휴대폰 번호로 가입된 계정이 없습니다."
                             : "이 이메일로 가입된 계정이 없습니다.",
                     Toast.LENGTH_SHORT).show();
             return;

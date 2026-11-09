@@ -19,6 +19,7 @@ import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.capstone.ui.GridColumns;
 import com.example.capstone.adapter.ProductAdapter;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.DummyData;
@@ -26,6 +27,7 @@ import com.example.capstone.data.Product;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.login.LoginMainActivity;
 import com.example.capstone.login.LoginSession;
+import com.example.capstone.ui.FilterChip;
 import com.example.capstone.ui.AppDialog;
 import com.example.capstone.ui.BottomMenu;
 import com.example.capstone.ui.CategoryFilterDialog;
@@ -190,8 +192,10 @@ public class MainActivity extends AppCompatActivity {
         );
 
         recyclerProducts.setLayoutManager(
-                new GridLayoutManager(this, 2)
+                new GridLayoutManager(this, GridColumns.get(this))
         );
+
+        GridColumns.bind(findViewById(R.id.btnHomeGrid), recyclerProducts);
 
         recyclerProducts.setNestedScrollingEnabled(false);
 
@@ -374,6 +378,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateProducts() {
+
+        FilterChip.apply(btnHomeFilter, minPrice > 0
+                || maxPrice > 0
+                || !selectedColor.isEmpty()
+                || !selectedStyles.isEmpty()
+                || !selectedHeight.isEmpty()
+                || !selectedWeight.isEmpty()
+                || !selectedBodyType.isEmpty());
 
         if ("홈".equals(selectedMenu)) {
             reloadHomeFeed();
@@ -796,6 +808,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        GridColumns.bind(findViewById(R.id.btnHomeGrid), recyclerProducts);
+        GridColumns.apply(recyclerProducts);
 
         if (productAdapter != null) {
             productAdapter.notifyDataSetChanged();

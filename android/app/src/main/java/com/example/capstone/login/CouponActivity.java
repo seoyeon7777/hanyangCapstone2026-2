@@ -100,6 +100,7 @@ public class CouponActivity extends AppCompatActivity {
 
         // 탭 전환
         tabOwned.setOnClickListener(v -> showOwnedTab());
+        findViewById(R.id.btnCouponEmptyGo).setOnClickListener(v -> showAvailableTab());
         tabAvailable.setOnClickListener(v -> showAvailableTab());
 
         // 쿠폰 받기 버튼 → 보유 탭에 바로 추가
@@ -251,6 +252,10 @@ public class CouponActivity extends AppCompatActivity {
             }
         }
         tvCouponCount.setText("쿠폰 " + count + "개");
+
+        boolean noOwned = ownedTabShown && containerOwned.getChildCount() == 0;
+        tvCouponCount.setVisibility(ownedTabShown && !noOwned ? View.VISIBLE : View.GONE);
+        findViewById(R.id.layoutCouponEmpty).setVisibility(noOwned ? View.VISIBLE : View.GONE);
     }
 
     /**

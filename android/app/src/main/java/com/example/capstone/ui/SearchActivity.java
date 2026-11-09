@@ -62,7 +62,7 @@ public class SearchActivity extends AppCompatActivity {
     private RecyclerView recyclerSearch;
     private TextView textResultCount;
     private TextView textEmpty;
-    private TextView btnClearSearch;
+    private View btnClearSearch;
     private TextView btnSearchFilter;
 
     private ScrollView discoveryScroll;
@@ -104,8 +104,10 @@ public class SearchActivity extends AppCompatActivity {
         btnSearchFilter = findViewById(R.id.btnSearchFilter);
 
         recyclerSearch.setLayoutManager(
-                new GridLayoutManager(this, 2)
+                new GridLayoutManager(this, GridColumns.get(this))
         );
+
+        GridColumns.bind(findViewById(R.id.btnSearchGrid), recyclerSearch);
 
         adapter = new ProductAdapter(searchResults);
         recyclerSearch.setAdapter(adapter);
@@ -607,90 +609,69 @@ public class SearchActivity extends AppCompatActivity {
                 )
         );
 
-        // 인기 검색어 2열
-        for (int row = 0; row < 5; row++) {
+        // 인기 검색어
+        for (int index = 0; index < POPULAR_TERMS.length; index++) {
 
-            LinearLayout rowLayout =
+            String keyword =
+                    POPULAR_TERMS[index];
+
+            LinearLayout item =
                     new LinearLayout(this);
 
-            rowLayout.setOrientation(
-                    LinearLayout.HORIZONTAL
+            item.setGravity(
+                    Gravity.CENTER_VERTICAL
             );
 
             root.addView(
-                    rowLayout,
+                    item,
                     new LinearLayout.LayoutParams(
                             -1,
-                            dp(54)
+                            dp(44)
                     )
             );
 
-            for (int col = 0; col < 2; col++) {
+            TextView rank = makeText(
+                    String.valueOf(index + 1),
+                    15,
+                    true,
+                    index < 3 ? BLACK : GRAY
+            );
 
-                int index = row * 2 + col;
+            rank.setGravity(
+                    Gravity.CENTER_VERTICAL
+            );
 
-                String keyword =
-                        POPULAR_TERMS[index];
+            item.addView(
+                    rank,
+                    new LinearLayout.LayoutParams(
+                            dp(32),
+                            -1
+                    )
+            );
 
-                LinearLayout item =
-                        new LinearLayout(this);
+            TextView name = makeText(
+                    keyword,
+                    14,
+                    false,
+                    BLACK
+            );
 
-                item.setGravity(
-                        Gravity.CENTER_VERTICAL
-                );
+            name.setGravity(
+                    Gravity.CENTER_VERTICAL
+            );
 
-                rowLayout.addView(
-                        item,
-                        new LinearLayout.LayoutParams(
-                                0,
-                                -1,
-                                1f
-                        )
-                );
+            item.addView(
+                    name,
+                    new LinearLayout.LayoutParams(
+                            0,
+                            -1,
+                            1f
+                    )
+            );
 
-                TextView rank = makeText(
-                        String.valueOf(index + 1),
-                        15,
-                        true,
-                        index < 3 ? BLACK : GRAY
-                );
-
-                rank.setGravity(
-                        Gravity.CENTER_VERTICAL
-                );
-
-                item.addView(
-                        rank,
-                        new LinearLayout.LayoutParams(
-                                dp(28),
-                                -1
-                        )
-                );
-
-                TextView name = makeText(
-                        keyword,
-                        13,
-                        false,
-                        BLACK
-                );
-
-                name.setGravity(
-                        Gravity.CENTER_VERTICAL
-                );
-
-                item.addView(
-                        name,
-                        new LinearLayout.LayoutParams(
-                                0,
-                                -1,
-                                1f
-                        )
-                );
-
-                item.setOnClickListener(
-                        v -> selectKeyword(keyword)
-                );
-            }
+            item.setOnClickListener(
+                    v -> selectKeyword(keyword)
+            );
         }
     }
 
@@ -834,13 +815,7 @@ public class SearchActivity extends AppCompatActivity {
                 empty ? View.GONE : View.VISIBLE
         );
 
-        btnSearchFilter.setText(
-                hasActiveFilters()
-                        ? "☷  필터 ●"
-                        : "☷  필터"
-        );
-
-        btnSearchFilter.setTextColor(BLACK);
+        FilterChip.apply(btnSearchFilter, hasActiveFilters());
     }
 
     private boolean hasActiveFilters() {
@@ -882,6 +857,14 @@ public class SearchActivity extends AppCompatActivity {
         );
 
         btnSearchFilter.setVisibility(
+                visible ? View.GONE : View.VISIBLE
+        );
+
+        findViewById(R.id.btnSearchGrid).setVisibility(
+                visible ? View.GONE : View.VISIBLE
+        );
+
+        ((View) btnSearchFilter.getParent()).setVisibility(
                 visible ? View.GONE : View.VISIBLE
         );
 

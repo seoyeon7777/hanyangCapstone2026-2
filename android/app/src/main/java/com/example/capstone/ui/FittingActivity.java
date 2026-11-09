@@ -60,7 +60,6 @@ public class FittingActivity extends AppCompatActivity {
 
     private void applyTabMode(Intent intent) {
         boolean asTab = intent.getBooleanExtra(EXTRA_AS_TAB, false);
-        findViewById(R.id.btnFittingBack).setVisibility(asTab ? View.INVISIBLE : View.VISIBLE);
         ((TextView) findViewById(R.id.tvFittingTitle)).setText(asTab ? "체형 분석" : "새 체형 추가");
     }
 

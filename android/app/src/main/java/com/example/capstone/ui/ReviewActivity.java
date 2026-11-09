@@ -1,6 +1,7 @@
 package com.example.capstone.ui;
 
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -8,11 +9,14 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.capstone.R;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -86,28 +90,32 @@ public class ReviewActivity extends AppCompatActivity {
                 0
         );
 
-        root.addView(
-                header,
+        LinearLayout.LayoutParams headerParams =
                 new LinearLayout.LayoutParams(
                         -1,
-                        dp(56)
-                )
+                        dp(48)
+                );
+
+        headerParams.topMargin = dp(12);
+
+        root.addView(
+                header,
+                headerParams
         );
 
-        TextView back = makeText(
-                "‹",
-                32,
-                false,
-                BLACK
-        );
+        ImageButton back = new ImageButton(this);
 
-        back.setGravity(Gravity.CENTER);
+        back.setImageResource(R.drawable.ic_back);
+        back.setImageTintList(ColorStateList.valueOf(BLACK));
+        back.setBackground(null);
+        back.setContentDescription("뒤로가기");
+        back.setPadding(dp(9), dp(9), dp(9), dp(9));
 
         header.addView(
                 back,
                 new LinearLayout.LayoutParams(
-                        dp(44),
-                        -1
+                        dp(40),
+                        dp(40)
                 )
         );
 
@@ -115,7 +123,7 @@ public class ReviewActivity extends AppCompatActivity {
 
         TextView title = makeText(
                 "상품 리뷰",
-                17,
+                18,
                 true,
                 BLACK
         );
@@ -131,16 +139,14 @@ public class ReviewActivity extends AppCompatActivity {
                 )
         );
 
-        // 제목 중앙 정렬용 빈 공간
         header.addView(
                 new View(this),
                 new LinearLayout.LayoutParams(
-                        dp(44),
-                        -1
+                        dp(40),
+                        dp(40)
                 )
         );
 
-        root.addView(divider());
 
         // 핵심: 화면 나머지 공간을
         // FrameLayout이 정확히 차지하도록 구성

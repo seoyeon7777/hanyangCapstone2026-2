@@ -91,7 +91,7 @@ public class ResetPwActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    /** 아이디를 입력받는다. 휴대전화/이메일은 인증번호를 어디로 받을지만 정한다 */
+    /** 아이디를 입력받는다. 휴대폰/이메일은 인증번호를 어디로 받을지만 정한다 */
     private void applyContactType() {
         ((TextView) findViewById(R.id.tvContactLabel)).setText("아이디");
         etEmail.setHint("가입한 아이디");
@@ -99,7 +99,7 @@ public class ResetPwActivity extends AppCompatActivity {
         etEmail.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         etEmail.setImeHintLocales(new LocaleList(Locale.ENGLISH));
         ((TextView) findViewById(R.id.tvGuide)).setText(byPhone
-                ? "아이디를 입력하면 가입한 휴대전화로 인증번호를 보내드려요."
+                ? "아이디를 입력하면 가입한 휴대폰으로 인증번호를 보내드려요."
                 : "아이디를 입력하면 등록한 이메일로 인증번호를 보내드려요.");
     }
 
@@ -194,7 +194,7 @@ public class ResetPwActivity extends AppCompatActivity {
         btnRequestAuth.setText("인증받기");
     }
 
-    /** 입력한 아이디의 회원이 있으면, 그 회원의 휴대전화(또는 이메일)로 인증번호를 보낸다. */
+    /** 입력한 아이디의 회원이 있으면, 그 회원의 휴대폰(또는 이메일)로 인증번호를 보낸다. */
     private void requestAuthCode() {
         String id = etEmail.getText().toString().trim();
 
@@ -213,8 +213,8 @@ public class ResetPwActivity extends AppCompatActivity {
         String target = byPhone ? found.phone : found.email;
         if (TextUtils.isEmpty(target)) {
             Toast.makeText(this, byPhone
-                            ? "이 계정에 등록된 휴대전화 번호가 없습니다."
-                            : "이 계정에 등록된 이메일이 없습니다. 휴대전화로 인증해주세요.",
+                            ? "이 계정에 등록된 휴대폰 번호가 없습니다."
+                            : "이 계정에 등록된 이메일이 없습니다. 휴대폰으로 인증해주세요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }

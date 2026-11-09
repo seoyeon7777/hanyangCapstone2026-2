@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.capstone.ui.GridColumns;
 import com.example.capstone.R;
 import com.example.capstone.login.LoginMainActivity;
 import com.example.capstone.login.LoginSession;
@@ -63,6 +64,19 @@ public class ProductAdapter
                         parent,
                         false
                 );
+
+        if (parent instanceof RecyclerView
+                && GridColumns.columnsOf((RecyclerView) parent) == 3) {
+
+            int width = parent.getWidth()
+                    - parent.getPaddingLeft()
+                    - parent.getPaddingRight();
+
+            if (width > 0) {
+                View image = view.findViewById(R.id.frameProductImage);
+                image.getLayoutParams().height = Math.round(width / 3f * 1.3f);
+            }
+        }
 
         return new ProductViewHolder(view);
     }

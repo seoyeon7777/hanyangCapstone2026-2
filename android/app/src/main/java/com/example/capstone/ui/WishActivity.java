@@ -1,5 +1,7 @@
 package com.example.capstone.ui;
 
+import android.content.res.ColorStateList;
+import android.widget.ImageButton;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -43,6 +45,8 @@ public class WishActivity extends AppCompatActivity {
     private LinearLayout emptyView;
     private LinearLayout categoryContainer;
     private LinearLayout wishContent;
+    private ImageButton gridToggle;
+    private LinearLayout gridRow;
 
     private ProductAdapter adapter;
 
@@ -65,7 +69,7 @@ public class WishActivity extends AppCompatActivity {
         recyclerWish = findViewById(R.id.recyclerWish);
 
         recyclerWish.setLayoutManager(
-                new GridLayoutManager(this, 2)
+                new GridLayoutManager(this, GridColumns.get(this))
         );
 
         // 기존 RecyclerView를 유지하면서
@@ -77,6 +81,9 @@ public class WishActivity extends AppCompatActivity {
                 BottomMenu.TAB_WISH
         );
 
+        findViewById(R.id.btnWishBack)
+                .setOnClickListener(v -> finish());
+
         findViewById(R.id.btnWishCart)
                 .setOnClickListener(v -> BottomMenu.openCart(this));
     }
@@ -84,6 +91,8 @@ public class WishActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        GridColumns.bind(gridToggle, recyclerWish);
+        GridColumns.apply(recyclerWish);
         showWishProducts();
     }
 
@@ -131,13 +140,77 @@ public class WishActivity extends AppCompatActivity {
 
         categoryScroll.setFillViewport(false);
 
-        root.addView(
-                categoryScroll,
+        LinearLayout categoryRow =
+                new LinearLayout(this);
+
+        categoryRow.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        LinearLayout.LayoutParams categoryRowParams =
                 new LinearLayout.LayoutParams(
                         -1,
                         dp(54)
+                );
+
+        categoryRowParams.setMarginStart(-dp(16));
+        categoryRowParams.setMarginEnd(-dp(16));
+
+        root.addView(
+                categoryRow,
+                categoryRowParams
+        );
+
+        categoryRow.addView(
+                categoryScroll,
+                new LinearLayout.LayoutParams(
+                        0,
+                        -1,
+                        1f
                 )
         );
+
+        gridToggle = new ImageButton(this);
+
+        gridToggle.setBackground(null);
+        gridToggle.setPadding(dp(7), dp(7), dp(7), dp(7));
+        gridToggle.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        gridToggle.setImageTintList(ColorStateList.valueOf(BLACK));
+
+        LinearLayout.LayoutParams gridParams =
+                new LinearLayout.LayoutParams(
+                        dp(36),
+                        dp(36)
+                );
+
+        gridParams.setMarginEnd(dp(14));
+
+        gridRow =
+                new LinearLayout(this);
+
+        gridRow.setGravity(
+                Gravity.END | Gravity.CENTER_VERTICAL
+        );
+
+        LinearLayout.LayoutParams gridRowParams =
+                new LinearLayout.LayoutParams(
+                        -1,
+                        dp(40)
+                );
+
+        gridRowParams.setMarginEnd(-dp(16));
+
+        root.addView(
+                gridRow,
+                gridRowParams
+        );
+
+        gridRow.addView(
+                gridToggle,
+                gridParams
+        );
+
+        GridColumns.bind(gridToggle, recyclerWish);
 
         categoryContainer =
                 new LinearLayout(this);
@@ -204,20 +277,39 @@ public class WishActivity extends AppCompatActivity {
                         dp(56)
                 );
 
-        heartParams.bottomMargin = dp(10);
+        heartParams.bottomMargin = dp(12);
 
         emptyView.addView(heart, heartParams);
 
         TextView message = makeText(
                 "찜한 상품이 없어요",
-                14,
-                false,
-                GRAY
+                15,
+                true,
+                BLACK
         );
 
         message.setGravity(Gravity.CENTER);
 
         emptyView.addView(message);
+
+        TextView subMessage = makeText(
+                "마음에 드는 상품에 하트를 눌러보세요",
+                13,
+                false,
+                GRAY
+        );
+
+        subMessage.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams subParams =
+                new LinearLayout.LayoutParams(
+                        -2,
+                        -2
+                );
+
+        subParams.topMargin = dp(6);
+
+        emptyView.addView(subMessage, subParams);
 
         TextView browse = makeText(
                 "상품 둘러보기",
@@ -238,11 +330,11 @@ public class WishActivity extends AppCompatActivity {
 
         LinearLayout.LayoutParams params =
                 new LinearLayout.LayoutParams(
-                        dp(126),
+                        dp(132),
                         dp(42)
                 );
 
-        params.topMargin = dp(18);
+        params.topMargin = dp(20);
 
         emptyView.addView(
                 browse,
@@ -398,6 +490,10 @@ public class WishActivity extends AppCompatActivity {
         }
 
         boolean empty = wishProducts.isEmpty();
+
+        gridRow.setVisibility(
+                empty ? View.GONE : View.VISIBLE
+        );
 
         emptyView.setVisibility(
                 empty ? View.VISIBLE : View.GONE

@@ -59,7 +59,6 @@ public class MyBodyActivity extends AppCompatActivity {
         // 하단 '체형분석' 탭 화면이다 (11/06, 예전 마이페이지 '내 체형관리'). 탭이라 뒤로 버튼은 숨긴다
         setContentView(R.layout.activity_my_body);
         MyPageUi.setupToolbar(this, "내 체형관리");
-        findViewById(R.id.btnBack).setVisibility(View.INVISIBLE);
         BottomMenu.setup(this, BottomMenu.TAB_FITTING);
 
         layoutProfiles = findViewById(R.id.layoutProfiles);

@@ -38,7 +38,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     private TextView textDetailName;
     private TextView textDetailPrice;
 
-    private TextView btnBack;
+    private View btnBack;
     private ImageView btnDetailHeart;
     private TextView btnAddCart;
     private TextView btnFitting;

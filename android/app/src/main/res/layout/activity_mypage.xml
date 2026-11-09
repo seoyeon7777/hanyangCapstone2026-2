@@ -10,13 +10,14 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:paddingHorizontal="20dp"
+        android:paddingHorizontal="12dp"
         android:layout_marginTop="12dp">
 
         <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="9dp"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:background="@null"
@@ -44,7 +45,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="20dp">
+            android:paddingHorizontal="16dp">
 
             <!-- ============ 프로필 영역 (users) ============ -->
             <LinearLayout
@@ -103,9 +104,9 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:background="#F5F5F5"
-                android:layout_marginHorizontal="-20dp"/>
+                android:layout_height="1dp"
+                android:background="#EEEEEE"
+                android:layout_marginHorizontal="-16dp"/>
 
             <!-- ============ 주문/배송 조회 (orders + delivery) ============ -->
             <LinearLayout
@@ -120,7 +121,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="주문/배송 조회"
+                    android:text="주문 조회"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/black"/>
@@ -275,9 +276,9 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:background="#F5F5F5"
-                android:layout_marginHorizontal="-20dp"/>
+                android:layout_height="1dp"
+                android:background="#EEEEEE"
+                android:layout_marginHorizontal="-16dp"/>
 
             <!-- 내 체형 관리는 체형 분석 탭(FittingActivity)으로 옮김 (11/06) -->
 
@@ -300,7 +301,7 @@
             <TextView
                 android:id="@+id/menuCancelReturn"
                 style="@style/MyPageMenuItem"
-                android:text="취소/반품/교환 내역"/>
+                android:text="취소·반품 내역"/>
 
             <TextView
                 android:id="@+id/menuDelivery"
@@ -312,11 +313,16 @@
                 style="@style/MyPageMenuItem"
                 android:text="내가 쓴 리뷰"/>
 
+            <TextView
+                android:id="@+id/menuCoupon"
+                style="@style/MyPageMenuItem"
+                android:text="쿠폰함"/>
+
             <View
                 android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:background="#F5F5F5"
-                android:layout_marginHorizontal="-20dp"
+                android:layout_height="1dp"
+                android:background="#EEEEEE"
+                android:layout_marginHorizontal="-16dp"
                 android:layout_marginTop="12dp"/>
 
             <!-- ============ 결제 관리 (payments, coupons) ============ -->
@@ -331,11 +337,6 @@
                 android:layout_marginBottom="8dp"/>
 
             <TextView
-                android:id="@+id/menuCoupon"
-                style="@style/MyPageMenuItem"
-                android:text="쿠폰함"/>
-
-            <TextView
                 android:id="@+id/menuPaymentMethod"
                 style="@style/MyPageMenuItem"
                 android:text="결제 수단 관리"/>
@@ -347,9 +348,9 @@
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:background="#F5F5F5"
-                android:layout_marginHorizontal="-20dp"
+                android:layout_height="1dp"
+                android:background="#EEEEEE"
+                android:layout_marginHorizontal="-16dp"
                 android:layout_marginTop="12dp"/>
 
             <!-- ============ 문의 (inquiries) ============ -->
@@ -371,7 +372,7 @@
             <TextView
                 android:id="@+id/menuNotice"
                 style="@style/MyPageMenuItem"
-                android:text="고객센터/공지사항"/>
+                android:text="고객센터"/>
 
             <!-- ============ 로그아웃 ============ -->
             <TextView
@@ -380,7 +381,7 @@
                 android:layout_height="wrap_content"
                 android:text="로그아웃"
                 android:textSize="13sp"
-                android:textColor="#5A5A5A"
+                android:textColor="#E53935"
                 android:layout_marginTop="28dp"
                 android:layout_marginBottom="24dp"/>
 
