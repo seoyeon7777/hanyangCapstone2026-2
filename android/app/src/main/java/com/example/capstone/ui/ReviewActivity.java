@@ -1,5 +1,6 @@
 package com.example.capstone.ui;
 
+import com.example.capstone.R;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -95,12 +96,13 @@ public class ReviewActivity extends AppCompatActivity {
         );
 
         TextView back = makeText(
-                "‹",
+                "",
                 32,
                 false,
                 BLACK
         );
 
+        back.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_back, 0, 0, 0);
         back.setGravity(Gravity.CENTER);
 
         header.addView(

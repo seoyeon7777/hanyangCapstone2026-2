@@ -19,7 +19,7 @@
             android:layout_width="40dp"
             android:layout_height="48dp"
             android:gravity="center"
-            android:text="‹"
+            android:drawableStart="@drawable/ic_back"
             android:textSize="32sp"
             android:textColor="#111111"/>
 

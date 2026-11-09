@@ -172,6 +172,14 @@ public class ProductDetailActivity extends AppCompatActivity {
             textDetailPrice.setText("가격 정보 준비 중");
         }
 
+        // 목록 카드에서 뺀 추천 이유를 상세에서 보여 준다
+        TextView textDetailReason = findViewById(R.id.textDetailReason);
+        if (currentProduct != null && currentProduct.getReason() != null
+                && !currentProduct.getReason().isEmpty()) {
+            textDetailReason.setText(currentProduct.getReason());
+            textDetailReason.setVisibility(View.VISIBLE);
+        }
+
         ProductImages.bind(
                 findViewById(R.id.frameDetailImage),
                 findViewById(R.id.textDetailImageLabel),
@@ -354,10 +362,13 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     private void updateSizeRecommendText() {
-        if (currentProduct == null) {
+        // 체형 설정의 "추천 사이즈 표시"를 끈 경우 보이지 않는다
+        if (currentProduct == null
+                || !BodyProfileStore.isSettingOn(this, BodyProfileStore.SETTING_SIZE_RECOMMEND)) {
             textSizeRecommend.setVisibility(View.GONE);
             return;
         }
+        textSizeRecommend.setVisibility(View.VISIBLE);
         UserBodyProfile profile = UserBodyProfile.getInstance();
         if (!RecommendApi.hasDiagnosis(this) || !profile.hasMeasurement()) {
             textSizeRecommend.setText("내 치수 사이즈 확인하러 가기  ›");

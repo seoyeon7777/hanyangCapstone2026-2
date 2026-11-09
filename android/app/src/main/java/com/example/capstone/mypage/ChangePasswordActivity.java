@@ -32,6 +32,23 @@ public class ChangePasswordActivity extends AppCompatActivity {
         etNewPw = findViewById(R.id.etNewPw);
         etNewPwConfirm = findViewById(R.id.etNewPwConfirm);
         btnSave = findViewById(R.id.btnSave);
+
+        // 칸마다 눈 모양 버튼으로 입력한 비밀번호를 보거나 숨긴다
+        bindEye(etCurrentPw, findViewById(R.id.btnShowCurrentPw));
+        bindEye(etNewPw, findViewById(R.id.btnShowNewPw));
+        bindEye(etNewPwConfirm, findViewById(R.id.btnShowConfirmPw));
+    }
+
+    private void bindEye(EditText edit, android.widget.ImageButton button) {
+        boolean[] visible = {false};
+        button.setOnClickListener(v -> {
+            visible[0] = !visible[0];
+            edit.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                    | (visible[0] ? android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                            : android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD));
+            button.setImageResource(visible[0] ? R.drawable.ic_eye_on : R.drawable.ic_eye_off);
+            edit.setSelection(edit.getText().length());
+        });
     }
 
     private void savePassword() {

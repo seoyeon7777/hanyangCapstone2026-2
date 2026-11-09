@@ -373,7 +373,26 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    /** 필터가 적용 중이면 버튼에 개수를 보여 주고 진하게 표시한다 */
+    private void refreshFilterButton() {
+        int count = 0;
+        if (minPrice > 0 || maxPrice > 0) count++;
+        if (selectedColor != null && !selectedColor.isEmpty()) count++;
+        if (selectedStyles != null && !selectedStyles.isEmpty()) count++;
+        if (selectedHeight != null && !selectedHeight.isEmpty()) count++;
+        if (selectedWeight != null && !selectedWeight.isEmpty()) count++;
+        if (selectedBodyType != null && !selectedBodyType.isEmpty()) count++;
+
+        btnHomeFilter.setText(count > 0 ? "필터 " + count + "개 적용 중 ›" : "필터 ›");
+        btnHomeFilter.setTextColor(count > 0 ? 0xFF111111 : 0xFF333333);
+        btnHomeFilter.setBackgroundResource(count > 0
+                ? R.drawable.bg_home_filter_button_active : R.drawable.bg_home_filter_button);
+        btnHomeFilter.setTypeface(null, count > 0
+                ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+    }
+
     private void updateProducts() {
+        refreshFilterButton();
 
         if ("홈".equals(selectedMenu)) {
             reloadHomeFeed();
@@ -791,6 +810,7 @@ public class MainActivity extends AppCompatActivity {
         selectedHeight = "";
         selectedWeight = "";
         selectedBodyType = "";
+        refreshFilterButton();
     }
 
     @Override

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -71,8 +72,10 @@ public class OrderActivity extends AppCompatActivity {
     private Spinner spOrderRequest;
     private static final String[] DELIVERY_REQUESTS = {
             "선택 안 함", "문 앞에 놓아주세요", "경비실에 맡겨주세요",
-            "택배함에 넣어주세요", "배송 전 연락 바랍니다", "부재 시 문 앞에 놓아주세요"
+            "택배함에 넣어주세요", "배송 전 연락 바랍니다", "부재 시 문 앞에 놓아주세요",
+            "직접 입력"
     };
+    private EditText etOrderRequest;
     private long selectedAddressId = -1;
     private CheckoutCoupons.Coupon selectedCoupon;
 
@@ -109,6 +112,18 @@ public class OrderActivity extends AppCompatActivity {
                 this, android.R.layout.simple_spinner_item, DELIVERY_REQUESTS);
         requestAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spOrderRequest.setAdapter(requestAdapter);
+        etOrderRequest = findViewById(R.id.etOrderRequest);
+        // "직접 입력"을 고르면 입력칸이 나타난다
+        spOrderRequest.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                etOrderRequest.setVisibility(position == DELIVERY_REQUESTS.length - 1 ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
+        });
         containerAddress = findViewById(R.id.containerAddress);
         btnAddAddress = findViewById(R.id.btnAddAddress);
         btnChangeAddress = findViewById(R.id.btnChangeAddress);
@@ -435,8 +450,12 @@ public class OrderActivity extends AppCompatActivity {
         // 주문 저장
         MyPageStore.addOrder(newOrder);
         // 주문별 요청사항 저장: 배송지 자체의 요청사항과 분리
-        String deliveryRequest = spOrderRequest.getSelectedItemPosition() <= 0
+        int requestPosition = spOrderRequest.getSelectedItemPosition();
+        String deliveryRequest = requestPosition <= 0
                 ? "" : spOrderRequest.getSelectedItem().toString();
+        if (requestPosition == DELIVERY_REQUESTS.length - 1) {
+            deliveryRequest = etOrderRequest.getText().toString().trim();
+        }
         getSharedPreferences("order_delivery_requests", MODE_PRIVATE)
                 .edit().putString(orderNo, deliveryRequest).apply();
 

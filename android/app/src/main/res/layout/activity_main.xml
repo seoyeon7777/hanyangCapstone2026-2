@@ -253,7 +253,7 @@
                     android:id="@+id/btnHomeFilter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="필터 · 정렬 ›"
+                    android:text="필터 ›"
                     android:textSize="12sp"
                     android:textColor="#333333"
                     android:background="@drawable/bg_home_filter_button"

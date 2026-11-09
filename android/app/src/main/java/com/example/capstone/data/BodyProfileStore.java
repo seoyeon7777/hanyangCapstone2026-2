@@ -45,8 +45,11 @@ public final class BodyProfileStore {
     /** 새로 측정해 저장한 체형을 대표 체형으로 자동 설정 */
     public static final String SETTING_AUTO_ACTIVE = "auto_active";
 
+    /** 상품 상세에 "내 치수 기준 추천 사이즈" 문구 표시 */
+    public static final String SETTING_SIZE_RECOMMEND = "size_recommend";
+
     public static final String[] SETTING_KEYS = {
-            SETTING_SIZE_WARNING, SETTING_MEASURE_NOTICE, SETTING_AUTO_ACTIVE
+            SETTING_SIZE_WARNING, SETTING_MEASURE_NOTICE, SETTING_AUTO_ACTIVE, SETTING_SIZE_RECOMMEND
     };
 
     private static final String PREF_NAME = "body_profile_store";

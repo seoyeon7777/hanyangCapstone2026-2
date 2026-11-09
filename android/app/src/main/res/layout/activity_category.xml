@@ -20,7 +20,7 @@
             android:layout_width="44dp"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="‹"
+            android:drawableStart="@drawable/ic_back"
             android:textColor="#111111"
             android:textSize="32sp"
             android:contentDescription="뒤로가기"/>

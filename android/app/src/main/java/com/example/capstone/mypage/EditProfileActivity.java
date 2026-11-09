@@ -9,7 +9,7 @@ import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.ProfilePhotoStore;
-import com.example.capstone.data.RecommendApi;
+import com.example.capstone.login.AuthCode;
 import com.example.capstone.login.LoginSession;
 import com.example.capstone.ui.AppDialog;
 import com.example.capstone.ui.EmailDomainInput;
@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -82,7 +83,7 @@ public class EditProfileActivity extends AppCompatActivity {
         showValue(tvEmail, user.email);
 
         String phone = MyPageUi.normalizePhone(user.phone == null ? "" : user.phone);
-        showValue(tvPhone, phone != null ? phone : user.phone);
+        showValue(tvPhone, phone != null ? com.example.capstone.data.LocalAccounts.formatPhone(phone) : user.phone);
     }
 
     private void showValue(TextView view, String value) {
@@ -95,7 +96,7 @@ public class EditProfileActivity extends AppCompatActivity {
         findViewById(R.id.tvChangePhoto).setOnClickListener(v -> changePhoto());
         imgProfile.setOnClickListener(v -> changePhoto());
 
-        findViewById(R.id.btnEditName).setOnClickListener(v -> editName());
+        // 이름은 환불 계좌 예금주로 쓰므로 바꿀 수 없다 (변경 버튼 없음)
         findViewById(R.id.btnEditEmail).setOnClickListener(v -> editEmail());
         // 휴대폰 번호는 가입할 때 본인확인한 번호라 바꿀 수 없다 (변경 버튼 없음)
 
@@ -158,32 +159,9 @@ public class EditProfileActivity extends AppCompatActivity {
         return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
-    private void editName() {
-        MyPageStore.User user = MyPageStore.getUser();
-
-        AppDialog.input(this, "이름 변경", null,
-                user.name, "이름을 입력해주세요",
-                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PERSON_NAME,
-                "변경", name -> {
-                    if (name.isEmpty()) {
-                        toast("이름을 입력해주세요.");
-                        return false;
-                    }
-                    if (name.length() > 20) {
-                        toast("이름은 20자 이하로 입력해주세요.");
-                        return false;
-                    }
-                    confirmChange("이름 변경", user.name, name, () -> {
-                        saveProfile(name, user.email, user.phone);
-                        toast("이름이 변경되었습니다.");
-                    });
-                    return true;
-                });
-    }
-
     /**
-     * 이메일 변경: 주소를 [앞부분] @ [도메인]으로 받고, 그 주소로 인증 메일을 실제로 보낸다.
-     * 메일 속 "이메일 인증하기"를 누른 뒤 "인증확인"을 눌러야 바뀐다. (서버 email_verify.py)
+     * 이메일 변경: 주소를 [앞부분] @ [도메인]으로 받고, "인증번호 받기"를 누르면 화면에 인증번호 4자리가 나온다.
+     * 그 번호를 입력해 인증확인을 눌러야 바뀐다. (메일 서버 설정이 없어 번호를 화면에 보여 주는 시연용 방식)
      */
     private void editEmail() {
         MyPageStore.User user = MyPageStore.getUser();
@@ -197,8 +175,12 @@ public class EditProfileActivity extends AppCompatActivity {
         TextView btnSendMail = view.findViewById(R.id.btnSendMail);
         TextView btnVerify = view.findViewById(R.id.btnVerifyEmail);
         TextView tvNotice = view.findViewById(R.id.tvMailNotice);
-        // [0] = 인증 요청 번호, [1] = 메일을 보낸 주소. 주소를 고치면 비운다
-        String[] sent = {null, null};
+        View layoutCode = view.findViewById(R.id.layoutEmailCode);
+        EditText etCode = view.findViewById(R.id.etEmailCode);
+        AuthCode authCode = new AuthCode();
+        authCode.bindTimer(view.findViewById(R.id.tvEmailTimer));
+        // 인증번호를 받은 주소. 주소를 고치면 비운다
+        String[] sent = {null};
 
         EmailDomainInput input = new EmailDomainInput(this,
                 view.findViewById(R.id.etEmailId),
@@ -207,9 +189,11 @@ public class EditProfileActivity extends AppCompatActivity {
                 () -> {
                     if (sent[0] != null) {
                         sent[0] = null;
-                        sent[1] = null;
-                        btnSendMail.setText("인증메일 보내기");
+                        authCode.clear();
+                        etCode.setText("");
+                        btnSendMail.setText("인증번호 받기");
                         tvNotice.setVisibility(View.GONE);
+                        layoutCode.setVisibility(View.GONE);
                         setVerifyEnabled(btnVerify, false);
                     }
                 });
@@ -230,56 +214,30 @@ public class EditProfileActivity extends AppCompatActivity {
                 toast("이미 가입된 이메일입니다.");
                 return;
             }
-            btnSendMail.setEnabled(false);
-            btnSendMail.setText("보내는 중…");
-            RecommendApi.sendEmailVerification(email, new RecommendApi.Callback<String>() {
-                @Override
-                public void onSuccess(String requestId) {
-                    btnSendMail.setEnabled(true);
-                    btnSendMail.setText("인증메일 다시 보내기");
-                    sent[0] = requestId;
-                    sent[1] = email;
-                    tvNotice.setText(email + " (으)로 인증 메일을 보냈어요.\n"
-                            + "메일의 '이메일 인증하기'를 누른 뒤 아래 인증확인을 눌러 주세요. (30분 동안 유효)");
-                    tvNotice.setVisibility(View.VISIBLE);
-                    setVerifyEnabled(btnVerify, true);
-                }
-
-                @Override
-                public void onError(int code, String message) {
-                    btnSendMail.setEnabled(true);
-                    btnSendMail.setText(sent[0] == null ? "인증메일 보내기" : "인증메일 다시 보내기");
-                    toast(message);
-                }
-            });
+            // 메일 서버가 없어서 인증번호를 안내 창에 보여 준다 (다시 받으면 시간도 처음부터)
+            authCode.issue(this, email, AuthCode.maskEmail(email));
+            sent[0] = email;
+            etCode.setText("");
+            btnSendMail.setText("인증번호 다시 받기");
+            tvNotice.setText("안내 창에 보이는 인증번호 4자리를 입력해 주세요. (5분 동안 유효)");
+            tvNotice.setVisibility(View.VISIBLE);
+            layoutCode.setVisibility(View.VISIBLE);
+            setVerifyEnabled(btnVerify, true);
         });
 
         btnVerify.setOnClickListener(v -> {
             if (sent[0] == null) {
                 return;
             }
-            String requestId = sent[0];
-            String email = sent[1];
-            RecommendApi.checkEmailVerification(requestId, new RecommendApi.Callback<Boolean>() {
-                @Override
-                public void onSuccess(Boolean verified) {
-                    if (!requestId.equals(sent[0])) {
-                        return;   // 확인하는 사이 주소를 고쳤다
-                    }
-                    if (!verified) {
-                        toast("아직 인증되지 않았어요. 메일함에서 '이메일 인증하기'를 눌러 주세요.");
-                        return;
-                    }
-                    saveProfile(user.name, email, user.phone);
-                    toast("이메일이 변경되었습니다.");
-                    dialog.dismiss();
-                }
-
-                @Override
-                public void onError(int code, String message) {
-                    toast(message);
-                }
-            });
+            String error = authCode.check(etCode.getText().toString().trim(), sent[0]);
+            if (error != null) {
+                toast(error);
+                return;
+            }
+            authCode.hideTimer();
+            saveProfile(user.name, sent[0], user.phone);
+            toast("이메일이 변경되었습니다.");
+            dialog.dismiss();
         });
 
         view.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
