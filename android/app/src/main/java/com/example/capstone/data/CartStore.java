@@ -30,6 +30,7 @@ import java.util.Set;
 public final class CartStore {
 
     public static final int MAX_QUANTITY = 99;
+    public static final String MAX_QUANTITY_MESSAGE = "최대 99개까지 담을 수 있어요.";
 
     private static final String TAG = "CartStore";
     private static final String PREF = "cart_store";
@@ -96,6 +97,13 @@ public final class CartStore {
     public static synchronized boolean containsOption(Context context, Product product, String size, String color) {
         ensureLoaded(context);
         return findOption(product, size, color, 0L) != null;
+    }
+
+    /** 이 상품의 이 옵션이 담긴 수량 (없으면 0) */
+    public static synchronized int quantityOf(Context context, Product product, String size, String color) {
+        ensureLoaded(context);
+        Product line = findOption(product, size, color, 0L);
+        return line == null ? 0 : line.getCartQuantity();
     }
 
     // =========================

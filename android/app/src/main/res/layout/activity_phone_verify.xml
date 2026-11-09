@@ -58,21 +58,65 @@
         android:textColor="@color/black"
         android:layout_marginBottom="6dp"/>
 
+    <!-- 010 - XXXX - XXXX : 010은 고정, 나머지 두 칸만 입력 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:layout_marginBottom="16dp">
 
+        <TextView
+            android:layout_width="56dp"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text="010"
+            android:background="@drawable/bg_edit"
+            android:textColor="#888888"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="4dp"
+            android:text="-"
+            android:textColor="@color/black"
+            android:textSize="14sp"/>
+
         <EditText
-            android:id="@+id/etPhone"
+            android:id="@+id/etPhoneMid"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:hint="010-0000-0000"
+            android:gravity="center"
+            android:hint="0000"
             android:background="@drawable/bg_edit"
             android:inputType="number"
-            android:paddingHorizontal="16dp"
+            android:maxLength="4"
+            android:imeOptions="actionNext"
+            android:paddingHorizontal="8dp"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="4dp"
+            android:text="-"
+            android:textColor="@color/black"
+            android:textSize="14sp"/>
+
+        <EditText
+            android:id="@+id/etPhoneLast"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:hint="0000"
+            android:background="@drawable/bg_edit"
+            android:inputType="number"
+            android:maxLength="4"
+            android:imeOptions="actionDone"
+            android:paddingHorizontal="8dp"
             android:textSize="14sp"
             android:layout_marginEnd="8dp"/>
 
@@ -106,32 +150,40 @@
         android:background="@drawable/bg_edit"
         android:paddingHorizontal="16dp"
         android:textSize="14sp"
-        android:layout_marginBottom="12dp"/>
+        android:layout_marginBottom="6dp"/>
+
+    <!-- 문자 발송 기능이 없어서 보낸 인증번호를 화면에 보여 준다 -->
+    <TextView
+        android:id="@+id/tvAuthCodeNotice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="12dp"
+        android:textColor="#888888"
+        android:textSize="11sp"
+        android:visibility="gone"/>
+
+    <!-- 누르면 수신차단 확인 안내가 아래에서 올라온다 (밑줄은 코드에서) -->
+    <TextView
+        android:id="@+id/tvNoAuthCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="12dp"
+        android:paddingVertical="4dp"
+        android:text="인증번호가 안 와요."
+        android:textColor="#888888"
+        android:textSize="13sp"/>
 
     <Button
         android:id="@+id/btnVerifyCode"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:text="인증확인"
-        android:textColor="@color/white"
-        android:textSize="14sp"
-        android:background="@drawable/bg_button"
-        app:backgroundTint="@null"
-        android:visibility="gone"/>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
-
-    <Button
-        android:id="@+id/btnNext"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
         android:text="다음"
         android:textColor="@color/white"
-        android:textSize="13sp"
-        android:background="@drawable/bg_button"
+        android:textSize="14sp"
+        android:background="@drawable/bg_button_gray"
+        android:enabled="false"
         app:backgroundTint="@null"/>
 
 </LinearLayout>

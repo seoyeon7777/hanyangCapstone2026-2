@@ -97,18 +97,6 @@
                 style="@style/MyPageEdit"
                 android:hint="상세 주소 (동/호수)" />
 
-            <TextView
-                style="@style/MyPageFormLabel"
-                android:text="배송 요청사항" />
-
-            <Spinner
-                android:id="@+id/spRequest"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="18dp"
-                android:background="@drawable/bg_edit"
-                android:paddingHorizontal="16dp" />
-
             <CheckBox
                 android:id="@+id/cbDefault"
                 android:layout_width="wrap_content"

@@ -10,6 +10,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -51,16 +52,15 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    /** 비회원이 사진 측정 때문에 로그인했을 때: 방금 한 설문 결과를 계정에 저장한다 (이 경로에서만 저장된다) */
+    /** 비회원이 결과 화면에서 로그인했을 때: 방금 한 설문(메모리에만 있던 것)을 지금 계정으로 옮긴다 */
     private void saveSurveyToAccountIfNeeded() {
 
         if (savedToAccount || surveyAnswers == null || !LoginSession.isLoggedIn(this)) {
             return;
         }
 
+        // 설문 답·결과만 계정에 옮긴다. 체형 카드는 "이대로 저장하기" 또는 사진 측정 저장 때 만든다
         BodyTypeActivity.persistSurvey(this, surveyAnswers, userHeightCm, resultType);
-        BodyProfileStore.saveFromSurvey(this, userHeightCm,
-                BodyTypeActivity.skeletonLabel(resultType), surveyAnswers);
         savedToAccount = true;
         findViewById(R.id.resultGuestNotice).setVisibility(View.GONE);
     }
@@ -107,6 +107,51 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 .show();
     }
 
+    private void saveSurvey() {
+
+        // 비회원이면 로그인 안내 → 로그인을 마치면 이어서 저장한다 (LoginGate)
+        if (!LoginSession.isLoggedIn(this)) {
+            LoginGate.require(this,
+                    "체형은 로그인한 계정에 저장돼요.\n로그인하면 방금 한 설문 결과가 바로 저장돼요.",
+                    () -> {
+                        saveSurveyToAccountIfNeeded();
+                        saveSurvey();
+                    });
+            return;
+        }
+
+        if (!BodyProfileStore.canAddProfile(this)) {
+            AppDialog.alert(this, "체형 저장",
+                    "체형은 최대 " + BodyProfileStore.MAX_PROFILES
+                            + "개까지 저장할 수 있어요. '내 체형 관리'에서 안 쓰는 체형을 지운 뒤 다시 저장해 주세요.",
+                    "확인");
+            return;
+        }
+
+        BodyProfileStore.Profile saved = BodyTypeActivity.saveSurveyProfile(this);
+
+        if (saved == null) {
+            Toast.makeText(this, "저장할 진단 결과가 없어요. 설문을 다시 해 주세요.",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        openSaved(saved);
+    }
+
+    private void openSaved(BodyProfileStore.Profile saved) {
+        startActivity(BodySaveCompleteActivity.newIntent(this, saved.name));
+        finish();
+    }
+
+    private void confirmLeave() {
+        AppDialog.show(this, false,
+                "저장하지 않고 나갈까요?",
+                "이번 결과는 '내 체형'에 저장되지 않아요.",
+                "나가기", this::finish,
+                "이대로 저장하기", this::saveSurvey);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -118,7 +163,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         resultFeatures = findViewById(R.id.resultFeatures);
 
         Button btnYes = findViewById(R.id.btnYes);
-        Button btnNo = findViewById(R.id.btnNo);
+        View btnNo = findViewById(R.id.btnNo);
         View btnRetry = findViewById(R.id.btnRetry);
 
         // 설문 결과 가져오기
@@ -245,8 +290,17 @@ public class BodyTypeResultActivity extends AppCompatActivity {
             }
         }));
 
-        // 아니오: 결과 화면 종료
-        btnNo.setOnClickListener(v -> finish());
+        // 이대로 저장하기: 사진 없이 지금 결과만 '내 체형'으로 저장
+        findViewById(R.id.btnSaveSurvey).setOnClickListener(v -> saveSurvey());
+
+        // 저장하지 않고 나가기 (뒤로가기도 같음)
+        btnNo.setOnClickListener(v -> confirmLeave());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                confirmLeave();
+            }
+        });
 
         // 다시 검사하기
         btnRetry.setOnClickListener(v -> {

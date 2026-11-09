@@ -279,27 +279,7 @@
                 android:background="#F5F5F5"
                 android:layout_marginHorizontal="-20dp"/>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="내 체형"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="8dp"/>
-
-            <TextView
-                android:id="@+id/menuMyBody"
-                style="@style/MyPageMenuItem"
-                android:text="내 체형관리"/>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:background="#F5F5F5"
-                android:layout_marginHorizontal="-20dp"
-                android:layout_marginTop="12dp"/>
+            <!-- 내 체형 관리는 체형 분석 탭(FittingActivity)으로 옮김 (11/06) -->
 
             <!-- ============ 쇼핑 활동 (orders, delivery, reviews) ============ -->
             <TextView
@@ -392,11 +372,6 @@
                 android:id="@+id/menuNotice"
                 style="@style/MyPageMenuItem"
                 android:text="고객센터/공지사항"/>
-
-            <TextView
-                android:id="@+id/menuSeller"
-                style="@style/MyPageMenuItem"
-                android:text="판매자 센터"/>
 
             <!-- ============ 로그아웃 ============ -->
             <TextView

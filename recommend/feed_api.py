@@ -33,7 +33,6 @@ import rec_config
 from fake_matching import classify_kind
 from feed import score_by_mode, home_feed, feed_order, reason, need_rediagnosis
 from store import make_store, StoreError
-from image_storage import absolute_image_url
 from matching_b import from_profile
 from body_profile import classify, InputError  # A 파트 (matching_b가 저장소 맨 위 폴더를 경로에 넣어 둠)
 
@@ -68,18 +67,15 @@ def make_body(ratio):
     return {"ratio": ratio, "kind": kind, "primary": primary}
 
 
-# 화면 표시용 상품 정보. price·brand·image_url·sizes·colors·measurements는 DB(판매자 등록) 상품에만 있다 (items.json 시연 상품에는 없음).
+# 화면 표시용 상품 정보. price·brand·image_url은 DB 상품에만 있다 (items.json 시연 상품에는 없음).
 # seasons는 모든 상품에 있다 — 앱 카테고리 화면의 계절 필터가 쓴다 (없으면 계절을 고르는 순간 서버 상품이 전부 사라짐)
-DISPLAY_KEYS = ("price", "brand", "image_url", "seasons", "sizes", "colors", "measurements")
+DISPLAY_KEYS = ("price", "brand", "image_url", "seasons")
 
 
 def for_screen(r):
     """점수 결과 하나 → 앱에 보낼 모양: 추천 이유(reason) + 가격·브랜드·사진 주소(있으면)."""
     item = STORE.item(r["product_id"]) or {}
-    shown = {k: item[k] for k in DISPLAY_KEYS if k in item}
-    if "image_url" in shown:    # 로컬에 올린 사진은 "/uploads/…" 경로로 저장돼 있다. 요청한 서버 주소를 붙여 보낸다
-        shown["image_url"] = absolute_image_url(shown["image_url"], request.host_url)
-    return {**r, "reason": reason(r), **shown}
+    return {**r, "reason": reason(r), **{k: item[k] for k in DISPLAY_KEYS if k in item}}
 
 
 def with_reasons(feed):

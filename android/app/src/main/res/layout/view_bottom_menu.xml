@@ -22,7 +22,7 @@
         android:id="@+id/menuFitting"
         style="@style/BottomMenuItem"
         android:drawableTop="@drawable/ic_nav_fitting"
-        android:text="체형분석" />
+        android:text="체형" />
 
     <TextView
         android:id="@+id/menuWish"

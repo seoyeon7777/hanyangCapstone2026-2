@@ -2,7 +2,6 @@ package com.example.capstone.mypage;
 
 import com.example.capstone.R;
 import com.example.capstone.data.LocalAccounts;
-import com.example.capstone.data.PasswordRule;
 import com.example.capstone.login.LoginSession;
 
 import android.os.Bundle;
@@ -54,8 +53,11 @@ public class ChangePasswordActivity extends AppCompatActivity {
             toast("현재 비밀번호가 일치하지 않습니다.");
             return;
         }
-        if (!PasswordRule.isValid(newPw)) {
-            toast(PasswordRule.MESSAGE);
+        // 회원가입과 같은 규칙 (LocalAccounts.isValidPassword)
+        if (!LocalAccounts.isValidPassword(newPw)) {
+            toast(LocalAccounts.hasInvalidPasswordChar(newPw)
+                    ? "새 비밀번호에 쓸 수 없는 문자가 있습니다. 특수문자는 안내된 것만 쓸 수 있어요."
+                    : "새 비밀번호는 영문 대소문자, 숫자, 특수문자 중 2가지 이상을 조합해 8~16자로 입력해주세요.");
             return;
         }
         if (newPw.equals(currentPw)) {

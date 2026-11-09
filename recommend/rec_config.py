@@ -173,27 +173,3 @@ DB_DEMO_USER_NAME = "앱 사용자"  # 앱이 처음 보낸 user_id로 users 행
 # (치수 점수가 내추럴을 거의 못 맞히고 웨이브로 쏠림 — sample.csv 치수만 내추럴 1/10, 기준 구간이 1cm 오차보다 좁음)
 # True로 바꾸면 설문 0.6 + 치수 0.4 (A 파트 classify) — 치수가 이상하면 그때도 설문만
 DIAGNOSIS_USE_MEASUREMENTS = False
-
-# ── 판매자 상품 등록 ──
-SELLER_DEFAULT_POPULARITY = 0.5     # 새로 등록한 상품의 인기도 (아직 반응이 없으니 가운데 값)
-SELLER_SEASONS = ("spring", "summer", "fall", "winter")
-SELLER_SIZES = ("XS", "S", "M", "L", "XL", "FREE")
-SELLER_COLORS = ("BLACK", "WHITE", "GRAY", "NAVY", "BEIGE", "BROWN", "RED", "PINK", "BLUE", "GREEN", "KHAKI")
-SELLER_MAX_PRICE = 10_000_000
-SELLER_MAX_OPTIONS = 60             # 사이즈 × 색상 조합 최대 개수
-# 옷을 평평하게 놓고 잰 단면 치수(cm). 종류 → (db 표, [(키, 화면 이름)]). 표의 열 이름과 같다 (db/db.sql)
-SELLER_MEASUREMENTS = {
-    "top":    ("top_measurements",   [("shoulder", "어깨너비"), ("chest", "가슴단면"), ("arm_length", "소매길이"), ("total_length", "총장")]),
-    "outer":  ("top_measurements",   [("shoulder", "어깨너비"), ("chest", "가슴단면"), ("arm_length", "소매길이"), ("total_length", "총장")]),
-    "pants":  ("bottom_measurements", [("waist", "허리단면"), ("thigh", "허벅지단면"), ("total_length", "총장")]),
-    "skirt":  ("skirt_measurements", [("waist", "허리단면"), ("hip", "엉덩이단면"), ("total_length", "총장")]),
-    "dress":  ("onepiece_measurements", [("shoulder", "어깨너비"), ("chest", "가슴단면"), ("waist", "허리단면"),
-                                         ("hip", "엉덩이단면"), ("arm_length", "소매길이"), ("total_length", "총장")]),
-}
-SELLER_MEASURE_MIN, SELLER_MEASURE_MAX = 5.0, 250.0      # cm. 범위 밖이면 입력 실수로 본다
-# 사진 올리기
-IMAGE_MAX_BYTES = 5 * 1024 * 1024
-IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
-UPLOAD_DIR_NAME = "uploads"         # recommend/uploads/ (서버를 켠 PC 폴더. 깃에는 올리지 않는다)
-UPLOAD_URL_PREFIX = "/uploads/"
-REGISTERED_ITEMS_FILE = "registered_items.json"   # recommend/data/ — 메모리 저장소일 때 등록한 상품을 보관

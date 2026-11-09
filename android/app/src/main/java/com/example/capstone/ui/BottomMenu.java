@@ -94,6 +94,12 @@ public final class BottomMenu {
         }
     }
 
+    /** 로그인했고 저장한 체형이 하나라도 있으면 true */
+    static boolean hasSavedBody(Activity activity) {
+        return LoginSession.isLoggedIn(activity)
+                && !com.example.capstone.data.BodyProfileStore.getProfiles(activity).isEmpty();
+    }
+
     public static void openCart(Activity activity) {
         // 장바구니 보기는 로그인해야 한다 (비회원이면 로그인 안내 → 로그인 뒤 장바구니로)
         LoginGate.require(activity, () -> activity.startActivity(
@@ -103,8 +109,8 @@ public final class BottomMenu {
 
     private static void moveTo(Activity activity, int tab) {
 
-        // 찜·장바구니 탭은 로그인해야 열 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 그 탭으로)
-        if ((tab == TAB_WISH || tab == TAB_CART) && !LoginSession.isLoggedIn(activity)) {
+        // 찜·장바구니·체형 탭은 로그인해야 열 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 그 탭으로)
+        if ((tab == TAB_WISH || tab == TAB_CART || tab == TAB_FITTING) && !LoginSession.isLoggedIn(activity)) {
             LoginGate.require(activity, () -> moveTo(activity, tab));
             return;
         }
@@ -139,7 +145,23 @@ public final class BottomMenu {
                 break;
 
             case TAB_FITTING:
-                target = FittingActivity.class;
+                // 체형분석 탭: 저장한 체형이 있으면 체형 목록(예전 마이페이지 '내 체형관리'),
+                // 없으면(처음 가입한 사람·비로그인) 바로 새 분석 화면
+                if (hasSavedBody(activity)) {
+                    target = com.example.capstone.mypage.MyBodyActivity.class;
+                } else {
+                    if (activity.getClass() == FittingActivity.class) {
+                        return;
+                    }
+                    Intent first = new Intent(activity, FittingActivity.class)
+                            .putExtra(FittingActivity.EXTRA_AS_TAB, true)
+                            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    activity.startActivity(first);
+                    if (!(activity instanceof MainActivity)) {
+                        activity.finish();
+                    }
+                    return;
+                }
                 break;
 
             case TAB_CART:
@@ -153,6 +175,9 @@ public final class BottomMenu {
         }
 
         if (activity.getClass() == target) {
+            if (activity instanceof MainActivity) {
+                ((MainActivity) activity).showHomeTab();
+            }
             return;
         }
 

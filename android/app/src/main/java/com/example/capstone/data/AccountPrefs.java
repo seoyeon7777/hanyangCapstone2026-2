@@ -16,13 +16,14 @@ public final class AccountPrefs {
     public static final String RECOMMEND_PREF = "recommend";
     public static final String RECOMMEND_USER_ID = "user_id";
     public static final String RECOMMEND_LIKED = "liked_products";
+    public static final String RECOMMEND_LIKED_LOCAL = "liked_local_products";
 
     private static final String[] SURVEY_KEYS = {
             SURVEY_ANSWERS, SURVEY_TYPE, SURVEY_HEIGHT, SURVEY_AT
     };
 
     private static final String[] RECOMMEND_KEYS = {
-            RECOMMEND_USER_ID, RECOMMEND_LIKED
+            RECOMMEND_USER_ID, RECOMMEND_LIKED, RECOMMEND_LIKED_LOCAL
     };
 
     private static final String GUEST = "guest";
@@ -41,6 +42,13 @@ public final class AccountPrefs {
     public static String key(Context context, String base) {
         return base + suffix(BodyProfileStore.accountKey(context));
     }
+
+    /**
+     * 비로그인 설문을 로그인한 계정으로 가져오는 기간. 이보다 오래된 비로그인 설문은 이 사람 것이라고 보기 어렵다
+     * (예: 같은 기기에서 예전에 다른 사람이 해 본 설문) → 가져오지 않고 비로그인 기록으로 둔다.
+     * 전에는 기간 제한이 없어서 방금 가입한 계정에 '내 체형'이 이미 있는 것처럼 보였다.
+     */
+    public static final long GUEST_SURVEY_ADOPT_MS = 24L * 60 * 60 * 1000;
 
     /** 예전 버전이 기기에 남긴 비회원 설문 기록을 지운다 (이제 비회원 설문은 메모리에만 둔다) */
     public static void clearGuestSurvey(Context context) {
@@ -66,8 +74,17 @@ public final class AccountPrefs {
         if (GUEST.equals(account)) {
             return;
         }
-        adopt(survey(context), SURVEY_KEYS, suffix(GUEST), suffix(account));
+        SharedPreferences survey = survey(context);
+        long guestSurveyAt = survey.getLong(SURVEY_AT + suffix(GUEST), 0L);
+        if (isRecentGuestSurvey(guestSurveyAt, System.currentTimeMillis())) {
+            adopt(survey, SURVEY_KEYS, suffix(GUEST), suffix(account));
+        }
         adopt(recommend(context), RECOMMEND_KEYS, suffix(GUEST), suffix(account));
+    }
+
+    /** 저장 시각이 있고 GUEST_SURVEY_ADOPT_MS 안이면 true (시각이 미래인 이상한 값은 false) */
+    static boolean isRecentGuestSurvey(long surveyAt, long now) {
+        return surveyAt > 0L && surveyAt <= now && now - surveyAt <= GUEST_SURVEY_ADOPT_MS;
     }
 
     /** to 계정에 기록이 없을 때만 from의 설문·추천 기록을 옮긴다. */

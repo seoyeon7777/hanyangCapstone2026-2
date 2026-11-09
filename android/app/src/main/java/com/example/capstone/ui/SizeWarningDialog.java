@@ -12,6 +12,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.example.capstone.R;
 import com.example.capstone.data.BodyProfileStore;
+import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.FitResult;
 
 import java.util.ArrayList;
@@ -260,7 +261,7 @@ public class SizeWarningDialog {
             textDetail.setVisibility(View.VISIBLE);
 
             textDetail.setText(
-                    buildDetail(results)
+                    buildDetail(results, RecommendApi.hasDiagnosis(context))
             );
 
 
@@ -268,7 +269,8 @@ public class SizeWarningDialog {
                     findRecommendedSize(results);
 
             if (recommendedSize != null
-                    && results.size() == 1) {
+                    && results.size() == 1
+                    && RecommendApi.hasDiagnosis(context)) {
 
                 textRecommend.setVisibility(View.VISIBLE);
 
@@ -477,7 +479,8 @@ public class SizeWarningDialog {
     // =========================
 
     private static String buildDetail(
-            List<FitResult> results
+            List<FitResult> results,
+            boolean showRecommended
     ) {
 
         StringBuilder builder =
@@ -534,6 +537,7 @@ public class SizeWarningDialog {
 
             // 여러 상품일 때는 상품별 추천 사이즈도 표시
             if (multiple
+                    && showRecommended
                     && result.getRecommendedSize() != null) {
 
                 builder.append("\n· 추천 사이즈: ")

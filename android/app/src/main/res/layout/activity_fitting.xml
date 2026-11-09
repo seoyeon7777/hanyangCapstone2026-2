@@ -7,7 +7,15 @@
     android:orientation="vertical"
     android:background="#FFFFFF">
 
+    <!-- 비로그인이면 이 안내만 보이고 아래 내용은 숨김 (LoginRequiredView, 찜 화면과 같음) -->
+    <include
+        layout="@layout/view_login_required"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
     <ScrollView
+        android:id="@+id/scrollFitting"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -22,14 +30,33 @@
             android:paddingEnd="24dp"
             android:paddingBottom="32dp">
 
-            <TextView
+            <!-- 체형분석 탭(내 체형관리)의 "새 체형 추가하기"로 들어오는 화면 -->
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="체형 분석"
-                android:textColor="#111111"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/btnFittingBack"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="start|center_vertical"
+                    android:layout_marginStart="-8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="뒤로가기"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_back"
+                    android:tint="#000000" />
+
+                <TextView
+                    android:id="@+id/tvFittingTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="새 체형 추가"
+                    android:textColor="#111111"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
 
             <TextView
                 android:layout_width="match_parent"
@@ -123,41 +150,6 @@
                 android:text="체형 분석 시작하기"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <!-- 지난번 답이 선택된 채로 설문을 다시 연다 -->
-            <Button
-                android:id="@+id/btnLoadSurvey"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="10dp"
-                android:backgroundTint="#EEEEEE"
-                android:text="이전 설문 불러오기"
-                android:textAllCaps="false"
-                android:textColor="#111111"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvLastSurvey"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center"
-                android:text="아직 저장된 설문이 없어요."
-                android:textColor="#888888"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/btnShowFeedback"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="10dp"
-                android:backgroundTint="#EEEEEE"
-                android:text="내 체형 피드백 보기"
-                android:textAllCaps="false"
-                android:textColor="#111111"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 

@@ -413,15 +413,7 @@ public class BodyTypeActivity extends AppCompatActivity {
 
                         saveLastSurvey(resultType);
 
-                        // 설문 결과를 내 체형으로 저장한다. 대표 체형이 있으면 그 카드의 설문 답·골격만 새 값으로
-                        // 바꾸고(홈은 대표 카드의 설문 답으로 추천하므로, 안 바꾸면 결과 화면과 홈 체형이 달라진다),
-                        // 없으면 새 체형을 만든다 (로그인한 경우). 치수는 사진 측정을 저장할 때 채워진다
-                        BodyProfileStore.saveFromSurvey(
-                                BodyTypeActivity.this,
-                                userHeightCm,
-                                skeletonLabel(resultType),
-                                selectedAnswers
-                        );
+                        // 체형 카드 저장은 결과 화면에서 고른다 (정밀 분석 / 이대로 저장 / 나가기)
 
                         Intent intent =
                                 new Intent(
@@ -473,7 +465,26 @@ public class BodyTypeActivity extends AppCompatActivity {
         );
     }
 
-    /** 서버 체형 코드 S / W / N → TYPE_ 값 */
+    /**
+     * 최근 설문(서버 진단까지 끝난 것)을 '내 체형 관리' 카드로 저장한다. 결과 화면의 "이대로 저장하기"가 부른다.
+     * 로그인했을 때만 (체형 카드는 계정에 저장). 저장했으면 그 카드, 아니면 null
+     */
+    public static BodyProfileStore.Profile saveSurveyProfile(Context context) {
+
+        if (!LoginSession.isLoggedIn(context)) {
+            return null;
+        }
+
+        int[] answers = lastSurveyAnswers(context);
+        int type = lastSurveyType(context);
+
+        if (answers == null || type < 0) {
+            return null;     // 답이 없거나 아직 진단 전
+        }
+
+        return BodyProfileStore.saveSurvey(context, answers, skeletonLabel(type), lastSurveyHeight(context));
+    }
+
     /** 대표 체형 카드에 저장하는 골격 이름 (MeasurementResultActivity와 같은 글자) */
     static String skeletonLabel(int type) {
 
@@ -488,6 +499,7 @@ public class BodyTypeActivity extends AppCompatActivity {
         }
     }
 
+    /** 서버 체형 코드 S / W / N → TYPE_ 값 */
     private static int typeOf(String primary) {
 
         switch (primary) {
@@ -613,6 +625,16 @@ public class BodyTypeActivity extends AppCompatActivity {
         }
 
         return answers;
+    }
+
+    /**
+     * 대표 체형이 없을 때 홈 추천에 쓸 설문 답 (RecommendApi.bodyInput).
+     * 로그인한 사람은 '내 체형'에 저장한 체형만 쓰므로 null (설문 후 "저장하지 않고 나가기"를 고르면 홈에도 안 씀).
+     * 비로그인은 체형을 저장할 수 없으니 최근 설문 답
+     */
+    public static int[] homeSurveyAnswers(Context context) {
+
+        return LoginSession.isLoggedIn(context) ? null : lastSurveyAnswers(context);
     }
 
     public static int lastSurveyType(Context context) {

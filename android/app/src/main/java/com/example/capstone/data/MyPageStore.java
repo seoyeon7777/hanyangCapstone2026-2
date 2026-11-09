@@ -283,7 +283,6 @@ public class MyPageStore {
         public final String type;
         public final String title;
         public final String content;
-        public final String email;
         public String status;
         public final String date;
 
@@ -291,14 +290,12 @@ public class MyPageStore {
                 String type,
                 String title,
                 String content,
-                String email,
                 String status,
                 String date
         ) {
             this.type = type;
             this.title = title;
             this.content = content;
-            this.email = email;
             this.status = status;
             this.date = date;
         }
@@ -349,17 +346,17 @@ public class MyPageStore {
                     faq(
                             "가상피팅",
                             "가상피팅은 어떻게 이용하나요?",
-                            "하단 「피팅」 메뉴에서 키와 전신 사진을 입력하면 내 체형에 맞는 3D 아바타가 만들어집니다. 아바타가 만들어지면 원하는 옷을 입혀 핏을 확인할 수 있습니다."
+                            "하단 「피팅」 메뉴에서 키를 입력하고 정면·측면 전신 사진을 촬영하거나 갤러리에서 선택하면 체형 분석을 진행할 수 있습니다. 분석 결과와 추천 사이즈를 참고해주세요."
                     ),
                     faq(
                             "가상피팅",
-                            "내 아바타 치수가 실제와 달라요.",
-                            "아바타에서 고치고 싶은 부위를 터치하면 확대되고, 슬라이더나 직접 입력으로 cm 단위까지 조정할 수 있습니다."
+                            "체형 분석 결과가 실제 치수와 달라요.",
+                            "사진 촬영 각도, 자세, 옷의 두께와 배경에 따라 추정 치수에 오차가 발생할 수 있습니다. 몸에 붙는 옷을 입고 정면·측면을 다시 촬영해 주세요. 결과는 참고용이며 실제 치수와 비교해 주세요."
                     ),
                     faq(
                             "가상피팅",
                             "전신 사진은 어떻게 찍어야 정확한가요?",
-                            "몸에 붙는 옷을 입고, 밝고 단순한 배경 앞에서 정면 전신이 모두 나오도록 찍어주세요. 카메라는 허리 높이에서 수평으로 들면 가장 정확합니다."
+                            "몸에 붙는 옷을 입고, 밝고 단순한 배경 앞에서 정면과 측면 전신이 모두 나오도록 찍어주세요. 카메라는 허리 높이에서 수평으로 들면 가장 정확합니다."
                     ),
                     faq(
                             "가상피팅",
@@ -368,7 +365,7 @@ public class MyPageStore {
                     ),
                     faq(
                             "가상피팅",
-                            "가상피팅 결과와 실제 착용감이 다를 수 있나요?",
+                            "체형 분석 결과와 실제 착용감이 다를 수 있나요?",
                             "옷의 소재, 신축성, 개인 체형 차이에 따라 실제 착용감과 차이가 있을 수 있습니다. 상품 상세의 실측 사이즈도 함께 확인해주세요."
                     ),
                     faq(
@@ -632,7 +629,6 @@ public class MyPageStore {
                             j.optString("type"),
                             j.optString("title"),
                             j.optString("content"),
-                            j.optString("email"),
                             j.optString("status"),
                             j.optString("date")
                     )
@@ -763,7 +759,6 @@ public class MyPageStore {
                 j.put("type", inquiry.type);
                 j.put("title", inquiry.title);
                 j.put("content", inquiry.content);
-                j.put("email", inquiry.email);
                 j.put("status", inquiry.status);
                 j.put("date", inquiry.date);
 
@@ -942,8 +937,7 @@ public class MyPageStore {
     public static void addInquiry(
             String type,
             String title,
-            String content,
-            String email
+            String content
     ) {
         inquiries.add(
                 0,
@@ -951,7 +945,6 @@ public class MyPageStore {
                         type,
                         title,
                         content,
-                        email,
                         INQUIRY_WAITING,
                         today()
                 )

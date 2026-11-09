@@ -71,10 +71,70 @@ public final class LocalAccounts {
         return digits.substring(0, 3) + "-" + digits.substring(3, midEnd) + "-" + digits.substring(midEnd);
     }
 
-    /** 가입할 때 쓴다. 아이디나 휴대폰 번호가 이미 있으면 저장하지 않고 false */
+    /** 아이디 규칙: 영문 소문자와 숫자를 모두 포함해 4~16자 (다른 글자는 쓸 수 없다) */
+    public static boolean isValidId(String id) {
+        return id != null && id.matches("(?=.*[a-z])(?=.*[0-9])[a-z0-9]{4,16}");
+    }
+
+    /** 비밀번호에 쓸 수 있는 특수문자 (회원가입 화면 안내 문구와 같게 유지) */
+    public static final String PASSWORD_SPECIALS = "~`!@#$%^()*_-={}[]|;:<>,.?/";
+
+    /** 비밀번호에 영문·숫자·PASSWORD_SPECIALS 말고 다른 글자(공백·한글·&·+ 등)가 있으면 true */
+    public static boolean hasInvalidPasswordChar(String password) {
+        for (char c : password.toCharArray()) {
+            boolean ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+                    || PASSWORD_SPECIALS.indexOf(c) >= 0;
+            if (!ok) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** 비밀번호 규칙: 영문 대소문자·숫자·특수문자 중 2가지 이상 조합해 8~16자 (특수문자는 PASSWORD_SPECIALS만) */
+    public static boolean isValidPassword(String password) {
+        if (password == null || password.length() < 8 || password.length() > 16
+                || hasInvalidPasswordChar(password)) {
+            return false;
+        }
+        int kinds = 0;
+        if (password.matches(".*[A-Za-z].*")) {
+            kinds++;
+        }
+        if (password.matches(".*[0-9].*")) {
+            kinds++;
+        }
+        if (password.matches(".*[^A-Za-z0-9].*")) {
+            kinds++;
+        }
+        return kinds >= 2;
+    }
+
+    /** 앞뒤 공백을 지우고 소문자로 바꾼 이메일 주소. 이메일 형식이 아니면 null */
+    public static String normalizeEmail(String input) {
+        if (input == null) {
+            return null;
+        }
+        String email = input.trim().toLowerCase(java.util.Locale.ROOT);
+        return email.matches("[a-z0-9._%+-]+@[a-z0-9-]+(\\.[a-z0-9-]+)*\\.[a-z]{2,}") ? email : null;
+    }
+
     public static boolean register(Context context, String id, String password, String name, String phone) {
+        return register(context, id, password, name, phone, "");
+    }
+
+    /**
+     * 가입할 때 쓴다. 이메일은 선택이라 빈 값이면 저장하지 않는다.
+     * 규칙에 맞지 않거나 아이디·휴대폰 번호·이메일이 이미 있으면 저장하지 않고 false
+     */
+    public static boolean register(Context context, String id, String password, String name, String phone,
+                                   String email) {
         String saved = normalizePhone(phone);
-        if (saved == null || idExists(context, id) || isTaken(context, "", saved)) {
+        String savedEmail = email == null || email.trim().isEmpty() ? "" : normalizeEmail(email);
+        if (saved == null || savedEmail == null || !isValidId(id) || password == null
+                || !isValidPassword(password.trim())
+                || idExists(context, id) || isTaken(context, "", saved)
+                || (!savedEmail.isEmpty() && isTaken(context, "", savedEmail))) {
             return false;
         }
         JSONArray accounts = load(context);
@@ -82,7 +142,7 @@ public final class LocalAccounts {
             JSONObject j = new JSONObject();
             j.put("id", id);
             j.put("name", name);
-            j.put("email", "");
+            j.put("email", savedEmail);
             j.put("phone", saved);
             putPassword(j, password);
             accounts.put(j);

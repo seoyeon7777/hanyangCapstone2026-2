@@ -83,6 +83,12 @@ public final class MeasurementSession {
         ratios[HIP] = DEFAULT_HIP;
     }
 
+    /**
+     * 설문만 한 체형 카드에서 "사진 분석 이어서 하기"로 들어왔을 때 그 카드 id. 측정 결과를 새 카드 대신 이 카드에 채운다.
+     * clear()로 지우지 않는다 (사진 분석을 시작할 때마다 clear()가 불리기 때문). PhotoMeasurementActivity가 시작할 때 정한다
+     */
+    public static String continueProfileId;
+
     public static void clear() {
         modelCirc = null;
         front = null;

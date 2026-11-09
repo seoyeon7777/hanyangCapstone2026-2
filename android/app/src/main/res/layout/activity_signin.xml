@@ -56,7 +56,16 @@
                 android:textStyle="bold"
                 android:textColor="@color/black"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="32dp" />
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="기본정보"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:layout_marginBottom="14dp" />
 
             <!-- 아이디 -->
             <TextView
@@ -75,10 +84,11 @@
 
                 <EditText
                     android:id="@+id/etId"
+                    android:maxLength="16"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:hint="영문, 숫자 포함 8자 이상"
+                    android:hint="영문소문자, 숫자 포함 4~16자"
                     android:background="@drawable/bg_edit"
                     android:paddingHorizontal="16dp"
                     android:textSize="14sp"
@@ -110,18 +120,29 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="6dp">
 
                 <EditText
                     android:id="@+id/etPw"
+                    android:maxLength="16"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:hint="영문, 숫자, 특수문자포함 8자 이상"
+                    android:hint="영문대소문자, 숫자, 특수문자 중 2가지 이상 조합 8~16자"
                     android:background="@drawable/bg_edit"
                     android:paddingStart="16dp"
                     android:paddingEnd="48dp"
                     android:textSize="14sp"
                     android:inputType="textPassword" />
+
+                <!-- 입력을 시작하면 보임: 조건에 맞으면 초록, 아니면 빨강 -->
+                <ImageView
+                    android:id="@+id/ivPwCheck"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="end|center_vertical"
+                    android:layout_marginEnd="42dp"
+                    android:src="@drawable/ic_pw_bad"
+                    android:visibility="gone" />
 
                 <ImageButton
                     android:id="@+id/btnTogglePw1"
@@ -134,6 +155,17 @@
                     android:scaleType="fitCenter" />
 
             </FrameLayout>
+
+            <!-- 비밀번호 규칙 (특수문자 목록은 LocalAccounts.PASSWORD_SPECIALS와 같게) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="16dp"
+                android:lineSpacingExtra="2dp"
+                android:text="• 영문대소문자, 숫자, 특수문자 중 2가지 이상 조합 8~16자\n• 입력가능 특수문자 ~ ` ! @ # $ % ^ ( ) * _ - = { } [ ] | ; : &lt; &gt; , . ? /"
+                android:textColor="#888888"
+                android:textSize="11sp" />
 
             <!-- 비밀번호 재확인 -->
             <TextView
@@ -151,14 +183,25 @@
 
                 <EditText
                     android:id="@+id/etPw2"
+                    android:maxLength="16"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:hint="영문, 숫자, 특수문자포함 8자 이상"
+                    android:hint="영문대소문자, 숫자, 특수문자 중 2가지 이상 조합 8~16자"
                     android:background="@drawable/bg_edit"
                     android:paddingStart="16dp"
                     android:paddingEnd="48dp"
                     android:textSize="14sp"
                     android:inputType="textPassword" />
+
+                <!-- 입력을 시작하면 보임: 조건에 맞으면 초록, 아니면 빨강 -->
+                <ImageView
+                    android:id="@+id/ivPw2Check"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="end|center_vertical"
+                    android:layout_marginEnd="42dp"
+                    android:src="@drawable/ic_pw_bad"
+                    android:visibility="gone" />
 
                 <ImageButton
                     android:id="@+id/btnTogglePw"
@@ -191,11 +234,119 @@
                 android:inputType="textPersonName"
                 android:layout_marginBottom="20dp" />
 
+            <!-- 전화번호: 본인확인한 번호를 그대로 보여 주고 고칠 수 없다 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="전화번호"
+                android:textSize="12sp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="6dp" />
+
+            <EditText
+                android:id="@+id/etPhone"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_edit"
+                android:paddingHorizontal="16dp"
+                android:textSize="14sp"
+                android:textColor="#888888"
+                android:enabled="false"
+                android:focusable="false"
+                android:inputType="none"
+                android:layout_marginBottom="20dp" />
+
+            <!-- 이메일 (선택): 앞부분 직접 입력 @ 도메인 선택, "직접 입력"이면 도메인 칸이 나온다 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="이메일 (선택)"
+                android:textSize="12sp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="6dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etEmailId"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_edit"
+                    android:hint="이메일"
+                    android:inputType="textEmailAddress"
+                    android:paddingHorizontal="16dp"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="6dp"
+                    android:text="\@"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
+
+                <!-- 도메인: 목록에서 고르고, "직접 입력"이면 같은 자리가 입력칸으로 바뀐다 (▾로 목록 다시 열기) -->
+                <FrameLayout
+                    android:layout_width="140dp"
+                    android:layout_height="48dp">
+
+                    <Spinner
+                        android:id="@+id/spEmailDomain"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_edit"
+                        android:paddingHorizontal="12dp" />
+
+                    <EditText
+                        android:id="@+id/etEmailDomain"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_edit"
+                        android:hint="직접 입력"
+                        android:inputType="textEmailAddress"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="34dp"
+                        android:textSize="14sp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/btnDomainList"
+                        android:layout_width="34dp"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="end"
+                        android:gravity="center"
+                        android:text="▾"
+                        android:textColor="#777777"
+                        android:textSize="16sp"
+                        android:visibility="gone" />
+                </FrameLayout>
+            </LinearLayout>
+
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="20dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="추가정보"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="14dp" />
+
             <!-- 생년월일 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="생년월일"
+                android:text="생년월일 (선택)"
                 android:textSize="12sp"
                 android:textColor="@color/black"
                 android:layout_marginBottom="6dp" />
@@ -206,17 +357,13 @@
                 android:orientation="horizontal"
                 android:layout_marginBottom="20dp">
 
-                <EditText
-                    android:id="@+id/etYear"
+                <Spinner
+                    android:id="@+id/spYear"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:hint="년(4자)"
+                    android:layout_weight="1.2"
                     android:background="@drawable/bg_edit"
-                    android:paddingHorizontal="16dp"
-                    android:textSize="13sp"
-                    android:inputType="number"
-                    android:maxLength="4"
+                    android:paddingHorizontal="12dp"
                     android:layout_marginEnd="8dp" />
 
                 <Spinner
@@ -273,35 +420,125 @@
                 android:textStyle="bold"
                 android:paddingBottom="10dp" />
 
-            <CheckBox
-                android:id="@+id/cb1"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="(필수) 서비스 이용약관 동의" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <CheckBox
-                android:id="@+id/cb2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="(필수) 개인정보 수집 및 이용 동의" />
+                <CheckBox
+                    android:id="@+id/cb1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="(필수) 서비스 이용약관 동의" />
 
-            <CheckBox
-                android:id="@+id/cb3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="(필수) 만 14세 이상입니다" />
+                <TextView
+                    android:id="@+id/tvTerms1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="8dp"
+                    android:paddingStart="12dp"
+                    android:text="내용보기"
+                    android:textColor="#999999"
+                    android:textSize="13sp" />
+            </LinearLayout>
 
-            <CheckBox
-                android:id="@+id/cb4"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="(선택) 마케팅 정보 수신 동의" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <CheckBox
-                android:id="@+id/cb5"
-                android:layout_width="wrap_content"
+                <CheckBox
+                    android:id="@+id/cb2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="(필수) 개인정보 수집 및 이용 동의" />
+
+                <TextView
+                    android:id="@+id/tvTerms2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="8dp"
+                    android:paddingStart="12dp"
+                    android:text="내용보기"
+                    android:textColor="#999999"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="(선택) 이벤트 및 프로모션 알림" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/cb3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="(필수) 만 14세 이상입니다" />
+
+                <TextView
+                    android:id="@+id/tvTerms3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="8dp"
+                    android:paddingStart="12dp"
+                    android:text="내용보기"
+                    android:textColor="#999999"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/cb4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="(선택) 마케팅 정보 수신 동의" />
+
+                <TextView
+                    android:id="@+id/tvTerms4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="8dp"
+                    android:paddingStart="12dp"
+                    android:text="내용보기"
+                    android:textColor="#999999"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/cb5"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="(선택) 이벤트 및 프로모션 알림" />
+
+                <TextView
+                    android:id="@+id/tvTerms5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="8dp"
+                    android:paddingStart="12dp"
+                    android:text="내용보기"
+                    android:textColor="#999999"
+                    android:textSize="13sp" />
+            </LinearLayout>
 
         </LinearLayout>
 

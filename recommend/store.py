@@ -23,7 +23,6 @@ import time
 
 from rec_config import (
     OUTFIT_GROUP, DATABASE_URL_FILE, DB_ITEMS_CACHE_SECONDS, DB_DEMO_USER_NAME, DB_POOL_SIZE,
-    SELLER_MEASUREMENTS, REGISTERED_ITEMS_FILE,
 )
 from feed import load_items, update_pref, pref_from_history
 
@@ -49,32 +48,9 @@ def database_url():
     return url or None
 
 
-REGISTERED_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", REGISTERED_ITEMS_FILE)
-
-# clothing_type -> categories.category_name (seed_db.py와 같다. categories는 이름이 겹치면 안 된다)
-CATEGORY_NAMES = {"top": "상의", "outer": "아우터", "pants": "바지", "skirt": "치마", "dress": "원피스"}
-
-
 def make_store():
     url = database_url()
-    if url:
-        return PgStore(url)
-    return MemoryStore(load_items() + _load_registered(REGISTERED_PATH), registered_path=REGISTERED_PATH)
-
-
-def _load_registered(path):
-    """판매자가 등록해 파일에 보관해 둔 상품들 (없거나 깨졌으면 빈 목록)."""
-    try:
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        return [i for i in data if isinstance(i, dict) and "product_id" in i]
-    except (OSError, ValueError):
-        return []
-
-
-def reference_size(sizes):
-    """DB의 치수 표는 상품당 한 줄이라, 사이즈별 치수 중 하나를 대표로 고른다: 가운데 사이즈."""
-    return sizes[(len(sizes) - 1) // 2] if sizes else None
+    return PgStore(url) if url else MemoryStore(load_items())
 
 
 def _new_user():
@@ -90,42 +66,17 @@ class MemoryStore:
 
     kind = "memory"
 
-    def __init__(self, items, registered_path=None):
+    def __init__(self, items):
         self._items = list(items)
         self._by_id = {i["product_id"]: i for i in self._items}
         self._users = {}
         self._seq = 0   # 반응 순서 번호 (체형이 바뀐 뒤의 반응을 가려낼 때 쓴다)
-        self._registered_path = registered_path   # 있으면 판매자가 등록한 상품을 이 파일에 보관한다
-        self._lock = threading.Lock()
 
     def items(self):
         return self._items
 
     def item(self, product_id):
         return self._by_id.get(product_id)
-
-    def add_product(self, product):
-        """판매자가 등록한 상품을 추가한다. product_id는 여기서 정한다. 저장한 상품을 돌려준다."""
-        with self._lock:
-            n = len(self._items) + 1
-            while f"r{n}" in self._by_id:
-                n += 1
-            stored = {**product, "product_id": f"r{n}"}
-            self._items.append(stored)
-            self._by_id[stored["product_id"]] = stored
-            self._save_registered()
-            return stored
-
-    def products_by_brand(self, brand):
-        return [i for i in self._items if i.get("brand") == brand and i.get("registered")]
-
-    def _save_registered(self):
-        if not self._registered_path:
-            return
-        mine = [i for i in self._items if i.get("registered")]
-        os.makedirs(os.path.dirname(self._registered_path), exist_ok=True)
-        with open(self._registered_path, "w", encoding="utf-8") as f:
-            json.dump(mine, f, ensure_ascii=False, indent=1)
 
     def user(self, user_id):
         return self._users.get(user_id)
@@ -295,94 +246,9 @@ class PgStore:
             "tags": list(tags), "seasons": list(seasons), "popularity": float(popularity),
             "price": price, "brand": brand or "", "image_url": image or "",
         } for pid, name, ctype, tags, seasons, popularity, price, brand, image in self._run(work)]
-        self._attach_seller_details(items)
         self._by_id = {i["product_id"]: i for i in items}
         self._items = items
         self._loaded_at = time.monotonic()
-
-    def _attach_seller_details(self, items):
-        """판매자가 등록한 상품(source=direct)에 사이즈·색상·사이즈별 치수를 붙인다. 시연용 상품은 그대로 둔다."""
-        if not items:
-            return
-
-        def work(cur):
-            cur.execute("SELECT product_id, attrs, source FROM product_tags WHERE product_id = ANY(%s)",
-                        ([i["product_id"] for i in items],))
-            return cur.fetchall()
-
-        by_id = {i["product_id"]: i for i in items}
-        for pid, attrs, source in self._run(work):
-            extra = attrs.get("seller_extra") if isinstance(attrs, dict) else None
-            item = by_id.get(pid)
-            if source != "direct" or not extra or item is None:
-                continue
-            item.update(registered=True, sizes=extra.get("sizes", []), colors=extra.get("colors", []),
-                        measurements=extra.get("measurements", {}), seller=extra.get("seller", ""))
-
-    def add_product(self, product):
-        """판매자가 등록한 상품을 DB에 넣는다 (brands·fabrics·categories는 없으면 만든다). 저장한 상품을 돌려준다."""
-        sizes, colors = product.get("sizes") or [], product.get("colors") or []
-        by_size = product.get("measurements") or {}
-        extra = {"sizes": sizes, "colors": colors, "measurements": by_size, "seller": product.get("seller", "")}
-        attrs = {**(product.get("attrs") or {}), "seller_extra": extra}
-
-        def one_id(cur, select_sql, insert_sql, args):
-            cur.execute(select_sql, args[:1])
-            row = cur.fetchone()
-            if row:
-                return row[0]
-            cur.execute(insert_sql, args)
-            return cur.fetchone()[0]
-
-        def work(cur):
-            brand_id = one_id(cur, "SELECT brand_id FROM brands WHERE brand_name = %s",
-                              "INSERT INTO brands (brand_name, created_at, updated_at) VALUES (%s, now(), now()) "
-                              "RETURNING brand_id", (product["brand"],))
-            fabric_id = one_id(cur, "SELECT fabric_id FROM fabrics WHERE fabric_name = %s",
-                               "INSERT INTO fabrics (fabric_name) VALUES (%s) RETURNING fabric_id",
-                               (product.get("fabric") or "기타",))
-            ctype = product["clothing_type"]
-            category_id = one_id(cur, "SELECT category_id FROM categories WHERE clothing_type = %s "
-                                      "ORDER BY category_id LIMIT 1",
-                                 "INSERT INTO categories (clothing_type, category_name) VALUES (%s, %s) "
-                                 "RETURNING category_id", (ctype, CATEGORY_NAMES[ctype]))
-            cur.execute(
-                """INSERT INTO products (brand_id, fabric_id, category_id, product_name, price, description,
-                                         main_image_url, seasons, popularity)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING product_id""",
-                (brand_id, fabric_id, category_id, product["product_name"], product["price"],
-                 product.get("description") or None, product.get("image_url") or None,
-                 list(product.get("seasons") or []), product["popularity"]),
-            )
-            product_id = cur.fetchone()[0]
-            for size in sizes:
-                for color in colors:
-                    cur.execute("INSERT INTO product_options (product_id, size, color) VALUES (%s, %s, %s)",
-                                (product_id, size, color))
-            table, fields = SELLER_MEASUREMENTS[ctype]
-            ref = by_size.get(reference_size(sizes) or "") or {}
-            values = [ref.get(key) for key, _ in fields]
-            if any(v is not None for v in values):
-                cols = ", ".join(key for key, _ in fields)
-                marks = ", ".join(["%s"] * len(fields))
-                cur.execute(f"INSERT INTO {table} (product_id, {cols}) VALUES (%s, {marks})", (product_id, *values))
-            cur.execute(
-                """INSERT INTO product_tags (product_id, tags, text_added, fit_stated, material_basis, attrs, source,
-                                              rules_version)
-                   VALUES (%s, %s::jsonb, %s::jsonb, %s, %s, %s::jsonb, %s, %s)""",
-                (product_id, json.dumps(product["tags"]), json.dumps(product.get("text_added") or []),
-                 product.get("fit_stated") or "unknown", product.get("material_basis"),
-                 json.dumps(attrs, ensure_ascii=False), product.get("source") or "direct",
-                 product.get("rules_version")),
-            )
-            return product_id
-
-        product_id = self._run(work, write=True)
-        self._loaded_at = 0.0      # 다음 요청 때 목록을 다시 불러온다 (캐시 무효화)
-        return {**product, "product_id": product_id}
-
-    def products_by_brand(self, brand):
-        return [i for i in self.items() if i.get("brand") == brand and i.get("registered")]
 
     # ── 사용자 ──
     def user(self, user_id):

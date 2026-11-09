@@ -12,7 +12,10 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.R;
+import com.example.capstone.login.LoginMainActivity;
+import com.example.capstone.login.LoginSession;
 import com.example.capstone.data.DummyData;
+import com.example.capstone.data.LocalLikes;
 import com.example.capstone.data.Product;
 import com.example.capstone.data.ProductImages;
 import com.example.capstone.data.RecommendApi;
@@ -28,6 +31,7 @@ public class ProductAdapter
 
     private final List<Product> productList;
     private final boolean isWishMode;
+    private Runnable onWishRemovedListener;
 
     public ProductAdapter(List<Product> productList) {
         this(productList, false);
@@ -39,6 +43,10 @@ public class ProductAdapter
     ) {
         this.productList = productList;
         this.isWishMode = isWishMode;
+    }
+
+    public void setOnWishRemovedListener(Runnable listener) {
+        onWishRemovedListener = listener;
     }
 
     @NonNull
@@ -116,6 +124,13 @@ public class ProductAdapter
 
         // 찜 버튼 클릭
         holder.textHeart.setOnClickListener(v -> {
+
+            if (!LoginSession.isLoggedIn(v.getContext())) {
+                v.getContext().startActivity(
+                        new Intent(v.getContext(), LoginMainActivity.class)
+                );
+                return;
+            }
 
             int currentPosition =
                     holder.getBindingAdapterPosition();
@@ -209,6 +224,12 @@ public class ProductAdapter
                 !product.isLiked()
         );
 
+        // 내장 상품 찜은 계정별로 저장 (혜림, LocalLikes)
+        LocalLikes.save(
+                context,
+                product
+        );
+
         // 서버 상품이면 찜 상태를 저장하고, 찜할 때 추천 서버가 취향을 배운다
         RecommendApi.saveLike(
                 context,
@@ -230,6 +251,10 @@ public class ProductAdapter
                     position,
                     productList.size() - position
             );
+
+            if (onWishRemovedListener != null) {
+                onWishRemovedListener.run();
+            }
 
         } else {
 

@@ -148,7 +148,7 @@ public class CartStoreTest {
 
     // ── 기기 저장소(SharedPreferences)를 메모리로 흉내 낸다 ──
 
-    private static final class FakeContext extends ContextWrapper {
+    static final class FakeContext extends ContextWrapper {
         private final Map<String, FakePrefs> prefs = new HashMap<>();
 
         FakeContext() {

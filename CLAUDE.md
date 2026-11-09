@@ -28,7 +28,6 @@ android/                안드로이드 앱 (Android Studio로 이 폴더를 연
 requirements.txt        flask (API·서버용), psycopg (DB용. 알고리즘과 테스트 대부분은 표준 라이브러리만)
 db/                     DB 담당: db.sql (PostgreSQL 표 32개, Supabase에 그대로 실행), README.md (표 설명)
 database_url.txt        (깃에 없음) DB 접속 주소 한 줄. 있으면 서버가 Supabase를 쓴다
-supabase.env            (깃에 없음) 사진을 Supabase Storage에 올릴 때만: SUPABASE_URL·SUPABASE_SERVICE_KEY·SUPABASE_BUCKET (KEY=값 한 줄씩). 없으면 사진은 이 PC 폴더에 저장
 app.py                  ★ 통합 서버 (B server.create_app + C feed_bp). python app.py → 0.0.0.0:5000 (에뮬레이터 10.0.2.2, 폰은 PC IP)
                         모든 오류를 JSON {"ok": false, "error"}로. HOST·PORT·FLASK_DEBUG 환경변수
 body_profile.py …       A 파트
@@ -40,8 +39,6 @@ recommend/              ★ C 파트 (추천 피드) — 이 폴더에서 작업
   feed.py               C 파트 본체 (final_score, score_all, rank, feed_order, home_feed, outfits, reason, update_pref, need_rediagnosis)
   feed_api.py           7·8단계 API (Flask Blueprint)
   store.py              11단계 저장소: DB 주소가 있으면 PgStore(PostgreSQL), 없으면 MemoryStore(items.json + 메모리)
-  seller_api.py         14단계 판매자 상품 등록 API (Flask Blueprint). 양식·검증·태그는 B(tagging.py), 저장은 store.py
-  image_storage.py      상품 사진 저장소: 이 PC의 recommend/uploads/ (기본) 또는 Supabase Storage (키가 있을 때)
   seed_db.py            시연 상품 30개를 DB에 넣는 스크립트 (여러 번 실행해도 됨)
   DB_연결가이드.md       Supabase 만들기 → 주소 넣기 → 확인 (팀원용)
   templates/feed_demo.html  8단계 연습용 무한 스크롤 화면 (/feed-demo). 팀 공용 templates/와 분리
@@ -51,7 +48,6 @@ recommend/              ★ C 파트 (추천 피드) — 이 폴더에서 작업
   test_integration.py   A+B+C 연결 테스트 (표준 라이브러리만)
   test_api.py           API 테스트 (Flask 필요, 맨 위 app.py를 불러옴. 항상 메모리 저장소)
   test_db.py            DB 저장소 테스트 (로컬 PostgreSQL에 임시 DB를 만들어 확인. TEST_DATABASE_URL 없으면 건너뜀)
-  test_seller.py        판매자 상품 등록 테스트 (Flask 필요. 항상 임시 폴더·메모리 저장소. DB·Supabase에 쓰지 않음)
   data/items.json       시연용 가짜 상품 30개 — B 태그 이름(fit:slim, sil:IH …)
   data/items_fake.json  같은 30개의 옛 태그 버전 — test_feed.py 전용
 ```
@@ -265,7 +261,48 @@ match_score(body, item) -> {
 - 배송비: 결제 화면에 "무료", 결제 금액 = 상품 금액 − 쿠폰 (배송비 계산 없음)
 - 단위 테스트 `CartStoreTest` 8개 (다시 켜도 남음·옵션별 줄·계정별·비로그인 합치기·옵션 변경 합치기·주문한 줄만 빼기·계정 이름 변경·수량 범위)
 
-### 4-16. 로그인·계정별 기록 (11/05, 로그인/계정 담당)
+### 4-16. 설문만 해도 체형 저장 (11/05)
+- 문제(테스트 보고): 설문만 하면 '내 체형 관리'는 "저장된 체형 0개"인데, 피드백 화면·홈 추천은 설문 체형으로 나왔다. 체형 카드는 사진 측정(`MeasurementResultActivity`)에서만 만들어졌기 때문
+- `BodyProfileStore.saveSurvey(context, answers, bodyType, heightCm)`: **설문만 한 카드**(parts 비어 있음, `Profile.isSurveyOnly()`)를 새로 만든다
+- (11/06 변경) **체형 여러 개 저장 + 현재 체형 선택** (배송지 관리처럼): 설문 저장·사진 측정 저장 모두 매번 새 카드(최대 `BodyProfileStore.MAX_PROFILES` 10개, 넘으면 안내). 예전 카드는 그대로. 새 카드는 설정 "새 체형을 현재 체형으로 자동 선택"(`SETTING_AUTO_ACTIVE`, 기본 켬)을 따른다. '내 체형 관리'에서 카드를 누르거나 "현재 체형으로 선택" → `setActive` → 홈 추천·사이즈 확인이 그 체형으로. 화면 문구 "대표" → "현재 체형". 기본 이름은 "내 체형 N" 중 안 쓴 번호
+- (11/06 변경) 설문 결과 화면(`BodyTypeResultActivity`)에서 고른다: **사진으로 정밀 분석하기**(`btnYes`) / **이대로 저장하기**(`btnSaveSurvey` → `BodyTypeActivity.saveSurveyProfile` → 저장 완료 화면) / **저장하지 않고 나가기**(`btnNo`, 뒤로가기도 같음, 확인 창). 진단만으로는 저장하지 않는다
+  - 저장은 로그인했을 때만. 비로그인이 "이대로 저장하기" → 로그인 안내 → `markSurveySavePending` → 로그인하면 `LoginSession.login`의 `adoptSurveyOnLogin`이 그 설문을 카드로 저장(24시간 안). "나가기"를 고른 설문은 로그인해도 카드로 안 만든다
+  - 홈 추천·피드백(`BodyTypeActivity.homeSurveyAnswers`, `FittingActivity.showFeedback`): 로그인했으면 저장한 대표 카드만 쓰고, 대표 카드가 없으면 골격 맞춤 없음. 비로그인은 최근 설문을 쓴다 → '내 체형 관리'와 홈·피드백 체형이 항상 같다
+- 내 체형 관리: 설문 카드는 "체형 ○○ (설문)", 치수 칸에 "사진 측정 전". 피팅 화면 "내 체형 피드백"은 대표 카드가 있으면 항상 그 카드로 연다
+- 비로그인 설문은 **24시간 안의 것만** 로그인 계정으로 옮긴다 (`AccountPrefs.GUEST_SURVEY_ADOPT_MS`). 전에는 같은 기기에서 예전에 해 본 비로그인 설문이 방금 가입한 계정으로 넘어와 "가입하자마자 내 체형이 있음"으로 보였다
+- 신체 정밀 측정(`PhotoMeasurementActivity`): 제목 옆 나가기 버튼(`btnPhotoBack`). "신체 분석 시작하기"는 사진 두 장 전에는 꺼져 있었지만 검은색이라 켜진 것처럼 보였다 → 꺼지면 회색(`color/analyze_button_tint`)
+- 단위 테스트 `BodyProfileSurveyTest` 12개
+- (11/06) 마이페이지의 "내 체형관리" 메뉴를 없애고 **하단 "체형분석" 탭 = 내 체형관리 화면(`MyBodyActivity`)** 으로 바꿨다 (`BottomMenu.TAB_FITTING`). 마이페이지에서 보던 것과 같은 목록·현재 체형 선택·이름 변경·삭제·설정에 하단 메뉴가 붙고 뒤로 버튼은 숨김. 맨 위 **"+ 새 체형 추가하기"** → `FittingActivity`(제목 "새 체형 추가", 뒤로 버튼): 키·몸무게·나이 → 설문 → 결과 화면에서 정밀 분석/이대로 저장/나가기. 비로그인은 목록 자리에 로그인 안내
+  - 저장한 체형이 없으면(처음 가입·비로그인) 체형분석 탭은 바로 분석 화면(`FittingActivity`, `EXTRA_AS_TAB`: 제목 "체형 분석", 뒤로 버튼 숨김). 판단은 `BottomMenu.hasSavedBody`
+  - 설문만 한 카드에는 "사진 분석 이어서 하기 ›" → `PhotoMeasurementActivity.continueIntent`(카드 id, 카드의 키) → `MeasurementSession.continueProfileId` → 측정 결과 저장 때 **그 카드에 치수를 채움**(이름·골격·설문 답은 카드 것, 새 카드 안 생김). 치수가 이미 있는 카드면 새 카드
+  - 새 체형 분석 화면(`FittingActivity`)에서 "이전 설문 불러오기"·"내 체형 피드백 보기" 버튼 삭제 (피드백은 체형 카드의 "피드백 보기")
+- (11/06) 카테고리 화면(`CategoryActivity`, 모든 카테고리·탭이 이 화면): 필터 줄에 "☰ 필터"만 남기고 색상·사이즈·가격·상세옵션 칩 삭제. 필터 창(`dialog_category_filter`)의 키/몸무게 입력은 숨김(id는 코드가 써서 뷰는 남김)
+- (11/06) ✕·뒤로 버튼이 한 번에 안 눌리던 문제: targetSdk 35 앱은 Android 15에서 화면이 상태바 밑까지 그려져(edge-to-edge 강제) 맨 위 제목 줄이 상태바와 겹쳤다. `values-v35/themes.xml`의 `windowOptOutEdgeToEdgeEnforcement`로 API 34 이하처럼 상태바 아래에서 시작. targetSdk를 36으로 올리면 이 옵션이 안 먹으니 그때는 화면마다 여백(insets)을 줘야 한다. ✕ 버튼들에 눌림 표시, 검색 지우기 ×는 30→40dp
+
+### 4-17. 홈·찜·상품 상세 정리 (11/06, 혜림)
+- 찜: 찜 탭이 전체 상품(서버 상품 포함)에 찜한 서버 상품을 또 붙여 서버 상품이 2개로 보이던 문제 수정. 편집 버튼 삭제, 찜 해제 즉시 개수·빈 화면 갱신, 찜 필터 "치마" → "스커트"(상품 분류 이름과 같게)
+- 내장 상품 찜 저장: `data/LocalLikes` (SharedPreferences "recommend"의 `liked_local_products@계정`). `CapstoneApp`이 화면이 열릴 때마다 `LocalLikes.refresh`·`RecommendApi.refreshLikes`로 지금 계정 기준 하트를 맞춘다. 테스트 `LocalLikesTest`
+- 상품 상세 추천 사이즈: 팝업 없이 글자만. 설문·대표 체형(`hasBodyInput`)과 치수가 모두 있을 때만 사이즈를 보여 주고, 아니면 체형분석 화면 바로가기. 바로 구매 사이즈 경고는 `Action.ORDER` 문구
+- 옵션 창은 장바구니에 담을 때마다 뜬다 (다른 옵션도 담을 수 있게 일부러 유지)
+- 홈 상단 탭은 홈·신상·베스트만 (옷 종류는 카테고리 메뉴). 신상 탭은 `DummyData.isNew`만 (서버 상품은 신상 정보가 없어 지금은 내장 상품 6개)
+- 체형 맞춤 토글: 로그인 + 서버 진단 결과(`RecommendApi.hasDiagnosis`, 답만 저장된 설문은 아님)일 때만 켜짐. 아니면 회색이고, 누르면 로그인 또는 체형 진단 안내 창. 추천 제목 문구는 그대로
+- 전체보기("전체 상품")는 서버 상품 목록만. 서버 목록이 없으면 "서버에 연결할 수 없어요"와 다시 시도 버튼. 다른 탭은 서버가 꺼져도 내장 상품이 보인다
+- 이동: 하단 홈 버튼은 항상 홈 탭으로(`MainActivity.showHomeTab`, `onNewIntent`). 신상·베스트·전체 상품에서 뒤로가기는 홈 탭으로, 홈 탭에서는 2초 안에 두 번 눌러야 종료
+- 확인: javac 컴파일 + 앱 단위 테스트까지 여기서 확인. 실제 실행은 Android Studio에서 확인할 것
+
+### 4-18. 옵션 창·장바구니·찜 정리 (11/06, 혜림)
+- 상품 상세: "선택 완료" 단계를 없애고 옵션 창에서 바로 구매·장바구니 담기. 옵션 줄은 `옵션 ›`만. 담기 완료 창은 사이즈·색상·수량만
+- 추천 사이즈·경고창 추천 줄: 서버 진단 결과(`RecommendApi.hasDiagnosis`)가 있을 때만. 치수가 없으면 "내 치수 사이즈 확인하러 가기 ›"
+- 상세·장바구니 `onResume`에서 `BodyProfileStore.syncActiveProfile`: 로그인·계정 전환 직후에도 지금 계정 치수를 쓴다. 측정만 하고 저장 안 한 치수는 쇼핑 화면에서 쓰지 않는다
+- 가격 0원 상품: 상세의 옵션 줄·바로 구매·담기를 흐리게 막는다(안내 문구 없음). 이미 담긴 줄은 그대로 주문된다. `seed_db.py`가 시연 상품 가격을 0으로 넣으므로, DB에 가격이 없으면 서버 상품은 담기·구매가 막힌다
+- 수량 상한은 `CartStore.MAX_QUANTITY`(99) 하나. 담기·옵션 변경으로 합쳐 넘으면 안내만 하고 실행하지 않는다
+- 장바구니 상품을 누르면 상세로 이동. 서버 상품은 서버 ID로만 찾는다(서버 상품 번호는 앱을 켤 때마다 달라져, 예전 번호로 찾으면 다른 상품이 열릴 수 있음). 목록에 없으면 장바구니 저장값으로 만든 상품을 상세 화면 안에서만 쓰고 공용 상품 목록에는 넣지 않는다
+- 로그인: 찜·장바구니 화면은 비로그인이면 `LoginRequiredView`(하단 메뉴 유지), 하트는 로그인 화면으로 이동. 비로그인 담기·바로 구매는 허용(팀 결정)
+- 찜 제목은 `찜 N`, 상단 탭은 3등분, 장바구니 체크박스는 `app:buttonTint`·`app:buttonIconTint`(Material3에서 `android:buttonTint`는 전체가 칠해짐)
+- 확인: 서버 상품 번호 겹침은 서버 없이 에뮬레이터에 테스트 데이터를 넣어 확인. 서버를 켠 동작은 아직 확인 못 함
+- 단위 테스트: 51개 중 `CartStoreTest`·`LocalLikesTest` 11개 실패. `org.json`이 테스트 환경에 없어서 나는 오류(`not mocked`)이고 앱 동작 문제는 아니다. 해결하려면 `build.gradle.kts`에 테스트 의존성 추가 필요(팀 공용 파일)
+### 4-19. 로그인·계정별 기록 (11/05, 로그인/계정 담당)
+- 로그인 화면은 한 장 (`LoginMainActivity`: 아이디·비밀번호 입력, 로그인, 아이디 찾기 | 비밀번호 찾기, 소셜 아이콘, 회원가입). 옛 `LoginEmailActivity`와 "반가워요! 회원가입하기" 화면(`SigninMainActivity`)은 없앴고, 회원가입 버튼은 바로 `PhoneVerifyActivity`(휴대전화 인증)로 간다
 - 로그인 화면은 한 장 (`LoginMainActivity`: 아이디·비밀번호 입력, 로그인, 아이디 찾기 | 비밀번호 찾기, 회원가입. 소셜 로그인 아이콘은 동작하지 않아 11/06에 뺐다). 옛 `LoginEmailActivity`와 "반가워요! 회원가입하기" 화면(`SigninMainActivity`)은 없앴고, 회원가입 버튼은 바로 `PhoneVerifyActivity`(휴대전화 인증)로 간다
 - 로그인은 **아이디 + 비밀번호**만 (인증 없음, `LocalAccounts.loginWithId`). 가입은 아이디를 따로 받고 휴대전화는 가입 때 인증한 번호(수정 불가), 이메일은 선택(넣으려면 인증). 로그인 화면의 "핸드폰 번호로 로그인"·"이메일 확인" 버튼은 뺐다 (`LoginPhoneActivity`는 어디서도 열리지 않음)
 - 계정(아이디) 찾기 (`FindIdActivity`): "휴대전화로 찾기"/"이메일로 찾기" 중 골라 입력 → 그 번호·이메일로 가입한 계정이 있으면 인증번호 발송, 없으면 "가입된 계정이 없습니다" → 인증번호가 맞으면 아이디를 보여 준다
@@ -282,6 +319,20 @@ match_score(body, item) -> {
 - 회원 탈퇴 (마이페이지 1번, 11/06): 탈퇴하면 회원 정보(`LocalAccounts.delete`)와 **그 계정 이름으로 기기에 쌓인 기록을 지우되, 주문·반품 기록은 보관한다** (`data/AccountData.deleteAll`). 지우는 것: 배송지·카드·환불 계좌·문의·리뷰·쿠폰(`MyPageStore.deleteAccount`), 장바구니(`CartStore`), 저장한 체형·대표 체형·체형 설정(`BodyProfileStore`), 설문·키·추천 사용자 ID·찜(`AccountPrefs`), 프로필 사진, 판매자 브랜드, 마케팅 수신 설정, 입력해 둔 키·몸무게·나이(`BodyInput.clear`), 주문번호별 서버 상품 기록. **주문·반품 기록은 법령상 보관해야 하므로** 이름·번호·주소·반품 사유 같은 개인정보와 계정 연결을 뺀 거래 내용(주문번호·날짜·브랜드·상품·옵션·수량·금액·상태, 반품은 번호·종류·날짜·상태)만 `capstone_order_review_store`의 `archived_orders`에 남긴다. 이 기록은 어느 계정에도 연결되지 않고 화면에서 읽지 않으며, 같은 아이디·번호로 재가입해도 나타나지 않는다. 탈퇴 확인 창 문구: "탈퇴하면 배송지, 쿠폰, 찜, 체형 등 모든 정보가 삭제되며 복구할 수 없어요. 단, 주문 내역은 관련 법령에 따라 일정 기간 보관돼요." 이메일을 지웠다 넣은 경우나 예전 형식(하이픈) 번호로 남은 것도 함께 지우도록 이메일·번호·하이픈 번호 이름을 모두 처리한다. 같은 아이디·번호로 다시 가입하면 완전히 새 계정이다 (탈퇴한 아이디도 다시 쓸 수 있다). 한계: 추천 서버에 쌓인 반응 기록은 앱에서 지울 수 없다 (서버·DB 쪽 일). 지금 보관 기록은 이 기기에만 있고 판매자나 서버는 읽지 못한다 (실제 서비스는 주문을 서버에 법정 기간 보관한다)
 - 한계: 더미 상품(DummyData)의 찜은 앱을 끄면 사라진다 (원래 저장 안 됨). `CartStoreTest`는 `org.json`이 단위 테스트에서 비어 있어 main에서도 실패한다
 
+### 4-20. 11/08 통합 (develop 브랜치)
+- 종합 수정본은 **`develop`** 브랜치에 계속 쌓는다 (main은 버전 0.1 그대로, 팀이 정하면 올림)
+- 합친 것: feature/seoyeon(4-16) + feature/hyerim(4-17·4-18) + feature/jihyun-merge(회원가입 본인확인·프로필 이메일 인증·약관·문의 상세) + feature/yeonoh 11/05~06 커밋 중 판매자 기능을 뺀 것(4-19) + feature/yubin-update 11/06 업로드(배송 요청사항을 주문 화면으로, 같은 배송지 중복 막기, FAQ 문구)
+- 겹친 부분 결정
+  - 체형 저장: 서연 방식(결과 화면 3가지 선택, 체형 여러 개·현재 체형, 마이페이지에 내 체형 메뉴 없음) 유지. 연오의 "설문 끝나면 자동 저장(`saveFromSurvey`)"은 빼고, 비회원 설문은 메모리에만(`GuestSurvey`)·탈퇴 시 기록 삭제·비회원 안내 창은 그대로. 비회원이 결과 화면에서 "이대로 저장하기"/"사진으로 정밀 분석하기" → `LoginGate` 로그인 → 들고 있던 답을 계정으로 옮김(`persistSurvey`). 4-19의 "설문을 마치면 저장"·4-16의 `markSurveySavePending`·24시간 설명은 이 결정으로 바뀜
+  - 회원가입 본인확인 화면(`PhoneVerifyActivity`): 지현 버전(010 + 4 + 4칸)
+  - 프로필 수정의 휴대폰·이메일 변경: 지현 버전(이메일 인증 메일). 연오의 `dialog_contact_verify` 방식은 넣지 않음
+  - 비밀번호 규칙: 가입·변경·재설정 모두 지현 규칙(2가지 이상 8~16자). `PasswordRule`은 `LocalAccounts.isValidPassword`를 부름
+  - 장바구니 담기·바로 구매: 혜림 4-18 "비로그인 허용(팀 결정)" 유지. 찜·하단 찜/장바구니 탭은 연오 `LoginGate`로 로그인 필요
+  - 1:1 문의: 이메일 칸 없음(지현)
+- (11/08) **체형도 로그인해야 이용** (찜과 같게): 하단 체형 탭은 비로그인이면 `LoginGate` 로그인 안내 → 로그인 뒤 그 탭으로(`BottomMenu`). 다른 길(상품 상세 "측정하러 가기" 등)로 `MyBodyActivity`·`FittingActivity`에 와도 `LoginRequiredView`로 "체형 분석은 로그인 후 이용할 수 있어요"만 보여 준다. 그래서 비회원 설문 관련 코드(`GuestSurvey`, 비회원 안내 창, 결과 화면 로그인 이어가기)는 지금은 거의 쓰이지 않는다
+- `RecommendApi`의 메인 스레드 핸들러를 처음 쓸 때 만들도록 바꿈 (로그인 때 `refreshLikes`가 불리면서 단위 테스트가 깨지던 문제)
+- 확인: javac 컴파일 오류 0, 앱 단위 테스트 75개 통과, test_feed 41·test_integration 8·test_api 29 통과, pytest 262 통과(2개는 원래 실패하던 B 쪽). 실제 화면은 Android Studio에서 확인 필요
+
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
   - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)
@@ -296,36 +347,9 @@ match_score(body, item) -> {
   - 설문을 다시 해서 서버 진단이 오면 `BodyProfileStore.updateActiveSurvey`가 대표 카드의 설문 답·골격 이름도 바꾼다 → 결과 화면과 홈 체형이 항상 같다 (전에는 카드가 측정 저장 때 값에 고정돼 홈이 예전 체형을 보였음)
   - 서버에 연결이 안 되면 결과 화면은 앱 채점으로 대신하지 않고 "다시 시도/나중에" 창 (팀 결정 그대로. 혜림 브랜치의 앱 채점 대체는 합칠 때 뺐음)
 
-### 4-14. 판매자 상품 등록 (14단계)
-- 판매자가 앱에서 상품을 올리면 B의 양식 검증·태그를 거쳐 저장되고, 바로 추천 후보(홈 피드)가 된다. 점수·순위 알고리즘(final_score·rank·home_feed)과 B 파트는 바꾸지 않았다
-- API (`recommend/seller_api.py`, app.py가 등록). 오류는 400 `{"ok": false, "error": 한국어}`
-  - `GET /api/seller/form`: 화면 정의 (종류 5개, B 속성 양식 10항목, 계절, 사이즈, 색상, 종류별 치수 항목, 사진 제한). 앱은 이 응답대로 화면을 그린다
-  - `POST /api/seller/products/validate`: 검증 + 태그 미리보기 (저장 안 함). `POST /api/seller/products`: 등록 (201)
-  - `GET /api/seller/products?brand=이름`: 그 브랜드로 등록한 상품. `POST /api/seller/images`(multipart `file`): 사진 올리기 → `{"url": "/uploads/…", "full_url": …}`
-  - 입력: brand, product_name, clothing_type, price(1~10,000,000 정수), description(선택, 5,000자), seasons, sizes(XS~FREE), colors, **measurements = {사이즈: {항목: cm}} (고른 사이즈마다 그 종류의 치수 항목을 모두)**, attrs(핏·기장·혼용률 …, B 양식), composition_percent, image_url(선택)
-  - 치수 항목은 종류마다 다르다 (`rec_config.SELLER_MEASUREMENTS`): 상의·아우터 4개, 팬츠 3개, 스커트 3개, 원피스 6개. 옷을 평평하게 놓고 잰 단면(cm), 5~250
-  - 새 상품의 인기도는 기록이 없어 0.5 (`SELLER_DEFAULT_POPULARITY`, **임시값**)
-- 저장 (`store.py`의 `add_product`)
-  - 메모리 저장소: 서버 안 + `recommend/data/registered_items.json`(깃에 없음)에 보관해 서버를 다시 켜도 남는다. product_id는 `r1`, `r2` …
-  - DB 저장소(PgStore): brands·fabrics·categories는 없으면 만들고, products·product_options(사이즈×색상)·치수 표·product_tags(source=`direct`)에 한 트랜잭션으로 넣는다. **DB 치수 표는 기본키가 product_id 하나라 상품당 한 줄**이다 → 가운데 사이즈 치수만 그 표에 넣고, 사이즈별 전체 치수·사이즈·색상은 `product_tags.attrs`의 `seller_extra`에 같이 저장한다. 표 구조는 DB 담당과 정할 것. **진짜 PostgreSQL이 없는 PC에서 만들어 SQL 문법은 아직 확인하지 못했다** (가짜 커서로 순서·값만 확인). 처음 DB에 연결할 때 등록 한 번으로 확인할 것
-  - 추천 응답(`/api/feed*`)의 상품에 `sizes`·`colors`·`measurements`를 더해 보낸다 (`feed_api.DISPLAY_KEYS`). 설명(description)은 상품 수만큼 실려 응답이 커지므로 뺐다
-- 사진 (`image_storage.py`): 사진 파일은 DB에 넣지 않고 주소만 `products.main_image_url`에 적는다
-  - 키가 없으면 `recommend/uploads/`(깃에 없음)에 저장하고 **`/uploads/<파일>` 경로만 적는다**. 서버 주소(에뮬레이터 10.0.2.2, 폰은 PC의 IP)는 보는 기기마다 달라서, 앱에 보낼 때 `absolute_image_url`이 그 요청의 서버 주소를 붙인다
-  - `SUPABASE_URL`·`SUPABASE_SERVICE_KEY`·`SUPABASE_BUCKET`이 모두 있으면 Supabase Storage(공개 버킷)에 올리고 공개 주소(https)를 적는다. 서비스 키는 서버 전용 비밀이다 — 앱·깃에 넣지 말 것 (환경 변수 또는 맨 위 `supabase.env`). **Supabase 쪽은 키가 없어서 실제로 올려 보지 못했다** (요청 모양만 가짜 응답으로 확인)
-  - 내용으로 JPG·PNG·WEBP인지 확인하고(이름·헤더는 믿지 않음) 5MB까지. 저장 이름은 추측할 수 없는 무작위 값. app.py는 사진 올리기만 큰 본문을 받고 나머지 API는 그대로 1MB로 막는다
-- 앱 (`android/.../ui/`, `data/`)
-  - `SellerCenterActivity`(내 상품 목록, 상품 등록 버튼), `SellerProductActivity`(**상품 등록 화면**: 서버 양식대로 종류별 속성·치수 칸, 사진 고르기·올리기), 공용 `SellerUi`, 서버 호출 `data/SellerApi`, 입력 해석 `data/SellerFormRules`(단위 테스트 있음)
-  - **상품 등록은 마이페이지 → "판매자 센터" → "상품 등록하기"에서 한다.** 판매자 계정·가입은 없다: 서버에 판매자 권한이 없어서(`users.role`은 user/admin만 허용) 누구나 열 수 있고, 등록할 때 브랜드 이름을 직접 적는다. 서버는 브랜드 이름으로 누구의 상품인지 가른다 (`data/SellerStore`는 마지막에 쓴 브랜드 이름만 기기에 기억해 다음 등록 때 채우고 센터 목록에 쓴다)
-  - 핏은 B 양식의 필수 항목이라 반드시 고른다 (슬림·레귤러·오버 → `fit:*` 태그 → 추천 점수)
-- 아직 안 한 것
-  - 등록 API에 인증이 없다 (서버가 같은 네트워크에 열려 있으면 누구나 등록·사진 올리기 가능)
-  - 등록한 상품의 수정·삭제·품절 처리, 재고
-  - 앱 홈·상품 상세가 등록 상품의 사이즈·색상·치수를 쓰는 것 (서버는 이미 내려 줌), 사이즈 경고를 판매자 치수 기준으로 바꾸기
-  - 판매자 권한·브랜드-계정 연결 (DB). 그전에는 "판매자 센터" 메뉴를 판매자에게만 보이게 할 수 없다
-  - 판매자 센터·상품 등록 화면을 에뮬레이터에서 눌러 보는 확인 (컴파일·단위 테스트·실제 서버 HTTP 시험까지만 했다)
-- 같이 고친 것 (앱): 설문 안내 문구를 실제 버튼 이름("체형 분석 시작하기")으로, 성인인데 사진 모델 결과가 없으면 결과 화면에 안내, 사진 모델은 측정이 끝나면 닫아 메모리(약 45MB)를 돌려줌, lint 오류 7개(`paddingHorizontal/Vertical` → `paddingLeft/Right/Top/Bottom`, `android:tint` → `app:tint`)
-
 ### 4-13. 앱 계정·주문·쿠폰 (11/01)
+- 휴대폰 번호는 `LocalAccounts.normalizePhone`으로 010-0000-0000 모양 하나로 저장 → 하이픈 유무와 상관없이 같은 계정. 다른 형식으로 저장된 체형·설문·찜·사진은 로그인·앱 시작 때, 지금 계정에 기록이 없을 때만 옮긴다 (`LoginSession.adoptOldPhoneData`)
+- 로그인은 가입한 비밀번호만 통과: `data/LocalAccounts`가 회원을 기기(SharedPreferences `local_accounts`)에 PBKDF2 해시로 저장. **가입한 기기에서만 로그인된다.** 서버 users 표와 연결되면 대체할 임시 저장소. 가입을 마치면 바로 로그인된다. 가입 화면(11/06): 본인확인은 `010`-XXXX-XXXX + 화면에 보여 주는 4자리 인증번호(문자 발송 서비스가 없어서), 맞아야 "다음". 아이디 = 영문 소문자+숫자 4~16자, 비밀번호 = 영문·숫자·특수문자(`LocalAccounts.PASSWORD_SPECIALS`만) 중 2가지 이상 8~16자 — `LocalAccounts.isValidId/isValidPassword`로 가입·마이페이지 비밀번호 변경이 같이 검사. 이메일 선택 입력, 생년월일은 1940~올해 드롭다운 + 그 달에 있는 날만, 성별은 여성만. 프로필 수정(11/07): 휴대폰 번호는 바꿀 수 없음(변경 버튼 없음), 이메일 변경은 `[앞부분]@[도메인]`(`ui/EmailDomainInput`, 가입 화면과 같이 씀) → 인증 메일 → 메일 속 링크 클릭 → "인증확인"이어야 저장. 서버 `email_verify.py`(POST /api/email/send·status, GET /api/email/confirm, 기록은 메모리, 테스트 `tests/test_email_verify.py`). 메일 계정은 맨 위 `email_smtp.txt`(깃에 없음) 또는 SMTP_ 환경변수 — 없으면 503. 이메일 도메인 존재 확인: 서버가 DNS(MX, 없으면 A)로 @ 뒤 도메인이 있는지 본다 — 가입 이메일(선택)은 POST /api/email/check, 인증 메일 발송 전에도 같은 확인. 인터넷이 안 돼 확인 못 하면 막지 않는다. 1:1 문의는 답변 받을 이메일 칸 없음(답변은 앱 문의내역), 문의내역을 누르면 상세 창. 약관 5개 "내용보기" → `TermsActivity`(내용은 `res/raw/terms_*.txt`, 임시 문안이라 실제 서비스 전 검토 필요) 생년월일·성별은 아직 저장하지 않는다. 이메일 로그인은 프로필에 이메일을 등록한 뒤에 된다. 비밀번호 재설정은 핸드폰 번호·이메일 중 고르는 화면(`ResetPwMainActivity`) → 입력 화면(`ResetPwActivity`, `EXTRA_BY_PHONE`). 인증번호는 아직 가짜(4자리면 통과)
 - 휴대폰 번호는 `LocalAccounts.normalizePhone`으로 **숫자만(01012345678)** 하나로 저장 → 하이픈 유무와 상관없이 같은 계정 (11/06에 하이픈 포함에서 숫자만으로 바꿈. 화면에는 `LocalAccounts.formatPhone`으로 010-0000-0000 모양을 보여 줌). 다른 형식으로 저장된 체형·설문·찜·사진은 로그인·앱 시작 때, 지금 계정에 기록이 없을 때만 옮긴다 (`LoginSession.adoptOldPhoneData`)
 - 로그인은 가입한 비밀번호만 통과: `data/LocalAccounts`가 회원을 기기(SharedPreferences `local_accounts`)에 PBKDF2 해시로 저장. **가입한 기기에서만 로그인된다.** 서버 users 표와 연결되면 대체할 임시 저장소. 가입을 마치면 바로 로그인된다. 생년월일·성별은 아직 저장하지 않는다. 이메일 로그인은 프로필에 이메일을 등록한 뒤에 된다. 비밀번호 재설정은 핸드폰 번호·이메일 중 고르는 화면(`ResetPwMainActivity`) → 입력 화면(`ResetPwActivity`, `EXTRA_BY_PHONE`). 인증번호는 아직 가짜(4자리면 통과)
 - 결제 완료 → 체크한 상품만 장바구니에서 뺀다 (`DummyData.removeOrderedFromCart`). 주문 화면·주문 내역 옵션은 고른 값 그대로 (`Product.getOptionLabel`, 여러 상품이면 `이름: L / NAVY, …`)
@@ -337,7 +361,6 @@ match_score(body, item) -> {
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
 `cd recommend && python test_api.py` — 현재 29개 통과 (Flask 필요: `pip install -r requirements.txt`).
-`cd recommend && python test_seller.py` — 현재 20개 통과 (Flask 필요. 판매자 상품 등록·사진 올리기·치수 검사·DB 저장 SQL 순서. 임시 폴더만 씀).
 `TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 10개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
@@ -416,8 +439,10 @@ match_score(body, item) -> {
 - [x] 10/31 통합(feature/integration-1031): main + feature/seoyeon + feature/jihyun-merge(찜 한 번만·재진단·구매반품·요청 줄·상품 정보 갱신) + feature/hyerim(장바구니·마이페이지·계정별 저장·서버 주소 설정·대표 카드 설문 답). 겹친 수정(NaN·DB 문구·스크롤 다시 시도)은 하나만 남김. 개발용 데모 체형·치수 수정 화면(BodyEditActivity) 삭제는 유지 — main에서도 데모 버튼으로만 열리던 화면
 - [x] 11/03 통합(feature/integration-1103): feature/hyerim(서버 상품을 카테고리·검색에, 주문·결제·장바구니·찜) + feature/jihyun-merge(기기 계정·비밀번호 해시·쿠폰 기간·주문 옵션) + feature/yeonoh 중 판매자 기능을 뺀 수정(사진 모델 측정 뒤 메모리 해제, 사진 분석 실패 안내, 안드로이드 7 호환 tint·padding, 안내 문구). **판매자 센터·판매자 API·사진 올리기는 화면 설계 전이라 넣지 않음** (feature/yeonoh에 남아 있음). feature/yubin-update는 지현 장바구니와 내용이 같아 넣지 않음
 - [x] 장바구니 저장(4-15): 앱을 꺼도 남음·계정별·옵션별 줄·주문한 줄만 빼기, 배송비 무료 — CartStoreTest 8개
-- [x] 14단계: 판매자 상품 등록 (seller_api.py, image_storage.py, store.add_product, 앱 판매자 센터·상품 등록 화면) — test_seller 20개, 앱 단위 테스트 8개 추가
-- [ ] 판매자 상품 등록 마무리: API 인증, 상품 수정·삭제·품절, 앱 홈·상세에서 등록 상품의 사이즈·치수 사용, Supabase 키·DB 연결 후 실제 등록 확인, 판매자 권한(DB)
+- [x] 설문만 해도 체형 저장(4-16), 오래된 비로그인 설문은 새 계정으로 안 옮김, 측정 화면 나가기·시작 버튼 회색, 결과 화면 3가지 선택(정밀 분석·이대로 저장·나가기), 체형 여러 개 저장·현재 체형 선택, 체형분석 탭=내 체형관리, 설문 카드 사진 분석 이어서 하기 — BodyProfileSurveyTest 12개 (feature/seoyeon, main 아님)
+- [x] 홈·찜·상품 상세 정리(4-17): 찜 중복, 내장 상품 찜 저장, 상단 탭 3개, 토글 조건, 전체 상품, 하단 홈·뒤로가기 — LocalLikesTest 4개
+- [x] 옵션 창·장바구니·찜 정리(4-18): 옵션 창에서 바로 담기·구매, 찜·장바구니 로그인 화면, 수량 99개, 0원 차단, 장바구니 상품 상세 이동
+- [x] 11/08 통합(4-20): develop 브랜치에 서연·혜림·지현·연오(판매자 제외)·유빈 합침
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend

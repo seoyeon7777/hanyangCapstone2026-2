@@ -3,7 +3,12 @@ package com.example.capstone.login;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.AbsoluteSizeSpan;
 import android.text.TextUtils;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -17,22 +22,44 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.LocalAccounts;
+import com.example.capstone.data.RecommendApi;
+import com.example.capstone.ui.EmailDomainInput;
+
+import java.util.Calendar;
 
 public class SigninActivity extends AppCompatActivity {
 
     public static final String EXTRA_PHONE = "extra_phone";
 
+    private static final String ID_RULE_MESSAGE =
+            "아이디는 영문 소문자와 숫자를 포함해 4~16자로 입력해주세요.";
+    private static final String PASSWORD_RULE_MESSAGE =
+            "비밀번호는 영문 대소문자, 숫자, 특수문자 중 2가지 이상을 조합해 8~16자로 입력해주세요.";
+    private static final String PASSWORD_CHAR_MESSAGE =
+            "비밀번호에 쓸 수 없는 문자가 있습니다. 특수문자는 안내된 것만 쓸 수 있어요.";
+
     private ImageButton btnBack, btnHome;
 
-    private EditText etId, etPw, etPw2, etName, etYear;
+    /** 생년월일 연도 목록의 가장 이른 해 (목록은 올해부터 이 해까지) */
+    private static final int BIRTH_YEAR_MIN = 1940;
+    private static final String YEAR_PLACEHOLDER = "년도";
+    private static final String MONTH_PLACEHOLDER = "월";
+    private static final String DAY_PLACEHOLDER = "일";
+    private static final int CHECK_RED = 0xFFE5484D;
+    private static final int CHECK_GREEN = 0xFF2EAE4F;
+    private EditText etId, etPw, etPw2, etName, etPhone;
+    private EmailDomainInput emailInput;
     private Button btnCheckId, btnNext;
     private ImageButton btnTogglePw1, btnTogglePw2;
+    private android.widget.ImageView ivPwCheck, ivPw2Check;
 
-    private Spinner spMonth, spDay, spGender;
+    private Spinner spYear, spMonth, spDay, spGender;
 
     private CheckBox cbAll, cb1, cb2, cb3, cb4, cb5;
 
     private boolean isIdChecked = false;
+    /** 서버에서 도메인 확인을 마친 이메일 (같은 주소로 다시 묻지 않는다) */
+    private String domainCheckedEmail = "";
     private boolean isPwVisible = false;
     private boolean isPw2Visible = false;
 
@@ -60,8 +87,12 @@ public class SigninActivity extends AppCompatActivity {
         btnTogglePw2 = findViewById(R.id.btnTogglePw);
 
         etName = findViewById(R.id.etName);
-        etYear = findViewById(R.id.etYear);
 
+        // 본인확인 화면에서 인증한 번호. 고칠 수 없다
+        etPhone = findViewById(R.id.etPhone);
+        etPhone.setText(getIntent().getStringExtra(EXTRA_PHONE));
+
+        spYear = findViewById(R.id.spYear);
         spMonth = findViewById(R.id.spMonth);
         spDay = findViewById(R.id.spDay);
         spGender = findViewById(R.id.spGender);
@@ -74,61 +105,173 @@ public class SigninActivity extends AppCompatActivity {
         cb5 = findViewById(R.id.cb5);
 
         btnNext = findViewById(R.id.btnNext);
+
+        // 비밀번호 규칙 문구가 길어서 안내 글씨만 작게 (입력 글씨는 그대로). 아이디도 같은 크기
+        smallHint(etId);
+        smallHint(etPw);
+        smallHint(etPw2);
+
+        // 비밀번호 칸 옆 체크 표시: 입력을 시작하면 보이고, 비밀번호는 규칙에 맞을 때,
+        // 재확인은 위 비밀번호와 똑같을 때 초록색 (아니면 빨간색)
+        ivPwCheck = findViewById(R.id.ivPwCheck);
+        ivPw2Check = findViewById(R.id.ivPw2Check);
+        android.text.TextWatcher pwWatcher = new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                updatePwChecks();
+            }
+        };
+        etPw.addTextChangedListener(pwWatcher);
+        etPw2.addTextChangedListener(pwWatcher);
+    }
+
+    private void updatePwChecks() {
+        String pw = etPw.getText().toString();
+        String pw2 = etPw2.getText().toString();
+        showCheck(etPw, ivPwCheck, !pw.isEmpty(), LocalAccounts.isValidPassword(pw.trim()));
+        showCheck(etPw2, ivPw2Check, !pw2.isEmpty(), pw2.equals(pw));
+    }
+
+    /** 체크가 보일 때만 오른쪽 여백을 넓힌다 (비어 있을 때는 긴 안내 문구가 잘리지 않게) */
+    private void showCheck(EditText field, android.widget.ImageView icon, boolean visible, boolean ok) {
+        icon.setVisibility(visible ? View.VISIBLE : View.GONE);
+        // 맞으면 초록 체크, 아니면 빨간 X
+        icon.setImageResource(ok ? R.drawable.ic_pw_ok : R.drawable.ic_pw_bad);
+        icon.setColorFilter(ok ? CHECK_GREEN : CHECK_RED);
+        int endDp = visible ? 72 : 48;
+        field.setPaddingRelative(field.getPaddingStart(), field.getPaddingTop(),
+                Math.round(endDp * getResources().getDisplayMetrics().density), field.getPaddingBottom());
+    }
+
+    private static void smallHint(EditText editText) {
+        SpannableString hint = new SpannableString(editText.getHint());
+        hint.setSpan(new AbsoluteSizeSpan(12, true), 0, hint.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        editText.setHint(hint);
     }
 
     private void setupSpinners() {
 
-        String[] months = new String[12];
+        // 연도: "년도" 다음에 올해부터 1940년까지 (최근 해가 위)
+        int thisYear = Calendar.getInstance().get(Calendar.YEAR);
+        String[] years = new String[thisYear - BIRTH_YEAR_MIN + 2];
+        years[0] = YEAR_PLACEHOLDER;
+        for (int y = thisYear, i = 1; y >= BIRTH_YEAR_MIN; y--, i++) {
+            years[i] = y + "년";
+        }
+        spYear.setAdapter(placeholderAdapter(years));
 
-        for (int i = 0; i < 12; i++) {
-            months[i] = (i + 1) + "월";
+        // 월·일: 처음에는 "월"/"일"만 보이고, 펼친 목록에는 1월~12월, 1일~마지막 날만
+        String[] months = new String[13];
+        months[0] = MONTH_PLACEHOLDER;
+
+        for (int i = 1; i <= 12; i++) {
+            months[i] = i + "월";
         }
 
-        ArrayAdapter<String> monthAdapter = new ArrayAdapter<>(
+        spMonth.setAdapter(placeholderAdapter(months));
+
+        // 일: 고른 연·월에 있는 날만 (2월 29일은 윤년만)
+        updateDays();
+
+        AdapterView.OnItemSelectedListener dateChanged = new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                updateDays();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        };
+        spYear.setOnItemSelectedListener(dateChanged);
+        spMonth.setOnItemSelectedListener(dateChanged);
+
+        String[] genders = {"여성"};
+
+        spGender.setAdapter(adapter(genders));
+
+        emailInput = new EmailDomainInput(this,
+                findViewById(R.id.etEmailId),
+                findViewById(R.id.spEmailDomain),
+                findViewById(R.id.etEmailDomain),
+                null);
+    }
+
+    private ArrayAdapter<String> adapter(String[] items) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_item,
-                months
+                items
         );
 
-        monthAdapter.setDropDownViewResource(
+        adapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item
         );
+        return adapter;
+    }
 
-        spMonth.setAdapter(monthAdapter);
+    /** 맨 앞 항목("년도"·"월"·"일")은 칸에만 보이고 펼친 목록에서는 숨긴다 */
+    private ArrayAdapter<String> placeholderAdapter(String[] items) {
+        return EmailDomainInput.placeholderAdapter(this, items);
+    }
 
+    /** 연도를 아직 안 골랐으면 0 */
+    private int selectedYear() {
+        String year = String.valueOf(spYear.getSelectedItem());
+        return YEAR_PLACEHOLDER.equals(year) ? 0 : Integer.parseInt(year.replace("년", ""));
+    }
 
-        String[] days = new String[31];
+    /** 아직 안 골랐으면 0 (목록 0번이 "월"/"일") */
+    private int selectedMonth() {
+        return Math.max(spMonth.getSelectedItemPosition(), 0);
+    }
 
-        for (int i = 0; i < 31; i++) {
-            days[i] = (i + 1) + "일";
+    private int selectedDay() {
+        return Math.max(spDay.getSelectedItemPosition(), 0);
+    }
+
+    /** 일 목록을 고른 연·월의 날 수에 맞춘다. 고른 날이 없어지면 그 달의 마지막 날로 */
+    private void updateDays() {
+        int year = selectedYear();
+        int month = selectedMonth();
+        // 연도 전이면 2월 29일까지, 월 전이면 31일까지 보여 준다
+        int dayCount = month == 0 ? 31 : daysInMonth(year == 0 ? 2000 : year, month);
+
+        if (spDay.getAdapter() != null && spDay.getAdapter().getCount() == dayCount + 1) {
+            return;
         }
+        int keep = Math.min(selectedDay(), dayCount);
 
-        ArrayAdapter<String> dayAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                days
-        );
+        String[] days = new String[dayCount + 1];
+        days[0] = DAY_PLACEHOLDER;
+        for (int i = 1; i <= dayCount; i++) {
+            days[i] = i + "일";
+        }
+        spDay.setAdapter(placeholderAdapter(days));
+        spDay.setSelection(keep);
+    }
 
-        dayAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
-        );
+    static int daysInMonth(int year, int month) {
+        Calendar c = Calendar.getInstance();
+        c.clear();
+        c.set(year, month - 1, 1);
+        return c.getActualMaximum(Calendar.DAY_OF_MONTH);
+    }
 
-        spDay.setAdapter(dayAdapter);
-
-
-        String[] genders = {"남성", "여성"};
-
-        ArrayAdapter<String> genderAdapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                genders
-        );
-
-        genderAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
-        );
-
-        spGender.setAdapter(genderAdapter);
+    /** 중복확인을 마치면 버튼을 회색으로 막고, 아이디를 고치면 다시 검은색으로 연다 */
+    private void setIdChecked(boolean checked) {
+        isIdChecked = checked;
+        btnCheckId.setEnabled(!checked);
+        btnCheckId.setBackgroundResource(checked ? R.drawable.bg_button_gray : R.drawable.bg_button);
     }
 
     private void setListeners() {
@@ -160,10 +303,10 @@ public class SigninActivity extends AppCompatActivity {
                 return;
             }
 
-            if (id.length() < 8) {
+            if (!LocalAccounts.isValidId(id)) {
                 Toast.makeText(
                         this,
-                        "아이디는 8자 이상이어야 합니다.",
+                        ID_RULE_MESSAGE,
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -181,7 +324,7 @@ public class SigninActivity extends AppCompatActivity {
                 return;
             }
 
-            isIdChecked = true;
+            setIdChecked(true);
 
             Toast.makeText(
                     this,
@@ -208,7 +351,9 @@ public class SigninActivity extends AppCompatActivity {
                     int before,
                     int count
             ) {
-                isIdChecked = false;
+                if (isIdChecked) {
+                    setIdChecked(false);
+                }
             }
 
             @Override
@@ -305,6 +450,13 @@ public class SigninActivity extends AppCompatActivity {
         cb4.setOnCheckedChangeListener(individualListener);
         cb5.setOnCheckedChangeListener(individualListener);
 
+        // 약관 내용보기 (밑줄 회색 글씨)
+        bindTerms(R.id.tvTerms1, "서비스 이용약관", R.raw.terms_service);
+        bindTerms(R.id.tvTerms2, "개인정보 수집 및 이용 동의", R.raw.terms_privacy);
+        bindTerms(R.id.tvTerms3, "만 14세 이상 확인", R.raw.terms_age);
+        bindTerms(R.id.tvTerms4, "마케팅 정보 수신 동의", R.raw.terms_marketing);
+        bindTerms(R.id.tvTerms5, "이벤트 및 프로모션 알림", R.raw.terms_event);
+
         // 가입하기
         btnNext.setOnClickListener(v -> {
 
@@ -320,14 +472,24 @@ public class SigninActivity extends AppCompatActivity {
             String name =
                     etName.getText().toString().trim();
 
-            String year =
-                    etYear.getText().toString().trim();
+            int year = selectedYear();
 
             if (TextUtils.isEmpty(id)) {
 
                 Toast.makeText(
                         this,
                         "아이디를 입력해주세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            if (!LocalAccounts.isValidId(id)) {
+
+                Toast.makeText(
+                        this,
+                        ID_RULE_MESSAGE,
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -345,12 +507,13 @@ public class SigninActivity extends AppCompatActivity {
                 return;
             }
 
-            if (TextUtils.isEmpty(pw)
-                    || pw.length() < 8) {
+            if (!LocalAccounts.isValidPassword(pw)) {
 
                 Toast.makeText(
                         this,
-                        "비밀번호는 8자 이상 입력해주세요.",
+                        LocalAccounts.hasInvalidPasswordChar(pw)
+                                ? PASSWORD_CHAR_MESSAGE
+                                : PASSWORD_RULE_MESSAGE,
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -379,12 +542,59 @@ public class SigninActivity extends AppCompatActivity {
                 return;
             }
 
-            if (TextUtils.isEmpty(year)
-                    || year.length() != 4) {
+            // 이메일은 선택. 쓰다 만 주소나 이미 가입된 주소만 막는다
+            String email = emailInput.email();
+
+            if (email == null) {
 
                 Toast.makeText(
                         this,
-                        "출생년도 4자리를 입력해주세요.",
+                        emailInput.isDomainMissing()
+                                ? "이메일 주소(@ 뒤)를 선택해주세요."
+                                : "이메일을 정확히 입력해주세요. 쓰지 않으려면 비워 두세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            // [여기에 DB 입력] 이미 가입된 이메일인지 확인 (users)
+            if (!email.isEmpty() && LocalAccounts.isTaken(this, "", email)) {
+
+                Toast.makeText(
+                        this,
+                        "이미 가입된 이메일입니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            // 생년월일은 선택. 셋 다 비우면 통과, 일부만 고르면 안내, 다 고르면 오늘 이후인지 본다
+            int month = selectedMonth();
+            int day = selectedDay();
+            int chosen = (year != 0 ? 1 : 0) + (month != 0 ? 1 : 0) + (day != 0 ? 1 : 0);
+
+            if (chosen != 0 && chosen != 3) {
+
+                Toast.makeText(
+                        this,
+                        "생년월일을 모두 선택하거나 모두 비워 주세요.",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+
+            Calendar birth = Calendar.getInstance();
+            birth.clear();
+            birth.set(year, month - 1, day);
+
+            if (chosen == 3 && birth.after(Calendar.getInstance())) {
+
+                Toast.makeText(
+                        this,
+                        "생년월일을 정확히 선택해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -404,16 +614,37 @@ public class SigninActivity extends AppCompatActivity {
                 return;
             }
 
-            String month =
-                    spMonth.getSelectedItem().toString();
+            // 이메일을 썼으면 @ 뒤 도메인이 실제로 있는지 서버에 확인한다 (dsdsds.fdf 같은 주소 막기).
+            // 확인이 끝나면 이 버튼을 다시 누른 것처럼 이어서 가입한다
+            if (!email.isEmpty() && !email.equals(domainCheckedEmail)) {
+                btnNext.setEnabled(false);
+                RecommendApi.checkEmailDomain(email, new RecommendApi.Callback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean ok) {
+                        btnNext.setEnabled(true);
+                        domainCheckedEmail = email;
+                        btnNext.performClick();
+                    }
 
-            String day =
-                    spDay.getSelectedItem().toString();
+                    @Override
+                    public void onError(int code, String message) {
+                        btnNext.setEnabled(true);
+                        if (code == 0) {
+                            // 서버에 연결이 안 되면 막지 않는다 (이메일은 선택 항목)
+                            domainCheckedEmail = email;
+                            btnNext.performClick();
+                            return;
+                        }
+                        Toast.makeText(SigninActivity.this, message, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return;
+            }
 
             String gender =
                     spGender.getSelectedItem().toString();
 
-            // [여기에 DB 입력] 회원가입 정보 저장 - 아이디, 비밀번호(암호화), 이름, 생년월일, 성별, 휴대폰 (users)
+            // [여기에 DB 입력] 회원가입 정보 저장 - 아이디, 비밀번호(암호화), 이름, 생년월일, 성별, 휴대폰, 이메일(선택) (users)
             //                 저장에 성공했을 때만 아래 완료 화면으로 이동할 것
             String phone = getIntent().getStringExtra(EXTRA_PHONE);
 
@@ -422,13 +653,14 @@ public class SigninActivity extends AppCompatActivity {
                     id,
                     pw,
                     name,
-                    phone
+                    phone,
+                    email
             );
 
             if (!saved) {
                 Toast.makeText(
                         this,
-                        "이미 가입된 아이디 또는 휴대폰 번호입니다.",
+                        "이미 가입된 아이디, 휴대폰 번호 또는 이메일입니다.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -436,14 +668,14 @@ public class SigninActivity extends AppCompatActivity {
             }
 
             // 가입하면 바로 로그인된 상태로 완료 화면에 간다
-            LoginSession.login(this, id, name, "", phone);
+            LoginSession.login(this, id, name, email, phone);
+
+            String birthText = chosen == 0 ? "" : year + "년 " + month + "월 " + day + "일, ";
 
             Toast.makeText(
                     this,
                     name + "님, 회원가입 완료! (" +
-                            year + "년 " +
-                            month + " " +
-                            day + ", " +
+                            birthText +
                             gender + ")",
                     Toast.LENGTH_LONG
             ).show();
@@ -462,6 +694,12 @@ public class SigninActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+    }
+
+    private void bindTerms(int viewId, String title, int rawRes) {
+        android.widget.TextView link = findViewById(viewId);
+        link.setPaintFlags(link.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+        link.setOnClickListener(v -> TermsActivity.open(this, title, rawRes));
     }
 
     private void updateAllCheckState() {

@@ -23,6 +23,9 @@ import com.example.capstone.login.LoginSession;
 /** 팀원 피팅 진입: 키·몸무게·나이 → 체형 자가진단. */
 public class FittingActivity extends AppCompatActivity {
 
+    /** true면 체형분석 탭의 첫 화면(저장한 체형이 없을 때)으로 연 것 → 뒤로 버튼을 숨기고 제목 "체형 분석" */
+    public static final String EXTRA_AS_TAB = "fitting_as_tab";
+
     private static final String PREF_TIPS = "survey_tips";
     private static final String KEY_SKIP_GUEST_NOTICE = "skip_guest_notice";
 
@@ -35,32 +38,30 @@ public class FittingActivity extends AppCompatActivity {
         BottomMenu.setup(this, BottomMenu.TAB_FITTING);
 
         findViewById(R.id.btnStartFitting).setOnClickListener(v -> startFitting());
-        findViewById(R.id.btnLoadSurvey).setOnClickListener(v -> loadLastSurvey());
-        findViewById(R.id.btnShowFeedback).setOnClickListener(v -> showFeedback());
+        // 체형분석 탭(내 체형관리)으로 돌아가기
+        findViewById(R.id.btnFittingBack).setOnClickListener(v -> finish());
+        applyTabMode(getIntent());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // 설문을 마치고 돌아오면 최근 설문으로 갱신
-        boolean hasSurvey = BodyTypeActivity.hasLastSurvey(this);
-        findViewById(R.id.btnLoadSurvey).setAlpha(hasSurvey ? 1f : 0.5f);
-        ((TextView) findViewById(R.id.tvLastSurvey)).setText(hasSurvey
-                ? "최근 설문: " + BodyTypeActivity.lastSurveySummary(this)
-                : "아직 저장된 설문이 없어요.");
+        // 체형 분석은 로그인해야 쓸 수 있다 (찜 화면과 같음). 상품 상세 "측정하러 가기" 등 다른 길로 와도 막는다
+        LoginRequiredView.update(this, R.drawable.ic_nav_fitting,
+                "체형 분석은 로그인 후 이용할 수 있어요.", findViewById(R.id.scrollFitting));
     }
 
-    private void showFeedback() {
-        BodyProfileStore.Profile active = BodyProfileStore.getActive(this);
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        applyTabMode(intent);
+    }
 
-        if (active != null && active.parts != null && active.parts.length() > 0) {
-            startActivity(BodyFeedbackActivity.profileIntent(this, active));
-        } else if (BodyTypeActivity.hasLastSurvey(this)) {
-            startActivity(BodyFeedbackActivity.surveyIntent(this));
-        } else {
-            Toast.makeText(this, "아직 체형 분석 기록이 없어요. '체형 분석 시작하기'로 먼저 분석해 주세요.",
-                    Toast.LENGTH_SHORT).show();
-        }
+    private void applyTabMode(Intent intent) {
+        boolean asTab = intent.getBooleanExtra(EXTRA_AS_TAB, false);
+        findViewById(R.id.btnFittingBack).setVisibility(asTab ? View.INVISIBLE : View.VISIBLE);
+        ((TextView) findViewById(R.id.tvFittingTitle)).setText(asTab ? "체형 분석" : "새 체형 추가");
     }
 
     private void startFitting() {
@@ -123,31 +124,6 @@ public class FittingActivity extends AppCompatActivity {
                     .putBoolean(KEY_SKIP_GUEST_NOTICE, true)
                     .apply();
         }
-    }
-
-    /** 최근 설문을 지난번 답이 선택된 채로 1번 문항부터 연다. */
-    private void loadLastSurvey() {
-        if (!BodyTypeActivity.hasLastSurvey(this)) {
-            Toast.makeText(this, "아직 저장된 설문이 없어요. '체형 분석 시작하기'로 먼저 설문을 진행해주세요.",
-                    Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // 키를 새로 입력했으면 그 키를, 비워두면 지난 설문 때의 키를 사용
-        EditText editHeight = findViewById(R.id.editHeight);
-        float savedHeight = BodyTypeActivity.lastSurveyHeight(this);
-        boolean useSaved = editHeight.getText().toString().trim().isEmpty()
-                && savedHeight >= 100f && savedHeight <= 230f;
-        float heightCm = useSaved ? savedHeight : readHeight();
-        if (heightCm <= 0f) {
-            return;
-        }
-        // 몸무게·나이는 비워 두면 지난번에 입력한 값을 쓴다
-        if (!readWeightAndAge(true)) {
-            return;
-        }
-
-        startActivity(BodyTypeActivity.lastSurveyIntent(this, heightCm));
     }
 
     /**

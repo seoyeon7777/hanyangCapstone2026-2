@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.camera.MeasurementSession;
 import com.example.capstone.data.BodyMeasurementContract;
 import com.example.capstone.data.BodyInput;
 import com.example.capstone.data.BodyPrior;
@@ -516,11 +517,37 @@ public class MeasurementResultActivity extends AppCompatActivity {
             return;
         }
 
-        String bodyType = surveyTypeLabel();
-        int[] surveyAnswers = BodyTypeActivity.lastSurveyAnswers(this);
+        // 설문만 한 카드에서 "사진 분석 이어서 하기"로 왔으면 그 카드에 치수를 채운다 (골격·설문 답은 그 카드 것)
+        BodyProfileStore.Profile continued =
+                BodyProfileStore.find(this, MeasurementSession.continueProfileId);
+        if (continued != null && !continued.isSurveyOnly()) {
+            continued = null;   // 이미 치수가 있는 카드면 이어서 하지 않고 새 카드로
+        }
 
-        String defaultName =
-                BodyProfileStore.nextDefaultName(this);
+        final String bodyType;
+        final int[] surveyAnswers;
+        final String editId;
+        String defaultName;
+
+        if (continued != null) {
+            bodyType = continued.bodyType;
+            surveyAnswers = continued.surveyAnswers;
+            editId = continued.id;
+            defaultName = continued.name;
+        } else {
+            // 체형은 저장할 때마다 새 카드로 남는다 (여러 개 저장하고 '내 체형 관리'에서 현재 체형을 고름)
+            if (!BodyProfileStore.canAddProfile(this)) {
+                AppDialog.alert(this, "체형 저장",
+                        "체형은 최대 " + BodyProfileStore.MAX_PROFILES
+                                + "개까지 저장할 수 있어요. '내 체형 관리'에서 안 쓰는 체형을 지운 뒤 다시 저장해 주세요.",
+                        "확인");
+                return;
+            }
+            bodyType = surveyTypeLabel();
+            surveyAnswers = BodyTypeActivity.lastSurveyAnswers(this);
+            editId = null;
+            defaultName = BodyProfileStore.nextDefaultName(this);
+        }
 
         BodySaveConfirmDialog.show(this, heightCm, bodyType, parts, defaultName,
                 new BodySaveConfirmDialog.Listener() {
@@ -528,8 +555,9 @@ public class MeasurementResultActivity extends AppCompatActivity {
                     public void onSave(String name) {
                         BodyProfileStore.Profile saved = BodyProfileStore.save(
                                 MeasurementResultActivity.this,
-                                null,
+                                editId,
                                 name, heightCm, 0f, bodyType, parts, surveyAnswers);
+                        MeasurementSession.continueProfileId = null;
                         startActivity(BodySaveCompleteActivity.newIntent(
                                 MeasurementResultActivity.this, saved.name));
                         finish();
@@ -547,6 +575,8 @@ public class MeasurementResultActivity extends AppCompatActivity {
                     public void onRetakeCamera() {
                         Intent intent = new Intent(MeasurementResultActivity.this, PhotoMeasurementActivity.class);
                         intent.putExtra(BodyMeasurementContract.EXTRA_USER_HEIGHT_CM, heightCm);
+                        intent.putExtra(PhotoMeasurementActivity.EXTRA_CONTINUE_PROFILE_ID,
+                                MeasurementSession.continueProfileId);   // 이어서 하던 카드는 그대로
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         startActivity(intent);
                         finish();

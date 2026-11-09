@@ -7,13 +7,11 @@ import com.example.capstone.data.ProfilePhotoStore;
 import com.example.capstone.mypage.CancelReturnActivity;
 import com.example.capstone.mypage.DeliveryAddressActivity;
 import com.example.capstone.mypage.EditProfileActivity;
-import com.example.capstone.mypage.MyBodyActivity;
 import com.example.capstone.mypage.MyReviewActivity;
 import com.example.capstone.mypage.NoticeActivity;
 import com.example.capstone.mypage.OrderListActivity;
 import com.example.capstone.ui.AppDialog;
 import com.example.capstone.ui.BottomMenu;
-import com.example.capstone.ui.SellerCenterActivity;
 import com.example.capstone.mypage.PaymentMethodActivity;
 import com.example.capstone.mypage.RefundAccountActivity;
 
@@ -149,7 +147,6 @@ public class MyPageActivity extends AppCompatActivity {
         itemOrderShipping.setOnClickListener(v -> openOrders(MyPageStore.STATUS_SHIPPING));
         itemOrderDone.setOnClickListener(v -> openOrders(MyPageStore.STATUS_DONE));
 
-        findViewById(R.id.menuMyBody).setOnClickListener(v -> open(MyBodyActivity.class));
 
         // 쇼핑 활동
         menuOrderList.setOnClickListener(v -> openOrders(MyPageStore.STATUS_ALL));
@@ -165,9 +162,6 @@ public class MyPageActivity extends AppCompatActivity {
         // 문의
         menuMyInquiry.setOnClickListener(v -> open(InquiryActivity.class));
         menuNotice.setOnClickListener(v -> open(NoticeActivity.class));
-
-        // 판매자 센터: 내 상품 목록과 상품 등록
-        findViewById(R.id.menuSeller).setOnClickListener(v -> open(SellerCenterActivity.class));
 
         // 로그아웃
         tvLogout.setOnClickListener(v -> AppDialog.show(this, false,

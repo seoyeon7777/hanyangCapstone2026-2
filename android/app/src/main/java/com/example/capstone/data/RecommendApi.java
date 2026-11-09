@@ -77,6 +77,7 @@ public final class RecommendApi {
     private static final int SERVER_ID_BASE = 1000;
     private static final int CATALOG_PAGE_SIZE = 50;
     private static final List<String> CATALOG_ORDER = new ArrayList<>();
+    private static final List<Runnable> CATALOG_WAITERS = new ArrayList<>();
     private static final List<String> BODY_ORDER = new ArrayList<>();
     private static volatile boolean catalogLoading = false;
     private static volatile long catalogLoadedAt = 0L;
@@ -85,7 +86,15 @@ public final class RecommendApi {
     // 홈 불러오기와 클릭·찜 기록을 다른 줄로 보낸다 (기록이 밀려도 홈 새로고침이 기다리지 않게)
     private static final ExecutorService FEED_IO = Executors.newSingleThreadExecutor();
     private static final ExecutorService EVENT_IO = Executors.newSingleThreadExecutor();
-    private static final Handler MAIN = new Handler(Looper.getMainLooper());
+    // 메인 스레드 핸들러는 처음 쓸 때 만든다 (클래스를 읽기만 해도 만들면 단위 테스트에서 로그인 경로가 깨진다)
+    private static Handler mainHandler;
+
+    private static synchronized Handler main() {
+        if (mainHandler == null) {
+            mainHandler = new Handler(Looper.getMainLooper());
+        }
+        return mainHandler;
+    }
 
     // 마지막으로 서버에 연결하지 못한 시각 (0이면 연결 문제 없음)
     private static volatile long lastConnectFailAt = 0L;
@@ -141,7 +150,7 @@ public final class RecommendApi {
      * 홈 추천에 보낼 체형 입력. 순서:
      * 1) 대표 체형 카드에 저장한 설문 답 → 서버가 진단 (설문을 다시 하면 결과 화면과 홈 체형이 같아진다)
      * 2) 옛 카드라 설문 답이 없으면 카드의 체형 이름을 100%로
-     * 3) 대표 체형이 없으면 최근 설문 답. 아무것도 없으면 null
+     * 3) 대표 체형이 없으면: 비로그인은 최근 설문 답, 로그인했으면 null (저장한 체형만 쓴다). 아무것도 없으면 null
      */
     private static JSONObject bodyInput(Context context) throws JSONException {
 
@@ -170,7 +179,7 @@ public final class RecommendApi {
             }
         }
 
-        int[] answers = BodyTypeActivity.lastSurveyAnswers(context);
+        int[] answers = BodyTypeActivity.homeSurveyAnswers(context);
 
         if (answers == null) {
             return null;
@@ -200,6 +209,15 @@ public final class RecommendApi {
         } catch (JSONException e) {
             return false;
         }
+    }
+
+    /** 서버 체형 진단 결과가 있는지 (대표 체형 카드 또는 최근 설문 결과). 답만 저장된 설문은 아니다 */
+    public static boolean hasDiagnosis(Context context) {
+
+        BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
+
+        return (active != null && typeCode(active.bodyType) != null)
+                || BodyTypeActivity.lastSurveyType(context) >= 0;
     }
 
     /** 홈이 체형이 바뀌었는지 알아챌 때 쓰는 값 (계정 + 설문 시각 + 대표 체형 카드) */
@@ -466,10 +484,15 @@ public final class RecommendApi {
     }
 
     public static void loadCatalog(Context context, Runnable onDone) {
-        if (catalogLoading
-                || (catalogLoadedAt > 0 && System.currentTimeMillis() - catalogLoadedAt < CATALOG_REFRESH_MILLIS)) {
+        if (catalogLoading) {
             if (onDone != null) {
-                MAIN.post(onDone);
+                CATALOG_WAITERS.add(onDone);
+            }
+            return;
+        }
+        if (catalogLoadedAt > 0 && System.currentTimeMillis() - catalogLoadedAt < CATALOG_REFRESH_MILLIS) {
+            if (onDone != null) {
+                main().post(onDone);
             }
             return;
         }
@@ -492,6 +515,15 @@ public final class RecommendApi {
         if (onDone != null) {
             onDone.run();
         }
+        List<Runnable> waiters = new ArrayList<>(CATALOG_WAITERS);
+        CATALOG_WAITERS.clear();
+        for (Runnable waiter : waiters) {
+            waiter.run();
+        }
+    }
+
+    public static boolean isCatalogLoading() {
+        return catalogLoading;
     }
 
     private static void loadCatalogPage(Context context, String mode, List<String> shown, Runnable onDone) {
@@ -987,6 +1019,80 @@ public final class RecommendApi {
     }
 
     // =========================
+    // 이메일 인증 (서버 email_verify.py: 인증 메일 → 메일 속 링크 클릭 → 인증확인)
+    // =========================
+
+    /** 인증 메일을 보낸다. 성공하면 인증 요청 번호(request_id) */
+    public static void sendEmailVerification(String email, Callback<String> callback) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put("email", email);
+        } catch (JSONException e) {
+            callback.onError(0, "이메일을 보낼 수 없어요");
+            return;
+        }
+        // 메일 서버를 거치느라 오래 걸릴 수 있어 넉넉히 기다린다
+        post("/api/email/send", body, 20000, EVENT_IO, new Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                callback.onSuccess(result.optString("request_id"));
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                callback.onError(code, code == 0 ? "서버에 연결할 수 없어요" : message);
+            }
+        });
+    }
+
+    /**
+     * 이메일 @ 뒤 도메인이 실제로 있는지 서버가 확인한다 (회원가입 이메일용, 메일은 보내지 않는다).
+     * 없는 도메인이면 onError(400, 안내 문구). 서버에 연결을 못 하면 onError(0, …)
+     */
+    public static void checkEmailDomain(String email, Callback<Boolean> callback) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put("email", email);
+        } catch (JSONException e) {
+            callback.onError(0, "이메일을 확인할 수 없어요");
+            return;
+        }
+        post("/api/email/check", body, TIMEOUT_MS, EVENT_IO, new Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                callback.onSuccess(true);
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                callback.onError(code, message);
+            }
+        });
+    }
+
+    /** 메일 속 링크를 눌렀는지 확인한다. 눌렀으면 true */
+    public static void checkEmailVerification(String requestId, Callback<Boolean> callback) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put("request_id", requestId);
+        } catch (JSONException e) {
+            callback.onError(0, "인증 요청을 확인할 수 없어요");
+            return;
+        }
+        post("/api/email/status", body, TIMEOUT_MS, EVENT_IO, new Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject result) {
+                callback.onSuccess(result.optBoolean("verified"));
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                callback.onError(code, code == 0 ? "서버에 연결할 수 없어요" : message);
+            }
+        });
+    }
+
+    // =========================
     // HTTP (백그라운드 스레드에서 보내고, 결과는 메인 스레드로)
     // =========================
 
@@ -1030,18 +1136,18 @@ public final class RecommendApi {
                 JSONObject json = new JSONObject(readAll(stream));
 
                 if (code < 400) {
-                    MAIN.post(() -> callback.onSuccess(json));
+                    main().post(() -> callback.onSuccess(json));
                 } else {
                     // 서버 오류는 {"ok": false, "error": "..."} 모양
                     String message = json.optString("error", "서버 오류 (" + code + ")");
-                    MAIN.post(() -> callback.onError(code, message));
+                    main().post(() -> callback.onError(code, message));
                 }
 
             } catch (IOException | JSONException e) {
                 if (e instanceof IOException) {
                     lastConnectFailAt = System.currentTimeMillis();
                 }
-                MAIN.post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
+                main().post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
             } finally {
                 if (connection != null) {
                     connection.disconnect();

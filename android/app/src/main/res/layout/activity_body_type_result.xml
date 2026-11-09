@@ -165,7 +165,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="더 자세한 체형 분석을 원하시나요?"
+                android:text="이 결과를 어떻게 할까요?"
                 android:textColor="#111111"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -176,46 +176,49 @@
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:lineSpacingExtra="3dp"
-                android:text="전신 사진(정면·옆면)을 올리면&#10;신체 비율과 치수를 더 자세하게 분석할 수 있습니다."
+                android:text="전신 사진(정면·옆면)을 올리면 치수까지 더 자세하게 분석해요.&#10;사진 없이 지금 결과만 내 체형으로 저장할 수도 있어요."
                 android:textColor="#777777"
                 android:textSize="13sp" />
 
-            <!-- 예 / 아니오 -->
-            <LinearLayout
+            <!-- 1) 정밀 분석 (사진) -->
+            <Button
+                android:id="@+id/btnYes"
                 android:layout_width="match_parent"
                 android:layout_height="54dp"
                 android:layout_marginTop="22dp"
-                android:orientation="horizontal">
+                android:backgroundTint="#111111"
+                android:text="사진으로 정밀 분석하기"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-                <!-- 예가 먼저 -->
-                <Button
-                    android:id="@+id/btnYes"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:backgroundTint="#111111"
-                    android:text="예"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+            <!-- 2) 사진 없이 지금 결과만 저장 -->
+            <Button
+                android:id="@+id/btnSaveSurvey"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="#EAEAEA"
+                android:text="이대로 저장하기"
+                android:textAllCaps="false"
+                android:textColor="#111111"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-                <Space
-                    android:layout_width="10dp"
-                    android:layout_height="match_parent" />
-
-                <Button
-                    android:id="@+id/btnNo"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:backgroundTint="#EAEAEA"
-                    android:text="아니오"
-                    android:textAllCaps="false"
-                    android:textColor="#111111"
-                    android:textSize="15sp" />
-
-            </LinearLayout>
+            <!-- 3) 저장하지 않고 나가기 -->
+            <TextView
+                android:id="@+id/btnNo"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="4dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="저장하지 않고 나가기"
+                android:textColor="#777777"
+                android:textSize="14sp" />
 
         </LinearLayout>
 
