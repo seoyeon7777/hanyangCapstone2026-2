@@ -65,7 +65,7 @@ public final class MeasurementSession {
     public static Silhouette side;
     public static BodyMeasurementCalculator.Result frontLengths;
     public static float heightCm;
-    /** 사진 모델이 구한 가슴·허리·엉덩이 둘레(cm). 못 구했으면 null */
+    /** 사진 모델이 구한 가슴·허리·엉덩이·허벅지 둘레(cm, 길이 4). 못 구했으면 null */
     public static float[] modelCirc;
 
     /** 가슴, 허리, 골반 순서. 정면·옆면 사진이 같은 값을 쓴다. */

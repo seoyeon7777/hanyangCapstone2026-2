@@ -88,10 +88,13 @@ final class MeasurementResultLauncher {
         intent.putExtra("HIP_CIRCUMFERENCE", circ[MeasurementSession.HIP]);
 
         // 사진 모델(딥러닝)이 구한 둘레. 있으면 결과 화면이 사진 계산 값 대신 쓴다
-        if (MeasurementSession.modelCirc != null && MeasurementSession.modelCirc.length == 3) {
+        if (MeasurementSession.modelCirc != null && MeasurementSession.modelCirc.length >= 3) {
             intent.putExtra("DL_CHEST", MeasurementSession.modelCirc[0]);
             intent.putExtra("DL_WAIST", MeasurementSession.modelCirc[1]);
             intent.putExtra("DL_HIP", MeasurementSession.modelCirc[2]);
+            if (MeasurementSession.modelCirc.length >= 4) {
+                intent.putExtra("DL_THIGH", MeasurementSession.modelCirc[3]);
+            }
         }
 
         // 어깨 경사각(도, 정면 윤곽에서 추정). 못 구하면 -1

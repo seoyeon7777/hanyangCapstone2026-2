@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * 정면·옆면 사진을 사진 모델(BodyPhotoModel)에 넣어 가슴·허리·엉덩이 둘레를 구한다.
+ * 정면·옆면 사진을 사진 모델(BodyPhotoModel)에 넣어 가슴·허리·엉덩이·허벅지 둘레를 구한다.
  * 모델이 학습한 전처리(PersonCropper)와 같은 순서로 사람 이미지를 만든다. 백그라운드에서 돌고 결과는 메인 스레드로 준다.
  * 성인(19세 이상)만 쓰고, 어디서든 실패하면 null을 돌려준다(그러면 기존 사진 계산 + 기준선으로 대신한다).
  */
@@ -57,8 +57,9 @@ final class BodyPhotoPipeline {
                     result = model.circumferences(front.chw, side.chw, heightCm, weightKg, age,
                             front.aspect, side.aspect, prior);
                     if (result != null) {
-                        Log.i(TAG, String.format("사진 모델 결과 가슴 %.1f 허리 %.1f 엉덩이 %.1f (가로세로 비율 정면 %.3f 옆면 %.3f)",
-                                result[0], result[1], result[2], front.aspect, side.aspect));
+                        Log.i(TAG, String.format("사진 모델 결과 가슴 %.1f 허리 %.1f 엉덩이 %.1f 허벅지 %.1f (가로세로 비율 정면 %.3f 옆면 %.3f)",
+                                result[0], result[1], result[2], result.length > 3 ? result[3] : -1f,
+                                front.aspect, side.aspect));
                     }
                 } else {
                     Log.w(TAG, "사람 이미지를 만들지 못했습니다 front=" + (front != null) + " side=" + (side != null));

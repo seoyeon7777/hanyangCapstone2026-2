@@ -211,18 +211,23 @@ public class MeasurementResultActivity extends AppCompatActivity {
         final float dlChest = receivedIntent.getFloatExtra("DL_CHEST", -1f);
         final float dlWaist = receivedIntent.getFloatExtra("DL_WAIST", -1f);
         final float dlHip = receivedIntent.getFloatExtra("DL_HIP", -1f);
+        final float dlThigh = receivedIntent.getFloatExtra("DL_THIGH", -1f);
         final boolean modelUsed = dlChest > 0f && dlWaist > 0f && dlHip > 0f;
+        final boolean thighModelUsed = modelUsed && dlThigh > 0f;
         if (modelUsed) {
             chest = dlChest;
             waist = dlWaist;
             hip = dlHip;
+        }
+        if (thighModelUsed) {
+            thigh = dlThigh;
         }
 
         final BodyPrior.Result prior = BodyInput.prior(this, height);
         final boolean[] estimated = new boolean[BodyPrior.PART_KEYS.length];
         final float[] fixed = BodyPrior.reconcile(prior,
                 new float[]{chest, waist, hip, thigh}, estimated,
-                new boolean[]{modelUsed, modelUsed, modelUsed, false});
+                new boolean[]{modelUsed, modelUsed, modelUsed, thighModelUsed});
         chest = fixed[BodyPrior.CHEST];
         waist = fixed[BodyPrior.WAIST];
         hip = fixed[BodyPrior.HIP];

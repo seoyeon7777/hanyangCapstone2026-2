@@ -362,6 +362,12 @@ match_score(body, item) -> {
 - 확인: 빌드 + 단위 테스트 컴파일까지. 사람 사진이 있는 기기에서 분석 → 결과 → 뒤로 가기(사진이 비어 있는지)는 실제로 확인하지 못했다
 - 사진을 파일로 저장하는 코드는 프로필 사진(`ProfilePhotoStore`)뿐이고, 체형 분석 사진과 무관하다
 
+### 4-23. 사진 모델: 출력 4개(허벅지 포함), 입력 오차 2.0 (11/10)
+- 사진(정면·옆면)으로 둘레를 맞히는 모델 `assets/models/body_photo.onnx`(ResNet-18, 기준선 대비 잔차)를 **출력 4개(가슴·허리·엉덩이·허벅지)** 로 바꿨다. 학습 때 키·몸무게에 섞는 입력 오차는 2.5에서 **2.0** 으로 낮췄다(입력이 정확할 때 가슴이 기준선보다 나빴던 문제와 틀린 입력에서의 안전을 맞춘 값, 비교표는 `training/README.md` 9-9). 허벅지는 모델 값이라 "(추정)" 표시가 없다
+- `BodyPhotoModel`: meta(`body_photo_meta.json`)의 mu·sd 길이(3 또는 4)만큼 출력을 읽는다. `MeasurementSession.modelCirc`는 길이 4, 결과 화면에는 `DL_THIGH`로 넘어가 `BodyPrior.reconcile`이 모델 값으로 믿는다(기준선과 `MODEL_MAX_DIFF_CM` 넘게 다르면 기준선). 저장된 체형은 `PHOTO_MODEL`이 있고 `EST_PARTS`에 THIGH가 없을 때만 허벅지를 모델 값으로 믿는다
+- 학습·재학습: 저장소 `training/`의 `make_inputs.py`, `train_photo_model.py`, `run_compare.py`, `summarize_runs.py`. Windows에서 `torch`가 Smart App Control에 막히면 WSL2에서 돌린다(`training/README.md` 7장). 학습 데이터·모델 파일은 저장소 밖(`D:\workspace\Capstone\데이터`)
+- 확인: 빌드, 에뮬레이터에서 학습에 안 쓴 한 명(F016)으로 분석 → 결과(허벅지 포함 4개) → 뒤로 가기에서 사진이 지워지는 것까지. 정확도는 점검용 35명 기준이고 폰 사진은 확인하지 못했다. 남은 모델 작업: 기준선 입력 범위 확장(키 130~200 등), 사이즈표(판매자 치수 방식)
+
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
   - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)

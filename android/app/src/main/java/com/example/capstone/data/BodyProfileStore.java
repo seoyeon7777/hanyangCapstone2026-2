@@ -33,7 +33,7 @@ public final class BodyProfileStore {
     /** 프로필 parts 안에서, 키·몸무게·나이로 어림해서 채운 부위 이름들(예: "CHEST,WAIST") */
     public static final String EST_PARTS = "EST_PARTS";
 
-    /** 프로필 parts 안에서, 가슴·허리·엉덩이가 사진 모델(딥러닝)로 구한 값이면 "1" */
+    /** 프로필 parts 안에서, 가슴·허리·엉덩이(·허벅지)가 사진 모델(딥러닝)로 구한 값이면 "1". 허벅지는 EST_PARTS에 없을 때만 모델 값 */
     public static final String PHOTO_MODEL = "PHOTO_MODEL";
 
     public static final String PART_CHEST_DEPTH = "CHEST_DEPTH";
@@ -361,8 +361,10 @@ public final class BodyProfileStore {
         boolean[] est = new boolean[measured.length];
         boolean fromModel = active != null && active.parts != null
                 && "1".equals(active.parts.optString(PHOTO_MODEL, ""));
-        // 사진 모델로 구한 가슴·허리·엉덩이는 기준선과 달라도 믿는다 (허벅지는 모델이 없다)
-        boolean[] trusted = {fromModel, fromModel, fromModel, false};
+        // 사진 모델로 구한 가슴·허리·엉덩이·허벅지는 기준선과 달라도 믿는다.
+        // 옛 3개 출력 모델로 저장한 체형은 허벅지가 기준선 값("추정"으로 기록)이라 믿지 않고 그대로 기준선과 맞춘다.
+        boolean thighFromModel = fromModel && !savedEst.contains(BodyPrior.PART_KEYS[BodyPrior.THIGH]);
+        boolean[] trusted = {fromModel, fromModel, fromModel, thighFromModel};
         float[] fixed = BodyPrior.reconcile(prior, measured, est, trusted);
 
         profile.updateFromMeasurement(
