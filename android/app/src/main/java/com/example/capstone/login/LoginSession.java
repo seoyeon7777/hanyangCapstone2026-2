@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.CartStore;
+import com.example.capstone.data.DemoData;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.GuestSurvey;
 import com.example.capstone.data.MyPageStore;
@@ -63,6 +64,7 @@ public final class LoginSession {
     public static void reloadAccountData(Context context) {
         GuestSurvey.clear();        // 비회원 설문은 로그인·로그아웃하면 사라진다 (새 계정이 이어받지 않는다)
         MyPageStore.init(context);
+        DemoData.seedIfNeeded(context);
         DummyData.clearLikes();
         RecommendApi.refreshLikes(context);
     }
