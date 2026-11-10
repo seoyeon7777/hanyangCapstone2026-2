@@ -285,6 +285,7 @@ public class MyPageStore {
         public final String content;
         public String status;
         public final String date;
+        public String answer = "";
 
         public Inquiry(
                 String type,
@@ -644,15 +645,15 @@ public class MyPageStore {
         for (int i = 0; savedInquiries != null && i < savedInquiries.length(); i++) {
             JSONObject j = savedInquiries.getJSONObject(i);
 
-            inquiries.add(
-                    new Inquiry(
-                            j.optString("type"),
-                            j.optString("title"),
-                            j.optString("content"),
-                            j.optString("status"),
-                            j.optString("date")
-                    )
+            Inquiry inquiry = new Inquiry(
+                    j.optString("type"),
+                    j.optString("title"),
+                    j.optString("content"),
+                    j.optString("status"),
+                    j.optString("date")
             );
+            inquiry.answer = j.optString("answer");
+            inquiries.add(inquiry);
         }
 
         JSONArray savedCoupons = all.optJSONArray("coupons");
@@ -781,6 +782,7 @@ public class MyPageStore {
                 j.put("content", inquiry.content);
                 j.put("status", inquiry.status);
                 j.put("date", inquiry.date);
+                j.put("answer", inquiry.answer);
 
                 inquiryArray.put(j);
             }
@@ -970,6 +972,14 @@ public class MyPageStore {
                 )
         );
 
+        save();
+    }
+
+    public static void addInquiry(Inquiry inquiry) {
+        if (inquiry == null) {
+            return;
+        }
+        inquiries.add(0, inquiry);
         save();
     }
 
