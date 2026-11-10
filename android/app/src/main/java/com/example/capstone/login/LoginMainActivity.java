@@ -76,7 +76,7 @@ public class LoginMainActivity extends AppCompatActivity {
         // 로그인: 아이디 + 비밀번호 (인증 없음)
         btnLogin.setOnClickListener(v -> login());
 
-        // 회원가입 → 휴대전화 본인인증부터
+        // 회원가입 → 휴대폰 본인인증부터
         btnSignup.setOnClickListener(v ->
                 startActivity(new Intent(LoginMainActivity.this, PhoneVerifyActivity.class)));
 

@@ -8,34 +8,46 @@
     android:orientation="vertical"
     android:background="#FFFFFF">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="12dp">
+        android:layout_height="48dp"
+        android:layout_marginTop="12dp"
+        android:paddingHorizontal="12dp">
+
+        <ImageButton
+            android:id="@+id/btnWishBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="9dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@null"
+            android:contentDescription="뒤로가기"
+            android:src="@drawable/ic_back"
+            app:tint="@color/black" />
 
         <TextView
             android:id="@+id/textWishTitle"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_centerInParent="true"
             android:text="찜"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="#111111"/>
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-        <ImageView
+        <ImageButton
             android:id="@+id/btnWishCart"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:padding="8dp"
+            android:padding="9dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@null"
+            android:contentDescription="장바구니"
             android:src="@drawable/ic_shopping_bag"
-            app:tint="#111111"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="장바구니"/>
-    </LinearLayout>
+            app:tint="@color/black" />
+    </RelativeLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerWish"

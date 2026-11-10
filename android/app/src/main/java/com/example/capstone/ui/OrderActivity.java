@@ -45,7 +45,7 @@ public class OrderActivity extends AppCompatActivity {
     /** 상세 화면 "바로 구매"일 때: 그 상품의 서버 번호 (서버 상품만). 장바구니는 건드리지 않는다 */
     public static final String EXTRA_BUY_NOW_SERVER_ID = "buy_now_server_id";
 
-    private TextView btnBack;
+    private View btnBack;
     private TextView tvProductName;
     private TextView tvProductOption;
     private TextView tvProductQuantity;

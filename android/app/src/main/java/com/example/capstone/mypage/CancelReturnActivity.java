@@ -39,7 +39,7 @@ public class CancelReturnActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cancel_return);
 
-        MyPageUi.setupToolbar(this, "취소/반품/교환 내역");
+        MyPageUi.setupToolbar(this, "취소·반품 내역");
 
         chips = new TextView[]{
                 findViewById(R.id.chipAll),

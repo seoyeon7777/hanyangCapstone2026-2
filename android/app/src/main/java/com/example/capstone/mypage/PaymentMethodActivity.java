@@ -59,7 +59,6 @@ public class PaymentMethodActivity extends AppCompatActivity {
         KoreanLineBreak.apply(findViewById(R.id.tvPayNotice));
 
         renderCards();
-        renderEasyPay();
     }
 
     private void renderCards() {
@@ -271,43 +270,6 @@ public class PaymentMethodActivity extends AppCompatActivity {
         }
 
         return digits.substring(0, 2) + "/" + digits.substring(2);
-    }
-
-    private void renderEasyPay() {
-        bindEasyPay(findViewById(R.id.tvKakaoStatus), findViewById(R.id.btnKakaoPay),
-                "카카오페이", MyPageStore.isKakaoPayLinked(), linked -> {
-                    // [여기에 DB 입력] 카카오페이 정기결제 연동/해제 (payments)
-                    MyPageStore.setKakaoPayLinked(linked);
-                });
-        bindEasyPay(findViewById(R.id.tvNaverStatus), findViewById(R.id.btnNaverPay),
-                "네이버페이", MyPageStore.isNaverPayLinked(), linked -> {
-                    // [여기에 DB 입력] 네이버페이 연동/해제 (payments)
-                    MyPageStore.setNaverPayLinked(linked);
-                });
-    }
-
-    private void bindEasyPay(TextView tvStatus, TextView btn, String name, boolean linked,
-                             java.util.function.Consumer<Boolean> save) {
-        tvStatus.setText(linked ? "연결됨" : "연결 안 됨");
-        tvStatus.setTextColor(linked ? 0xFF111111 : 0xFF999999);
-        btn.setText(linked ? "연결 해제" : "연결하기");
-
-        btn.setOnClickListener(v -> {
-            if (!linked) {
-                save.accept(true);
-                toast(name + "가 연결되었습니다.");
-                renderEasyPay();
-                return;
-            }
-            AppDialog.show(this, false, name + " 연결 해제",
-                    name + " 연결을 해제하면 주문할 때 " + name + "로 결제할 수 없어요.",
-                    "취소", null,
-                    "연결 해제", () -> {
-                        save.accept(false);
-                        toast(name + " 연결이 해제되었습니다.");
-                        renderEasyPay();
-                    });
-        });
     }
 
     private void toast(String message) {

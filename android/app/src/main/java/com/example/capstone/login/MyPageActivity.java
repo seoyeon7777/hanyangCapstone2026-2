@@ -15,6 +15,7 @@ import com.example.capstone.ui.BottomMenu;
 import com.example.capstone.mypage.PaymentMethodActivity;
 import com.example.capstone.mypage.RefundAccountActivity;
 
+import android.view.View;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageButton;
@@ -114,9 +115,10 @@ public class MyPageActivity extends AppCompatActivity {
         MyPageStore.User user = MyPageStore.getUser();
         tvUserName.setText((user.name.isEmpty() ? "회원" : user.name) + "님");
         tvUserEmail.setText(user.email);
+        tvUserEmail.setVisibility(user.email == null || user.email.isEmpty() ? View.GONE : View.VISIBLE);
 
         ProfilePhotoStore.showIn(imgProfile,
-                Math.round(12 * getResources().getDisplayMetrics().density));
+                Math.round(6 * getResources().getDisplayMetrics().density));
     }
 
     /** orders + delivery 상태별 개수 반영 */

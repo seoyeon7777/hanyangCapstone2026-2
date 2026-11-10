@@ -221,15 +221,17 @@ public class CartActivity extends AppCompatActivity {
 
         TextView subMessage = makeText(
                 "마음에 드는 상품을 담아보세요",
-                12, false, GRAY
+                13, false, GRAY
         );
 
         subMessage.setGravity(Gravity.CENTER);
 
         LinearLayout.LayoutParams subParams =
                 new LinearLayout.LayoutParams(
-                        -1, dp(32)
+                        -2, -2
                 );
+
+        subParams.topMargin = dp(6);
 
         emptyLayout.addView(subMessage, subParams);
 
@@ -248,7 +250,7 @@ public class CartActivity extends AppCompatActivity {
                         dp(132), dp(42)
                 );
 
-        buttonParams.topMargin = dp(18);
+        buttonParams.topMargin = dp(20);
 
         emptyLayout.addView(
                 browseButton, buttonParams
@@ -732,9 +734,7 @@ public class CartActivity extends AppCompatActivity {
         }
 
         if (recommendationSection != null) {
-            recommendationSection.setVisibility(
-                    empty ? View.VISIBLE : View.GONE
-            );
+            recommendationSection.setVisibility(View.GONE);
         }
 
         if (summaryLayout != null) {

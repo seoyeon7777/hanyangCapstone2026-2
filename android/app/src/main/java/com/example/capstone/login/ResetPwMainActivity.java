@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
 
-/** 비밀번호 재설정: 핸드폰 번호로 찾을지 이메일로 찾을지 고르는 화면 */
+/** 비밀번호 재설정: 휴대폰 번호로 찾을지 이메일로 찾을지 고르는 화면 */
 public class ResetPwMainActivity extends AppCompatActivity {
 
     @Override

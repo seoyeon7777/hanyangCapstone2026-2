@@ -1,5 +1,8 @@
 package com.example.capstone.ui;
 
+import android.content.res.ColorStateList;
+import android.widget.ImageButton;
+import android.widget.FrameLayout;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -81,33 +84,59 @@ public class CategoryMenuActivity extends AppCompatActivity {
         setContentView(root);
 
         // 상단 제목
-        LinearLayout toolbar = new LinearLayout(this);
-        toolbar.setGravity(Gravity.CENTER_VERTICAL);
-        toolbar.setPadding(dp(16), 0, dp(16), 0);
+        FrameLayout toolbar = new FrameLayout(this);
+        toolbar.setPadding(dp(12), 0, dp(12), 0);
 
-        root.addView(
-                toolbar,
-                new LinearLayout.LayoutParams(-1, dp(52))
+        LinearLayout.LayoutParams toolbarParams =
+                new LinearLayout.LayoutParams(-1, dp(48));
+        toolbarParams.topMargin = dp(12);
+
+        root.addView(toolbar, toolbarParams);
+
+        ImageButton back = new ImageButton(this);
+        back.setImageResource(R.drawable.ic_back);
+        back.setImageTintList(ColorStateList.valueOf(BLACK));
+        back.setBackground(null);
+        back.setPadding(dp(9), dp(9), dp(9), dp(9));
+        back.setContentDescription("뒤로가기");
+
+        toolbar.addView(
+                back,
+                new FrameLayout.LayoutParams(dp(40), dp(40), Gravity.START | Gravity.CENTER_VERTICAL)
         );
 
+        back.setOnClickListener(v -> finish());
+
         TextView title = makeText(
-                "카테고리", 19, true, BLACK
+                "카테고리", 18, true, BLACK
         );
 
         toolbar.addView(
                 title,
-                new LinearLayout.LayoutParams(0, -2, 1)
+                new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER)
         );
 
-        TextView search = makeText(
-                "⌕", 28, false, BLACK
-        );
-
-        search.setGravity(Gravity.CENTER);
+        LinearLayout actions = new LinearLayout(this);
+        actions.setGravity(Gravity.CENTER_VERTICAL);
 
         toolbar.addView(
+                actions,
+                new FrameLayout.LayoutParams(-2, -1, Gravity.END | Gravity.CENTER_VERTICAL)
+        );
+
+        ImageView search = new ImageView(this);
+        search.setImageResource(R.drawable.ic_search);
+        search.setColorFilter(BLACK);
+        search.setPadding(dp(9), dp(10), dp(9), dp(8));
+        search.setContentDescription("검색");
+
+        LinearLayout.LayoutParams searchParams =
+                new LinearLayout.LayoutParams(dp(40), dp(40));
+        searchParams.setMarginEnd(-dp(6));
+
+        actions.addView(
                 search,
-                new LinearLayout.LayoutParams(dp(42), -1)
+                searchParams
         );
 
         search.setOnClickListener(v ->
@@ -122,14 +151,13 @@ public class CategoryMenuActivity extends AppCompatActivity {
         cart.setPadding(dp(9), dp(9), dp(9), dp(9));
         cart.setContentDescription("장바구니");
 
-        toolbar.addView(
+        actions.addView(
                 cart,
-                new LinearLayout.LayoutParams(dp(42), dp(42))
+                new LinearLayout.LayoutParams(dp(40), dp(40))
         );
 
         cart.setOnClickListener(v -> BottomMenu.openCart(this));
 
-        root.addView(divider());
 
         // 가운데 카테고리 영역
         LinearLayout content = new LinearLayout(this);
