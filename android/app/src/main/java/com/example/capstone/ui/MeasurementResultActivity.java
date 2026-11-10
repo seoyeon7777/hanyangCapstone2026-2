@@ -71,16 +71,6 @@ public class MeasurementResultActivity extends AppCompatActivity {
                 findViewById(R.id.textResultThigh);
 
         // =========================================
-        // 촬영 사진
-        // =========================================
-
-        ImageView imageFront =
-                findViewById(R.id.imageResultFront);
-
-        ImageView imageSide =
-                findViewById(R.id.imageResultSide);
-
-        // =========================================
         // 비율 분석
         // =========================================
 
@@ -327,48 +317,6 @@ public class MeasurementResultActivity extends AppCompatActivity {
         estNote.setVisibility(anyEstimated || photoModelFailed ? View.VISIBLE : View.GONE);
 
         // =========================================
-        // 정면 사진 표시
-        // 기존 URI 방식 + 새 카메라 PATH 방식
-        // 둘 다 지원
-        // =========================================
-
-        String frontUriString =
-                receivedIntent.getStringExtra(
-                        "FRONT_PHOTO_URI"
-                );
-
-        String frontPhotoPath =
-                receivedIntent.getStringExtra(
-                        "FRONT_PHOTO_PATH"
-                );
-
-        displayPhoto(
-                imageFront,
-                frontUriString,
-                frontPhotoPath
-        );
-
-        // =========================================
-        // 측면 사진 표시
-        // =========================================
-
-        String sideUriString =
-                receivedIntent.getStringExtra(
-                        "SIDE_PHOTO_URI"
-                );
-
-        String sidePhotoPath =
-                receivedIntent.getStringExtra(
-                        "SIDE_PHOTO_PATH"
-                );
-
-        displayPhoto(
-                imageSide,
-                sideUriString,
-                sidePhotoPath
-        );
-
-        // =========================================
         // 상체 비율
         // =========================================
 
@@ -598,60 +546,6 @@ public class MeasurementResultActivity extends AppCompatActivity {
             parts.put(key, Math.round(value * 10f) / 10d);
         } catch (Exception ignored) {
         }
-    }
-
-    // =========================================
-    // 사진 표시
-    // 기존 URI / 카메라 파일 경로 모두 지원
-    // =========================================
-
-    private void displayPhoto(
-            ImageView imageView,
-            String uriString,
-            String photoPath
-    ) {
-
-        if (uriString != null &&
-                !uriString.isEmpty()) {
-
-            try {
-
-                imageView.setImageURI(
-                        Uri.parse(uriString)
-                );
-
-                if (imageView.getDrawable() != null) {
-                    return;
-                }
-
-            } catch (Exception ignored) {
-                // PATH 방식으로 재시도
-            }
-        }
-
-        if (photoPath != null &&
-                !photoPath.isEmpty()) {
-
-            try {
-
-                File photoFile =
-                        new File(photoPath);
-
-                if (photoFile.exists()) {
-
-                    imageView.setImageURI(
-                            Uri.fromFile(photoFile)
-                    );
-
-                    return;
-                }
-
-            } catch (Exception ignored) {
-                // 사진을 표시하지 못한 경우
-            }
-        }
-
-        imageView.setImageDrawable(null);
     }
 
     // =========================================

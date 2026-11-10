@@ -139,8 +139,10 @@
             </LinearLayout>
 
 
-            <!-- 오른쪽 사진 -->
+            <!-- 오른쪽 사진: 사진은 분석이 끝나면 바로 지우므로 보여 주지 않는다 -->
             <LinearLayout
+                android:id="@+id/layoutResultPhotos"
+                android:visibility="gone"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1.15"

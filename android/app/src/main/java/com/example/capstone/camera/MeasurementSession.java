@@ -1,12 +1,11 @@
 package com.example.capstone.camera;
 
-import android.net.Uri;
-
-import java.io.File;
-
 /**
  * 카메라 측정 → 측정 위치 조정 → 결과 화면으로 넘어가는 동안 들고 있는 값.
  * 윤곽 마스크는 용량이 커서 Intent로 못 넘기므로, 가로줄마다의 몸 폭만 요약해 메모리에 둔다.
+ *
+ * 사용자의 사진(파일·주소)은 여기에 두지 않는다. 사진은 기기 안에서만 분석하고, 분석이 끝나면
+ * clear()와 PhotoMeasurementActivity.releasePhotos()가 들고 있던 값을 모두 지운다.
  */
 public final class MeasurementSession {
 
@@ -66,14 +65,9 @@ public final class MeasurementSession {
     public static Silhouette side;
     public static BodyMeasurementCalculator.Result frontLengths;
     public static float heightCm;
-    public static File frontPhoto;
-    public static File sidePhoto;
     /** 사진 모델이 구한 가슴·허리·엉덩이 둘레(cm). 못 구했으면 null */
     public static float[] modelCirc;
 
-    /** 앨범에서 고른 사진이면 파일 대신 Uri */
-    public static Uri frontUri;
-    public static Uri sideUri;
     /** 가슴, 허리, 골반 순서. 정면·옆면 사진이 같은 값을 쓴다. */
     public static final float[] ratios = {DEFAULT_CHEST, DEFAULT_WAIST, DEFAULT_HIP};
 
@@ -94,10 +88,6 @@ public final class MeasurementSession {
         front = null;
         side = null;
         frontLengths = null;
-        frontPhoto = null;
-        sidePhoto = null;
-        frontUri = null;
-        sideUri = null;
         resetRatios();
     }
 }

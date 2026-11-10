@@ -105,21 +105,9 @@ final class MeasurementResultLauncher {
         intent.putExtra("HIP_WIDTH", width[MeasurementSession.HIP]);
         intent.putExtra("HIP_DEPTH", depth[MeasurementSession.HIP]);
 
-        if (MeasurementSession.frontUri != null) {
-            intent.putExtra("FRONT_PHOTO_URI", MeasurementSession.frontUri.toString());
-        }
-        if (MeasurementSession.sideUri != null) {
-            intent.putExtra("SIDE_PHOTO_URI", MeasurementSession.sideUri.toString());
-        }
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        if (MeasurementSession.frontPhoto != null) {
-            intent.putExtra("FRONT_PHOTO_PATH", MeasurementSession.frontPhoto.getAbsolutePath());
-        }
-        if (MeasurementSession.sidePhoto != null) {
-            intent.putExtra("SIDE_PHOTO_PATH", MeasurementSession.sidePhoto.getAbsolutePath());
-        }
-
         context.startActivity(intent);
+        // 분석이 끝났으니 사진에서 얻은 윤곽·주소를 바로 지운다 (결과 값은 intent에 담겼다)
+        MeasurementSession.clear();
         return true;
     }
 }

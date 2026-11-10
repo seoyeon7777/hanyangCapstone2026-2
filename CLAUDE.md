@@ -354,6 +354,14 @@ match_score(body, item) -> {
 - 하단 탭 로그인: 체형·장바구니 탭은 로그인 안내(`BottomMenu`), 찜 탭과 장바구니 아이콘은 비로그인도 열리고 화면 안에서 로그인 안내(지현 11/10)
 - 확인: javac 컴파일 오류 0, 앱 단위 테스트 76개 통과, test_feed 41·test_integration 8·test_api 29, pytest 262 통과(2개는 원래 실패하던 B 쪽). 실제 화면은 Android Studio에서 확인 필요
 
+### 4-22. 사진은 기기 안에서만 분석하고 끝나면 바로 지운다 (11/10)
+- 원칙(팀): 사용자의 사진은 서버에 보내지 않고 기기에서만 돌린다(관절·윤곽·사진 모델 모두 기기 안). 체형 분석이 끝나면 앱이 들고 있던 사진을 바로 지운다. 앨범 속 원본 사진은 앱이 지우지 않는다
+- `PhotoMeasurementActivity`: 앨범 사진 읽기 권한을 오래 붙들던 `takePersistableUriPermission`을 뺐다(화면이 열려 있는 동안만 읽음). 결과 화면을 열면 `releasePhotos()`가 고른 사진 주소·미리보기·관절·윤곽·남아 있던 앨범 읽기 권한을 모두 놓고, 화면을 닫을 때(`onDestroy`)도 같다. 다시 분석하려면 사진을 새로 골라야 한다
+- `MeasurementSession`: 사진 파일·주소 필드를 없앴다(윤곽 요약만 있고 `MeasurementResultLauncher.open`이 intent에 담은 뒤 `clear()`). 결과 화면(`MeasurementResultActivity`)은 사진을 더 이상 보여 주지 않는다(intent에 사진 주소 없음)
+- `BodyPhotoPipeline.prepareOne`: 읽은 이미지(원본·회전본·잘라낸 것)를 쓰자마자 `recycle()`
+- 확인: 빌드 + 단위 테스트 컴파일까지. 사람 사진이 있는 기기에서 분석 → 결과 → 뒤로 가기(사진이 비어 있는지)는 실제로 확인하지 못했다
+- 사진을 파일로 저장하는 코드는 프로필 사진(`ProfilePhotoStore`)뿐이고, 체형 분석 사진과 무관하다
+
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
   - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)

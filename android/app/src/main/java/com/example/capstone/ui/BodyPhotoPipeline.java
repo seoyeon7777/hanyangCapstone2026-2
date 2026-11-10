@@ -90,33 +90,46 @@ final class BodyPhotoPipeline {
         if (raw == null) {
             return null;
         }
-        Matrix matrix = new Matrix();
-        matrix.postRotate(image.getRotationDegrees());
-        Bitmap upright = Bitmap.createBitmap(raw, 0, 0, raw.getWidth(), raw.getHeight(), matrix, true);
+        Bitmap upright = null;
+        Bitmap crop = null;
+        try {
+            Matrix matrix = new Matrix();
+            matrix.postRotate(image.getRotationDegrees());
+            upright = Bitmap.createBitmap(raw, 0, 0, raw.getWidth(), raw.getHeight(), matrix, true);
 
-        PersonCropper.Box box = PersonCropper.cropBox(pose, upright.getWidth(), upright.getHeight());
-        float[] center = PersonCropper.torsoCenter(pose);
-        if (box == null || center == null) {
-            return null;
+            PersonCropper.Box box = PersonCropper.cropBox(pose, upright.getWidth(), upright.getHeight());
+            float[] center = PersonCropper.torsoCenter(pose);
+            if (box == null || center == null) {
+                return null;
+            }
+            crop = Bitmap.createBitmap(upright, box.x0, box.y0, box.width(), box.height());
+
+            // 잘라낸 사진에서 윤곽을 다시 구한다 (학습 때와 같은 방식)
+            SegmentationMask mask = Tasks.await(segmenter.process(InputImage.fromBitmap(crop, 0)));
+            int w = crop.getWidth();
+            int h = crop.getHeight();
+            if (mask.getWidth() != w || mask.getHeight() != h) {
+                Log.w(TAG, "마스크 크기가 다릅니다 " + mask.getWidth() + "x" + mask.getHeight() + " vs " + w + "x" + h);
+                return null;
+            }
+            ByteBuffer buffer = mask.getBuffer();
+            buffer.order(ByteOrder.nativeOrder());
+            buffer.rewind();
+            float[] confidence = new float[w * h];
+            buffer.asFloatBuffer().get(confidence);
+
+            int[] argb = new int[w * h];
+            crop.getPixels(argb, 0, w, 0, 0, w, h);
+            return PersonCropper.prepare(argb, w, h, confidence, center[0] - box.x0, center[1] - box.y0);
+        } finally {
+            // 사진을 다 읽었으니 이미지 메모리를 바로 돌려준다 (사진은 이 안에서만 쓰고 어디에도 저장하지 않는다)
+            if (crop != null) {
+                crop.recycle();
+            }
+            if (upright != null && upright != raw) {
+                upright.recycle();
+            }
+            raw.recycle();
         }
-        Bitmap crop = Bitmap.createBitmap(upright, box.x0, box.y0, box.width(), box.height());
-
-        // 잘라낸 사진에서 윤곽을 다시 구한다 (학습 때와 같은 방식)
-        SegmentationMask mask = Tasks.await(segmenter.process(InputImage.fromBitmap(crop, 0)));
-        int w = crop.getWidth();
-        int h = crop.getHeight();
-        if (mask.getWidth() != w || mask.getHeight() != h) {
-            Log.w(TAG, "마스크 크기가 다릅니다 " + mask.getWidth() + "x" + mask.getHeight() + " vs " + w + "x" + h);
-            return null;
-        }
-        ByteBuffer buffer = mask.getBuffer();
-        buffer.order(ByteOrder.nativeOrder());
-        buffer.rewind();
-        float[] confidence = new float[w * h];
-        buffer.asFloatBuffer().get(confidence);
-
-        int[] argb = new int[w * h];
-        crop.getPixels(argb, 0, w, 0, 0, w, h);
-        return PersonCropper.prepare(argb, w, h, confidence, center[0] - box.x0, center[1] - box.y0);
     }
 }
