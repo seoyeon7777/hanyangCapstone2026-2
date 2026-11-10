@@ -670,13 +670,9 @@ public class SigninActivity extends AppCompatActivity {
             // 가입하면 바로 로그인된 상태로 완료 화면에 간다
             LoginSession.login(this, id, name, email, phone);
 
-            String birthText = chosen == 0 ? "" : year + "년 " + month + "월 " + day + "일, ";
-
             Toast.makeText(
                     this,
-                    name + "님, 회원가입 완료! (" +
-                            birthText +
-                            gender + ")",
+                    name + "님, 회원가입 완료!",
                     Toast.LENGTH_LONG
             ).show();
 

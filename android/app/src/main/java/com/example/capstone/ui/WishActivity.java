@@ -361,16 +361,21 @@ public class WishActivity extends AppCompatActivity {
     private void showWishProducts() {
 
         TextView title = findViewById(R.id.textWishTitle);
+        View back = findViewById(R.id.btnWishBack);
 
         if (!LoginRequiredView.update(
                 this,
                 R.drawable.ic_wish_empty,
                 "찜 목록은 로그인 후 이용할 수 있어요.",
                 wishContent)) {
-            title.setText("찜");
+            // 비로그인: 제목 "찜" 글씨 대신 이전 화면 버튼 (자리는 남겨 장바구니 아이콘은 오른쪽 그대로)
+            title.setText("");
+            back.setVisibility(View.VISIBLE);
+            back.setOnClickListener(v -> finish());
             return;
         }
 
+        back.setVisibility(View.GONE);
         title.setText("찜 " + getCategoryCount("전체"));
 
         renderCategories();

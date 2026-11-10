@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <!-- 배송지 주소 검색 (카카오 우편번호 서비스, 키·가입 필요 없음). AddressSearchActivity가 연다 -->
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; background: #fff; }
+        #wrap { width: 100%; height: 100%; }
+        #error { display: none; padding: 40px 24px; text-align: center; color: #666;
+                 font-family: sans-serif; font-size: 15px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+<div id="wrap"></div>
+<div id="error">주소 검색을 불러오지 못했어요.<br>인터넷 연결을 확인하고 다시 열어 주세요.</div>
+
+<script>
+    function showError() {
+        document.getElementById('wrap').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+    }
+
+    function start() {
+        new daum.Postcode({
+            width: '100%',
+            height: '100%',
+            oncomplete: function (data) {
+                // 도로명 주소 (지번을 골랐으면 지번 주소). 도로명이면 끝에 법정동을 붙인다 → "테헤란로 152 (역삼동)"
+                var address = data.userSelectedType === 'J' ? data.jibunAddress : data.roadAddress;
+                if (!address) {
+                    address = data.address;
+                }
+                if (data.userSelectedType !== 'J' && data.bname && /[동로가]$/.test(data.bname)) {
+                    address += ' (' + data.bname + ')';
+                }
+                Android.onSelected(data.zonecode, address);
+            }
+        }).embed(document.getElementById('wrap'), { autoClose: false });
+    }
+</script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
+        onload="start()" onerror="showError()"></script>
+</body>
+</html>

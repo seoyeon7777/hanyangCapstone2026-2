@@ -24,6 +24,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
+import com.example.capstone.login.LoginGate;
+import com.example.capstone.login.LoginSession;
 import com.example.capstone.adapter.CartAdapter;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.CartStore;
@@ -537,6 +539,13 @@ public class CartActivity extends AppCompatActivity {
 
         btnGoOrder.setOnClickListener(v -> {
 
+            // 구매는 로그인해야 한다. 비회원이면 로그인 안내 → 로그인(가입) 뒤 장바구니로 돌아오고,
+            // 다시 주문하기를 누르면 체형 측정 확인 창이 뜬다 (비회원 장바구니는 로그인 계정 장바구니에 합쳐진다)
+            if (!LoginSession.isLoggedIn(this)) {
+                LoginGate.require(this, "로그인하면 구매할 수 있어요.", () -> { });
+                return;
+            }
+
             StringBuilder productNames =
                     new StringBuilder();
 
@@ -645,16 +654,7 @@ public class CartActivity extends AppCompatActivity {
     // 장바구니 상품과 금액 갱신
     private void showCartProducts() {
 
-        if (!LoginRequiredView.update(
-                this,
-                R.drawable.ic_shopping_bag,
-                "장바구니는 로그인 후 이용할 수 있어요.",
-                cartContent)) {
-            titleCount.setText("장바구니");
-            btnGoOrder.setVisibility(View.GONE);
-            return;
-        }
-
+        // 비회원도 담은 상품을 볼 수 있다 (주문하기를 누를 때 로그인 안내)
         cartProducts.clear();
 
         int cartQuantity = 0;

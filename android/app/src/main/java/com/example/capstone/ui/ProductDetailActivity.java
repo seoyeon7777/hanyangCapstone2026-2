@@ -392,13 +392,20 @@ public class ProductDetailActivity extends AppCompatActivity {
                 (size, color, quantity) -> {
 
                     saveSelection(size, color, quantity);
+                    // 바로 구매는 로그인해야 한다. 비회원이면 로그인 안내 → 로그인(가입) 뒤 이 화면으로 돌아오고,
+                    // 다시 바로 구매를 누르면 체형 측정 확인 창(측정하러 가기 / 그냥 구매)이 뜬다
+                    if (!LoginSession.isLoggedIn(this)) {
+                        LoginGate.require(this, "로그인하면 바로 구매할 수 있어요.", () -> { });
+                        return;
+                    }
                     checkFitThen(this::buyNow, SizeWarningDialog.Action.ORDER);
                 },
                 "장바구니 담기",
                 (size, color, quantity) -> {
 
                     saveSelection(size, color, quantity);
-                    checkFitThen(this::addToCart, SizeWarningDialog.Action.CART);
+                    // 장바구니 담기는 비회원도 되고, 체형 측정 확인은 장바구니에서 주문할 때 한다
+                    addToCart();
                 }
         );
     }
@@ -491,8 +498,8 @@ public class ProductDetailActivity extends AppCompatActivity {
         AppDialog.show(this, false,
                 "장바구니에 담았어요",
                 message,
-                "계속 쇼핑", null,
-                "장바구니 보기", () -> startActivity(new Intent(this, CartActivity.class)));
+                "계속 쇼핑하기", null,
+                "장바구니 이동", () -> startActivity(new Intent(this, CartActivity.class)));
     }
 
     // 바로 구매: 장바구니는 건드리지 않고 이 상품·옵션만 결제 화면으로 넘긴다
