@@ -397,13 +397,13 @@ public class ProductOptionSheet {
             );
 
             chip.setBackgroundResource(
-                    R.drawable.bg_option_chip
+                    R.drawable.bg_option_chip_filled
             );
 
             chip.setTextColor(
                     ContextCompat.getColorStateList(
                             context,
-                            R.color.option_chip_text
+                            R.color.option_chip_text_filled
                     )
             );
 

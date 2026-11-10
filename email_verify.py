@@ -163,7 +163,7 @@ def domain_exists(domain):
     return result
 
 
-NO_DOMAIN_MESSAGE = "존재하지 않는 이메일 주소예요. @ 뒤 주소를 확인해 주세요"
+NO_DOMAIN_MESSAGE = "존재하지 않는 이메일 주소예요. 다시 확인해 주세요."
 
 
 @email_bp.post("/api/email/check")
