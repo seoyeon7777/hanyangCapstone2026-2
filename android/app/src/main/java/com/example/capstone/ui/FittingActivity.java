@@ -75,6 +75,7 @@ public class FittingActivity extends AppCompatActivity {
         if (!readWeightAndAge(false)) {
             return;
         }
+        notifyIfNoEstimate(heightCm);
 
         // 비회원이면 설문 전에 "결과는 앱을 실행하는 동안에만 저장돼요" 안내를 먼저 보여 준다
         if (!LoginSession.isLoggedIn(this)
@@ -183,6 +184,20 @@ public class FittingActivity extends AppCompatActivity {
         // 입력한 값으로 사이즈 알림용 치수를 바로 갱신한다
         BodyProfileStore.syncActiveProfile(this);
         return true;
+    }
+
+    /** 입력한 값이 치수를 어림할 수 있는 범위 밖이면(저장은 된다) 사진 결과만 쓰게 된다고 미리 알린다. */
+    private void notifyIfNoEstimate(float heightCm) {
+        BodyPrior.Result prior = BodyInput.prior(this, heightCm);
+        if (prior == null) {
+            Toast.makeText(this,
+                    "입력한 값이 어림 가능한 범위 밖이라 사진 결과만 보여 드려요.",
+                    Toast.LENGTH_LONG).show();
+        } else if (prior.reference) {
+            Toast.makeText(this,
+                    "키·나이가 확인한 범위 밖이라 어림한 치수는 참고용이에요.",
+                    Toast.LENGTH_LONG).show();
+        }
     }
 
     /** 입력한 키를 확인해 저장하고 돌려준다. 잘못된 값이면 안내 후 -1. */

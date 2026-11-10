@@ -52,6 +52,21 @@ public class BodyPriorTest {
     }
 
     @Test
+    public void adult_height_130_to_200_is_estimated_and_outside_135_190_is_reference_only() {
+        assertFalse(BodyPrior.estimate(135f, 55f, 25f).reference);   // 확인한 범위
+        assertFalse(BodyPrior.estimate(190f, 70f, 25f).reference);
+        BodyPrior.Result tall = BodyPrior.estimate(200f, 80f, 25f);   // 넓힌 범위 → 참고용
+        BodyPrior.Result small = BodyPrior.estimate(130f, 45f, 25f);
+        assertNotNull(tall);
+        assertTrue(tall.reference);
+        assertNotNull(small);
+        assertTrue(small.reference);
+        assertNull(BodyPrior.estimate(129.9f, 45f, 25f));            // 130 미만
+        assertNull(BodyPrior.estimate(200.1f, 80f, 25f));            // 200 초과
+        assertNull(BodyPrior.estimate(130f, 55f, 15f));              // 10대는 그대로 135 이상
+    }
+
+    @Test
     public void out_of_range_input_gives_no_estimate() {
         assertNull(BodyPrior.estimate(160f, 55f, 9f));      // 나이 범위 밖
         assertNull(BodyPrior.estimate(160f, 55f, 100f));
