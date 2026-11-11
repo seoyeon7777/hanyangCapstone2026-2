@@ -379,6 +379,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     );
 
 
+                    AnalysisTimer.start();
                     analyzeFrontPhoto();
                 });
 
@@ -463,6 +464,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                         }
 
                         textFrontStatus.setText("✓ 정면 신체 분석 완료");
+                        AnalysisTimer.mark("정면 관절·윤곽");
                         textPhotoStatus.setText(
                                 "옆면 사진을 분석하고 있습니다...");
 
@@ -526,6 +528,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         }
 
         textSideStatus.setText("✓ 옆면 신체 분석 완료");
+        AnalysisTimer.mark("옆면 관절·윤곽");
         // 가슴·허리·골반 둘레: 사진 모델(딥러닝)이 구한 값을 쓰고, 못 구하면 기본 위치(몸 높이의 29/43/52%)로 계산한다
         MeasurementSession.clear();
         MeasurementSession.heightCm = userHeightCm;
@@ -549,6 +552,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                             return;
                         }
                         MeasurementSession.modelCirc = circ;
+                        AnalysisTimer.mark("모델 단계 전체(앱으로 돌아옴)");
                         openResultOrWarn();
                     });
             return;

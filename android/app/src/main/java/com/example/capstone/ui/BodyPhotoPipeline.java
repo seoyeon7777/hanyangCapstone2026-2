@@ -47,15 +47,19 @@ final class BodyPhotoPipeline {
             float[] result = null;
             try {
                 PersonCropper.Prepared front = prepareOne(app, segmenter, frontUri, frontPose);
+                AnalysisTimer.mark("모델 입력 만들기(정면)");
                 PersonCropper.Prepared side = prepareOne(app, segmenter, sideUri, sidePose);
+                AnalysisTimer.mark("모델 입력 만들기(옆면)");
                 if (front != null && side != null) {
                     synchronized (BodyPhotoPipeline.class) {
                         if (model == null) {
                             model = new BodyPhotoModel(app);
                         }
                     }
+                    AnalysisTimer.mark("모델 파일 불러오기");
                     result = model.circumferences(front.chw, side.chw, heightCm, weightKg, age,
                             front.aspect, side.aspect, prior);
+                    AnalysisTimer.mark("모델 계산");
                     if (result != null) {
                         Log.i(TAG, String.format("사진 모델 결과 가슴 %.1f 허리 %.1f 엉덩이 %.1f 허벅지 %.1f (가로세로 비율 정면 %.3f 옆면 %.3f)",
                                 result[0], result[1], result[2], result.length > 3 ? result[3] : -1f,
