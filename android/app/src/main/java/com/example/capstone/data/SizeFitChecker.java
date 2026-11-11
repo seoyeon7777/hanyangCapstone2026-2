@@ -9,7 +9,7 @@ import java.util.Locale;
 
 public class SizeFitChecker {
 
-    // 임시 사이즈표의 판정 여유값(cm)
+    // 사이즈표(KS K 0051 호칭값 ±2.5cm) 바깥으로 이만큼(cm)까지는 경고하지 않는 판정 여유값
     private static final float TOLERANCE_CM = 3.0f;
 
     // 키·몸무게·나이로 어림한 값은 오차가 더 크므로(평균 2~3cm, 10명 중 1명은 5cm 이상) 판정 여유를 넓힌다
