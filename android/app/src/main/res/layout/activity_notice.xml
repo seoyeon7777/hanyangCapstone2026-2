@@ -23,7 +23,6 @@
 
             <!-- ============ 고객센터 ============ -->
             <LinearLayout
-                android:id="@+id/layoutCs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
@@ -86,7 +85,6 @@
 
             <!-- ============ 탭 ============ -->
             <LinearLayout
-                android:id="@+id/layoutTabs"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"

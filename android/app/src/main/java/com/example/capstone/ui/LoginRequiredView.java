@@ -36,11 +36,4 @@ public final class LoginRequiredView {
 
         return loggedIn;
     }
-
-    /** 로그인 안내 왼쪽 위에 이전 화면(‹) 버튼을 보여 준다. 누르면 이 화면을 닫는다 */
-    public static void showBack(Activity activity) {
-        View back = activity.findViewById(R.id.btnLoginRequiredBack);
-        back.setVisibility(View.VISIBLE);
-        back.setOnClickListener(v -> activity.finish());
-    }
 }

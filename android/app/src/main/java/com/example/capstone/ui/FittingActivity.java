@@ -49,10 +49,6 @@ public class FittingActivity extends AppCompatActivity {
         // 체형 분석은 로그인해야 쓸 수 있다 (찜 화면과 같음). 상품 상세 "측정하러 가기" 등 다른 길로 와도 막는다
         LoginRequiredView.update(this, R.drawable.ic_nav_fitting,
                 "체형 분석은 로그인 후 이용할 수 있어요.", findViewById(R.id.scrollFitting));
-        // 상품 상세 "내 치수 사이즈 확인하러 가기" 등 다른 화면에서 왔으면 왼쪽 위 ‹ 로 돌아갈 수 있게 (탭으로 열었을 때는 그대로)
-        if (!getIntent().getBooleanExtra(EXTRA_AS_TAB, false)) {
-            LoginRequiredView.showBack(this);
-        }
     }
 
     @Override

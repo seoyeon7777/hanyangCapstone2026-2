@@ -328,8 +328,7 @@ public class MyBodyActivity extends AppCompatActivity {
         settingSwitches = new SwitchCompat[]{
                 findViewById(R.id.switchSizeWarning),
                 findViewById(R.id.switchMeasureNotice),
-                findViewById(R.id.switchAutoActive),
-                findViewById(R.id.switchSizeRecommend)
+                findViewById(R.id.switchAutoActive)
         };
 
         for (int i = 0; i < settingSwitches.length; i++) {
@@ -350,8 +349,6 @@ public class MyBodyActivity extends AppCompatActivity {
         SwitchCompat autoActive = findViewById(R.id.switchAutoActive);
         findViewById(R.id.rowSizeWarning).setOnClickListener(v -> sizeWarning.toggle());
         findViewById(R.id.rowAutoActive).setOnClickListener(v -> autoActive.toggle());
-        SwitchCompat sizeRecommend = findViewById(R.id.switchSizeRecommend);
-        findViewById(R.id.rowSizeRecommend).setOnClickListener(v -> sizeRecommend.toggle());
 
         switchAll.setOnCheckedChangeListener((b, checked) -> {
             if (syncingSwitches) {

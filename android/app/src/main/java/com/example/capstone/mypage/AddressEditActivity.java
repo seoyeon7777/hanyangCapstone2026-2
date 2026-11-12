@@ -13,8 +13,6 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 /** 배송지 추가 / 수정 (delivery) */
@@ -84,28 +82,13 @@ public class AddressEditActivity extends AppCompatActivity {
     }
 
     private void setListeners() {
-        // 우편번호·도로명 주소는 주소 검색으로만 채운다 (칸을 눌러도 검색 화면). 상세 주소만 직접 입력
-        btnSearchZip.setOnClickListener(v -> openAddressSearch());
-        etZipCode.setOnClickListener(v -> openAddressSearch());
-        etAddress1.setOnClickListener(v -> openAddressSearch());
+        btnSearchZip.setOnClickListener(v ->
+                // TODO: 우편번호 검색 (다음/카카오 우편번호 서비스 WebView) 연결 후
+                //       선택한 결과로 etZipCode, etAddress1 자동 입력
+                Toast.makeText(this, "주소 검색은 준비 중입니다. 직접 입력해주세요.",
+                        Toast.LENGTH_SHORT).show());
 
         btnSave.setOnClickListener(v -> saveAddress());
-    }
-
-    private final ActivityResultLauncher<Intent> addressSearch = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode() != RESULT_OK || result.getData() == null) {
-                    return;
-                }
-                etZipCode.setText(result.getData().getStringExtra(AddressSearchActivity.EXTRA_ZIP_CODE));
-                etAddress1.setText(result.getData().getStringExtra(AddressSearchActivity.EXTRA_ADDRESS));
-                // 아파트 이름·동·호수 같은 상세 주소는 직접 쓰게 커서를 옮긴다
-                etAddress2.requestFocus();
-                etAddress2.setSelection(etAddress2.length());
-            });
-
-    private void openAddressSearch() {
-        addressSearch.launch(new Intent(this, AddressSearchActivity.class));
     }
 
     private void saveAddress() {
@@ -129,11 +112,11 @@ public class AddressEditActivity extends AppCompatActivity {
             return;
         }
         if (!zip.matches("[0-9]{5}")) {
-            toast("주소 검색으로 주소를 입력해주세요.");
+            toast("우편번호 5자리를 입력해주세요.");
             return;
         }
         if (TextUtils.isEmpty(address1)) {
-            toast("주소 검색으로 주소를 입력해주세요.");
+            toast("주소를 입력해주세요.");
             return;
         }
         if (TextUtils.isEmpty(address2)) {

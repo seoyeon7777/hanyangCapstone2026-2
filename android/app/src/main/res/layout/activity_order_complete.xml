@@ -8,7 +8,6 @@
     android:padding="24dp">
 
     <TextView
-        android:id="@+id/tvCompleteTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="주문이 완료되었습니다"
@@ -21,8 +20,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:lineSpacingExtra="6dp"
         android:text="총 결제금액 0원"
         android:textColor="#555555"
         android:textSize="16sp" />

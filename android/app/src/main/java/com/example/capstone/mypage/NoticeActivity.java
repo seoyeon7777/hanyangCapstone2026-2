@@ -26,11 +26,6 @@ public class NoticeActivity extends AppCompatActivity {
 
     private static final String CS_PHONE = "1588-0000";
 
-    /** 열 화면: 고객센터(전화·1:1 문의·자주 묻는 질문) 또는 공지사항. 없으면 고객센터 */
-    public static final String EXTRA_MODE = "EXTRA_MODE";
-    public static final String MODE_CS = "cs";
-    public static final String MODE_NOTICE = "notice";
-
     private static final int TAB_NOTICE = 0;
     private static final int TAB_FAQ = 1;
 
@@ -40,9 +35,8 @@ public class NoticeActivity extends AppCompatActivity {
 
     /** FAQ 카테고리 (메인 화면 카테고리 바와 같은 형식) */
     private static final String[] FAQ_CATEGORIES = {
-            "전체", "체형분석", "주문/결제", "배송", "취소/반품/교환", "회원정보", "기타"
+            "가상피팅", "주문/결제", "배송", "취소/반품/교환", "회원정보", "기타"
     };
-    private static final String CATEGORY_ALL = "전체";
     private static final int COLOR_CATEGORY_SELECTED = Color.parseColor("#000000");
     private static final int COLOR_CATEGORY_NORMAL = Color.parseColor("#777777");
 
@@ -55,8 +49,7 @@ public class NoticeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notice);
 
-        boolean noticeOnly = MODE_NOTICE.equals(getIntent().getStringExtra(EXTRA_MODE));
-        MyPageUi.setupToolbar(this, noticeOnly ? "공지사항" : "고객센터");
+        MyPageUi.setupToolbar(this, "고객센터");
 
         tabNotice = findViewById(R.id.tabNotice);
         tabFaq = findViewById(R.id.tabFaq);
@@ -79,14 +72,7 @@ public class NoticeActivity extends AppCompatActivity {
         tabNotice.setOnClickListener(v -> showTab(TAB_NOTICE));
         tabFaq.setOnClickListener(v -> showTab(TAB_FAQ));
 
-        // 공지사항 화면: 고객센터 카드와 탭을 숨기고 공지 목록만. 고객센터 화면: 탭을 숨기고 자주 묻는 질문만
-        findViewById(R.id.layoutTabs).setVisibility(View.GONE);
-        if (noticeOnly) {
-            findViewById(R.id.layoutCs).setVisibility(View.GONE);
-            showTab(TAB_NOTICE);
-        } else {
-            showTab(TAB_FAQ);
-        }
+        showTab(TAB_NOTICE);
     }
 
     /** 메인 화면 카테고리처럼 글자만 있는 카테고리 바를 만든다. */
@@ -130,7 +116,7 @@ public class NoticeActivity extends AppCompatActivity {
     private List<Notice> getFaqsInCategory() {
         List<Notice> result = new ArrayList<>();
         for (Notice faq : MyPageStore.getFaqs()) {
-            if (CATEGORY_ALL.equals(selectedCategory) || selectedCategory.equals(faq.category)) {
+            if (selectedCategory.equals(faq.category)) {
                 result.add(faq);
             }
         }

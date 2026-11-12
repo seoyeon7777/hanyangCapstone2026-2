@@ -285,7 +285,6 @@ public class MyPageStore {
         public final String content;
         public String status;
         public final String date;
-        public String answer = "";
 
         public Inquiry(
                 String type,
@@ -345,49 +344,29 @@ public class MyPageStore {
     private static final List<Notice> faqs = new ArrayList<>(
             Arrays.asList(
                     faq(
-                            "체형분석",
-                            "체형분석은 어떻게 이용하나요?",
-                            "로그인한 뒤 하단 「체형」 메뉴에서 「새 체형 추가하기」를 누르세요. 키·몸무게·나이를 입력하고 7개 설문에 답하면 나의 골격 체형(스트레이트·웨이브·내추럴)을 알려 드려요. 결과는 홈의 「체형 맞춤」 추천에 바로 쓰여요."
+                            "가상피팅",
+                            "가상피팅은 어떻게 이용하나요?",
+                            "하단 「피팅」 메뉴에서 키를 입력하고 정면·측면 전신 사진을 촬영하거나 갤러리에서 선택하면 체형 분석을 진행할 수 있습니다. 분석 결과와 추천 사이즈를 참고해주세요."
                     ),
                     faq(
-                            "체형분석",
-                            "골격 체형은 어떻게 정해지나요?",
-                            "골격 체형은 설문 답변으로 정해져요. 한 체형이 확실히 높으면 그 체형으로, 두 체형이 비슷하면 혼합형으로 보여 드려요. 사진으로 잰 치수는 골격 체형을 바꾸지 않고, 사이즈를 확인하는 데만 쓰여요."
+                            "가상피팅",
+                            "체형 분석 결과가 실제 치수와 달라요.",
+                            "사진 촬영 각도, 자세, 옷의 두께와 배경에 따라 추정 치수에 오차가 발생할 수 있습니다. 몸에 붙는 옷을 입고 정면·측면을 다시 촬영해 주세요. 결과는 참고용이며 실제 치수와 비교해 주세요."
                     ),
                     faq(
-                            "체형분석",
-                            "「사진으로 정밀 분석하기」와 「이대로 저장하기」는 뭐가 다른가요?",
-                            "「이대로 저장하기」는 설문 결과만 내 체형으로 저장해요. 「사진으로 정밀 분석하기」는 정면·옆면 전신 사진으로 가슴·허리·골반 등의 치수까지 재서 저장해요. 치수가 있으면 상품 상세의 추천 사이즈와 주문 전 사이즈 확인을 받을 수 있어요. 저장하지 않고 나가면 결과는 남지 않아요."
+                            "가상피팅",
+                            "전신 사진은 어떻게 찍어야 정확한가요?",
+                            "몸에 붙는 옷을 입고, 밝고 단순한 배경 앞에서 정면과 측면 전신이 모두 나오도록 찍어주세요. 카메라는 허리 높이에서 수평으로 들면 가장 정확합니다."
                     ),
                     faq(
-                            "체형분석",
-                            "체형을 여러 개 저장할 수 있나요?",
-                            "최대 10개까지 저장할 수 있어요. 「내 체형관리」에서 체형을 눌러 「현재 체형」으로 고르면, 홈 체형 맞춤 추천과 장바구니·주문 사이즈 확인이 그 체형 기준으로 바뀌어요. 이름 변경과 삭제도 같은 화면에서 할 수 있어요."
+                            "가상피팅",
+                            "촬영한 사진은 저장되나요?",
+                            "촬영한 사진은 신체 치수 추정에만 사용되며, 보관 여부와 기간은 개인정보처리방침을 따릅니다."
                     ),
                     faq(
-                            "체형분석",
-                            "전신 사진은 어떻게 고르면 정확한가요?",
-                            "머리부터 발끝까지 모두 나오고 몸에 붙는 옷을 입은 정면·옆면 사진을 골라 주세요. 카메라를 기울이지 않고 찍은 사진일수록, 밝고 단순한 배경일수록 정확해요. 정면과 옆면은 같은 사람의 사진이어야 해요."
-                    ),
-                    faq(
-                            "체형분석",
-                            "사진으로 잰 치수가 실제와 달라요.",
-                            "옷의 두께, 자세, 사진 각도에 따라 오차가 생길 수 있어요. 치수를 잰 뒤 나오는 화면에서 가슴·허리·골반 선을 위아래로 끌어 몸에 맞게 조정하면 치수가 다시 계산돼요. 그래도 다르면 몸에 붙는 옷을 입고 찍은 사진으로 다시 분석해 주세요. 결과는 참고용이니 상품의 실측 사이즈도 함께 확인해 주세요."
-                    ),
-                    faq(
-                            "체형분석",
-                            "선택한 사진은 저장되나요?",
-                            "사진은 치수를 계산하는 데만 쓰이고 서버로 보내지 않아요. 계산에 쓴 사진 정보는 측정이 끝나면 앱의 메모리에서 지워져요. 저장되는 것은 설문 답변과 계산된 치수뿐이에요."
-                    ),
-                    faq(
-                            "체형분석",
-                            "추천 사이즈나 사이즈 경고를 끄고 싶어요.",
-                            "「내 체형관리」 아래쪽의 체형 설정에서 「추천 사이즈 표시」, 「사이즈 경고 팝업」, 「측정 권유 팝업」을 각각 켜고 끌 수 있어요. 「새 체형을 현재 체형으로 자동 선택」도 여기에서 바꿀 수 있어요."
-                    ),
-                    faq(
-                            "체형분석",
-                            "체형분석 결과와 실제 착용감이 다를 수 있나요?",
-                            "옷의 소재, 신축성, 개인 체형 차이에 따라 실제 착용감은 다를 수 있어요. 체형 맞춤 추천과 추천 사이즈는 참고용이니 상품 상세의 실측 사이즈도 함께 확인해 주세요."
+                            "가상피팅",
+                            "체형 분석 결과와 실제 착용감이 다를 수 있나요?",
+                            "옷의 소재, 신축성, 개인 체형 차이에 따라 실제 착용감과 차이가 있을 수 있습니다. 상품 상세의 실측 사이즈도 함께 확인해주세요."
                     ),
                     faq(
                             "주문/결제",
@@ -645,15 +624,15 @@ public class MyPageStore {
         for (int i = 0; savedInquiries != null && i < savedInquiries.length(); i++) {
             JSONObject j = savedInquiries.getJSONObject(i);
 
-            Inquiry inquiry = new Inquiry(
-                    j.optString("type"),
-                    j.optString("title"),
-                    j.optString("content"),
-                    j.optString("status"),
-                    j.optString("date")
+            inquiries.add(
+                    new Inquiry(
+                            j.optString("type"),
+                            j.optString("title"),
+                            j.optString("content"),
+                            j.optString("status"),
+                            j.optString("date")
+                    )
             );
-            inquiry.answer = j.optString("answer");
-            inquiries.add(inquiry);
         }
 
         JSONArray savedCoupons = all.optJSONArray("coupons");
@@ -782,7 +761,6 @@ public class MyPageStore {
                 j.put("content", inquiry.content);
                 j.put("status", inquiry.status);
                 j.put("date", inquiry.date);
-                j.put("answer", inquiry.answer);
 
                 inquiryArray.put(j);
             }
@@ -972,14 +950,6 @@ public class MyPageStore {
                 )
         );
 
-        save();
-    }
-
-    public static void addInquiry(Inquiry inquiry) {
-        if (inquiry == null) {
-            return;
-        }
-        inquiries.add(0, inquiry);
         save();
     }
 

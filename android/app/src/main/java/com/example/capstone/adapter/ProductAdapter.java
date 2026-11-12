@@ -115,8 +115,13 @@ public class ProductAdapter
                         : View.VISIBLE
         );
 
-        // 추천 이유는 목록 카드에는 안 보이고 상품 상세에서 보여 준다
-        holder.textReason.setVisibility(View.GONE);
+        holder.textReason.setText(product.getReason());
+
+        holder.textReason.setVisibility(
+                product.getReason().isEmpty()
+                        ? View.GONE
+                        : View.VISIBLE
+        );
 
         // NEW 배지
         // 임시 기준: 상품 ID가 5 이상이면 NEW (추천 서버 상품은 표시 안 함)

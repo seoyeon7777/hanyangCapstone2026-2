@@ -113,16 +113,6 @@
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/textDetailReason"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:lineSpacingExtra="3dp"
-                    android:textColor="#666666"
-                    android:textSize="13sp"
-                    android:visibility="gone" />
-
             </LinearLayout>
 
             <!-- 구분선 -->

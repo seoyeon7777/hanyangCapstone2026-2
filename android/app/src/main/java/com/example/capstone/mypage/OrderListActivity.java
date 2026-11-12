@@ -39,6 +39,7 @@ public class OrderListActivity extends AppCompatActivity {
     /** 칩 순서와 같은 순서의 상태값 */
     private static final int[] CHIP_STATUSES = {
             MyPageStore.STATUS_ALL,
+            MyPageStore.STATUS_PENDING,
             MyPageStore.STATUS_PAID,
             MyPageStore.STATUS_READY,
             MyPageStore.STATUS_SHIPPING,
@@ -96,6 +97,7 @@ public class OrderListActivity extends AppCompatActivity {
     private void initViews() {
         chips = new TextView[]{
                 findViewById(R.id.chipAll),
+                findViewById(R.id.chipPending),
                 findViewById(R.id.chipPaid),
                 findViewById(R.id.chipReady),
                 findViewById(R.id.chipShipping),

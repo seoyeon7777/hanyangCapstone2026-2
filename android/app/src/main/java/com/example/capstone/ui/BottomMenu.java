@@ -101,15 +101,16 @@ public final class BottomMenu {
     }
 
     public static void openCart(Activity activity) {
-        // 장바구니 보기는 비회원도 된다 (담은 상품이 보이고, 주문할 때 로그인을 요구한다 — CartActivity)
-        activity.startActivity(new Intent(activity, CartActivity.class));
+        // 장바구니 보기는 로그인해야 한다 (비회원이면 로그인 안내 → 로그인 뒤 장바구니로)
+        LoginGate.require(activity, () -> activity.startActivity(
+                new Intent(activity, CartActivity.class)
+        ));
     }
 
     private static void moveTo(Activity activity, int tab) {
 
-        // 장바구니·체형 탭은 로그인해야 열 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 그 탭으로)
-        // 찜 탭은 팝업 없이 찜 화면으로 가고, 찜 화면이 "로그인이 필요해요" 안내를 보여 준다 (WishActivity)
-        if ((tab == TAB_CART || tab == TAB_FITTING) && !LoginSession.isLoggedIn(activity)) {
+        // 찜·장바구니·체형 탭은 로그인해야 열 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 그 탭으로)
+        if ((tab == TAB_WISH || tab == TAB_CART || tab == TAB_FITTING) && !LoginSession.isLoggedIn(activity)) {
             LoginGate.require(activity, () -> moveTo(activity, tab));
             return;
         }

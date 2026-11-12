@@ -22,7 +22,6 @@
             android:layout_centerVertical="true"
             android:background="@null"
             android:src="@drawable/ic_back"
-            android:visibility="gone"
             app:tint="@color/black"/>
 
         <TextView
@@ -142,6 +141,32 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:id="@+id/itemOrderPending"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/tvCountPending"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="주문접수"
+                        android:textSize="11sp"
+                        android:textColor="#5A5A5A"
+                        android:layout_marginTop="4dp"/>
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/itemOrderPaid"
@@ -332,7 +357,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="고객지원"
+                android:text="문의"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"
@@ -340,14 +365,14 @@
                 android:layout_marginBottom="8dp"/>
 
             <TextView
+                android:id="@+id/menuMyInquiry"
+                style="@style/MyPageMenuItem"
+                android:text="1:1 문의"/>
+
+            <TextView
                 android:id="@+id/menuNotice"
                 style="@style/MyPageMenuItem"
                 android:text="고객센터"/>
-
-            <TextView
-                android:id="@+id/menuNoticeBoard"
-                style="@style/MyPageMenuItem"
-                android:text="공지사항"/>
 
             <!-- ============ 로그아웃 ============ -->
             <TextView
