@@ -169,15 +169,9 @@ public class SigninActivity extends AppCompatActivity {
         }
         spYear.setAdapter(placeholderAdapter(years));
 
-        // 월·일: 처음에는 "월"/"일"만 보이고, 펼친 목록에는 1월~12월, 1일~마지막 날만
-        String[] months = new String[13];
-        months[0] = MONTH_PLACEHOLDER;
-
-        for (int i = 1; i <= 12; i++) {
-            months[i] = i + "월";
-        }
-
-        spMonth.setAdapter(placeholderAdapter(months));
+        // 월·일: 처음에는 "월"/"일"만 보이고, 펼친 목록에는 1월~12월, 1일~마지막 날만.
+        // 올해를 고르면 오늘까지만 (미래 날짜는 목록에 없다)
+        updateMonths();
 
         // 일: 고른 연·월에 있는 날만 (2월 29일은 윤년만)
         updateDays();
@@ -185,6 +179,7 @@ public class SigninActivity extends AppCompatActivity {
         AdapterView.OnItemSelectedListener dateChanged = new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                updateMonths();
                 updateDays();
             }
 
@@ -239,12 +234,28 @@ public class SigninActivity extends AppCompatActivity {
         return Math.max(spDay.getSelectedItemPosition(), 0);
     }
 
-    /** 일 목록을 고른 연·월의 날 수에 맞춘다. 고른 날이 없어지면 그 달의 마지막 날로 */
+    /** 월 목록: 올해면 이번 달까지, 아니면 12월까지. 고른 달이 없어지면 마지막 달로 */
+    private void updateMonths() {
+        int monthCount = maxMonth(selectedYear(), Calendar.getInstance());
+
+        if (spMonth.getAdapter() != null && spMonth.getAdapter().getCount() == monthCount + 1) {
+            return;
+        }
+        int keep = Math.min(selectedMonth(), monthCount);
+
+        String[] months = new String[monthCount + 1];
+        months[0] = MONTH_PLACEHOLDER;
+        for (int i = 1; i <= monthCount; i++) {
+            months[i] = i + "월";
+        }
+        spMonth.setAdapter(placeholderAdapter(months));
+        spMonth.setSelection(keep);
+    }
+
+    /** 일 목록을 고른 연·월의 날 수에 맞춘다 (올해 이번 달이면 오늘까지). 고른 날이 없어지면 마지막 날로 */
     private void updateDays() {
-        int year = selectedYear();
-        int month = selectedMonth();
         // 연도 전이면 2월 29일까지, 월 전이면 31일까지 보여 준다
-        int dayCount = month == 0 ? 31 : daysInMonth(year == 0 ? 2000 : year, month);
+        int dayCount = maxDay(selectedYear(), selectedMonth(), Calendar.getInstance());
 
         if (spDay.getAdapter() != null && spDay.getAdapter().getCount() == dayCount + 1) {
             return;
@@ -258,6 +269,23 @@ public class SigninActivity extends AppCompatActivity {
         }
         spDay.setAdapter(placeholderAdapter(days));
         spDay.setSelection(keep);
+    }
+
+    /** 고를 수 있는 마지막 달. 올해면 이번 달, 아니면(연도 전 포함) 12 */
+    static int maxMonth(int year, Calendar today) {
+        return year == today.get(Calendar.YEAR) ? today.get(Calendar.MONTH) + 1 : 12;
+    }
+
+    /** 고를 수 있는 마지막 날. 올해 이번 달이면 오늘, 월 전이면 31, 연도 전이면 윤년 기준 */
+    static int maxDay(int year, int month, Calendar today) {
+        if (month == 0) {
+            return 31;
+        }
+        int last = daysInMonth(year == 0 ? 2000 : year, month);
+        if (year == today.get(Calendar.YEAR) && month == today.get(Calendar.MONTH) + 1) {
+            return Math.min(last, today.get(Calendar.DAY_OF_MONTH));
+        }
+        return last;
     }
 
     static int daysInMonth(int year, int month) {
@@ -670,13 +698,9 @@ public class SigninActivity extends AppCompatActivity {
             // 가입하면 바로 로그인된 상태로 완료 화면에 간다
             LoginSession.login(this, id, name, email, phone);
 
-            String birthText = chosen == 0 ? "" : year + "년 " + month + "월 " + day + "일, ";
-
             Toast.makeText(
                     this,
-                    name + "님, 회원가입 완료! (" +
-                            birthText +
-                            gender + ")",
+                    name + "님, 회원가입 완료!",
                     Toast.LENGTH_LONG
             ).show();
 

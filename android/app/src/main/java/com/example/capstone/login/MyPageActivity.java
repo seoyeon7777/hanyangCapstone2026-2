@@ -33,12 +33,12 @@ public class MyPageActivity extends AppCompatActivity {
     private TextView tvUserName, tvUserEmail, tvEditProfile;
 
     private TextView tvOrderAll;
-    private TextView tvCountPending, tvCountPaid, tvCountReady, tvCountShipping, tvCountDone;
-    private LinearLayout itemOrderPending, itemOrderPaid, itemOrderReady, itemOrderShipping, itemOrderDone;
+    private TextView tvCountPaid, tvCountReady, tvCountShipping, tvCountDone;
+    private LinearLayout itemOrderPaid, itemOrderReady, itemOrderShipping, itemOrderDone;
 
     private TextView menuOrderList, menuCancelReturn, menuDelivery, menuReview;
     private TextView menuCoupon, menuPaymentMethod, menuRefundAccount;
-    private TextView menuMyInquiry, menuNotice;
+    private TextView menuNotice, menuNoticeBoard;
     private TextView tvLogout;
 
     @Override
@@ -84,13 +84,11 @@ public class MyPageActivity extends AppCompatActivity {
         tvEditProfile = findViewById(R.id.tvEditProfile);
 
         tvOrderAll = findViewById(R.id.tvOrderAll);
-        tvCountPending = findViewById(R.id.tvCountPending);
         tvCountPaid = findViewById(R.id.tvCountPaid);
         tvCountReady = findViewById(R.id.tvCountReady);
         tvCountShipping = findViewById(R.id.tvCountShipping);
         tvCountDone = findViewById(R.id.tvCountDone);
 
-        itemOrderPending = findViewById(R.id.itemOrderPending);
         itemOrderPaid = findViewById(R.id.itemOrderPaid);
         itemOrderReady = findViewById(R.id.itemOrderReady);
         itemOrderShipping = findViewById(R.id.itemOrderShipping);
@@ -105,8 +103,8 @@ public class MyPageActivity extends AppCompatActivity {
         menuPaymentMethod = findViewById(R.id.menuPaymentMethod);
         menuRefundAccount = findViewById(R.id.menuRefundAccount);
 
-        menuMyInquiry = findViewById(R.id.menuMyInquiry);
         menuNotice = findViewById(R.id.menuNotice);
+        menuNoticeBoard = findViewById(R.id.menuNoticeBoard);
 
         tvLogout = findViewById(R.id.tvLogout);
     }
@@ -125,8 +123,7 @@ public class MyPageActivity extends AppCompatActivity {
 
     /** orders + delivery 상태별 개수 반영 */
     private void loadOrderCounts() {
-        // [여기에 DB 입력] 주문접수/결제완료/배송준비중/배송중/배송완료 상태별 주문 개수 조회 (orders)
-        tvCountPending.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_PENDING)));
+        // [여기에 DB 입력] 결제완료/배송준비중/배송중/배송완료 상태별 주문 개수 조회 (orders)
         tvCountPaid.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_PAID)));
         tvCountReady.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_READY)));
         tvCountShipping.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_SHIPPING)));
@@ -143,7 +140,6 @@ public class MyPageActivity extends AppCompatActivity {
 
         // 주문/배송 전체보기 + 상태별 개수를 누르면 해당 상태로 필터된 주문 목록
         tvOrderAll.setOnClickListener(v -> openOrders(MyPageStore.STATUS_ALL));
-        itemOrderPending.setOnClickListener(v -> openOrders(MyPageStore.STATUS_PENDING));
         itemOrderPaid.setOnClickListener(v -> openOrders(MyPageStore.STATUS_PAID));
         itemOrderReady.setOnClickListener(v -> openOrders(MyPageStore.STATUS_READY));
         itemOrderShipping.setOnClickListener(v -> openOrders(MyPageStore.STATUS_SHIPPING));
@@ -162,8 +158,10 @@ public class MyPageActivity extends AppCompatActivity {
         menuRefundAccount.setOnClickListener(v -> open(RefundAccountActivity.class));
 
         // 문의
-        menuMyInquiry.setOnClickListener(v -> open(InquiryActivity.class));
         menuNotice.setOnClickListener(v -> open(NoticeActivity.class));
+        menuNoticeBoard.setOnClickListener(v -> startActivity(
+                new android.content.Intent(this, NoticeActivity.class)
+                        .putExtra(NoticeActivity.EXTRA_MODE, NoticeActivity.MODE_NOTICE)));
 
         // 로그아웃
         tvLogout.setOnClickListener(v -> AppDialog.show(this, false,

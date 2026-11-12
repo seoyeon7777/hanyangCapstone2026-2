@@ -26,6 +26,17 @@
             android:src="@drawable/ic_back"
             app:tint="@color/black" />
 
+        <!-- 비로그인일 때만 제목 "찜" 대신 보이는 이전 화면 버튼 (상품 상세와 같은 화살표) -->
+        <TextView
+            android:id="@+id/btnWishBack"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="‹"
+            android:textColor="#111111"
+            android:textSize="36sp"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/textWishTitle"
             android:layout_width="wrap_content"

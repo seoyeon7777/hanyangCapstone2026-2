@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -71,8 +72,10 @@ public class OrderActivity extends AppCompatActivity {
     private Spinner spOrderRequest;
     private static final String[] DELIVERY_REQUESTS = {
             "선택 안 함", "문 앞에 놓아주세요", "경비실에 맡겨주세요",
-            "택배함에 넣어주세요", "배송 전 연락 바랍니다", "부재 시 문 앞에 놓아주세요"
+            "택배함에 넣어주세요", "배송 전 연락 바랍니다", "부재 시 문 앞에 놓아주세요",
+            "직접 입력"
     };
+    private EditText etOrderRequest;
     private long selectedAddressId = -1;
     private CheckoutCoupons.Coupon selectedCoupon;
 
@@ -81,6 +84,14 @@ public class OrderActivity extends AppCompatActivity {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     selectedAddressId = result.getData()
                             .getLongExtra(DeliveryAddressActivity.EXTRA_ADDRESS_ID, -1);
+                }
+            });
+
+    // 카드 결제 화면(CardPaymentActivity)에서 "결제"까지 마치고 돌아오면 주문을 저장한다
+    private final ActivityResultLauncher<Intent> cardPayment = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    completeOrder(false);
                 }
             });
 
@@ -109,6 +120,18 @@ public class OrderActivity extends AppCompatActivity {
                 this, android.R.layout.simple_spinner_item, DELIVERY_REQUESTS);
         requestAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spOrderRequest.setAdapter(requestAdapter);
+        etOrderRequest = findViewById(R.id.etOrderRequest);
+        // "직접 입력"을 고르면 입력칸이 나타난다
+        spOrderRequest.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                etOrderRequest.setVisibility(position == DELIVERY_REQUESTS.length - 1 ? View.VISIBLE : View.GONE);
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {
+            }
+        });
         containerAddress = findViewById(R.id.containerAddress);
         btnAddAddress = findViewById(R.id.btnAddAddress);
         btnChangeAddress = findViewById(R.id.btnChangeAddress);
@@ -370,6 +393,12 @@ public class OrderActivity extends AppCompatActivity {
             return;
         }
 
+        // 계좌이체는 사이즈 주의 팝업 없이 바로 이체 안내 화면으로
+        if (checkedPaymentId == R.id.rbBank) {
+            pay();
+            return;
+        }
+
         // 결제 직전 사이즈 주의 팝업 (주문하는 장바구니 줄만. 바로 구매는 상세 화면에서 이미 확인했다)
         List<FitResult> warnings = SizeFitChecker.checkLines(orderedLines());
 
@@ -379,13 +408,24 @@ public class OrderActivity extends AppCompatActivity {
                     OrderActivity.this,
                     warnings,
                     SizeWarningDialog.Action.PAYMENT,
-                    this::completeOrder
+                    this::pay
             );
 
             return;
         }
 
-        completeOrder();
+        pay();
+    }
+
+    /** 결제 방법에 따라: 카드 → 카드 결제 화면 / 계좌이체 → 주문 저장 후 이체 안내 화면 */
+    private void pay() {
+        if (rgPayment.getCheckedRadioButtonId() == R.id.rbCard) {
+            Intent intent = new Intent(this, CardPaymentActivity.class);
+            intent.putExtra(CardPaymentActivity.EXTRA_AMOUNT, payPrice());
+            cardPayment.launch(intent);
+            return;
+        }
+        completeOrder(true);
     }
 
     /** 이번에 주문하는 장바구니 줄 (바로 구매면 빈 목록) */
@@ -398,8 +438,8 @@ public class OrderActivity extends AppCompatActivity {
         return option == null ? "" : option.trim();
     }
 
-    // 결제 완료 및 주문 내역 저장
-    private void completeOrder() {
+    // 결제 완료 및 주문 내역 저장 (bankTransfer = 계좌이체면 완료 화면에 이체할 계좌를 보여 준다)
+    private void completeOrder(boolean bankTransfer) {
 
         if (orderCompleted) {
             return;
@@ -435,8 +475,12 @@ public class OrderActivity extends AppCompatActivity {
         // 주문 저장
         MyPageStore.addOrder(newOrder);
         // 주문별 요청사항 저장: 배송지 자체의 요청사항과 분리
-        String deliveryRequest = spOrderRequest.getSelectedItemPosition() <= 0
+        int requestPosition = spOrderRequest.getSelectedItemPosition();
+        String deliveryRequest = requestPosition <= 0
                 ? "" : spOrderRequest.getSelectedItem().toString();
+        if (requestPosition == DELIVERY_REQUESTS.length - 1) {
+            deliveryRequest = etOrderRequest.getText().toString().trim();
+        }
         getSharedPreferences("order_delivery_requests", MODE_PRIVATE)
                 .edit().putString(orderNo, deliveryRequest).apply();
 
@@ -464,6 +508,7 @@ public class OrderActivity extends AppCompatActivity {
 
         intent.putExtra("totalPrice", payPrice());
         intent.putExtra("orderNo", orderNo);
+        intent.putExtra(OrderCompleteActivity.EXTRA_BANK_TRANSFER, bankTransfer);
 
         startActivity(intent);
         finish();

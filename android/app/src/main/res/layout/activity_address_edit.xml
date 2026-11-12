@@ -70,8 +70,10 @@
                     android:layout_marginEnd="8dp"
                     android:layout_marginBottom="0dp"
                     android:layout_weight="1"
+                    android:cursorVisible="false"
+                    android:focusable="false"
                     android:hint="우편번호"
-                    android:inputType="number"
+                    android:inputType="none"
                     android:maxLength="5" />
 
                 <Button
@@ -90,7 +92,10 @@
                 android:id="@+id/etAddress1"
                 style="@style/MyPageEdit"
                 android:layout_marginBottom="10dp"
-                android:hint="도로명 주소" />
+                android:cursorVisible="false"
+                android:focusable="false"
+                android:hint="도로명 주소 (주소 검색으로 입력)"
+                android:inputType="none" />
 
             <EditText
                 android:id="@+id/etAddress2"
@@ -101,7 +106,8 @@
                 android:id="@+id/cbDefault"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:buttonTint="#000000"
+                app:buttonTint="#000000"
+                app:buttonIconTint="#FFFFFF"
                 android:text="기본 배송지로 설정"
                 android:textColor="@color/black"
                 android:textSize="14sp" />

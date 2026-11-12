@@ -231,6 +231,47 @@
                         app:trackTint="#BBBBBB" />
                 </LinearLayout>
 
+                <!-- 제목 + 회색 설명. 줄 어디를 눌러도 스위치가 바뀜 (MyBodyActivity) -->
+                <LinearLayout
+                    android:id="@+id/rowSizeRecommend"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:minHeight="48dp"
+                    android:orientation="horizontal"
+                    android:paddingVertical="8dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="추천 사이즈 표시"
+                            android:textColor="#333333"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="상품 상세에 내 치수 기준 추천 사이즈를 보여줘요"
+                            android:textColor="#999999"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/switchSizeRecommend"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:thumbTint="#000000"
+                        app:trackTint="#BBBBBB" />
+                </LinearLayout>
+
             </LinearLayout>
 
         </LinearLayout>

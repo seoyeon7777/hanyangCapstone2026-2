@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- 상품 옵션 창 칩 글자색: 선택되면 흰색 -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_selected="true" android:color="#FFFFFF" />
+
+    <item android:color="#777777" />
+
+</selector>

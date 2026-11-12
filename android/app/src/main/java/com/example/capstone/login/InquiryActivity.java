@@ -225,7 +225,7 @@ public class InquiryActivity extends AppCompatActivity {
         // [여기에 DB 입력] 답변 내용 조회 (inquiry_answers) - 지금은 답변 저장소가 없어 안내 문구만
         ((TextView) view.findViewById(R.id.tvDetailAnswer)).setText(answered
                 ? "답변이 등록되었어요."
-                : "아직 답변을 준비하고 있어요. 답변이 등록되면 여기에 보여 드릴게요.");
+                : "아직 답변이 등록되지 않았습니다.");
 
         view.findViewById(R.id.btnCloseSheet).setOnClickListener(v -> sheet.dismiss());
         sheet.show();

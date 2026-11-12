@@ -35,6 +35,8 @@
         <activity android:name=".login.TermsActivity" android:exported="false" />
         <activity android:name=".ui.OrderActivity" />
         <activity android:name=".ui.OrderCompleteActivity" />
+        <activity android:name=".ui.CardPaymentActivity" android:exported="false" />
+        <activity android:name=".mypage.AddressSearchActivity" android:exported="false" />
         <activity android:name=".ui.ReviewActivity" />
 
 
