@@ -452,6 +452,7 @@ match_score(body, item) -> {
 - [x] 상단 탭·카테고리·검색·장바구니에 서버 상품 합침 (4-14). DummyData 40개는 그대로 같이 보임 — 뺄지는 팀 결정
 - [ ] 로그인 사용자와 추천 user_id(app-…) 연결 (로그인이 서버·DB와 연결된 뒤)
 - [ ] 실제 상품 데이터(products + product_tags) 넣기, popularity 산식 정하기
+  - (11/14) 네이버 쇼핑 검색 API가 2026-07-31 종료 → 3명이 50개씩 직접 수집. 나눔·칸 정의는 `recommend/상품수집_가이드.md`, 양식은 `recommend/data/collect/팀원N_*.csv`. DB 넣는 `import_products.py`는 아직
 - [ ] B 파트 server.py의 상품 저장소는 아직 메모리 (B API를 쓸 때만 해당)
 - [x] A·B·C 통합 (feature/integration): matching_b.py로 B 연결, app.py 통합 서버, /api/feed에 설문 answers 입력, 상품 태그를 B 이름으로, test_integration.py 8개
 - [x] 9단계: 홈 화면 토글 ON(골격 맞춤)/OFF(일반 쇼핑몰) — general_score, mode 인자, 테스트 9개
