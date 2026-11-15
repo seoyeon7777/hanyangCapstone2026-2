@@ -29,7 +29,6 @@ import com.example.capstone.adapter.ProductAdapter;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.Product;
 import com.example.capstone.data.RecommendApi;
-import com.example.capstone.data.SearchHistory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +42,8 @@ public class SearchActivity extends AppCompatActivity {
     private static final int BORDER = 0xFFE8E8E8;
     private static final int WHITE = Color.WHITE;
 
-    private static final String PREF_NAME = SearchHistory.PREF_NAME;
+    private static final String PREF_NAME = "search_history";
+    private static final String PREF_KEY = "recent_terms";
 
     private static final String[] POPULAR_TERMS = {
             "와이드 팬츠",
@@ -209,10 +209,8 @@ public class SearchActivity extends AppCompatActivity {
                         MODE_PRIVATE
                 );
 
-        SearchHistory.dropLegacy(this);
-
         String stored = prefs.getString(
-                SearchHistory.key(this),
+                PREF_KEY,
                 ""
         );
 
@@ -251,7 +249,7 @@ public class SearchActivity extends AppCompatActivity {
                 MODE_PRIVATE
         ).edit()
                 .putString(
-                        SearchHistory.key(this),
+                        PREF_KEY,
                         builder.toString()
                 )
                 .apply();

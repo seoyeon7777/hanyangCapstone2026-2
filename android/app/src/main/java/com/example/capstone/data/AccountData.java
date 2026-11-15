@@ -52,7 +52,6 @@ public final class AccountData {
             BodyProfileStore.deleteAccount(context, name);
             AccountPrefs.deleteAccount(context, name);
             ProfilePhotoStore.deleteAccount(context, name);
-            SearchHistory.deleteAccount(context, name);
         }
 
         // 이 회원이 입력해 둔 키·몸무게·나이도 지운다
