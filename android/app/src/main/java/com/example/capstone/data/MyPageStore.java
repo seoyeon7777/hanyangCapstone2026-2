@@ -35,6 +35,14 @@ public class MyPageStore {
             "배송완료", "취소완료", "반품신청", "교환신청"
     };
 
+    // 주문 상태 자동 진행 (택배 연동이 없는 시연용): 주문 시각(주문번호 ORD+밀리초)부터 지난 시간으로 정한다.
+    // 실제 서비스에서는 택배사·판매자가 바꾸는 값이다. 시연에서 볼 수 있게 짧게 잡았다.
+    public static final long ADVANCE_READY_MS = 2L * 60 * 1000;      // 결제완료 → 배송준비중
+    public static final long ADVANCE_SHIPPING_MS = 5L * 60 * 1000;   // → 배송중
+    public static final long ADVANCE_DONE_MS = 10L * 60 * 1000;      // → 배송완료
+    /** 배송완료 뒤 반품·교환을 신청할 수 있는 기간 (정책 문구 "7일"과 같게) */
+    public static final long RETURN_WINDOW_MS = 7L * 24 * 60 * 60 * 1000;
+
     public static final String CLAIM_CANCEL = "취소";
     public static final String CLAIM_RETURN = "반품";
     public static final String CLAIM_EXCHANGE = "교환";
@@ -77,6 +85,9 @@ public class MyPageStore {
         public final String courier;
         public final String trackingNo;
 
+        /** 주문한 시각(밀리초). 주문번호가 ORD+밀리초 모양일 때만 알 수 있고, 아니면 0 (자동 진행·기간 제한 없음) */
+        public final long placedAt;
+
         public Order(
                 String orderNo,
                 String orderDate,
@@ -99,6 +110,19 @@ public class MyPageStore {
             this.status = status;
             this.courier = courier;
             this.trackingNo = trackingNo;
+            this.placedAt = parsePlacedAt(orderNo);
+        }
+
+        private static long parsePlacedAt(String orderNo) {
+            if (orderNo != null && orderNo.matches("ORD\\d{13}")) {
+                return Long.parseLong(orderNo.substring(3));
+            }
+            return 0L;
+        }
+
+        /** 배송완료가 된 시각 (알 수 없으면 0) */
+        public long deliveredAt() {
+            return placedAt > 0 ? placedAt + ADVANCE_DONE_MS : 0L;
         }
 
         public String getStatusLabel() {
@@ -1002,7 +1026,37 @@ public class MyPageStore {
         save();
     }
 
+    /** 시간이 지난 만큼 결제완료 → 배송준비중 → 배송중 → 배송완료로 넘긴다. 취소·반품·교환 중인 주문은 건드리지 않는다. */
+    private static void advanceOrders() {
+        long now = System.currentTimeMillis();
+        boolean changed = false;
+
+        for (Order order : orders) {
+            if (order.placedAt <= 0
+                    || order.status < STATUS_PAID
+                    || order.status >= STATUS_DONE) {
+                continue;
+            }
+
+            long age = now - order.placedAt;
+            int next = age >= ADVANCE_DONE_MS ? STATUS_DONE
+                    : age >= ADVANCE_SHIPPING_MS ? STATUS_SHIPPING
+                    : age >= ADVANCE_READY_MS ? STATUS_READY
+                    : STATUS_PAID;
+
+            if (next > order.status) {
+                order.status = next;
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            save();
+        }
+    }
+
     public static List<Order> getOrders(int status) {
+        advanceOrders();
         List<Order> result = new ArrayList<>();
 
         for (Order order : orders) {
@@ -1023,6 +1077,7 @@ public class MyPageStore {
             return null;
         }
 
+        advanceOrders();
         for (Order order : orders) {
             if (order.orderNo.equals(orderNo)) {
                 return order;
@@ -1033,13 +1088,19 @@ public class MyPageStore {
     }
 
     public static boolean canCancel(Order order) {
+        advanceOrders();
         return order != null
                 && (order.status == STATUS_PENDING
                 || order.status == STATUS_PAID);
     }
 
     public static boolean canReturnOrExchange(Order order) {
-        return order != null && order.status == STATUS_DONE;
+        advanceOrders();
+        if (order == null || order.status != STATUS_DONE) {
+            return false;
+        }
+        long delivered = order.deliveredAt();
+        return delivered <= 0 || System.currentTimeMillis() - delivered <= RETURN_WINDOW_MS;
     }
 
     // 취소 / 반품 / 교환
@@ -1049,6 +1110,12 @@ public class MyPageStore {
             String reason
     ) {
         if (order == null) {
+            return;
+        }
+
+        // 신청 창을 열어 둔 사이 상태가 바뀌었거나 반품 기간이 지났으면 처리하지 않는다
+        boolean allowed = CLAIM_CANCEL.equals(type) ? canCancel(order) : canReturnOrExchange(order);
+        if (!allowed) {
             return;
         }
 
