@@ -11,11 +11,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.graphics.Typeface;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
@@ -39,26 +41,23 @@ public class OrderListActivity extends AppCompatActivity {
     /** 칩 순서와 같은 순서의 상태값 */
     private static final int[] CHIP_STATUSES = {
             MyPageStore.STATUS_ALL,
+            MyPageStore.STATUS_PENDING,
             MyPageStore.STATUS_PAID,
             MyPageStore.STATUS_READY,
             MyPageStore.STATUS_SHIPPING,
             MyPageStore.STATUS_DONE
     };
 
-    private static final String[] CANCEL_REASONS = {
-            "단순 변심", "다른 상품으로 재주문", "배송 지연", "결제 수단 변경", "기타"
-    };
-
-    private static final String[] RETURN_REASONS = {
-            "사이즈가 맞지 않음", "상품 불량/파손", "상품 정보와 다름", "오배송", "단순 변심", "기타"
-    };
+    private static final int[] PERIOD_MONTHS = {1, MyPageStore.RECENT_MONTHS, 6, 12, 0};
+    private static final String[] PERIOD_LABELS = {"최근 1개월", "최근 3개월", "최근 6개월", "최근 1년", "전체 기간"};
 
     private TextView[] chips;
-    private TextView tvOrderCount, tvEmpty;
+    private TextView tvOrderPeriod, tvEmpty;
     private LinearLayout containerOrders;
     private ScrollView scrollOrders;
 
     private int currentStatus = MyPageStore.STATUS_ALL;
+    private int currentMonths = MyPageStore.RECENT_MONTHS;
 
     public static Intent newIntent(Context context, int status) {
         Intent intent = new Intent(context, OrderListActivity.class);
@@ -84,6 +83,43 @@ public class OrderListActivity extends AppCompatActivity {
                 scrollOrders.scrollTo(0, 0);
             });
         }
+
+        tvOrderPeriod.setOnClickListener(v -> showPeriodMenu());
+    }
+
+    private void showPeriodMenu() {
+        float density = getResources().getDisplayMetrics().density;
+
+        LinearLayout menu = new LinearLayout(this);
+        menu.setOrientation(LinearLayout.VERTICAL);
+        menu.setBackgroundResource(R.drawable.bg_card);
+        menu.setPadding(0, Math.round(6 * density), 0, Math.round(6 * density));
+
+        PopupWindow popup = new PopupWindow(menu, Math.round(150 * density),
+                LinearLayout.LayoutParams.WRAP_CONTENT, true);
+        popup.setElevation(8 * density);
+        popup.setOutsideTouchable(true);
+
+        for (int i = 0; i < PERIOD_MONTHS.length; i++) {
+            final int index = i;
+            boolean selected = PERIOD_MONTHS[i] == currentMonths;
+            TextView row = new TextView(this);
+            row.setText(PERIOD_LABELS[i]);
+            row.setTextSize(14);
+            row.setTextColor(selected ? 0xFF111111 : 0xFF666666);
+            row.setTypeface(null, selected ? Typeface.BOLD : Typeface.NORMAL);
+            row.setPadding(Math.round(16 * density), Math.round(11 * density),
+                    Math.round(16 * density), Math.round(11 * density));
+            row.setOnClickListener(v -> {
+                popup.dismiss();
+                currentMonths = PERIOD_MONTHS[index];
+                renderOrders();
+                scrollOrders.scrollTo(0, 0);
+            });
+            menu.addView(row);
+        }
+
+        popup.showAsDropDown(tvOrderPeriod, Math.round(14 * density), 0);
     }
 
     @Override
@@ -96,12 +132,13 @@ public class OrderListActivity extends AppCompatActivity {
     private void initViews() {
         chips = new TextView[]{
                 findViewById(R.id.chipAll),
+                findViewById(R.id.chipPending),
                 findViewById(R.id.chipPaid),
                 findViewById(R.id.chipReady),
                 findViewById(R.id.chipShipping),
                 findViewById(R.id.chipDone)
         };
-        tvOrderCount = findViewById(R.id.tvOrderCount);
+        tvOrderPeriod = findViewById(R.id.tvOrderPeriod);
         tvEmpty = findViewById(R.id.tvEmpty);
         containerOrders = findViewById(R.id.containerOrders);
         scrollOrders = findViewById(R.id.scrollOrders);
@@ -114,28 +151,67 @@ public class OrderListActivity extends AppCompatActivity {
             }
         }
 
-        List<Order> orders = MyPageStore.getOrders(currentStatus);
-        tvOrderCount.setText("주문 " + orders.size() + "건");
+        for (int i = 0; i < PERIOD_MONTHS.length; i++) {
+            if (PERIOD_MONTHS[i] == currentMonths) {
+                tvOrderPeriod.setText(PERIOD_LABELS[i] + " ▾");
+            }
+        }
+
+        List<Order> orders = MyPageStore.getOrders(currentStatus, currentMonths);
+        tvEmpty.setText(currentMonths == 0 ? "아직 주문 내역이 없어요" : "이 기간에 주문 내역이 없어요");
         tvEmpty.setVisibility(orders.isEmpty() ? View.VISIBLE : View.GONE);
 
         containerOrders.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
-        for (Order order : orders) {
-            containerOrders.addView(createOrderView(inflater, order));
+        for (int i = 0; i < orders.size(); i++) {
+            Order order = orders.get(i);
+            boolean sameAsPrevious = i > 0
+                    && orders.get(i - 1).getGroupNo().equals(order.getGroupNo());
+            boolean sameAsNext = i < orders.size() - 1
+                    && orders.get(i + 1).getGroupNo().equals(order.getGroupNo());
+            containerOrders.addView(createOrderView(inflater, order, sameAsPrevious, sameAsNext));
         }
     }
 
-    private View createOrderView(LayoutInflater inflater, Order order) {
+    private View createOrderView(LayoutInflater inflater, Order order,
+                                 boolean sameAsPrevious, boolean sameAsNext) {
         View view = inflater.inflate(R.layout.item_order, containerOrders, false);
 
+        float density = getResources().getDisplayMetrics().density;
+        if (sameAsPrevious) {
+            view.findViewById(R.id.layoutOrderHeader).setVisibility(View.GONE);
+            View product = view.findViewById(R.id.layoutOrderProduct);
+            LinearLayout.LayoutParams plp = (LinearLayout.LayoutParams) product.getLayoutParams();
+            plp.topMargin = 0;
+            product.setLayoutParams(plp);
+            view.setPadding(view.getPaddingLeft(), Math.round(18 * density),
+                    view.getPaddingRight(), view.getPaddingBottom());
+        }
+        if (sameAsNext) {
+            View divider = view.findViewById(R.id.viewOrderDivider);
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) divider.getLayoutParams();
+            lp.height = Math.max(1, Math.round(density));
+            lp.topMargin = Math.round(18 * density);
+            lp.setMarginStart(Math.round(20 * density));
+            lp.setMarginEnd(Math.round(20 * density));
+            divider.setLayoutParams(lp);
+            divider.setBackgroundColor(0xFFEEEEEE);
+        }
+
         ((TextView) view.findViewById(R.id.tvOrderDate)).setText(order.orderDate);
-        ((TextView) view.findViewById(R.id.tvOrderNo)).setText(order.orderNo);
+        view.findViewById(R.id.tvOrderNo).setOnClickListener(v ->
+                startActivity(OrderDetailActivity.newIntent(this, order.getGroupNo())));
+        view.findViewById(R.id.layoutOrderProduct).setOnClickListener(v ->
+                OrderDetailActivity.openProduct(this, order));
         ((TextView) view.findViewById(R.id.tvOrderStatus)).setText(order.getStatusLabel());
-        ((TextView) view.findViewById(R.id.tvBrand)).setText(order.brand);
+        TextView tvBrand = view.findViewById(R.id.tvBrand);
+        tvBrand.setText(order.brand);
+        tvBrand.setVisibility(TextUtils.isEmpty(order.brand) ? View.GONE : View.VISIBLE);
         ((TextView) view.findViewById(R.id.tvProductName)).setText(order.productName);
         // 장바구니 주문은 option에 "총 n개"까지 들어 있어 수량을 또 붙이지 않는다
         ((TextView) view.findViewById(R.id.tvOption)).setText(order.option.contains("총 ")
-                ? order.option : order.option + " / " + order.quantity + "개");
+                ? order.option
+                : (order.option.isEmpty() ? "" : order.option + " / ") + order.quantity + "개");
         ((TextView) view.findViewById(R.id.tvPrice)).setText(MyPageStore.formatPrice(order.getTotalPrice()));
 
         Button btnCancel = view.findViewById(R.id.btnCancel);
@@ -148,7 +224,7 @@ public class OrderListActivity extends AppCompatActivity {
                 || order.status == MyPageStore.STATUS_SHIPPING
                 || order.status == MyPageStore.STATUS_DONE;
         boolean returnable = MyPageStore.canReturnOrExchange(order);
-        boolean reviewable = order.status == MyPageStore.STATUS_DONE && !order.reviewed;
+        boolean reviewable = false;
 
         btnCancel.setVisibility(cancelable ? View.VISIBLE : View.GONE);
         btnTracking.setVisibility(trackable ? View.VISIBLE : View.GONE);
@@ -159,8 +235,10 @@ public class OrderListActivity extends AppCompatActivity {
         view.findViewById(R.id.layoutActions).setVisibility(
                 cancelable || trackable || returnable || reviewable ? View.VISIBLE : View.GONE);
 
-        btnCancel.setOnClickListener(v -> showClaimDialog(order, true));
-        btnReturn.setOnClickListener(v -> showClaimDialog(order, false));
+        btnCancel.setOnClickListener(v ->
+                startActivity(ClaimRequestActivity.newIntent(this, order.orderNo, true)));
+        btnReturn.setOnClickListener(v ->
+                startActivity(ClaimRequestActivity.newIntent(this, order.orderNo, false)));
         btnTracking.setOnClickListener(v -> showTracking(order));
         btnReview.setOnClickListener(v ->
                 startActivity(ReviewWriteActivity.newWriteIntent(this, order.orderNo)));
@@ -181,55 +259,5 @@ public class OrderListActivity extends AppCompatActivity {
         }
 
         AppDialog.alert(this, "배송조회", message, "확인");
-    }
-
-    /**
-     * 주문취소(isCancel=true) 또는 반품/교환(isCancel=false) 신청 다이얼로그
-     */
-    private void showClaimDialog(Order order, boolean isCancel) {
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_claim_request, null);
-
-        TextView tvProduct = dialogView.findViewById(R.id.tvClaimProduct);
-        RadioGroup rgType = dialogView.findViewById(R.id.rgClaimType);
-        RadioButton rbExchange = dialogView.findViewById(R.id.rbExchange);
-        Spinner spReason = dialogView.findViewById(R.id.spReason);
-        EditText etDetail = dialogView.findViewById(R.id.etReasonDetail);
-
-        tvProduct.setText(order.productName + " · " + order.option + "\n"
-                + MyPageStore.formatPrice(order.getTotalPrice()));
-        rgType.setVisibility(isCancel ? View.GONE : View.VISIBLE);
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, isCancel ? CANCEL_REASONS : RETURN_REASONS);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spReason.setAdapter(adapter);
-
-        new AlertDialog.Builder(this)
-                .setTitle(isCancel ? "주문 취소" : "반품/교환 신청")
-                .setView(dialogView)
-                .setPositiveButton("신청", (d, w) -> {
-                    String type;
-                    if (isCancel) {
-                        type = MyPageStore.CLAIM_CANCEL;
-                    } else {
-                        type = rbExchange.isChecked() ? MyPageStore.CLAIM_EXCHANGE : MyPageStore.CLAIM_RETURN;
-                    }
-
-                    String reason = spReason.getSelectedItem().toString();
-                    String detail = etDetail.getText().toString().trim();
-                    if (!detail.isEmpty()) {
-                        reason += " - " + detail;
-                    }
-
-                    MyPageStore.requestClaim(order, type, reason);
-                    if (MyPageStore.CLAIM_RETURN.equals(type)) {
-                        // 반품은 추천 학습에 반영 (그 주문의 서버 상품 취향 점수를 낮춘다)
-                        RecommendApi.recordReturn(this, order.orderNo);
-                    }
-                    Toast.makeText(this, type + " 신청이 완료되었습니다.", Toast.LENGTH_SHORT).show();
-                    renderOrders();
-                })
-                .setNegativeButton("닫기", null)
-                .show();
     }
 }

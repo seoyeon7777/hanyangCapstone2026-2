@@ -56,6 +56,9 @@
         <activity android:name=".mypage.ChangePasswordActivity" android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity android:name=".mypage.OrderListActivity" android:exported="false" />
+        <activity android:name=".mypage.OrderDetailActivity" android:exported="false" />
+        <activity android:name=".mypage.ClaimRequestActivity" android:exported="false" />
+        <activity android:name=".login.CouponHistoryActivity" android:exported="false" />
         <activity android:name=".mypage.CancelReturnActivity" android:exported="false" />
         <activity android:name=".mypage.DeliveryAddressActivity" android:exported="false" />
         <activity android:name=".mypage.AddressEditActivity" android:exported="false"

@@ -128,7 +128,13 @@ public class ReviewWriteActivity extends AppCompatActivity {
     }
 
     private void updateRatingLabel(float rating) {
-        tvRatingLabel.setText(RATING_LABELS[Math.round(rating)]);
+        if (rating <= 0f) {
+            tvRatingLabel.setText(RATING_LABELS[0]);
+            return;
+        }
+        String score = rating == Math.floor(rating)
+                ? String.valueOf((int) rating) : String.valueOf(rating);
+        tvRatingLabel.setText(score + "점 · " + RATING_LABELS[(int) Math.ceil(rating)]);
     }
 
     private void updateContentCount(int length) {
@@ -139,7 +145,7 @@ public class ReviewWriteActivity extends AppCompatActivity {
         float rating = ratingBar.getRating();
         String content = etContent.getText().toString().trim();
 
-        if (rating < 1) {
+        if (rating < 0.5f) {
             Toast.makeText(this, "별점을 선택해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }

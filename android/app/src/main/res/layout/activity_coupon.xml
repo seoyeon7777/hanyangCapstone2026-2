@@ -101,6 +101,42 @@
         android:layout_height="1dp"
         android:background="#EEEEEE" />
 
+    <HorizontalScrollView
+        android:id="@+id/layoutCouponChips"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="12dp">
+
+            <TextView
+                android:id="@+id/chipCouponAll"
+                style="@style/MyPageChip"
+                android:text="전체" />
+
+            <TextView
+                android:id="@+id/chipCouponMall"
+                style="@style/MyPageChip"
+                android:text="쇼핑몰" />
+
+            <TextView
+                android:id="@+id/chipCouponBrand"
+                style="@style/MyPageChip"
+                android:text="브랜드" />
+
+            <TextView
+                android:id="@+id/chipCouponItem"
+                style="@style/MyPageChip"
+                android:text="상품" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
     <!-- 하나의 ScrollView만 사용하여 쿠폰 목록을 세로 스크롤 -->
     <ScrollView
         android:id="@+id/scrollCoupon"
@@ -134,6 +170,29 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/tvCouponTypeEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:gravity="center"
+                android:text="이 종류의 쿠폰이 없어요"
+                android:textColor="#999999"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/btnCouponMore"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_button_outlin"
+                android:gravity="center"
+                android:text="전체보기 ⌄"
+                android:textColor="#111111"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/layoutCouponEmpty"
@@ -170,6 +229,57 @@
                     android:text="쿠폰 받으러 가기"
                     android:textColor="#111111"
                     android:textSize="13sp" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/spaceCouponBottom"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:minHeight="60dp" />
+
+            <LinearLayout
+                android:id="@+id/layoutCouponFinished"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginHorizontal="-20dp"
+                    android:background="#EEEEEE" />
+
+                <LinearLayout
+                    android:id="@+id/rowCouponFinished"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="완료 / 만료"
+                        android:textColor="#111111"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="›"
+                        android:textColor="#111111"
+                        android:textSize="22sp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginHorizontal="-20dp"
+                    android:background="#EEEEEE" />
             </LinearLayout>
 
             <!-- 쿠폰 받기 -->

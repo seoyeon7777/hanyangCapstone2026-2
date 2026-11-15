@@ -698,11 +698,13 @@ public class SearchActivity extends AppCompatActivity {
     // 검색 기능
     // =====================================
 
+    private static String searchKey(String text) {
+        return text == null ? "" : text.replaceAll("\\s+", "").toLowerCase(Locale.ROOT);
+    }
+
     private void searchProducts(String keyword) {
 
-        String query = keyword
-                .trim()
-                .toLowerCase(Locale.ROOT);
+        String query = searchKey(keyword);
 
         searchResults.clear();
 
@@ -720,22 +722,13 @@ public class SearchActivity extends AppCompatActivity {
                 DummyData.getProducts()) {
 
             String name =
-                    product.getName() == null
-                            ? ""
-                            : product.getName()
-                            .toLowerCase(Locale.ROOT);
+                    searchKey(product.getName());
 
             String brand =
-                    product.getBrand() == null
-                            ? ""
-                            : product.getBrand()
-                            .toLowerCase(Locale.ROOT);
+                    searchKey(product.getBrand());
 
             String category =
-                    product.getCategory() == null
-                            ? ""
-                            : product.getCategory()
-                            .toLowerCase(Locale.ROOT);
+                    searchKey(product.getCategory());
 
             // 상품명 / 브랜드 / 카테고리 검색
             if (!name.contains(query)

@@ -15,6 +15,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.data.BodyInput;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.login.LoginGate;
 import com.example.capstone.login.LoginSession;
@@ -73,7 +74,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(pad, pad / 2, pad, 0);
+        box.setPadding(0, 0, 0, 0);
 
         TextView message = new TextView(this);
         message.setText(
@@ -91,10 +92,9 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         skip.setText("다시 보지 않기");
         box.addView(skip);
 
-        new AlertDialog.Builder(this)
-                .setTitle("정확한 측정을 위해")
-                .setView(box)
-                .setPositiveButton("시작하기", (d, w) -> {
+        AppDialog.custom(this, "정확한 측정을 위해", box,
+                "다음에 하기", null,
+                "시작하기", () -> {
                     if (skip.isChecked()) {
                         getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
                                 .edit()
@@ -102,9 +102,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                                 .apply();
                     }
                     startMeasurement();
-                })
-                .setNegativeButton("다음에 하기", null)
-                .show();
+                });
     }
 
     private void saveSurvey() {
@@ -188,10 +186,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
         // 키 전달이 누락된 경우 저장된 키 사용
         if (userHeightCm <= 0f) {
-            userHeightCm = getSharedPreferences(
-                    "avatar_input",
-                    MODE_PRIVATE
-            ).getFloat("height_cm", 0f);
+            userHeightCm = BodyInput.height(this);
         }
 
         // 체형별 결과 표시

@@ -44,6 +44,8 @@ public class OrderActivity extends AppCompatActivity {
     public static final String EXTRA_CART_LINE_IDS = "cart_line_ids";
     /** 상세 화면 "바로 구매"일 때: 그 상품의 서버 번호 (서버 상품만). 장바구니는 건드리지 않는다 */
     public static final String EXTRA_BUY_NOW_SERVER_ID = "buy_now_server_id";
+    public static final String EXTRA_BRAND = "product_brand";
+    public static final String EXTRA_PRODUCT_ID = "order_product_id";
 
     private View btnBack;
     private TextView tvProductName;
@@ -91,7 +93,10 @@ public class OrderActivity extends AppCompatActivity {
     private final ActivityResultLauncher<Intent> cardPayment = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
-                    completeOrder(false);
+                    Intent data = result.getData();
+                    completeOrder(false,
+                            data == null ? "" : data.getStringExtra(CardPaymentActivity.RESULT_CARD),
+                            data == null ? "" : data.getStringExtra(CardPaymentActivity.RESULT_INSTALLMENT));
                 }
             });
 
@@ -393,27 +398,6 @@ public class OrderActivity extends AppCompatActivity {
             return;
         }
 
-        // 계좌이체는 사이즈 주의 팝업 없이 바로 이체 안내 화면으로
-        if (checkedPaymentId == R.id.rbBank) {
-            pay();
-            return;
-        }
-
-        // 결제 직전 사이즈 주의 팝업 (주문하는 장바구니 줄만. 바로 구매는 상세 화면에서 이미 확인했다)
-        List<FitResult> warnings = SizeFitChecker.checkLines(orderedLines());
-
-        if (!warnings.isEmpty()) {
-
-            SizeWarningDialog.show(
-                    OrderActivity.this,
-                    warnings,
-                    SizeWarningDialog.Action.PAYMENT,
-                    this::pay
-            );
-
-            return;
-        }
-
         pay();
     }
 
@@ -425,7 +409,7 @@ public class OrderActivity extends AppCompatActivity {
             cardPayment.launch(intent);
             return;
         }
-        completeOrder(true);
+        completeOrder(true, "", "");
     }
 
     /** 이번에 주문하는 장바구니 줄 (바로 구매면 빈 목록) */
@@ -438,8 +422,59 @@ public class OrderActivity extends AppCompatActivity {
         return option == null ? "" : option.trim();
     }
 
+    private static class OrderLine {
+        String brand;
+        String name;
+        String option;
+        int quantity;
+        int unitPrice;
+        int productId = -1;
+        String serverId;
+    }
+
+    private List<OrderLine> orderLines() {
+        List<OrderLine> lines = new ArrayList<>();
+
+        for (Product product : orderedLines()) {
+            if (product.getCartQuantity() <= 0) {
+                continue;
+            }
+            OrderLine line = new OrderLine();
+            line.brand = product.getBrand() == null ? "" : product.getBrand();
+            line.name = product.getName();
+            line.option = product.getOptionLabel();
+            line.quantity = product.getCartQuantity();
+            line.unitPrice = product.getPrice();
+            line.productId = product.getId();
+            line.serverId = product.isFromServer() ? product.getServerId() : null;
+            lines.add(line);
+        }
+
+        if (lines.isEmpty()) {
+            OrderLine line = new OrderLine();
+            String brand = getIntent().getStringExtra(EXTRA_BRAND);
+            line.brand = brand == null ? "" : brand;
+            line.name = productNames;
+            line.option = orderOption();
+            line.quantity = Math.max(1, totalQuantity);
+            line.unitPrice = totalPrice / line.quantity;
+            line.productId = getIntent().getIntExtra(EXTRA_PRODUCT_ID, -1);
+            line.serverId = getIntent().getStringExtra(EXTRA_BUY_NOW_SERVER_ID);
+            lines.add(line);
+        }
+        return lines;
+    }
+
+    private String deliveryRequest() {
+        int requestPosition = spOrderRequest.getSelectedItemPosition();
+        if (requestPosition == DELIVERY_REQUESTS.length - 1) {
+            return etOrderRequest.getText().toString().trim();
+        }
+        return requestPosition <= 0 ? "" : spOrderRequest.getSelectedItem().toString();
+    }
+
     // 결제 완료 및 주문 내역 저장 (bankTransfer = 계좌이체면 완료 화면에 이체할 계좌를 보여 준다)
-    private void completeOrder(boolean bankTransfer) {
+    private void completeOrder(boolean bankTransfer, String cardCompany, String installment) {
 
         if (orderCompleted) {
             return;
@@ -448,54 +483,69 @@ public class OrderActivity extends AppCompatActivity {
         orderCompleted = true;
         btnOrder.setEnabled(false);
 
-        String orderNo = "ORD" + System.currentTimeMillis();
-
+        String groupNo = "ORD" + System.currentTimeMillis();
         String orderDate = MyPageStore.today();
+        MyPageStore.Address address = selectedAddress();
+        String request = deliveryRequest();
 
-        String option = orderOption();
-
-        // 현재 장바구니는 상품별 정보가 아닌
-        // 상품명 목록, 총수량, 총금액을 전달한다.
-        // 총 결제금액이 정확하도록 주문 한 건으로 저장한다.
-        MyPageStore.Order newOrder =
-                new MyPageStore.Order(
-                        orderNo,
-                        orderDate,
-                        "쇼핑몰",
-                        productNames,
-                        (option.isEmpty() ? "" : option + " / ")
-                                + "총 " + Math.max(1, totalQuantity) + "개",
-                        1,
-                        payPrice(),
-                        MyPageStore.STATUS_PAID,
-                        "",
-                        ""
-                );
-
-        // 주문 저장
-        MyPageStore.addOrder(newOrder);
-        // 주문별 요청사항 저장: 배송지 자체의 요청사항과 분리
-        int requestPosition = spOrderRequest.getSelectedItemPosition();
-        String deliveryRequest = requestPosition <= 0
-                ? "" : spOrderRequest.getSelectedItem().toString();
-        if (requestPosition == DELIVERY_REQUESTS.length - 1) {
-            deliveryRequest = etOrderRequest.getText().toString().trim();
+        List<OrderLine> lines = orderLines();
+        int linesTotal = 0;
+        for (OrderLine line : lines) {
+            linesTotal += line.unitPrice * line.quantity;
         }
-        getSharedPreferences("order_delivery_requests", MODE_PRIVATE)
-                .edit().putString(orderNo, deliveryRequest).apply();
 
-        // 구매는 추천 학습에 반영 (주문한 서버 상품마다 purchase, 반품 때 쓰려고 주문번호와 함께 저장)
-        List<String> serverIds = new ArrayList<>();
-        for (Product line : orderedLines()) {
-            if (line.isFromServer()) {
-                serverIds.add(line.getServerId());
+        int discount = totalPrice - payPrice();
+        int discountLeft = discount;
+
+        List<MyPageStore.Order> newOrders = new ArrayList<>();
+        for (int i = 0; i < lines.size(); i++) {
+            OrderLine line = lines.get(i);
+            int lineTotal = line.unitPrice * line.quantity;
+            int lineDiscount = i == lines.size() - 1
+                    ? discountLeft
+                    : (linesTotal == 0 ? 0 : (int) ((long) discount * lineTotal / linesTotal));
+            discountLeft -= lineDiscount;
+
+            MyPageStore.Order order = new MyPageStore.Order(
+                    lines.size() == 1 ? groupNo : groupNo + "-" + (i + 1),
+                    orderDate,
+                    line.brand,
+                    line.name,
+                    line.option,
+                    line.quantity,
+                    line.unitPrice,
+                    bankTransfer ? MyPageStore.STATUS_PENDING : MyPageStore.STATUS_PAID,
+                    "",
+                    ""
+            );
+            order.groupNo = groupNo;
+            order.paidAmount = Math.max(0, lineTotal - lineDiscount);
+            order.payMethod = bankTransfer ? MyPageStore.PAY_BANK : MyPageStore.PAY_CARD;
+            order.cardCompany = cardCompany == null ? "" : cardCompany;
+            order.installment = installment == null ? "" : installment;
+            if (address != null) {
+                order.receiver = address.receiver;
+                order.receiverPhone = address.phone;
+                order.shippingAddress = address.getFullAddress();
+            }
+            order.deliveryRequest = request;
+            order.couponName = selectedCoupon == null ? "" : selectedCoupon.name;
+            order.productId = line.productId;
+            order.serverProductId = line.serverId == null ? "" : line.serverId;
+            newOrders.add(order);
+
+            if (line.serverId != null && !line.serverId.isEmpty()) {
+                List<String> serverIds = new ArrayList<>();
+                serverIds.add(line.serverId);
+                RecommendApi.recordPurchase(this, order.orderNo, serverIds);
             }
         }
-        String buyNowServerId = getIntent().getStringExtra(EXTRA_BUY_NOW_SERVER_ID);
-        if (buyNowServerId != null && !buyNowServerId.isEmpty()) {
-            serverIds.add(buyNowServerId);
+
+        MyPageStore.addOrders(newOrders);
+        if (selectedCoupon != null) {
+            MyPageStore.useCoupon(selectedCoupon.id, groupNo);
         }
-        RecommendApi.recordPurchase(this, orderNo, serverIds);
+        String orderNo = groupNo;
 
         // 결제한 줄만 장바구니에서 뺀다 (체크했지만 이번에 주문하지 않은 줄·바로 구매는 그대로)
         CartStore.removeLines(this, getIntent().getLongArrayExtra(EXTRA_CART_LINE_IDS));

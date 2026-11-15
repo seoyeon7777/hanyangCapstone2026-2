@@ -594,12 +594,9 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
             MeasurementResultLauncher.open(this);
             return;
         }
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("치수가 이상할 수 있어요")
-                .setMessage(warning + "\n그래도 계산할까요?")
-                .setPositiveButton("그래도 계산", (d, w) -> MeasurementResultLauncher.open(this))
-                .setNegativeButton("사진 다시 고르기", null)
-                .show();
+        AppDialog.show(this, true, "치수가 이상할 수 있어요", warning + "\n그래도 계산할까요?",
+                "사진 다시 고르기", null,
+                "그래도 계산", () -> MeasurementResultLauncher.open(this));
     }
 
     // =====================================================

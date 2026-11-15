@@ -227,7 +227,11 @@ public class BodyTypeActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                confirmClose();
+                if (currentQuestion > 0) {
+                    goPrev();
+                } else {
+                    confirmClose();
+                }
             }
         });
     }

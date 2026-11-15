@@ -1,11 +1,14 @@
 package com.example.capstone.ui;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -16,6 +19,10 @@ public final class AppDialog {
 
     public interface InputHandler {
         boolean onInput(String text);
+    }
+
+    public interface PickHandler {
+        void onPick(int index);
     }
 
     private AppDialog() {
@@ -88,6 +95,64 @@ public final class AppDialog {
         }
         etInput.requestFocus();
         dialog.show();
+    }
+
+    public static void choose(Context context, String title, String[] items, int selected,
+                              PickHandler onPick) {
+        View view = inflate(context, false, title, null);
+        LinearLayout list = view.findViewById(R.id.layoutDialogExtra);
+        AlertDialog dialog = create(context, view);
+        float density = context.getResources().getDisplayMetrics().density;
+
+        for (int i = 0; i < items.length; i++) {
+            final int index = i;
+            boolean isSelected = i == selected;
+            TextView row = new TextView(context);
+            row.setText(items[i]);
+            row.setTextSize(15);
+            row.setTextColor(0xFF111111);
+            row.setGravity(Gravity.CENTER);
+            row.setTypeface(null, isSelected ? Typeface.BOLD : Typeface.NORMAL);
+            row.setBackgroundResource(isSelected ? R.drawable.bg_card_active : R.drawable.bg_card);
+            row.setOnClickListener(v -> {
+                dialog.dismiss();
+                onPick.onPick(index);
+            });
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, Math.round(48 * density));
+            if (i > 0) {
+                lp.topMargin = Math.round(8 * density);
+            }
+            list.addView(row, lp);
+        }
+
+        showExtra(view, items.length > 6 ? Math.round(context.getResources().getDisplayMetrics().heightPixels * 0.45f) : 0);
+        view.findViewById(R.id.btnDialogDark).setVisibility(View.GONE);
+        bindButton(view.findViewById(R.id.btnDialogLight), "닫기", dialog, null);
+        dialog.show();
+    }
+
+    public static void custom(Context context, String title, View content,
+                              String lightText, Runnable onLight,
+                              String darkText, Runnable onDark) {
+        View view = inflate(context, false, title, null);
+        ((LinearLayout) view.findViewById(R.id.layoutDialogExtra)).addView(content);
+        showExtra(view, 0);
+
+        AlertDialog dialog = create(context, view);
+        bindButton(view.findViewById(R.id.btnDialogLight), lightText, dialog, onLight);
+        bindButton(view.findViewById(R.id.btnDialogDark), darkText, dialog, onDark);
+        dialog.show();
+    }
+
+    private static void showExtra(View view, int maxHeight) {
+        View scroll = view.findViewById(R.id.scrollDialogExtra);
+        scroll.setVisibility(View.VISIBLE);
+        if (maxHeight > 0) {
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) scroll.getLayoutParams();
+            lp.height = maxHeight;
+            scroll.setLayoutParams(lp);
+        }
     }
 
     private static View inflate(Context context, boolean warning, String title, String message) {
