@@ -1149,7 +1149,7 @@ public final class RecommendApi {
                 if (httpCode > 0 && e instanceof JSONException) {
                     // 서버는 답했는데 JSON이 아니다 (프록시 오류 화면 등): 연결 문제로 보이지 않게 따로 알린다
                     final int answered = httpCode >= 400 ? httpCode : 502;
-                    main().post(() -> callback.onError(answered, "서버 응답을 읽을 수 없어요"));
+                    main().post(() -> callback.onError(answered, "일시적인 문제가 생겼어요. 잠시 후 다시 시도해 주세요"));
                 } else {
                     if (e instanceof IOException) {
                         lastConnectFailAt = System.currentTimeMillis();
