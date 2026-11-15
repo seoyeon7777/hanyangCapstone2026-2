@@ -354,6 +354,19 @@ match_score(body, item) -> {
 - 하단 탭 로그인: 체형·장바구니 탭은 로그인 안내(`BottomMenu`), 찜 탭과 장바구니 아이콘은 비로그인도 열리고 화면 안에서 로그인 안내(지현 11/10)
 - 확인: javac 컴파일 오류 0, 앱 단위 테스트 76개 통과, test_feed 41·test_integration 8·test_api 29, pytest 262 통과(2개는 원래 실패하던 B 쪽). 실제 화면은 Android Studio에서 확인 필요
 
+### 4-22. 주문·반품·쿠폰·리뷰 정리 (11/15, 혜림)
+- 노션 "1111 기능적 수정" 반영. develop(11/14)을 feature/hyerim에 받아온 뒤 작업
+- 체형: 키·몸무게·나이(`BodyInput`)를 계정별로 저장(`AccountPrefs` 설문 키와 같이 → 탈퇴 삭제·계정 이름 변경 이동). 비로그인 체형 탭은 팝업 없이 화면 안 로그인 안내(찜과 같음). 설문 화면 폰 이전 버튼 = 앞 문항(1번 문항에서만 그만두기 창)
+- 검색: 띄어쓰기·대소문자 무시 (`SearchActivity.searchKey`)
+- 주문 저장(`OrderActivity.completeOrder`): 상품마다 주문 1건(`orderNo`=`그룹번호-1`…, `groupNo` 공유), 배송지·결제 수단(`payMethod` card/bank, 카드사·할부)·요청사항·쿠폰명·상품 번호(`productId`, `serverProductId`)·실제 결제 금액(`paidAmount`, 쿠폰 할인은 상품 금액 비율로 나눔)을 `MyPageStore.Order`에 저장. 계좌이체는 주문접수(STATUS_PENDING)로 저장. 예전 `order_delivery_requests` 저장은 없앰. 결제 화면 사이즈 경고 없앰(장바구니 주문하기·상세 바로 구매에서만)
+- 주문 내역: 같은 `groupNo`는 날짜 줄 한 번만, "주문 N건" 대신 기간 선택(`RECENT_MONTHS` 3개월 기본), 칩에 주문접수, 상품 누르면 상품 상세(`OrderDetailActivity.openProduct`, 예전 주문은 이름으로 찾음), 리뷰 쓰기 버튼 없음(내가 쓴 리뷰에서 작성). 마이페이지 주문 개수는 최근 3개월 + 주문접수 칸
+- 주문 상세: 새 화면 `mypage/OrderDetailActivity` (상품·배송 정보(이름·번호 일부 가림)·결제 내역)
+- 취소·반품·교환: 팝업 대신 새 화면 `mypage/ClaimRequestActivity` (사유 직접 입력 필수, 환불 계좌 카드 목록 + "+ 새 환불 계좌 등록"). 계좌이체·예전 주문은 환불 계좌 필수(`MyPageStore.needsRefundAccount`), 카드 주문은 계좌를 고르면 계좌·안 고르면 카드 취소, 입금 전 주문은 환불 없음. 고른 환불 정보는 `Claim.refund`로 저장해 취소·반품 내역에 표시. 환불 계좌 예금주는 직접 입력(회원 이름과 달라도 됨)
+- 쿠폰: 결제하면 사용함(`MyPageStore.useCoupon`, 저장 키 `usedCoupons`), 주문 상품이 모두 취소되면 돌려줌. 쿠폰 종류(`CheckoutCoupons.TYPE_*`) 칩, 처음 3장 + "전체보기", 맨 아래 "완료 / 만료" → `login/CouponHistoryActivity`
+- 리뷰: 별점 0.5 단위, 작성 가능한 리뷰 카드 크게
+- 팝업: `AppDialog.choose`(목록 고르기)·`AppDialog.custom` 추가. 주문 내역 기간·카테고리 정렬/사이즈·카드사 더보기·사진 측정 경고·옷차림 안내를 앱 팝업 모양으로. 카테고리 대분류 제목 화살표 없앰. `dialog_claim_request.xml` 삭제
+- 확인: 빌드 + 에뮬레이터로 주요 화면 확인. 단위 테스트 76개 중 20개 실패는 `org.json`·`Log` 테스트 환경 문제(이번 수정과 무관)
+
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
   - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)
@@ -467,6 +480,7 @@ match_score(body, item) -> {
 - [x] 11/10 통합(4-21): 연오·혜림·지현 11/09~10 수정
 - [x] 11/08 통합(4-20): develop 브랜치에 서연·혜림·지현·연오(판매자 제외)·유빈 합침
 - [x] 1109 UI 수정(4-21): 상단바 통일·고정, 아이콘, 필터 칩, 2·3열 보기, 검색·찜·장바구니·마이페이지·쿠폰·결제 화면 정리
+- [x] 주문·반품·쿠폰·리뷰 정리(4-22): 상품별 주문 저장, 주문 상세·취소/반품 화면, 환불 계좌, 쿠폰 사용 처리·완료/만료, 별점 0.5, 검색 띄어쓰기, 키·몸무게 계정별
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend
