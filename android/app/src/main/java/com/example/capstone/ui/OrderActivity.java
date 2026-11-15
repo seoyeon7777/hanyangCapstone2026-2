@@ -24,6 +24,7 @@ import androidx.core.widget.NestedScrollView;
 
 import com.example.capstone.R;
 import com.example.capstone.data.CartStore;
+import com.example.capstone.data.DeliveryRequests;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.Product;
@@ -481,8 +482,7 @@ public class OrderActivity extends AppCompatActivity {
         if (requestPosition == DELIVERY_REQUESTS.length - 1) {
             deliveryRequest = etOrderRequest.getText().toString().trim();
         }
-        getSharedPreferences("order_delivery_requests", MODE_PRIVATE)
-                .edit().putString(orderNo, deliveryRequest).apply();
+        DeliveryRequests.save(this, orderNo, deliveryRequest);
 
         // 구매는 추천 학습에 반영 (주문한 서버 상품마다 purchase, 반품 때 쓰려고 주문번호와 함께 저장)
         List<String> serverIds = new ArrayList<>();

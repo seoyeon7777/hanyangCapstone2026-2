@@ -9,6 +9,7 @@ import com.example.capstone.data.DummyData;
 import com.example.capstone.data.GuestSurvey;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.RecommendApi;
+import com.example.capstone.data.DeliveryRequests;
 import com.example.capstone.data.SearchHistory;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
@@ -113,6 +114,7 @@ public final class LoginSession {
             CartStore.adoptAccount(context, from, to);
             ProfilePhotoStore.adoptAccount(context, from, to);
             SearchHistory.adoptAccount(context, from, to);
+            DeliveryRequests.adoptAccount(context, from, to);
         }
     }
 

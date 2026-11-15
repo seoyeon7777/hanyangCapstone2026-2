@@ -114,6 +114,17 @@
         </LinearLayout>
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tvRequest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:visibility="gone"
+        android:textColor="#777777"
+        android:textSize="12sp" />
+
     <LinearLayout
         android:id="@+id/layoutActions"
         android:layout_width="match_parent"

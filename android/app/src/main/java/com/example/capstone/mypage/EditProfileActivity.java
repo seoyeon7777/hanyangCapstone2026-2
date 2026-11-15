@@ -5,6 +5,7 @@ import com.example.capstone.R;
 import com.example.capstone.data.AccountData;
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.CartStore;
+import com.example.capstone.data.DeliveryRequests;
 import com.example.capstone.data.SearchHistory;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
@@ -276,6 +277,7 @@ public class EditProfileActivity extends AppCompatActivity {
             AccountPrefs.moveAccount(this, before, after);
             CartStore.moveAccount(this, before, after);
             SearchHistory.moveAccount(this, before, after);
+            DeliveryRequests.moveAccount(this, before, after);
             MyPageStore.moveAccount(this, before, after);
             moveMarketingSettings(before, after);
             setupMarketingSwitches();
