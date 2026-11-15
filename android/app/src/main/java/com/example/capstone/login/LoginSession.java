@@ -3,7 +3,12 @@ package com.example.capstone.login;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import com.example.capstone.data.AccountKey;
 import com.example.capstone.data.AccountPrefs;
+import com.example.capstone.mypage.EditProfileActivity;
 import com.example.capstone.data.CartStore;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.GuestSurvey;
@@ -38,21 +43,30 @@ public final class LoginSession {
         return context.getApplicationContext().getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
-    /** 로그인 성공 시 호출. 모르는 값은 빈 문자열로 넘긴다. */
+    /** 로그인 성공 시 호출. 모르는 값은 빈 문자열로 넘긴다. (아이디를 모르는 옛 방식: 저장된 아이디는 건드리지 않는다) */
     public static void login(Context context, String name, String email, String phone) {
+        doLogin(context, null, name, email, phone);
+    }
+
+    private static void doLogin(Context context, String userId, String name, String email, String phone) {
         // [여기에 DB 입력] 로그인 성공 시 서버에서 받은 회원번호/토큰도 함께 저장 (users)
         String savedPhone = phone == null ? "" : phone;
         String normalized = LocalAccounts.normalizePhone(savedPhone);
         if (normalized != null) {
             savedPhone = normalized;
         }
-        prefs(context).edit()
+        // 아이디는 기록을 나누는 이름이라, 기록을 가져오거나 읽기 전에 먼저 저장한다
+        SharedPreferences.Editor editor = prefs(context).edit()
                 .putBoolean(KEY_LOGGED_IN, true)
                 .putString(KEY_NAME, name == null ? "" : name)
                 .putString(KEY_EMAIL, email == null ? "" : email)
-                .putString(KEY_PHONE, savedPhone)
-                .apply();
-        adoptOldPhoneData(context, phone);
+                .putString(KEY_PHONE, savedPhone);
+        if (userId != null) {
+            editor.putString(KEY_USER_ID, userId);
+        }
+        editor.apply();
+        // 아이디가 계정 이름이 되기 전(이메일·번호 이름)에 저장된 기록은 이 계정 것이면 가져온다
+        adoptOldNames(context, email, phone);
         // 비회원일 때의 기록은 새로 로그인한 계정으로 가져오지 않는다 (계정마다 따로)
         reloadAccountData(context);
     }
@@ -105,24 +119,59 @@ public final class LoginSession {
     /** 옛 이름(번호 모양이 다른 것, 숫자만 있는 것)으로 저장된 기록을 to로 옮긴다. to에 기록이 있으면 안 옮긴다 */
     private static void moveOldKeys(Context context, String oldPhone, String to) {
         for (String from : new String[]{oldPhone, oldPhone.replaceAll("[^0-9]", "")}) {
-            if (from.equals(to)) {
-                continue;
-            }
-            BodyProfileStore.adoptAccount(context, from, to);
-            MyPageStore.adoptAccount(context, from, to);
-            AccountPrefs.adoptAccount(context, from, to);
-            CartStore.adoptAccount(context, from, to);
-            ProfilePhotoStore.adoptAccount(context, from, to);
-            SearchHistory.adoptAccount(context, from, to);
-            DeliveryRequests.adoptAccount(context, from, to);
+            adoptEverything(context, from, to);
         }
     }
 
+    /** from 이름으로 저장된 모든 기록(체형·주문·장바구니·검색 기록·요청사항·마케팅 설정 …)을, to에 기록이 없는 것만 to로 옮긴다 */
+    private static void adoptEverything(Context context, String from, String to) {
+        if (from.equals(to)) {
+            return;
+        }
+        BodyProfileStore.adoptAccount(context, from, to);
+        MyPageStore.adoptAccount(context, from, to);
+        AccountPrefs.adoptAccount(context, from, to);
+        CartStore.adoptAccount(context, from, to);
+        ProfilePhotoStore.adoptAccount(context, from, to);
+        SearchHistory.adoptAccount(context, from, to);
+        DeliveryRequests.adoptAccount(context, from, to);
+        EditProfileActivity.adoptMarketingSettings(context, from, to);
+    }
+
+    /**
+     * 기록을 나누는 이름이 이메일·번호에서 아이디로 바뀐 뒤에도 예전 기록이 보이게,
+     * 이 회원의 이메일·번호(하이픈 있는 것·없는 것) 이름으로 저장된 기록을 지금 이름(아이디)으로 옮긴다.
+     * 지금 이름에 이미 기록이 있는 항목은 옮기지 않는다. 여러 번 불러도 결과가 같다.
+     */
+    private static void adoptOldNames(Context context, String email, String phone) {
+        String to = BodyProfileStore.accountKey(context);
+        Set<String> names = new LinkedHashSet<>();
+        if (email != null) {
+            names.add(email);
+        }
+        if (phone != null) {
+            names.add(phone);
+            names.add(phone.replaceAll("[^0-9]", ""));
+            names.add(LocalAccounts.formatPhone(phone));
+        }
+        for (String from : names) {
+            if (from == null || from.isEmpty() || AccountKey.GUEST.equals(from)) {
+                continue;
+            }
+            adoptEverything(context, from, to);
+        }
+    }
+
+    /** 앱을 켤 때 호출: 이미 로그인된 회원이 아이디로 기록을 나누게 바뀐 뒤에도 예전 기록을 그대로 보게 옮긴다 */
+    public static void migrateToUserId(Context context) {
+        if (!isLoggedIn(context) || getUserId(context).isEmpty()) {
+            return;
+        }
+        adoptOldNames(context, getEmail(context), getPhone(context));
+    }
+
     public static void login(Context context, String userId, String name, String email, String phone) {
-        login(context, name, email, phone);
-        prefs(context).edit()
-                .putString(KEY_USER_ID, userId == null ? "" : userId)
-                .apply();
+        doLogin(context, userId == null ? "" : userId, name, email, phone);
     }
 
     /** 프로필 수정 후 바뀐 정보를 반영한다. */

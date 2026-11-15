@@ -28,6 +28,7 @@ public class CapstoneApp extends Application {
         com.example.capstone.data.AccountPrefs.clearGuestSurvey(this);
         LoginSession.migrateStoredPhones(this);
         LoginSession.normalizeSavedPhone(this);
+        LoginSession.migrateToUserId(this);     // 기록 이름이 이메일·번호에서 아이디로 바뀐 뒤에도 예전 기록이 보이게 옮긴다
         LoginSession.reloadAccountData(this);
 
         registerActivityLifecycleCallbacks(new ActivityLifecycleCallbacks() {

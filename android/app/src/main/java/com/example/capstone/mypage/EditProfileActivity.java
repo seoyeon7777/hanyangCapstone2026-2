@@ -16,6 +16,7 @@ import com.example.capstone.login.LoginSession;
 import com.example.capstone.ui.AppDialog;
 import com.example.capstone.ui.EmailDomainInput;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Paint;
@@ -295,6 +296,25 @@ public class EditProfileActivity extends AppCompatActivity {
                 KEY_MARKETING_SMS + account, "문자(SMS)");
         bindSwitch(findViewById(R.id.switchMarketingEmail), prefs,
                 KEY_MARKETING_EMAIL + account, "이메일");
+    }
+
+    /** 기록을 나누는 이름이 이메일·번호에서 아이디로 바뀔 때: to에 마케팅 수신 설정이 없을 때만 from의 설정을 옮긴다 */
+    public static void adoptMarketingSettings(Context context, String from, String to) {
+        if (from.equals(to)) {
+            return;
+        }
+        SharedPreferences prefs = context.getApplicationContext()
+                .getSharedPreferences(PREF_SETTINGS, Context.MODE_PRIVATE);
+        if (prefs.contains(KEY_MARKETING_SMS + to) || prefs.contains(KEY_MARKETING_EMAIL + to)) {
+            return;
+        }
+        SharedPreferences.Editor e = prefs.edit();
+        for (String key : new String[]{KEY_MARKETING_SMS, KEY_MARKETING_EMAIL}) {
+            if (prefs.contains(key + from)) {
+                e.putBoolean(key + to, prefs.getBoolean(key + from, false)).remove(key + from);
+            }
+        }
+        e.apply();
     }
 
     private void moveMarketingSettings(String from, String to) {

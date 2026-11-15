@@ -140,14 +140,12 @@ public final class BodyProfileStore {
         return accountKey(context);
     }
 
-    // 이 부분에 서버 회원번호(user_id) 넣기
+    /** 계정별 기록을 나누는 이름: 로그인했으면 아이디(바뀌지 않음), 아이디를 모르는 옛 계정은 이메일·번호, 비로그인은 guest */
     public static String accountKey(Context context) {
-        String email = LoginSession.getEmail(context);
-        if (!email.isEmpty()) {
-            return email;
-        }
-        String phone = LoginSession.getPhone(context);
-        return phone.isEmpty() ? "guest" : phone;
+        return AccountKey.choose(
+                LoginSession.getUserId(context),
+                LoginSession.getEmail(context),
+                LoginSession.getPhone(context));
     }
 
     public static void moveAccount(Context context, String from, String to) {
