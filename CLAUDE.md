@@ -360,6 +360,8 @@ match_score(body, item) -> {
 - `POST /api/diagnose` `{"answers", "measurements"(선택)}` → `{"ok", "primary", "secondary", "ratios", "confidence", "is_mixed", "used_measurements", "notice"}`. 저장하지 않는다
 - `feed_api.diagnose()`: /api/diagnose와 /api/feed·/api/feed/scroll이 같이 쓴다. **치수가 이상하면(범위 밖·빠짐) 400 대신 설문만으로 진단**하고 notice에 이유. 설문 답이 틀린 경우만 400. 치수가 객체가 아니면 400
 - 앱: 설문 마지막 "결과 확인" → `RecommendApi.diagnose`(답 + `cameraMeasurements`) → 서버 결과로 `BodyTypeResultActivity` (체형 + 비율 % + 혼합형 안내). 서버에 못 붙으면 답만 저장하고 "다시 시도/나중에" 창
+- (11/15, 지현) **앱 설문을 새 15문항(A·B·C 글자 보기, 사진 없음)으로 바꿈**. 질문 위 "n / 15" + 게이지(1~9 검정·10~12 초록·13~14 주황·15 노랑) + "%", 10~12번 "조금만 더 하면 설문이 완성돼요!", 13~15번 "설문 3번만 더 하시면…". 7~14번에 "여기까지 하고 결과보기"(그 문항까지 답한 7~14개로 진단), 15번은 "결과 확인". 저장된 답은 7~15개(`BodyProfileStore.SURVEY_MIN/MAX_ANSWERS`)
+  - **주의: 서버 채점은 아직 옛 7문항 그대로**(팀원 결정으로 안 건드림). 서버는 q1~q7만 옛 문항 뜻으로 채점하고 q8~q15는 무시 → 새 문항에 맞는 결과를 내려면 A 파트 `body_profile.SURVEY`를 새 15문항에 맞게 바꿔야 한다
   - `lastSurveyType`은 이제 서버 진단 결과만 저장 (진단 전이면 없음 → `lastSurveySummary`는 "진단 전"). `MeasurementResultActivity`의 `finalBodyType`도 `/api/diagnose`를 쓴다
 - **팀 결정(10/24): 카메라 치수는 진단에 섞지 않고 설문만** — `rec_config.DIAGNOSIS_USE_MEASUREMENTS = False`. 서버는 치수가 와도 무시하고(`used_measurements` false), 앱도 안 보낸다(`loadFeed`·`diagnose`·`finalBodyType`). `RecommendApi.cameraMeasurements`는 다시 켤 때를 위해 남김
   - 이유(10/24 분석): 치수 점수만으로는 sample.csv 내추럴 1/10, 애매한 설문에 치수를 더하면 웨이브 32→49%·내추럴 33→19%로 쏠림. 내추럴용 치수 지표가 약하고(최대점 N 1.1 / W 2.25), 기준 구간이 좁아(상체÷다리 0.5511~0.5639) 1cm 오차로 뒤집힘
