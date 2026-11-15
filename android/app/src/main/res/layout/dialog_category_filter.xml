@@ -229,12 +229,14 @@
                 android:layout_marginBottom="12dp"
                 android:background="#E7E7E7"/>
 
-            <!-- 체형 -->
+            <!-- 체형: 상품에 체형 정보가 없어 걸러 낼 수 없으므로 숨긴다 (고르면 필터 개수만 늘고 결과가 안 바뀌던 문제).
+                 id는 코드가 써서 뷰는 남긴다 -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="44dp"
                 android:gravity="center_vertical"
                 android:text="체형"
+                android:visibility="gone"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="#111111"/>
@@ -243,6 +245,7 @@
                 android:id="@+id/filterBodyTypeContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:orientation="horizontal"/>
 
         </LinearLayout>

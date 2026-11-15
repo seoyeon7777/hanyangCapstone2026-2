@@ -38,6 +38,8 @@ final class BodyPhotoPipeline {
     private BodyPhotoPipeline() {
     }
 
+    private static final Object RUN_LOCK = new Object();
+
     static void run(Context context, Segmenter segmenter,
                     Uri frontUri, Pose frontPose, Uri sideUri, Pose sidePose,
                     float heightCm, float weightKg, float age, BodyPrior.Result prior,
@@ -45,6 +47,8 @@ final class BodyPhotoPipeline {
         final Context app = context.getApplicationContext();
         new Thread(() -> {
             float[] result = null;
+            // 분석을 연달아 시작해도 한 번에 하나씩만 돈다 (한쪽이 끝나며 모델을 닫아 다른 쪽이 실패하던 문제)
+            synchronized (RUN_LOCK) {
             try {
                 PersonCropper.Prepared front = prepareOne(app, segmenter, frontUri, frontPose);
                 AnalysisTimer.mark("모델 입력 만들기(정면)");
@@ -78,6 +82,7 @@ final class BodyPhotoPipeline {
                         model = null;
                     }
                 }
+            }
             }
             final float[] out = result;
             new Handler(Looper.getMainLooper()).post(() -> callback.onDone(out));

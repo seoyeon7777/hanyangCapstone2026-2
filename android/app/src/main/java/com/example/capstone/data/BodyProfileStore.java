@@ -185,12 +185,28 @@ public final class BodyProfileStore {
     public static List<Profile> getProfiles(Context context) {
         // 이 부분에 서버 body_measurements 목록 조회 API 넣기
         List<Profile> list = new ArrayList<>();
+        String raw = prefs(context).getString("profiles_" + account(context), "[]");
+        JSONArray array;
+        int count;
         try {
-            JSONArray array = new JSONArray(prefs(context).getString("profiles_" + account(context), "[]"));
-            for (int i = 0; i < array.length(); i++) {
-                list.add(Profile.fromJson(array.getJSONObject(i)));
+            array = new JSONArray(raw);
+            count = array.length();
+        } catch (Exception e) {
+            // 저장된 글자가 깨졌다: 다음 저장이 덮어써서 완전히 사라지지 않게 원본을 따로 남겨 둔다 (한 번만)
+            if (raw != null && raw.length() > 2) {
+                String backupKey = "profiles_corrupt_" + account(context);
+                if (!prefs(context).contains(backupKey)) {
+                    prefs(context).edit().putString(backupKey, raw).apply();
+                }
             }
-        } catch (Exception ignored) {
+            return list;
+        }
+        for (int i = 0; i < count; i++) {
+            try {
+                list.add(Profile.fromJson(array.getJSONObject(i)));
+            } catch (Exception ignored) {
+                // 깨진 카드 하나 때문에 뒤의 카드까지 사라지지 않게 그 카드만 건너뛴다
+            }
         }
         return list;
     }
@@ -336,6 +352,7 @@ public final class BodyProfileStore {
     public static void deleteAccount(Context context, String account) {
         SharedPreferences.Editor editor = prefs(context).edit()
                 .remove("profiles_" + account)
+                .remove("profiles_corrupt_" + account)
                 .remove("active_" + account);
         for (String key : SETTING_KEYS) {
             editor.remove("setting_" + key + "_" + account);

@@ -140,6 +140,21 @@ public class ResetPwActivity extends AppCompatActivity {
         });
 
         // 인증확인 버튼
+        // 인증번호를 받은 뒤 아이디를 고치면 처음부터 다시 (처음 요청한 계정의 비밀번호가 바뀌는 것을 막는다)
+        etEmail.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (sentId != null && !sentId.equals(s.toString().trim())) {
+                    resetFlow();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
         btnVerifyCode.setOnClickListener(v -> verifyAuthCode());
 
         // 새 비밀번호 보기/숨기기 토글

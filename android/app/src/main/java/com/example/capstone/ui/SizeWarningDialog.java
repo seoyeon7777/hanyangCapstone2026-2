@@ -32,7 +32,8 @@ import java.util.List;
 public class SizeWarningDialog {
 
     // 지금 떠 있는 주의 팝업
-    private static AlertDialog showingDialog;
+    // 떠 있는 경고창 (약한 참조: 화면이 사라지면 같이 정리되게)
+    private static java.lang.ref.WeakReference<AlertDialog> showingDialog;
 
 
     // =========================
@@ -150,8 +151,8 @@ public class SizeWarningDialog {
 
         // 이미 주의 팝업이 떠 있으면 새로 띄우지 않는다
         // (버튼을 연달아 눌러도 한 번만 뜨도록)
-        if (showingDialog != null
-                && showingDialog.isShowing()) {
+        AlertDialog already = showingDialog == null ? null : showingDialog.get();
+        if (already != null && already.isShowing()) {
 
             return;
         }
@@ -298,11 +299,11 @@ public class SizeWarningDialog {
                         .setCancelable(true)
                         .create();
 
-        showingDialog = dialog;
+        showingDialog = new java.lang.ref.WeakReference<>(dialog);
 
         dialog.setOnDismissListener(d -> {
 
-            if (showingDialog == dialog) {
+            if (showingDialog != null && showingDialog.get() == dialog) {
                 showingDialog = null;
             }
         });

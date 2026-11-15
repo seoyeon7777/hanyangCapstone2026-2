@@ -118,28 +118,18 @@ public class MyBodyActivity extends AppCompatActivity {
             return;
         }
         String activeId = BodyProfileStore.getActiveId(this);
-        List<String> targets = new ArrayList<>();
-        for (String id : selectedIds) {
-            if (!id.equals(activeId)) {
-                targets.add(id);
-            }
-        }
-        boolean skipActive = targets.size() < selectedIds.size();
-        if (targets.isEmpty()) {
-            AppDialog.alert(this, "선택 삭제",
-                    "현재 체형은 삭제할 수 없어요. 다른 체형을 현재 체형으로 선택한 뒤 삭제해 주세요.", "확인");
-            return;
-        }
+        final List<String> targets = new ArrayList<>(selectedIds);
+        boolean includesActive = activeId != null && targets.contains(activeId);
+
         String message = "선택한 체형 " + targets.size() + "개를 삭제하시겠습니까?";
-        if (skipActive) {
-            message += "\n현재 체형은 삭제되지 않아요.";
+        if (includesActive) {
+            message += "\n현재 체형도 삭제돼요. 남은 체형이 있으면 그중 하나가 현재 체형이 되고, 없으면 현재 체형이 비어요.";
         }
         MyPageUi.confirm(this, "선택 삭제", message, () -> {
             for (String id : targets) {
                 BodyProfileStore.delete(this, id);
             }
-            Toast.makeText(this, "체형 " + targets.size() + "개를 삭제했어요."
-                            + (skipActive ? " 현재 체형은 제외했어요." : ""),
+            Toast.makeText(this, "체형 " + targets.size() + "개를 삭제했어요.",
                     Toast.LENGTH_SHORT).show();
             setSelectMode(false);
         });
@@ -276,12 +266,11 @@ public class MyBodyActivity extends AppCompatActivity {
         card.findViewById(R.id.btnEditProfile).setOnClickListener(v -> openFeedback(profile));
         card.findViewById(R.id.tvRename).setOnClickListener(v -> showRename(profile));
         card.findViewById(R.id.tvDelete).setOnClickListener(v -> {
+            String message = "'" + profile.name + "'을(를) 삭제하시겠습니까?";
             if (active) {
-                AppDialog.alert(this, "체형 삭제",
-                        "현재 체형은 삭제할 수 없어요. 다른 체형을 현재 체형으로 선택한 뒤 삭제해 주세요.", "확인");
-                return;
+                message += "\n현재 체형이에요. 삭제하면 남은 체형이 있으면 그중 하나가 현재 체형이 되고, 없으면 현재 체형이 비어요.";
             }
-            MyPageUi.confirm(this, "체형 삭제", "'" + profile.name + "'을(를) 삭제하시겠습니까?", () -> {
+            MyPageUi.confirm(this, "체형 삭제", message, () -> {
                 BodyProfileStore.delete(this, profile.id);
                 loadProfiles();
             });

@@ -173,6 +173,15 @@ public class FindIdActivity extends AppCompatActivity {
         });
 
         // 인증확인 버튼
+        // 인증번호를 받은 뒤 번호·이메일을 고치면 처음부터 다시 (처음 요청한 계정이 그대로 인증되는 것을 막는다)
+        etPhone.addTextChangedListener(new SimpleWatcher() {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (sentTarget != null && !sentTarget.equals(normalizedContact())) {
+                    resetFlow();
+                }
+            }
+        });
         btnVerifyCode.setOnClickListener(v -> verifyAuthCode());
 
         // 아이디 찾기 버튼

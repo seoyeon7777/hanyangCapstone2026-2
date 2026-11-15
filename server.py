@@ -66,6 +66,8 @@ def create_app(rules: matching.Rules | None = None) -> Flask:
 
     @app.errorhandler(ValueError)
     def on_value_error(e):
+        # 입력 검증 실패는 400. 코드 버그로 난 ValueError도 여기로 오므로 서버 화면에 남겨서 원인을 찾을 수 있게 한다
+        app.logger.warning("400 %s: %s", request.path, e)
         return fail(str(e))
 
     def read_attrs(body: dict) -> dict:

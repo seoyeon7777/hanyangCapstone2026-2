@@ -1114,6 +1114,7 @@ public final class RecommendApi {
 
         line.execute(() -> {
             HttpURLConnection connection = null;
+            int httpCode = 0;   // 서버가 답했는지 (0 = 아직 답이 없음)
 
             try {
                 connection = (HttpURLConnection) new URL(BASE_URL + path).openConnection();
@@ -1128,6 +1129,7 @@ public final class RecommendApi {
                 }
 
                 int code = connection.getResponseCode();
+                httpCode = code;
                 lastConnectFailAt = 0L;   // 서버가 답했다 (오류 코드여도 연결은 됨)
                 InputStream stream = code < 400
                         ? connection.getInputStream()
@@ -1144,9 +1146,18 @@ public final class RecommendApi {
                 }
 
             } catch (IOException | JSONException e) {
-                if (e instanceof IOException) {
-                    lastConnectFailAt = System.currentTimeMillis();
+                if (httpCode > 0 && e instanceof JSONException) {
+                    // 서버는 답했는데 JSON이 아니다 (프록시 오류 화면 등): 연결 문제로 보이지 않게 따로 알린다
+                    final int answered = httpCode >= 400 ? httpCode : 502;
+                    main().post(() -> callback.onError(answered, "서버 응답을 읽을 수 없어요"));
+                } else {
+                    if (e instanceof IOException) {
+                        lastConnectFailAt = System.currentTimeMillis();
+                    }
+                    main().post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
                 }
+            } catch (RuntimeException e) {
+                // 예상 못 한 오류도 콜백을 부른다 (안 부르면 홈 피드가 "불러오는 중"에서 멈춘다)
                 main().post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
             } finally {
                 if (connection != null) {

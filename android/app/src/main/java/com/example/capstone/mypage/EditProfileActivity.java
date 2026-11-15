@@ -5,6 +5,7 @@ import com.example.capstone.R;
 import com.example.capstone.data.AccountData;
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.CartStore;
+import com.example.capstone.data.SearchHistory;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.MyPageStore;
@@ -179,6 +180,7 @@ public class EditProfileActivity extends AppCompatActivity {
         EditText etCode = view.findViewById(R.id.etEmailCode);
         AuthCode authCode = new AuthCode();
         authCode.bindTimer(view.findViewById(R.id.tvEmailTimer));
+        dialog.setOnDismissListener(d -> authCode.clear());   // 창을 닫으면 남은 시간 갱신을 멈춘다
         // 인증번호를 받은 주소. 주소를 고치면 비운다
         String[] sent = {null};
 
@@ -273,6 +275,7 @@ public class EditProfileActivity extends AppCompatActivity {
             ProfilePhotoStore.moveAccount(this, before, after);
             AccountPrefs.moveAccount(this, before, after);
             CartStore.moveAccount(this, before, after);
+            SearchHistory.moveAccount(this, before, after);
             MyPageStore.moveAccount(this, before, after);
             moveMarketingSettings(before, after);
             setupMarketingSwitches();
