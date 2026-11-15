@@ -1,25 +1,155 @@
-
 package com.example.capstone.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
-
-import java.util.Locale;
+import com.example.capstone.data.BodyProfileStore;
+import com.example.capstone.login.LoginGate;
+import com.example.capstone.login.LoginSession;
 
 public class BodyTypeResultActivity extends AppCompatActivity {
 
     private TextView resultTitle;
     private TextView resultDescription;
-    private TextView resultScore;
+    private TextView resultFeatures;
 
     private float userHeightCm;
+
+    /** 이 설문의 답과 결과 (비회원이 사진 측정 때문에 로그인하면 계정에 저장하려고 들고 있는다) */
+    private int[] surveyAnswers;
+    private int resultType;
+
+    /** 이 결과가 지금 계정에 이미 저장됐는가 (로그인한 채 설문했으면 true) */
+    private boolean savedToAccount;
+
+    private static final String PREF_TIPS = "measure_tips";
+    private static final String KEY_SKIP_CLOTHES_TIP = "skip_clothes_tip";
+
+    private void startMeasurement() {
+
+        Intent intent = new Intent(
+                BodyTypeResultActivity.this,
+                PhotoMeasurementActivity.class
+        );
+
+        intent.putExtra(
+                "USER_HEIGHT_CM",
+                userHeightCm
+        );
+
+        startActivity(intent);
+    }
+
+    /** 비회원이 결과 화면에서 로그인했을 때: 방금 한 설문(메모리에만 있던 것)을 지금 계정으로 옮긴다 */
+    private void saveSurveyToAccountIfNeeded() {
+
+        if (savedToAccount || surveyAnswers == null || !LoginSession.isLoggedIn(this)) {
+            return;
+        }
+
+        // 설문 답·결과만 계정에 옮긴다. 체형 카드는 "이대로 저장하기" 또는 사진 측정 저장 때 만든다
+        BodyTypeActivity.persistSurvey(this, surveyAnswers, userHeightCm, resultType);
+        savedToAccount = true;
+        findViewById(R.id.resultGuestNotice).setVisibility(View.GONE);
+    }
+
+    /** 사진을 고르기 전 옷차림 안내. 몸에 붙는 옷이 정확하다는 것을 알려 준다. */
+    private void showClothesTip() {
+
+        float density = getResources().getDisplayMetrics().density;
+        int pad = Math.round(20 * density);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(pad, pad / 2, pad, 0);
+
+        TextView message = new TextView(this);
+        message.setText(
+                "• 몸에 붙는 옷 (레깅스·슬림한 티 등), 가능하면 어두운 단색\n"
+                        + "• 어깨·팔꿈치·무릎이 보이는 옷 (롱코트, 긴 치마, 두꺼운 패딩은 피하기)\n"
+                        + "• 팔은 몸에서 살짝 벌리고, 단색 배경 앞에서 전신이 나오게\n"
+                        + "• 머리를 묶으면 머리 꼭대기가 더 정확히 잡혀요\n"
+                        + "\n옷이 헐렁하면 가슴·허리·골반 둘레가 실제보다 크게 나와요."
+        );
+        message.setTextSize(14f);
+        message.setLineSpacing(0f, 1.2f);
+        box.addView(message);
+
+        CheckBox skip = new CheckBox(this);
+        skip.setText("다시 보지 않기");
+        box.addView(skip);
+
+        new AlertDialog.Builder(this)
+                .setTitle("정확한 측정을 위해")
+                .setView(box)
+                .setPositiveButton("시작하기", (d, w) -> {
+                    if (skip.isChecked()) {
+                        getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
+                                .edit()
+                                .putBoolean(KEY_SKIP_CLOTHES_TIP, true)
+                                .apply();
+                    }
+                    startMeasurement();
+                })
+                .setNegativeButton("다음에 하기", null)
+                .show();
+    }
+
+    private void saveSurvey() {
+
+        // 비회원이면 로그인 안내 → 로그인을 마치면 이어서 저장한다 (LoginGate)
+        if (!LoginSession.isLoggedIn(this)) {
+            LoginGate.require(this,
+                    "체형은 로그인한 계정에 저장돼요.\n로그인하면 방금 한 설문 결과가 바로 저장돼요.",
+                    () -> {
+                        saveSurveyToAccountIfNeeded();
+                        saveSurvey();
+                    });
+            return;
+        }
+
+        if (!BodyProfileStore.canAddProfile(this)) {
+            AppDialog.alert(this, "체형 저장",
+                    "체형은 최대 " + BodyProfileStore.MAX_PROFILES
+                            + "개까지 저장할 수 있어요. '내 체형 관리'에서 안 쓰는 체형을 지운 뒤 다시 저장해 주세요.",
+                    "확인");
+            return;
+        }
+
+        BodyProfileStore.Profile saved = BodyTypeActivity.saveSurveyProfile(this);
+
+        if (saved == null) {
+            Toast.makeText(this, "저장할 진단 결과가 없어요. 설문을 다시 해 주세요.",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        openSaved(saved);
+    }
+
+    private void openSaved(BodyProfileStore.Profile saved) {
+        startActivity(BodySaveCompleteActivity.newIntent(this, saved.name));
+        finish();
+    }
+
+    private void confirmLeave() {
+        AppDialog.show(this, false,
+                "저장하지 않고 나갈까요?",
+                "이번 결과는 '내 체형'에 저장되지 않아요.",
+                "나가기", this::finish,
+                "이대로 저장하기", this::saveSurvey);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,11 +159,11 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
         resultTitle = findViewById(R.id.resultTitle);
         resultDescription = findViewById(R.id.resultDescription);
-        resultScore = findViewById(R.id.resultScore);
+        resultFeatures = findViewById(R.id.resultFeatures);
 
         Button btnYes = findViewById(R.id.btnYes);
-        Button btnNo = findViewById(R.id.btnNo);
-        Button btnRetry = findViewById(R.id.btnRetry);
+        View btnNo = findViewById(R.id.btnNo);
+        View btnRetry = findViewById(R.id.btnRetry);
 
         // 설문 결과 가져오기
         Intent receivedIntent = getIntent();
@@ -43,9 +173,12 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 BodyTypeActivity.TYPE_STRAIGHT
         );
 
-        int[] scores = receivedIntent.getIntArrayExtra(
-                BodyTypeActivity.EXTRA_SCORES
-        );
+        this.resultType = resultType;
+        surveyAnswers = receivedIntent.getIntArrayExtra(BodyTypeActivity.EXTRA_ANSWERS);
+        savedToAccount = LoginSession.isLoggedIn(this);
+
+        // 비회원은 결과가 저장되지 않는다는 안내를 보여 준다 (로그인한 채 설문한 결과만 저장된다)
+        findViewById(R.id.resultGuestNotice).setVisibility(savedToAccount ? View.GONE : View.VISIBLE);
 
         userHeightCm = receivedIntent.getFloatExtra(
                 "USER_HEIGHT_CM",
@@ -60,13 +193,10 @@ public class BodyTypeResultActivity extends AppCompatActivity {
             ).getFloat("height_cm", 0f);
         }
 
-        if (scores == null || scores.length < 3) {
-            scores = new int[]{0, 0, 0};
-        }
-
         // 체형별 결과 표시
         String typeName;
-        String description;
+        String summary;
+        String features;
 
         switch (resultType) {
 
@@ -74,15 +204,12 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
                 typeName = "웨이브 체형";
 
-                description =
-                        "자가진단 결과, 웨이브 체형의 특징과 "
-                                + "가장 가까운 것으로 나타났어요.\n\n"
-                                + "웨이브 체형은 일반적으로 부드러운 "
-                                + "신체 윤곽과 하체 중심의 비율 등이 "
-                                + "특징으로 설명됩니다.\n\n"
-                                + "다만 이는 설문 응답을 기반으로 한 "
-                                + "참고용 분류이며, 실제 신체 치수나 "
-                                + "체형을 확정하는 결과는 아닙니다.";
+                summary = "부드러운 곡선이 돋보이는 체형이에요.";
+
+                features =
+                        "• 부드럽고 곡선적인 신체 윤곽\n"
+                                + "• 하체 중심의 비율\n"
+                                + "• 허리선을 살린 스타일이 잘 어울려요";
 
                 break;
 
@@ -90,15 +217,12 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
                 typeName = "내추럴 체형";
 
-                description =
-                        "자가진단 결과, 내추럴 체형의 특징과 "
-                                + "가장 가까운 것으로 나타났어요.\n\n"
-                                + "내추럴 체형은 일반적으로 뼈대와 "
-                                + "관절의 존재감, 비교적 자연스러운 "
-                                + "신체 윤곽 등이 특징으로 설명됩니다.\n\n"
-                                + "다만 이는 설문 응답을 기반으로 한 "
-                                + "참고용 분류이며, 실제 신체 치수나 "
-                                + "체형을 확정하는 결과는 아닙니다.";
+                summary = "뼈대와 관절의 존재감이 느껴지는 체형이에요.";
+
+                features =
+                        "• 뼈대와 관절의 존재감\n"
+                                + "• 자연스러운 신체 윤곽\n"
+                                + "• 여유 있는 실루엣이 잘 어울려요";
 
                 break;
 
@@ -107,62 +231,86 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
                 typeName = "스트레이트 체형";
 
-                description =
-                        "자가진단 결과, 스트레이트 체형의 "
-                                + "특징과 가장 가까운 것으로 나타났어요.\n\n"
-                                + "스트레이트 체형은 일반적으로 "
-                                + "상체의 입체감과 비교적 탄탄한 "
-                                + "신체 윤곽 등이 특징으로 설명됩니다.\n\n"
-                                + "다만 이는 설문 응답을 기반으로 한 "
-                                + "참고용 분류이며, 실제 신체 치수나 "
-                                + "체형을 확정하는 결과는 아닙니다.";
+                summary = "입체감 있고 탄탄한 실루엣의 체형이에요.";
+
+                features =
+                        "• 상체의 입체감\n"
+                                + "• 탄탄하고 곧은 신체 윤곽\n"
+                                + "• 깔끔하고 정돈된 스타일이 잘 어울려요";
 
                 break;
         }
 
         resultTitle.setText(typeName);
-        resultDescription.setText(description);
-
-        // 설문 점수 표시
-        resultScore.setText(
-                String.format(
-                        Locale.KOREA,
-                        "스트레이트  %d점\n"
-                                + "웨이브  %d점\n"
-                                + "내추럴  %d점",
-                        scores[0],
-                        scores[1],
-                        scores[2]
-                )
-        );
-
-        // 자세한 신체 분석 → 카메라 실행
-        btnYes.setOnClickListener(v -> {
-
-            if (userHeightCm < 100f || userHeightCm > 230f) {
-                Toast.makeText(
-                        this,
-                        "키 정보가 없습니다. 피팅 시작 화면에서 키를 다시 입력해주세요.",
-                        Toast.LENGTH_LONG
-                ).show();
-                return;
-            }
-
-            Intent intent = new Intent(
-                    BodyTypeResultActivity.this,
-                    BodyMeasurementActivity.class
-            );
-
-            intent.putExtra(
-                    "USER_HEIGHT_CM",
-                    userHeightCm
-            );
-
-            startActivity(intent);
+        String key = resultType == BodyTypeActivity.TYPE_WAVE ? "wave"
+                : resultType == BodyTypeActivity.TYPE_NATURAL ? "natural" : "straight";
+        int bodyImage = getResources().getIdentifier("body_" + key, "drawable", getPackageName());
+        if (bodyImage != 0) {
+            ((android.widget.ImageView) findViewById(R.id.imgSurveyType)).setImageResource(bodyImage);
+        }
+        findViewById(R.id.btnSurveyFeedback).setOnClickListener(v -> {
+            Intent feedback = BodyFeedbackActivity.surveyIntent(this);
+            feedback.putExtra(BodyFeedbackActivity.EXTRA_SURVEY_TYPE, typeName.replace(" 체형", ""));
+            startActivity(feedback);
         });
 
-        // 아니오: 결과 화면 종료
-        btnNo.setOnClickListener(v -> finish());
+        // 서버 진단 비율 (예: 스트레이트 38% · 웨이브 41% · 내추럴 21%)
+        float ratioS = receivedIntent.getFloatExtra(BodyTypeActivity.EXTRA_RATIO_S, -1f);
+
+        if (ratioS >= 0f) {
+            float ratioW = receivedIntent.getFloatExtra(BodyTypeActivity.EXTRA_RATIO_W, 0f);
+            float ratioN = receivedIntent.getFloatExtra(BodyTypeActivity.EXTRA_RATIO_N, 0f);
+
+            summary += "\n\n스트레이트 " + Math.round(ratioS * 100) + "%"
+                    + " · 웨이브 " + Math.round(ratioW * 100) + "%"
+                    + " · 내추럴 " + Math.round(ratioN * 100) + "%";
+
+            if (receivedIntent.getBooleanExtra(BodyTypeActivity.EXTRA_MIXED, false)) {
+                summary += "\n두 체형의 특징이 함께 보여요. 추천도 두 체형을 섞어서 골라 드려요.";
+            }
+        }
+
+        resultDescription.setText(KoreanLineBreak.keepWords(summary));
+        resultFeatures.setText(KoreanLineBreak.keepWords(features));
+        KoreanLineBreak.apply(findViewById(R.id.resultNotice));
+
+        // 자세한 신체 분석 → 정면·옆면 사진 고르기. 로그인해야 할 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 이어서 시작)
+        btnYes.setOnClickListener(v -> LoginGate.require(this,
+                "사진으로 치수를 측정하려면 로그인해야 해요.\n로그인하면 방금 한 설문 결과도 내 체형으로 저장돼요.",
+                () -> {
+
+                    if (userHeightCm < 100f || userHeightCm > 230f) {
+                        Toast.makeText(
+                                this,
+                                "키 정보가 없습니다. 피팅 시작 화면에서 키를 다시 입력해주세요.",
+                                Toast.LENGTH_LONG
+                        ).show();
+                        return;
+                    }
+
+                    // 비회원이 여기서 로그인하고 이어가는 경우: 방금 한 설문 결과를 지금 계정의 내 체형으로 저장한다
+                    saveSurveyToAccountIfNeeded();
+
+                    // 사진을 고르기 전에 옷차림 안내 (다시 보지 않기를 고르면 건너뜀)
+                    if (getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
+                            .getBoolean(KEY_SKIP_CLOTHES_TIP, false)) {
+                        startMeasurement();
+                    } else {
+                        showClothesTip();
+                    }
+                }));
+
+        // 이대로 저장하기: 사진 없이 지금 결과만 '내 체형'으로 저장
+        findViewById(R.id.btnSaveSurvey).setOnClickListener(v -> saveSurvey());
+
+        // 저장하지 않고 나가기 (뒤로가기도 같음)
+        btnNo.setOnClickListener(v -> confirmLeave());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                confirmLeave();
+            }
+        });
 
         // 다시 검사하기
         btnRetry.setOnClickListener(v -> {
