@@ -414,6 +414,7 @@ match_score(body, item) -> {
 - 리뷰: 별점 0.5 단위, 작성 가능한 리뷰 카드 크게
 - 팝업: `AppDialog.choose`(목록 고르기)·`AppDialog.custom` 추가. 주문 내역 기간·카테고리 정렬/사이즈·카드사 더보기·사진 측정 경고·옷차림 안내를 앱 팝업 모양으로. 카테고리 대분류 제목 화살표 없앰. `dialog_claim_request.xml` 삭제
 - 확인: 빌드 + 에뮬레이터로 주요 화면 확인. 단위 테스트 76개 중 20개 실패는 `org.json`·`Log` 테스트 환경 문제(이번 수정과 무관)
+- (11/17) 리뷰를 쓰면 그 상품 리뷰(`capstone_reviews`)에도 저장, 수정·삭제도 같이 반영 (`data/ProductReviews`, 키는 내장 상품 `reviews_product_번호`·서버 상품 `reviews_server_서버번호`). 상품 리뷰 화면 별은 0.5 단위 그림 별(RatingBar), 상품 상세 "리뷰 보기"에 리뷰 수·평균 별점. 주문 내역 카드의 "배송 요청사항" 줄은 숨김(주문 상세에만 표시)
 
 ### 4-27. 11/16 통합 (develop)
 - 합친 것: feature/hyerim 11/15(4-26 주문·반품·쿠폰·리뷰) + feature/jihyun-merge cb14154(새 15문항 설문, 4-12 참고) + feature/yeonoh 11/10~15(4-22~4-25: 사진 기기 안 처리, 사진 모델 출력 4개, KS 사이즈표, 전체 점검·세로 고정·아이디 기준 기록. 판매자 기능 없음) + feature/yubin-update 11/15 업로드(설문 결과 화면에 체형 그림 `body_*.jpg`·"피드백 보기" 버튼 `btnSurveyFeedback`, 내 체형 피드백 화면 새 디자인·스타일 그림 `style_*`)
