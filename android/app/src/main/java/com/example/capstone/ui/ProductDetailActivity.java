@@ -358,7 +358,13 @@ public class ProductDetailActivity extends AppCompatActivity {
         if (currentProduct == null) {
             return;
         }
-        btnReview.setText("리뷰 보기  ›");
+        float[] summary = com.example.capstone.data.ProductReviews.summary(this,
+                currentProduct.getId(),
+                currentProduct.isFromServer() ? currentProduct.getServerId() : null);
+        int count = (int) summary[0];
+        btnReview.setText(count == 0
+                ? "리뷰 보기  ›"
+                : String.format(java.util.Locale.KOREA, "리뷰 %d · ★ %.1f  ›", count, summary[1]));
     }
 
     private void updateSizeRecommendText() {

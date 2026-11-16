@@ -1529,6 +1529,12 @@ public class MyPageStore {
 
         order.reviewed = true;
         save();
+        MyReview added = reviews.get(0);
+        ProductReviews.put(appContext, order, reviewKey(added), rating, content, added.writtenDate, order.option);
+    }
+
+    private static String reviewKey(MyReview review) {
+        return loadedAccount + ":" + review.id;
     }
 
     public static void updateReview(
@@ -1545,6 +1551,8 @@ public class MyPageStore {
         review.writtenDate = today();
 
         save();
+        ProductReviews.put(appContext, findOrder(review.orderNo), reviewKey(review),
+                rating, content, review.writtenDate, review.option);
     }
 
     public static void deleteReview(MyReview review) {
@@ -1561,6 +1569,7 @@ public class MyPageStore {
         }
 
         save();
+        ProductReviews.remove(appContext, order, reviewKey(review));
     }
 
     // 공지사항 / FAQ

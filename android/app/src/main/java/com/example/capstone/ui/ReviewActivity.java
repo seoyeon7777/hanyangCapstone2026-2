@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -34,6 +35,7 @@ public class ReviewActivity extends AppCompatActivity {
     private static final int BORDER = 0xFFE8E8E8;
 
     private int productId;
+    private String serverId;
     private boolean satisfiedOnly = false;
 
     private final List<JSONObject> reviews =
@@ -50,6 +52,7 @@ public class ReviewActivity extends AppCompatActivity {
                 "product_id",
                 -1
         );
+        serverId = getIntent().getStringExtra("server_product_id");
 
         createScreen();
         loadReviews();
@@ -178,7 +181,7 @@ public class ReviewActivity extends AppCompatActivity {
                 );
 
         String json = prefs.getString(
-                "reviews_product_" + productId,
+                com.example.capstone.data.ProductReviews.key(productId, serverId),
                 "[]"
         );
 
@@ -666,16 +669,22 @@ public class ReviewActivity extends AppCompatActivity {
 
         // 별점은 입력이 아닌
         // 등록된 리뷰의 평점 표시
-        TextView stars = makeText(
-                createStars(rating),
-                17,
-                false,
-                BLACK
+        RatingBar stars = new RatingBar(
+                this,
+                null,
+                android.R.attr.ratingBarStyleSmall
+        );
+        stars.setNumStars(5);
+        stars.setStepSize(0.5f);
+        stars.setIsIndicator(true);
+        stars.setRating(rating);
+        stars.setProgressTintList(
+                android.content.res.ColorStateList.valueOf(BLACK)
         );
 
         LinearLayout.LayoutParams starParams =
                 new LinearLayout.LayoutParams(
-                        -1,
+                        -2,
                         -2
                 );
 
@@ -728,22 +737,6 @@ public class ReviewActivity extends AppCompatActivity {
     // =====================================
     // UI 공통 함수
     // =====================================
-
-    private String createStars(float rating) {
-
-        int filled = Math.round(rating);
-
-        StringBuilder builder =
-                new StringBuilder();
-
-        for (int i = 0; i < 5; i++) {
-            builder.append(
-                    i < filled ? "★" : "☆"
-            );
-        }
-
-        return builder.toString();
-    }
 
     private TextView createChip(
             String label,
