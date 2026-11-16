@@ -117,21 +117,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                         }
 
 
-                        // ---------------------------------
-                        // URI 읽기 권한 유지
-                        // ---------------------------------
-
-                        try {
-
-                            getContentResolver()
-                                    .takePersistableUriPermission(
-                                            uri,
-                                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                    );
-
-                        } catch (Exception ignored) {
-
-                        }
+                        // 사진 읽기 권한을 오래 붙들지 않는다 (이 화면이 열려 있는 동안만 읽는다)
 
 
                         // ---------------------------------
@@ -178,21 +164,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                         }
 
 
-                        // ---------------------------------
-                        // URI 읽기 권한 유지
-                        // ---------------------------------
-
-                        try {
-
-                            getContentResolver()
-                                    .takePersistableUriPermission(
-                                            uri,
-                                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                    );
-
-                        } catch (Exception ignored) {
-
-                        }
+                        // 사진 읽기 권한을 오래 붙들지 않는다 (이 화면이 열려 있는 동안만 읽는다)
 
 
                         // ---------------------------------
@@ -407,6 +379,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     );
 
 
+                    AnalysisTimer.start();
                     analyzeFrontPhoto();
                 });
 
@@ -491,6 +464,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                         }
 
                         textFrontStatus.setText("✓ 정면 신체 분석 완료");
+                        AnalysisTimer.mark("정면 관절·윤곽");
                         textPhotoStatus.setText(
                                 "옆면 사진을 분석하고 있습니다...");
 
@@ -554,14 +528,13 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         }
 
         textSideStatus.setText("✓ 옆면 신체 분석 완료");
+        AnalysisTimer.mark("옆면 관절·윤곽");
         // 가슴·허리·골반 둘레: 사진 모델(딥러닝)이 구한 값을 쓰고, 못 구하면 기본 위치(몸 높이의 29/43/52%)로 계산한다
         MeasurementSession.clear();
         MeasurementSession.heightCm = userHeightCm;
         MeasurementSession.front = frontSilhouette;
         MeasurementSession.side = sideSilhouette;
         MeasurementSession.frontLengths = basicResult;
-        MeasurementSession.frontUri = frontPhotoUri;
-        MeasurementSession.sideUri = sidePhotoUri;
 
         btnAnalyzePhotos.setEnabled(true);
 
@@ -579,6 +552,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                             return;
                         }
                         MeasurementSession.modelCirc = circ;
+                        AnalysisTimer.mark("모델 단계 전체(앱으로 돌아옴)");
                         openResultOrWarn();
                     });
             return;
@@ -591,12 +565,61 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
     private void openResultOrWarn() {
         String warning = MeasurementResultLauncher.shapeWarning();
         if (warning == null) {
-            MeasurementResultLauncher.open(this);
+            openResultAndRelease();
             return;
         }
         AppDialog.show(this, true, "치수가 이상할 수 있어요", warning + "\n그래도 계산할까요?",
                 "사진 다시 고르기", null,
-                "그래도 계산", () -> MeasurementResultLauncher.open(this));
+                "그래도 계산", this::openResultAndRelease);
+    }
+
+    /** 결과 화면을 열고, 분석이 끝났으니 사진을 바로 지운다 */
+    private void openResultAndRelease() {
+        if (MeasurementResultLauncher.open(this)) {
+            releasePhotos();
+        }
+    }
+
+    /**
+     * 사진은 기기 안에서만 분석하고 서버로 보내지 않는다. 분석이 끝나면 앱이 들고 있던 사진을 모두 놓는다:
+     * 고른 사진 주소, 미리보기, 사진에서 얻은 관절·윤곽, 앨범 읽기 권한. (앨범 속 원본 사진은 그대로 둔다)
+     */
+    private void releasePhotos() {
+        frontPhotoUri = null;
+        sidePhotoUri = null;
+        frontPose = null;
+        sidePose = null;
+        frontSilhouette = null;
+        basicResult = null;
+        if (imageFrontPreview != null) {
+            imageFrontPreview.setImageDrawable(null);
+        }
+        if (imageSidePreview != null) {
+            imageSidePreview.setImageDrawable(null);
+        }
+        MeasurementSession.clear();
+
+        // 예전 버전이 붙들어 둔 앨범 읽기 권한도 풀어 준다
+        try {
+            for (android.content.UriPermission permission : getContentResolver().getPersistedUriPermissions()) {
+                getContentResolver().releasePersistableUriPermission(
+                        permission.getUri(), Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            }
+        } catch (Exception ignored) {
+        }
+
+        if (textFrontStatus != null) {
+            textFrontStatus.setText("정면 사진을 선택해주세요.");
+        }
+        if (textSideStatus != null) {
+            textSideStatus.setText("옆면 사진을 선택해주세요.");
+        }
+        if (btnAnalyzePhotos != null) {
+            btnAnalyzePhotos.setEnabled(false);
+        }
+        if (textPhotoStatus != null) {
+            textPhotoStatus.setText("사진은 분석이 끝나는 대로 지워졌어요. 다시 분석하려면 사진을 새로 골라 주세요.");
+        }
     }
 
     // =====================================================
@@ -633,6 +656,15 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
     protected void onDestroy() {
 
         super.onDestroy();
+
+        // 화면을 닫을 때도 사진을 들고 있지 않는다
+        MeasurementSession.clear();
+        frontPhotoUri = null;
+        sidePhotoUri = null;
+        frontPose = null;
+        sidePose = null;
+        frontSilhouette = null;
+        basicResult = null;
 
 
         if (poseDetector != null) {

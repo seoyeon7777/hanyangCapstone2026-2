@@ -71,16 +71,6 @@ public class MeasurementResultActivity extends AppCompatActivity {
                 findViewById(R.id.textResultThigh);
 
         // =========================================
-        // 촬영 사진
-        // =========================================
-
-        ImageView imageFront =
-                findViewById(R.id.imageResultFront);
-
-        ImageView imageSide =
-                findViewById(R.id.imageResultSide);
-
-        // =========================================
         // 비율 분석
         // =========================================
 
@@ -221,18 +211,23 @@ public class MeasurementResultActivity extends AppCompatActivity {
         final float dlChest = receivedIntent.getFloatExtra("DL_CHEST", -1f);
         final float dlWaist = receivedIntent.getFloatExtra("DL_WAIST", -1f);
         final float dlHip = receivedIntent.getFloatExtra("DL_HIP", -1f);
+        final float dlThigh = receivedIntent.getFloatExtra("DL_THIGH", -1f);
         final boolean modelUsed = dlChest > 0f && dlWaist > 0f && dlHip > 0f;
+        final boolean thighModelUsed = modelUsed && dlThigh > 0f;
         if (modelUsed) {
             chest = dlChest;
             waist = dlWaist;
             hip = dlHip;
+        }
+        if (thighModelUsed) {
+            thigh = dlThigh;
         }
 
         final BodyPrior.Result prior = BodyInput.prior(this, height);
         final boolean[] estimated = new boolean[BodyPrior.PART_KEYS.length];
         final float[] fixed = BodyPrior.reconcile(prior,
                 new float[]{chest, waist, hip, thigh}, estimated,
-                new boolean[]{modelUsed, modelUsed, modelUsed, false});
+                new boolean[]{modelUsed, modelUsed, modelUsed, thighModelUsed});
         chest = fixed[BodyPrior.CHEST];
         waist = fixed[BodyPrior.WAIST];
         hip = fixed[BodyPrior.HIP];
@@ -324,49 +319,15 @@ public class MeasurementResultActivity extends AppCompatActivity {
         if (photoModelFailed) {
             estNote.setText("사진 분석을 마치지 못해 둘레는 키·몸무게·나이로 어림하거나 간단한 계산으로 구한 값이에요. 정확하지 않을 수 있으니 사진을 다시 골라 보세요.");
         }
-        estNote.setVisibility(anyEstimated || photoModelFailed ? View.VISIBLE : View.GONE);
-
-        // =========================================
-        // 정면 사진 표시
-        // 기존 URI 방식 + 새 카메라 PATH 방식
-        // 둘 다 지원
-        // =========================================
-
-        String frontUriString =
-                receivedIntent.getStringExtra(
-                        "FRONT_PHOTO_URI"
-                );
-
-        String frontPhotoPath =
-                receivedIntent.getStringExtra(
-                        "FRONT_PHOTO_PATH"
-                );
-
-        displayPhoto(
-                imageFront,
-                frontUriString,
-                frontPhotoPath
-        );
-
-        // =========================================
-        // 측면 사진 표시
-        // =========================================
-
-        String sideUriString =
-                receivedIntent.getStringExtra(
-                        "SIDE_PHOTO_URI"
-                );
-
-        String sidePhotoPath =
-                receivedIntent.getStringExtra(
-                        "SIDE_PHOTO_PATH"
-                );
-
-        displayPhoto(
-                imageSide,
-                sideUriString,
-                sidePhotoPath
-        );
+        // 키·몸무게·나이로 어림할 수 없는 범위면 사진 모델도 못 돌아 간단한 사진 계산 값만 나온다
+        final boolean noPrior = prior == null;
+        final boolean referenceOnly = prior != null && prior.reference;
+        if (noPrior) {
+            estNote.setText("입력한 키·몸무게·나이가 치수를 어림할 수 있는 범위(키 130~200cm, 몸무게 35~120kg 등)를 벗어나서 간단한 사진 계산 값만 보여 줘요. 오차가 클 수 있어요.");
+        } else if (referenceOnly && !photoModelFailed && !anyEstimated) {
+            estNote.setText("입력한 키·나이가 확인한 범위(키 135~190cm, 79세 이하)를 벗어나서 이 치수는 참고용이에요.");
+        }
+        estNote.setVisibility(anyEstimated || photoModelFailed || noPrior || referenceOnly ? View.VISIBLE : View.GONE);
 
         // =========================================
         // 상체 비율
@@ -598,60 +559,6 @@ public class MeasurementResultActivity extends AppCompatActivity {
             parts.put(key, Math.round(value * 10f) / 10d);
         } catch (Exception ignored) {
         }
-    }
-
-    // =========================================
-    // 사진 표시
-    // 기존 URI / 카메라 파일 경로 모두 지원
-    // =========================================
-
-    private void displayPhoto(
-            ImageView imageView,
-            String uriString,
-            String photoPath
-    ) {
-
-        if (uriString != null &&
-                !uriString.isEmpty()) {
-
-            try {
-
-                imageView.setImageURI(
-                        Uri.parse(uriString)
-                );
-
-                if (imageView.getDrawable() != null) {
-                    return;
-                }
-
-            } catch (Exception ignored) {
-                // PATH 방식으로 재시도
-            }
-        }
-
-        if (photoPath != null &&
-                !photoPath.isEmpty()) {
-
-            try {
-
-                File photoFile =
-                        new File(photoPath);
-
-                if (photoFile.exists()) {
-
-                    imageView.setImageURI(
-                            Uri.fromFile(photoFile)
-                    );
-
-                    return;
-                }
-
-            } catch (Exception ignored) {
-                // 사진을 표시하지 못한 경우
-            }
-        }
-
-        imageView.setImageDrawable(null);
     }
 
     // =========================================

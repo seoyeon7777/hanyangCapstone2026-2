@@ -37,7 +37,7 @@ public final class BodyProfileStore {
     /** 프로필 parts 안에서, 키·몸무게·나이로 어림해서 채운 부위 이름들(예: "CHEST,WAIST") */
     public static final String EST_PARTS = "EST_PARTS";
 
-    /** 프로필 parts 안에서, 가슴·허리·엉덩이가 사진 모델(딥러닝)로 구한 값이면 "1" */
+    /** 프로필 parts 안에서, 가슴·허리·엉덩이(·허벅지)가 사진 모델(딥러닝)로 구한 값이면 "1". 허벅지는 EST_PARTS에 없을 때만 모델 값 */
     public static final String PHOTO_MODEL = "PHOTO_MODEL";
 
     public static final String PART_CHEST_DEPTH = "CHEST_DEPTH";
@@ -145,14 +145,12 @@ public final class BodyProfileStore {
         return accountKey(context);
     }
 
-    // 이 부분에 서버 회원번호(user_id) 넣기
+    /** 계정별 기록을 나누는 이름: 로그인했으면 아이디(바뀌지 않음), 아이디를 모르는 옛 계정은 이메일·번호, 비로그인은 guest */
     public static String accountKey(Context context) {
-        String email = LoginSession.getEmail(context);
-        if (!email.isEmpty()) {
-            return email;
-        }
-        String phone = LoginSession.getPhone(context);
-        return phone.isEmpty() ? "guest" : phone;
+        return AccountKey.choose(
+                LoginSession.getUserId(context),
+                LoginSession.getEmail(context),
+                LoginSession.getPhone(context));
     }
 
     public static void moveAccount(Context context, String from, String to) {
@@ -190,12 +188,28 @@ public final class BodyProfileStore {
     public static List<Profile> getProfiles(Context context) {
         // 이 부분에 서버 body_measurements 목록 조회 API 넣기
         List<Profile> list = new ArrayList<>();
+        String raw = prefs(context).getString("profiles_" + account(context), "[]");
+        JSONArray array;
+        int count;
         try {
-            JSONArray array = new JSONArray(prefs(context).getString("profiles_" + account(context), "[]"));
-            for (int i = 0; i < array.length(); i++) {
-                list.add(Profile.fromJson(array.getJSONObject(i)));
+            array = new JSONArray(raw);
+            count = array.length();
+        } catch (Exception e) {
+            // 저장된 글자가 깨졌다: 다음 저장이 덮어써서 완전히 사라지지 않게 원본을 따로 남겨 둔다 (한 번만)
+            if (raw != null && raw.length() > 2) {
+                String backupKey = "profiles_corrupt_" + account(context);
+                if (!prefs(context).contains(backupKey)) {
+                    prefs(context).edit().putString(backupKey, raw).apply();
+                }
             }
-        } catch (Exception ignored) {
+            return list;
+        }
+        for (int i = 0; i < count; i++) {
+            try {
+                list.add(Profile.fromJson(array.getJSONObject(i)));
+            } catch (Exception ignored) {
+                // 깨진 카드 하나 때문에 뒤의 카드까지 사라지지 않게 그 카드만 건너뛴다
+            }
         }
         return list;
     }
@@ -341,6 +355,7 @@ public final class BodyProfileStore {
     public static void deleteAccount(Context context, String account) {
         SharedPreferences.Editor editor = prefs(context).edit()
                 .remove("profiles_" + account)
+                .remove("profiles_corrupt_" + account)
                 .remove("active_" + account);
         for (String key : SETTING_KEYS) {
             editor.remove("setting_" + key + "_" + account);
@@ -366,8 +381,10 @@ public final class BodyProfileStore {
         boolean[] est = new boolean[measured.length];
         boolean fromModel = active != null && active.parts != null
                 && "1".equals(active.parts.optString(PHOTO_MODEL, ""));
-        // 사진 모델로 구한 가슴·허리·엉덩이는 기준선과 달라도 믿는다 (허벅지는 모델이 없다)
-        boolean[] trusted = {fromModel, fromModel, fromModel, false};
+        // 사진 모델로 구한 가슴·허리·엉덩이·허벅지는 기준선과 달라도 믿는다.
+        // 옛 3개 출력 모델로 저장한 체형은 허벅지가 기준선 값("추정"으로 기록)이라 믿지 않고 그대로 기준선과 맞춘다.
+        boolean thighFromModel = fromModel && !savedEst.contains(BodyPrior.PART_KEYS[BodyPrior.THIGH]);
+        boolean[] trusted = {fromModel, fromModel, fromModel, thighFromModel};
         float[] fixed = BodyPrior.reconcile(prior, measured, est, trusted);
 
         profile.updateFromMeasurement(

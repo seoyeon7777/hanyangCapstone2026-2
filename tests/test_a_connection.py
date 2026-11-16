@@ -9,9 +9,9 @@ import server
 ANSWERS = {f"q{i}": 1 for i in range(1, 8)}
 ANSWERS_N = {"q1": 3, "q2": 3, "q3": 3, "q4": 3, "q5": 3, "q6": 3, "q7": 3}
 MEAS = {"height": 165.0, "shoulder_width": 31.5, "arm_length": 53.1, "upper_body_length": 47.0, "leg_length": 86.1}
-ITEMS = [{"item_id": 1, "category": "top", "name": "a", "tags": ["fit:slim"]},
-         {"item_id": 2, "category": "top", "name": "b", "tags": ["fit:over"]},
-         {"item_id": 3, "category": "pants", "name": "c", "tags": ["sil:wide"]}]
+ITEMS = [{"product_id": 1, "clothing_type": "top", "product_name": "a", "tags": ["fit:slim"]},
+         {"product_id": 2, "clothing_type": "top", "product_name": "b", "tags": ["fit:over"]},
+         {"product_id": 3, "clothing_type": "pants", "product_name": "c", "tags": ["sil:wide"]}]
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ def test_fake_a_module_flow(client, monkeypatch):
     r = client.post("/api/recommend", json={"answers": ANSWERS, "items": ITEMS})
     assert r.status_code == 200
     j = r.get_json()
-    assert j["profile"]["primary"] == "N" and j["ranking"]["top"][0]["item_id"] == 2          # N은 오버핏
+    assert j["profile"]["primary"] == "N" and j["ranking"]["top"][0]["product_id"] == 2          # N은 오버핏
 
     def boom(a, m=None):
         raise InputError("q1 값이 이상하다")

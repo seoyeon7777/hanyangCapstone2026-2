@@ -649,6 +649,9 @@ public class SigninActivity extends AppCompatActivity {
                 RecommendApi.checkEmailDomain(email, new RecommendApi.Callback<Boolean>() {
                     @Override
                     public void onSuccess(Boolean ok) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;   // 확인 중에 화면을 나갔으면 가입을 이어가지 않는다
+                        }
                         btnNext.setEnabled(true);
                         domainCheckedEmail = email;
                         btnNext.performClick();
@@ -656,6 +659,9 @@ public class SigninActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(int code, String message) {
+                        if (isFinishing() || isDestroyed()) {
+                            return;
+                        }
                         btnNext.setEnabled(true);
                         if (code == 0) {
                             // 서버에 연결이 안 되면 막지 않는다 (이메일은 선택 항목)

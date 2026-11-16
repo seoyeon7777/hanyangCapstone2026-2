@@ -1,6 +1,7 @@
 package com.example.capstone.mypage;
 
 import com.example.capstone.R;
+import com.example.capstone.data.DeliveryRequests;
 import com.example.capstone.data.MyPageStore;
 import com.example.capstone.data.MyPageStore.Order;
 import com.example.capstone.data.RecommendApi;
@@ -213,6 +214,14 @@ public class OrderListActivity extends AppCompatActivity {
                 ? order.option
                 : (order.option.isEmpty() ? "" : order.option + " / ") + order.quantity + "개");
         ((TextView) view.findViewById(R.id.tvPrice)).setText(MyPageStore.formatPrice(order.getTotalPrice()));
+
+        // 결제 때 적은 배송 요청사항 (없으면 줄을 숨긴다)
+        TextView tvRequest = view.findViewById(R.id.tvRequest);
+        // 주문에 같이 저장된 값(혜림 11/15) → 없으면 예전 방식(주문번호별 저장)
+        String request = TextUtils.isEmpty(order.deliveryRequest)
+                ? DeliveryRequests.get(this, order.orderNo) : order.deliveryRequest;
+        tvRequest.setText("배송 요청사항: " + request);
+        tvRequest.setVisibility(request.isEmpty() ? View.GONE : View.VISIBLE);
 
         Button btnCancel = view.findViewById(R.id.btnCancel);
         Button btnTracking = view.findViewById(R.id.btnTracking);

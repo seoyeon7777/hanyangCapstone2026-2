@@ -17,69 +17,69 @@
         android:theme="@style/Theme.Capstone"
         android:usesCleartextTraffic="true">
 
-        <activity android:name=".ui.WishActivity" />
-        <activity android:name=".ui.CartActivity" />
-        <activity
+        <activity android:screenOrientation="portrait" android:name=".ui.WishActivity" />
+        <activity android:screenOrientation="portrait" android:name=".ui.CartActivity" />
+        <activity android:screenOrientation="portrait"
             android:name=".ui.FittingActivity"
             android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".ui.BodyTypeActivity" />
-        <activity android:name=".ui.BodyTypeResultActivity" />
-        <activity android:name=".ui.PhotoMeasurementActivity" />
-        <activity android:name=".ui.MeasurementResultActivity" />
-        <activity android:name=".ui.ProductDetailActivity" />
-        <activity android:name=".login.LoginMainActivity" />
-        <activity android:name=".login.LoginPhoneActivity" />
-        <activity android:name=".login.PhoneVerifyActivity" />
-        <activity android:name=".login.SigninActivity" />
-        <activity android:name=".login.SigninCompleteActivity" />
-        <activity android:name=".login.TermsActivity" android:exported="false" />
-        <activity android:name=".ui.OrderActivity" />
-        <activity android:name=".ui.OrderCompleteActivity" />
-        <activity android:name=".ui.CardPaymentActivity" android:exported="false" />
-        <activity android:name=".mypage.AddressSearchActivity" android:exported="false" />
-        <activity android:name=".ui.ReviewActivity" />
+        <activity android:screenOrientation="portrait" android:name=".ui.BodyTypeActivity" />
+        <activity android:screenOrientation="portrait" android:name=".ui.BodyTypeResultActivity" />
+        <activity android:screenOrientation="portrait" android:name=".ui.PhotoMeasurementActivity" />
+        <activity android:screenOrientation="portrait" android:name=".ui.MeasurementResultActivity" />
+        <activity android:screenOrientation="portrait" android:name=".ui.ProductDetailActivity" />
+        <activity android:screenOrientation="portrait" android:name=".login.LoginMainActivity" />
+        <activity android:screenOrientation="portrait" android:name=".login.LoginPhoneActivity" />
+        <activity android:screenOrientation="portrait" android:name=".login.PhoneVerifyActivity" />
+        <activity android:screenOrientation="portrait" android:name=".login.SigninActivity" />
+        <activity android:screenOrientation="portrait" android:name=".login.SigninCompleteActivity" />
+        <activity android:screenOrientation="portrait" android:name=".login.TermsActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".ui.OrderActivity" />
+        <activity android:screenOrientation="portrait" android:name=".ui.OrderCompleteActivity" />
+        <activity android:screenOrientation="portrait" android:name=".ui.CardPaymentActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".mypage.AddressSearchActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".ui.ReviewActivity" />
 
 
         <!-- 팀원 merged_capstone 추가 화면 -->
-        <activity android:name=".login.MyPageActivity" android:exported="false" />
-        <activity android:name=".login.CouponActivity" android:exported="false" />
-        <activity android:name=".login.ResetPwMainActivity" android:exported="false" />
-        <activity android:name=".login.ResetPwActivity" android:exported="false" />
-        <activity android:name=".login.FindIdActivity" android:exported="false" />
-        <activity android:name=".login.InquiryActivity" android:exported="false" />
-        <activity android:name=".ui.CategoryActivity" android:exported="false" />
-        <activity android:name=".ui.CategoryMenuActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".login.MyPageActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".login.CouponActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".login.ResetPwMainActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".login.ResetPwActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".login.FindIdActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".login.InquiryActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".ui.CategoryActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".ui.CategoryMenuActivity" android:exported="false" />
 
         <!-- 마이페이지 하위 화면 -->
-        <activity android:name=".mypage.EditProfileActivity" android:exported="false"
+        <activity android:screenOrientation="portrait" android:name=".mypage.EditProfileActivity" android:exported="false"
             android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".mypage.ChangePasswordActivity" android:exported="false"
+        <activity android:screenOrientation="portrait" android:name=".mypage.ChangePasswordActivity" android:exported="false"
             android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".mypage.OrderListActivity" android:exported="false" />
-        <activity android:name=".mypage.OrderDetailActivity" android:exported="false" />
-        <activity android:name=".mypage.ClaimRequestActivity" android:exported="false" />
-        <activity android:name=".login.CouponHistoryActivity" android:exported="false" />
-        <activity android:name=".mypage.CancelReturnActivity" android:exported="false" />
-        <activity android:name=".mypage.DeliveryAddressActivity" android:exported="false" />
-        <activity android:name=".mypage.AddressEditActivity" android:exported="false"
+        <activity android:screenOrientation="portrait" android:name=".mypage.OrderListActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".mypage.OrderDetailActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".mypage.ClaimRequestActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".login.CouponHistoryActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".mypage.CancelReturnActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".mypage.DeliveryAddressActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".mypage.AddressEditActivity" android:exported="false"
             android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".mypage.MyReviewActivity" android:exported="false" />
-        <activity android:name=".mypage.ReviewWriteActivity" android:exported="false"
+        <activity android:screenOrientation="portrait" android:name=".mypage.MyReviewActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".mypage.ReviewWriteActivity" android:exported="false"
             android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".mypage.PaymentMethodActivity" android:exported="false" />
-        <activity android:name=".mypage.RefundAccountActivity" android:exported="false"
+        <activity android:screenOrientation="portrait" android:name=".mypage.PaymentMethodActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".mypage.RefundAccountActivity" android:exported="false"
             android:windowSoftInputMode="adjustResize" />
-        <activity android:name=".mypage.NoticeActivity" android:exported="false" />
-        <activity android:name=".mypage.MyBodyActivity" android:exported="false" />
-        <activity android:name=".ui.BodySaveCompleteActivity" android:exported="false" />
-        <activity android:name=".ui.BodyFeedbackActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".mypage.NoticeActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".mypage.MyBodyActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".ui.BodySaveCompleteActivity" android:exported="false" />
+        <activity android:screenOrientation="portrait" android:name=".ui.BodyFeedbackActivity" android:exported="false" />
 
-        <activity
+        <activity android:screenOrientation="portrait"
             android:name=".ui.SearchActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
 
-        <activity
+        <activity android:screenOrientation="portrait"
             android:name=".MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
