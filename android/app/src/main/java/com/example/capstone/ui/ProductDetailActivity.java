@@ -522,6 +522,8 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, OrderActivity.class);
         intent.putExtra("productNames", currentProduct.getName());
+        intent.putExtra(OrderActivity.EXTRA_BRAND, currentProduct.getBrand());
+        intent.putExtra(OrderActivity.EXTRA_PRODUCT_ID, currentProduct.getId());
         intent.putExtra("productOption", selectedSize + " / " + selectedColor);
         intent.putExtra("totalQuantity", selectedQuantity);
         intent.putExtra("totalPrice", currentProduct.getPrice() * selectedQuantity);

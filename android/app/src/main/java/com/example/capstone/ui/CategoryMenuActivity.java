@@ -258,16 +258,12 @@ public class CategoryMenuActivity extends AppCompatActivity {
 
         // 오른쪽 대분류 제목
         rightTitle = makeText(
-                category + " ›", 20, true, BLACK
+                category, 20, true, BLACK
         );
 
         rightTitle.setPadding(0, dp(8), 0, dp(22));
 
         rightMenu.addView(rightTitle);
-
-        rightTitle.setOnClickListener(v ->
-                openProducts(category, "전체")
-        );
 
         // 소분류 2열 배치
         String[] items = SUBCATEGORIES[index];

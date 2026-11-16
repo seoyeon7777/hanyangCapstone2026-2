@@ -88,7 +88,8 @@ public class CancelReturnActivity extends AppCompatActivity {
         ((TextView) view.findViewById(R.id.tvProductName)).setText(claim.productName);
         ((TextView) view.findViewById(R.id.tvOption)).setText(claim.option);
         ((TextView) view.findViewById(R.id.tvPrice)).setText(MyPageStore.formatPrice(claim.price));
-        ((TextView) view.findViewById(R.id.tvReason)).setText("사유: " + claim.reason);
+        ((TextView) view.findViewById(R.id.tvReason)).setText("사유: " + claim.reason
+                + (claim.refund.isEmpty() ? "" : "\n환불: " + claim.refund));
         ((TextView) view.findViewById(R.id.tvOrderNo)).setText("주문번호 " + claim.orderNo);
 
         boolean processing = MyPageStore.CLAIM_STATE_PROCESSING.equals(claim.state);

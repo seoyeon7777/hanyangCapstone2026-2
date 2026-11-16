@@ -27,6 +27,11 @@
                 android:text="전체" />
 
             <TextView
+                android:id="@+id/chipPending"
+                style="@style/MyPageChip"
+                android:text="주문접수" />
+
+            <TextView
                 android:id="@+id/chipPaid"
                 style="@style/MyPageChip"
                 android:text="결제완료" />
@@ -55,14 +60,15 @@
         android:background="#EEEEEE" />
 
     <TextView
-        android:id="@+id/tvOrderCount"
-        android:layout_width="match_parent"
+        android:id="@+id/tvOrderPeriod"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingStart="20dp"
-        android:paddingTop="20dp"
-        android:paddingBottom="16dp"
-        android:text="주문 0건"
-        android:textSize="15sp"
+        android:paddingEnd="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="4dp"
+        android:text="최근 3개월 ▾"
+        android:textSize="14sp"
         android:textStyle="bold"
         android:textColor="#111111" />
 

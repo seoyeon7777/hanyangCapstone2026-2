@@ -442,53 +442,24 @@ public class CategoryActivity extends AppCompatActivity {
             }
         }
 
-        AlertDialog dialog =
-                new AlertDialog.Builder(this)
-                        .setTitle("사이즈")
-                        .setSingleChoiceItems(
-                                options,
-                                selectedIndex,
-                                (d, which) -> {
+        AppDialog.choose(this, "사이즈", options, selectedIndex, which -> {
 
-                                    selectedSize =
-                                            which == 0
-                                                    ? ""
-                                                    : options[which];
+            selectedSize =
+                    which == 0
+                            ? ""
+                            : options[which];
 
-                                    createFilterChips();
-                                    updateProducts();
+            createFilterChips();
+            updateProducts();
 
-                                    d.dismiss();
-
-                                    if (!selectedSize.isEmpty()) {
-                                        Toast.makeText(
-                                                this,
-                                                "사이즈별 상품 데이터는 아직 연결되지 않았습니다.",
-                                                Toast.LENGTH_SHORT
-                                        ).show();
-                                    }
-                                }
-                        )
-                        .setNegativeButton("취소", null)
-                        .create();
-
-        dialog.setOnShowListener(unused -> {
-            dialog.getButton(
-                    AlertDialog.BUTTON_NEGATIVE
-            ).setTextColor(BLACK);
+            if (!selectedSize.isEmpty()) {
+                Toast.makeText(
+                        this,
+                        "사이즈별 상품 데이터는 아직 연결되지 않았습니다.",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
         });
-
-        dialog.show();
-
-        dialog.getButton(
-                AlertDialog.BUTTON_NEGATIVE
-        ).setTextColor(BLACK);
-
-        if (dialog.getListView() != null) {
-            dialog.getListView().setChoiceMode(
-                    android.widget.ListView.CHOICE_MODE_SINGLE
-            );
-        }
     }
 
     // =====================================
@@ -814,29 +785,10 @@ public class CategoryActivity extends AppCompatActivity {
             }
         }
 
-        AlertDialog dialog =
-                new AlertDialog.Builder(this)
-                        .setTitle("상품 정렬")
-                        .setSingleChoiceItems(
-                                SORT_OPTIONS,
-                                selected,
-                                (d, which) -> {
-
-                                    sortMode =
-                                            SORT_OPTIONS[which];
-
-                                    updateProducts();
-                                    d.dismiss();
-                                }
-                        )
-                        .setNegativeButton("취소", null)
-                        .create();
-
-        dialog.show();
-
-        dialog.getButton(
-                AlertDialog.BUTTON_NEGATIVE
-        ).setTextColor(BLACK);
+        AppDialog.choose(this, "상품 정렬", SORT_OPTIONS, selected, which -> {
+            sortMode = SORT_OPTIONS[which];
+            updateProducts();
+        });
     }
 
     private int dp(float value) {

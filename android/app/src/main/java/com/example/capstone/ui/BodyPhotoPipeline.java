@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * 정면·옆면 사진을 사진 모델(BodyPhotoModel)에 넣어 가슴·허리·엉덩이 둘레를 구한다.
+ * 정면·옆면 사진을 사진 모델(BodyPhotoModel)에 넣어 가슴·허리·엉덩이·허벅지 둘레를 구한다.
  * 모델이 학습한 전처리(PersonCropper)와 같은 순서로 사람 이미지를 만든다. 백그라운드에서 돌고 결과는 메인 스레드로 준다.
  * 성인(19세 이상)만 쓰고, 어디서든 실패하면 null을 돌려준다(그러면 기존 사진 계산 + 기준선으로 대신한다).
  */
@@ -38,6 +38,8 @@ final class BodyPhotoPipeline {
     private BodyPhotoPipeline() {
     }
 
+    private static final Object RUN_LOCK = new Object();
+
     static void run(Context context, Segmenter segmenter,
                     Uri frontUri, Pose frontPose, Uri sideUri, Pose sidePose,
                     float heightCm, float weightKg, float age, BodyPrior.Result prior,
@@ -45,20 +47,27 @@ final class BodyPhotoPipeline {
         final Context app = context.getApplicationContext();
         new Thread(() -> {
             float[] result = null;
+            // 분석을 연달아 시작해도 한 번에 하나씩만 돈다 (한쪽이 끝나며 모델을 닫아 다른 쪽이 실패하던 문제)
+            synchronized (RUN_LOCK) {
             try {
                 PersonCropper.Prepared front = prepareOne(app, segmenter, frontUri, frontPose);
+                AnalysisTimer.mark("모델 입력 만들기(정면)");
                 PersonCropper.Prepared side = prepareOne(app, segmenter, sideUri, sidePose);
+                AnalysisTimer.mark("모델 입력 만들기(옆면)");
                 if (front != null && side != null) {
                     synchronized (BodyPhotoPipeline.class) {
                         if (model == null) {
                             model = new BodyPhotoModel(app);
                         }
                     }
+                    AnalysisTimer.mark("모델 파일 불러오기");
                     result = model.circumferences(front.chw, side.chw, heightCm, weightKg, age,
                             front.aspect, side.aspect, prior);
+                    AnalysisTimer.mark("모델 계산");
                     if (result != null) {
-                        Log.i(TAG, String.format("사진 모델 결과 가슴 %.1f 허리 %.1f 엉덩이 %.1f (가로세로 비율 정면 %.3f 옆면 %.3f)",
-                                result[0], result[1], result[2], front.aspect, side.aspect));
+                        Log.i(TAG, String.format("사진 모델 결과 가슴 %.1f 허리 %.1f 엉덩이 %.1f 허벅지 %.1f (가로세로 비율 정면 %.3f 옆면 %.3f)",
+                                result[0], result[1], result[2], result.length > 3 ? result[3] : -1f,
+                                front.aspect, side.aspect));
                     }
                 } else {
                     Log.w(TAG, "사람 이미지를 만들지 못했습니다 front=" + (front != null) + " side=" + (side != null));
@@ -73,6 +82,7 @@ final class BodyPhotoPipeline {
                         model = null;
                     }
                 }
+            }
             }
             final float[] out = result;
             new Handler(Looper.getMainLooper()).post(() -> callback.onDone(out));
@@ -90,33 +100,46 @@ final class BodyPhotoPipeline {
         if (raw == null) {
             return null;
         }
-        Matrix matrix = new Matrix();
-        matrix.postRotate(image.getRotationDegrees());
-        Bitmap upright = Bitmap.createBitmap(raw, 0, 0, raw.getWidth(), raw.getHeight(), matrix, true);
+        Bitmap upright = null;
+        Bitmap crop = null;
+        try {
+            Matrix matrix = new Matrix();
+            matrix.postRotate(image.getRotationDegrees());
+            upright = Bitmap.createBitmap(raw, 0, 0, raw.getWidth(), raw.getHeight(), matrix, true);
 
-        PersonCropper.Box box = PersonCropper.cropBox(pose, upright.getWidth(), upright.getHeight());
-        float[] center = PersonCropper.torsoCenter(pose);
-        if (box == null || center == null) {
-            return null;
+            PersonCropper.Box box = PersonCropper.cropBox(pose, upright.getWidth(), upright.getHeight());
+            float[] center = PersonCropper.torsoCenter(pose);
+            if (box == null || center == null) {
+                return null;
+            }
+            crop = Bitmap.createBitmap(upright, box.x0, box.y0, box.width(), box.height());
+
+            // 잘라낸 사진에서 윤곽을 다시 구한다 (학습 때와 같은 방식)
+            SegmentationMask mask = Tasks.await(segmenter.process(InputImage.fromBitmap(crop, 0)));
+            int w = crop.getWidth();
+            int h = crop.getHeight();
+            if (mask.getWidth() != w || mask.getHeight() != h) {
+                Log.w(TAG, "마스크 크기가 다릅니다 " + mask.getWidth() + "x" + mask.getHeight() + " vs " + w + "x" + h);
+                return null;
+            }
+            ByteBuffer buffer = mask.getBuffer();
+            buffer.order(ByteOrder.nativeOrder());
+            buffer.rewind();
+            float[] confidence = new float[w * h];
+            buffer.asFloatBuffer().get(confidence);
+
+            int[] argb = new int[w * h];
+            crop.getPixels(argb, 0, w, 0, 0, w, h);
+            return PersonCropper.prepare(argb, w, h, confidence, center[0] - box.x0, center[1] - box.y0);
+        } finally {
+            // 사진을 다 읽었으니 이미지 메모리를 바로 돌려준다 (사진은 이 안에서만 쓰고 어디에도 저장하지 않는다)
+            if (crop != null) {
+                crop.recycle();
+            }
+            if (upright != null && upright != raw) {
+                upright.recycle();
+            }
+            raw.recycle();
         }
-        Bitmap crop = Bitmap.createBitmap(upright, box.x0, box.y0, box.width(), box.height());
-
-        // 잘라낸 사진에서 윤곽을 다시 구한다 (학습 때와 같은 방식)
-        SegmentationMask mask = Tasks.await(segmenter.process(InputImage.fromBitmap(crop, 0)));
-        int w = crop.getWidth();
-        int h = crop.getHeight();
-        if (mask.getWidth() != w || mask.getHeight() != h) {
-            Log.w(TAG, "마스크 크기가 다릅니다 " + mask.getWidth() + "x" + mask.getHeight() + " vs " + w + "x" + h);
-            return null;
-        }
-        ByteBuffer buffer = mask.getBuffer();
-        buffer.order(ByteOrder.nativeOrder());
-        buffer.rewind();
-        float[] confidence = new float[w * h];
-        buffer.asFloatBuffer().get(confidence);
-
-        int[] argb = new int[w * h];
-        crop.getPixels(argb, 0, w, 0, 0, w, h);
-        return PersonCropper.prepare(argb, w, h, confidence, center[0] - box.x0, center[1] - box.y0);
     }
 }

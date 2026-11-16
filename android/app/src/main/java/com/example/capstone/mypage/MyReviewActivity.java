@@ -93,8 +93,15 @@ public class MyReviewActivity extends AppCompatActivity {
         for (Order order : orders) {
             View view = inflater.inflate(R.layout.item_writable_review, containerWritable, false);
             ((TextView) view.findViewById(R.id.tvProductName)).setText(order.productName);
-            ((TextView) view.findViewById(R.id.tvOption)).setText(order.option);
+            ((TextView) view.findViewById(R.id.tvOption)).setText(order.option.contains("총 ")
+                    ? order.option
+                    : (order.option.isEmpty() ? "" : order.option + " / ") + order.quantity + "개");
             ((TextView) view.findViewById(R.id.tvOrderDate)).setText(order.orderDate + " 구매");
+            TextView tvBrand = view.findViewById(R.id.tvBrand);
+            tvBrand.setText(order.brand);
+            tvBrand.setVisibility(order.brand == null || order.brand.isEmpty() ? View.GONE : View.VISIBLE);
+            view.findViewById(R.id.layoutWritableProduct).setOnClickListener(v ->
+                    OrderDetailActivity.openProduct(this, order));
             view.findViewById(R.id.btnWrite).setOnClickListener(v ->
                     startActivity(ReviewWriteActivity.newWriteIntent(this, order.orderNo)));
             containerWritable.addView(view);

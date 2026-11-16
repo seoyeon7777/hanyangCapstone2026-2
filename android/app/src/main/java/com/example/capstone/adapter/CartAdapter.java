@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.R;
 import com.example.capstone.data.CartStore;
+import com.example.capstone.ui.AppDialog;
 import com.example.capstone.data.Product;
 import com.example.capstone.ui.ProductDetailActivity;
 import com.example.capstone.ui.ProductOptionSheet;
@@ -219,12 +220,26 @@ public class CartAdapter
             Product currentProduct =
                     cartList.get(currentPosition);
 
-            CartStore.remove(v.getContext(), currentProduct);
-
-            cartList.remove(currentPosition);
-
-            notifyItemRemoved(currentPosition);
-            notifyCartChanged();
+            // 실수로 눌러도 바로 지워지지 않게 한 번 묻는다
+            AppDialog.show(
+                    v.getContext(),
+                    false,
+                    "장바구니에서 뺄까요?",
+                    currentProduct.getName(),
+                    "취소",
+                    null,
+                    "삭제",
+                    () -> {
+                        int removeAt = cartList.indexOf(currentProduct);
+                        if (removeAt < 0) {
+                            return;
+                        }
+                        CartStore.remove(v.getContext(), currentProduct);
+                        cartList.remove(removeAt);
+                        notifyItemRemoved(removeAt);
+                        notifyCartChanged();
+                    }
+            );
         });
     }
 

@@ -1,5 +1,6 @@
 package com.example.capstone.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -32,6 +33,8 @@ import java.util.Locale;
 public class CardPaymentActivity extends AppCompatActivity {
 
     public static final String EXTRA_AMOUNT = "card_amount";
+    public static final String RESULT_CARD = "card_company";
+    public static final String RESULT_INSTALLMENT = "card_installment";
 
     /** 이 금액 이상이어야 할부(2~12개월)를 고를 수 있다 */
     static final int INSTALLMENT_MIN_AMOUNT = 50000;
@@ -106,7 +109,10 @@ public class CardPaymentActivity extends AppCompatActivity {
             if (!cbConfirm.isChecked()) {
                 return;
             }
-            setResult(RESULT_OK);
+            Intent result = new Intent();
+            result.putExtra(RESULT_CARD, selectedCard);
+            result.putExtra(RESULT_INSTALLMENT, String.valueOf(spInstallment.getSelectedItem()));
+            setResult(RESULT_OK, result);
             finish();
         });
 
@@ -162,15 +168,18 @@ public class CardPaymentActivity extends AppCompatActivity {
     }
 
     private void showMoreCards() {
-        new AlertDialog.Builder(this)
-                .setTitle("카드사 선택")
-                .setItems(MORE_CARDS, (dialog, which) -> {
-                    String card = MORE_CARDS[which];
-                    // 더보기 칸에 고른 카드사 이름을 보여 주고 선택 상태로
-                    moreCell.setText(card);
-                    selectCard(moreCell, card);
-                })
-                .show();
+        int selected = -1;
+        for (int i = 0; i < MORE_CARDS.length; i++) {
+            if (MORE_CARDS[i].equals(selectedCard)) {
+                selected = i;
+            }
+        }
+        AppDialog.choose(this, "카드사 선택", MORE_CARDS, selected, which -> {
+            String card = MORE_CARDS[which];
+            // 더보기 칸에 고른 카드사 이름을 보여 주고 선택 상태로
+            moreCell.setText(card);
+            selectCard(moreCell, card);
+        });
     }
 
     private void selectCard(TextView cell, String card) {

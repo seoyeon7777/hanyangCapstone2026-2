@@ -29,6 +29,7 @@ import com.example.capstone.adapter.ProductAdapter;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.Product;
 import com.example.capstone.data.RecommendApi;
+import com.example.capstone.data.SearchHistory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,8 +43,7 @@ public class SearchActivity extends AppCompatActivity {
     private static final int BORDER = 0xFFE8E8E8;
     private static final int WHITE = Color.WHITE;
 
-    private static final String PREF_NAME = "search_history";
-    private static final String PREF_KEY = "recent_terms";
+    private static final String PREF_NAME = SearchHistory.PREF_NAME;
 
     private static final String[] POPULAR_TERMS = {
             "와이드 팬츠",
@@ -209,8 +209,10 @@ public class SearchActivity extends AppCompatActivity {
                         MODE_PRIVATE
                 );
 
+        SearchHistory.dropLegacy(this);
+
         String stored = prefs.getString(
-                PREF_KEY,
+                SearchHistory.key(this),
                 ""
         );
 
@@ -249,7 +251,7 @@ public class SearchActivity extends AppCompatActivity {
                 MODE_PRIVATE
         ).edit()
                 .putString(
-                        PREF_KEY,
+                        SearchHistory.key(this),
                         builder.toString()
                 )
                 .apply();
@@ -698,11 +700,13 @@ public class SearchActivity extends AppCompatActivity {
     // 검색 기능
     // =====================================
 
+    private static String searchKey(String text) {
+        return text == null ? "" : text.replaceAll("\\s+", "").toLowerCase(Locale.ROOT);
+    }
+
     private void searchProducts(String keyword) {
 
-        String query = keyword
-                .trim()
-                .toLowerCase(Locale.ROOT);
+        String query = searchKey(keyword);
 
         searchResults.clear();
 
@@ -720,22 +724,13 @@ public class SearchActivity extends AppCompatActivity {
                 DummyData.getProducts()) {
 
             String name =
-                    product.getName() == null
-                            ? ""
-                            : product.getName()
-                            .toLowerCase(Locale.ROOT);
+                    searchKey(product.getName());
 
             String brand =
-                    product.getBrand() == null
-                            ? ""
-                            : product.getBrand()
-                            .toLowerCase(Locale.ROOT);
+                    searchKey(product.getBrand());
 
             String category =
-                    product.getCategory() == null
-                            ? ""
-                            : product.getCategory()
-                            .toLowerCase(Locale.ROOT);
+                    searchKey(product.getCategory());
 
             // 상품명 / 브랜드 / 카테고리 검색
             if (!name.contains(query)

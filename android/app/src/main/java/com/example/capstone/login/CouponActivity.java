@@ -1,9 +1,11 @@
 package com.example.capstone.login;
 
 import com.example.capstone.R;
+import com.example.capstone.data.CheckoutCoupons;
 import com.example.capstone.data.CouponExpiry;
 import com.example.capstone.data.MyPageStore;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -20,6 +22,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class CouponActivity extends AppCompatActivity {
@@ -40,6 +44,15 @@ public class CouponActivity extends AppCompatActivity {
 
     /** 지금 보고 있는 탭이 "보유"인지 */
     private boolean ownedTabShown = true;
+
+    private TextView[] typeChips;
+    private static final String[] CHIP_TYPES = {
+            null, CheckoutCoupons.TYPE_MALL, CheckoutCoupons.TYPE_BRAND, CheckoutCoupons.TYPE_ITEM
+    };
+    private int currentChip = 0;
+
+    private static final int COLLAPSED_COUNT = 3;
+    private boolean expanded = false;
 
     /**
      * 받을 수 있는 쿠폰 목록. 레이아웃의 btnDownload1~3 카드와 같은 순서.
@@ -71,6 +84,14 @@ public class CouponActivity extends AppCompatActivity {
         setListeners();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (ownedTabShown) {
+            renderOwned();
+        }
+    }
+
     private void initViews() {
         btnBack = findViewById(R.id.btnBack);
 
@@ -86,6 +107,13 @@ public class CouponActivity extends AppCompatActivity {
 
         etCouponCode = findViewById(R.id.etCouponCode);
         btnRegisterCode = findViewById(R.id.btnRegisterCode);
+
+        typeChips = new TextView[]{
+                findViewById(R.id.chipCouponAll),
+                findViewById(R.id.chipCouponMall),
+                findViewById(R.id.chipCouponBrand),
+                findViewById(R.id.chipCouponItem),
+        };
 
         downloadButtons = new Button[]{
                 findViewById(R.id.btnDownload1),
@@ -111,6 +139,63 @@ public class CouponActivity extends AppCompatActivity {
 
         // 쿠폰번호 등록
         btnRegisterCode.setOnClickListener(v -> registerCouponCode());
+
+        for (int i = 0; i < typeChips.length; i++) {
+            final int index = i;
+            typeChips[i].setOnClickListener(v -> {
+                currentChip = index;
+                expanded = false;
+                renderOwned();
+            });
+        }
+
+        findViewById(R.id.btnCouponMore).setOnClickListener(v -> {
+            expanded = true;
+            renderOwned();
+        });
+
+        findViewById(R.id.rowCouponFinished).setOnClickListener(v ->
+                startActivity(new Intent(this, CouponHistoryActivity.class)));
+    }
+
+    private void renderOwned() {
+        for (int i = 0; i < typeChips.length; i++) {
+            typeChips[i].setSelected(i == currentChip);
+        }
+
+        List<CheckoutCoupons.Coupon> all = CheckoutCoupons.owned();
+        List<CheckoutCoupons.Coupon> shown = new ArrayList<>();
+        for (CheckoutCoupons.Coupon coupon : all) {
+            if (CHIP_TYPES[currentChip] == null || CHIP_TYPES[currentChip].equals(coupon.type)) {
+                shown.add(coupon);
+            }
+        }
+
+        containerOwned.removeAllViews();
+        int limit = expanded ? shown.size() : Math.min(COLLAPSED_COUNT, shown.size());
+        for (int i = 0; i < limit; i++) {
+            containerOwned.addView(couponCard(this, containerOwned, shown.get(i)));
+        }
+
+        boolean noOwned = all.isEmpty();
+        tvCouponCount.setText("쿠폰 " + shown.size() + "개");
+        tvCouponCount.setVisibility(noOwned ? View.GONE : View.VISIBLE);
+        findViewById(R.id.layoutCouponChips).setVisibility(noOwned ? View.GONE : View.VISIBLE);
+        findViewById(R.id.layoutCouponEmpty).setVisibility(noOwned ? View.VISIBLE : View.GONE);
+        findViewById(R.id.tvCouponTypeEmpty).setVisibility(!noOwned && shown.isEmpty() ? View.VISIBLE : View.GONE);
+        findViewById(R.id.btnCouponMore).setVisibility(shown.size() > limit ? View.VISIBLE : View.GONE);
+        findViewById(R.id.layoutCouponFinished).setVisibility(View.VISIBLE);
+        findViewById(R.id.spaceCouponBottom).setVisibility(noOwned ? View.GONE : View.VISIBLE);
+    }
+
+    static View couponCard(android.content.Context context, LinearLayout parent, CheckoutCoupons.Coupon coupon) {
+        View card = LayoutInflater.from(context)
+                .inflate(R.layout.item_coupon_owned, parent, false);
+        ((TextView) card.findViewById(R.id.tvCouponDiscount)).setText(coupon.discountText());
+        ((TextView) card.findViewById(R.id.tvCouponName)).setText("[" + coupon.type + "] " + coupon.name);
+        ((TextView) card.findViewById(R.id.tvCouponCondition)).setText(coupon.conditionText);
+        ((TextView) card.findViewById(R.id.tvCouponExpire)).setText(coupon.expireText());
+        return card;
     }
 
     /** "보유" 탭 - 지금 가지고 있는 쿠폰 목록 */
@@ -118,9 +203,10 @@ public class CouponActivity extends AppCompatActivity {
         // [여기에 DB 입력] 로그인한 회원의 보유 쿠폰 목록 조회 → containerOwned 채우기 (user_coupons, coupons)
         //                 개수는 tvCouponCount에, 사용완료/기간만료 쿠폰은 흐리게 표시
         ownedTabShown = true;
-        updateCouponCount();
+        expanded = false;
         containerOwned.setVisibility(View.VISIBLE);
         containerAvailable.setVisibility(View.GONE);
+        renderOwned();
 
         lineOwned.setVisibility(View.VISIBLE);
         lineAvailable.setVisibility(View.GONE);
@@ -139,9 +225,15 @@ public class CouponActivity extends AppCompatActivity {
         // [여기에 DB 입력] 지금 받을 수 있는 쿠폰 목록 조회 → containerAvailable 채우기 (coupons)
         //                 이미 받은 쿠폰은 버튼을 "받기완료"로 표시
         ownedTabShown = false;
-        updateCouponCount();
         containerOwned.setVisibility(View.GONE);
         containerAvailable.setVisibility(View.VISIBLE);
+        tvCouponCount.setVisibility(View.GONE);
+        findViewById(R.id.layoutCouponChips).setVisibility(View.GONE);
+        findViewById(R.id.layoutCouponEmpty).setVisibility(View.GONE);
+        findViewById(R.id.tvCouponTypeEmpty).setVisibility(View.GONE);
+        findViewById(R.id.btnCouponMore).setVisibility(View.GONE);
+        findViewById(R.id.layoutCouponFinished).setVisibility(View.GONE);
+        findViewById(R.id.spaceCouponBottom).setVisibility(View.GONE);
 
         lineOwned.setVisibility(View.GONE);
         lineAvailable.setVisibility(View.VISIBLE);
@@ -161,7 +253,7 @@ public class CouponActivity extends AppCompatActivity {
     }
 
     /**
-     * 쿠폰 받기 처리. 받은 쿠폰은 보유 탭 맨 위에 바로 추가하고, 버튼은 다시 누를 수 없게 잠근다.
+     * 쿠폰 받기 처리. 받은 쿠폰은 보유 탭에 나오고, 버튼은 다시 누를 수 없게 잠근다.
      */
     private void downloadCoupon(int index) {
         Button button = downloadButtons[index];
@@ -173,7 +265,6 @@ public class CouponActivity extends AppCompatActivity {
         // 화면을 열어 둔 사이에 기간이 지난 경우
         if (CouponExpiry.isExpired(coupon[4], System.currentTimeMillis())) {
             markExpired(button);
-            updateCouponCount();
             Toast.makeText(this, "기간이 지난 쿠폰입니다.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -182,18 +273,15 @@ public class CouponActivity extends AppCompatActivity {
         //                 저장에 실패하면 버튼을 원래 상태로 되돌릴 것
         if (!MyPageStore.receiveCoupon(coupon[0])) {
             markReceived(button);
-            updateCouponCount();
             Toast.makeText(this, "이미 받은 쿠폰입니다.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         markReceived(button);
-        addOwnedCard(coupon);
-        updateCouponCount();
         Toast.makeText(this, "쿠폰을 받았습니다.", Toast.LENGTH_SHORT).show();
     }
 
-    /** 화면을 다시 열었을 때, 이전에 받은 쿠폰을 보유 탭과 버튼 상태에 다시 반영한다. */
+    /** 화면을 다시 열었을 때, 이전에 받은 쿠폰을 받기 버튼 상태에 다시 반영한다. */
     private void restoreReceivedCoupons() {
         long now = System.currentTimeMillis();
 
@@ -203,7 +291,6 @@ public class CouponActivity extends AppCompatActivity {
                 markExpired(downloadButtons[i]);
             } else if (MyPageStore.isCouponReceived(AVAILABLE_COUPONS[i][0])) {
                 markReceived(downloadButtons[i]);
-                addOwnedCard(AVAILABLE_COUPONS[i]);
             }
         }
     }
@@ -218,44 +305,6 @@ public class CouponActivity extends AppCompatActivity {
         button.setText("기간만료");
         button.setEnabled(false);
         button.setAlpha(0.4f);
-    }
-
-    /** 보유 탭 맨 위에 쿠폰 카드를 추가한다. */
-    private void addOwnedCard(String[] coupon) {
-        View card = LayoutInflater.from(this)
-                .inflate(R.layout.item_coupon_owned, containerOwned, false);
-        ((TextView) card.findViewById(R.id.tvCouponDiscount)).setText(coupon[1]);
-        ((TextView) card.findViewById(R.id.tvCouponName)).setText(coupon[2]);
-        ((TextView) card.findViewById(R.id.tvCouponCondition)).setText(coupon[3]);
-        ((TextView) card.findViewById(R.id.tvCouponExpire)).setText(coupon[4]);
-        containerOwned.addView(card, 0);
-    }
-
-    /**
-     * "쿠폰 n개" 갱신.
-     * 보유 탭: 사용할 수 있는 보유 쿠폰 수 (tag="used" 인 사용완료/기간만료 카드는 제외)
-     * 쿠폰 받기 탭: 아직 받지 않은 쿠폰 수
-     */
-    private void updateCouponCount() {
-        int count = 0;
-        if (ownedTabShown) {
-            for (int i = 0; i < containerOwned.getChildCount(); i++) {
-                if (!"used".equals(containerOwned.getChildAt(i).getTag())) {
-                    count++;
-                }
-            }
-        } else {
-            for (Button button : downloadButtons) {
-                if (button.isEnabled()) {
-                    count++;
-                }
-            }
-        }
-        tvCouponCount.setText("쿠폰 " + count + "개");
-
-        boolean noOwned = ownedTabShown && containerOwned.getChildCount() == 0;
-        tvCouponCount.setVisibility(ownedTabShown && !noOwned ? View.VISIBLE : View.GONE);
-        findViewById(R.id.layoutCouponEmpty).setVisibility(noOwned ? View.VISIBLE : View.GONE);
     }
 
     /**

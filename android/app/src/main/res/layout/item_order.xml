@@ -5,10 +5,11 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="#FFFFFF"
-    android:paddingTop="18dp"
-    android:paddingBottom="20dp">
+    android:paddingTop="14dp"
+    android:paddingBottom="0dp">
 
     <LinearLayout
+        android:id="@+id/layoutOrderHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -30,17 +31,21 @@
             android:id="@+id/tvOrderNo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="주문번호"
-            android:textSize="11sp"
-            android:textColor="#999999" />
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:text="주문 상세 ›"
+            android:textSize="12sp"
+            android:textColor="#5A5A5A" />
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/layoutOrderProduct"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="14dp"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
+        android:background="?attr/selectableItemBackground"
         android:orientation="horizontal">
 
         <FrameLayout
@@ -114,6 +119,17 @@
         </LinearLayout>
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tvRequest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:visibility="gone"
+        android:textColor="#777777"
+        android:textSize="12sp" />
+
     <LinearLayout
         android:id="@+id/layoutActions"
         android:layout_width="match_parent"
@@ -160,6 +176,7 @@
     </LinearLayout>
 
     <View
+        android:id="@+id/viewOrderDivider"
         android:layout_width="match_parent"
         android:layout_height="8dp"
         android:layout_marginTop="22dp"

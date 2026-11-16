@@ -7,8 +7,14 @@ import java.util.List;
 // [여기에 DB 입력] 보유 쿠폰 조회·사용 처리 (user_coupons, coupons)
 public final class CheckoutCoupons {
 
+    public static final String TYPE_MALL = "쇼핑몰";
+    public static final String TYPE_BRAND = "브랜드";
+    public static final String TYPE_ITEM = "상품";
+    public static final String[] TYPES = {TYPE_MALL, TYPE_BRAND, TYPE_ITEM};
+
     public static final class Coupon {
         public final String id;
+        public final String type;
         public final String name;
         public final int percent;
         public final int maxDiscount;
@@ -16,9 +22,10 @@ public final class CheckoutCoupons {
         public final String conditionText;
         private final int endYear, endMonth, endDay;
 
-        Coupon(String id, String name, int percent, int maxDiscount, int minOrder,
+        Coupon(String id, String type, String name, int percent, int maxDiscount, int minOrder,
                String conditionText, int endYear, int endMonth, int endDay) {
             this.id = id;
+            this.type = type;
             this.name = name;
             this.conditionText = conditionText;
             this.percent = percent;
@@ -54,13 +61,13 @@ public final class CheckoutCoupons {
     }
 
     private static final Coupon[] ALL = {
-            new Coupon("NEWBETTER_NEW_30", "뉴베러 신상품 쿠폰", 30, 50000, 1,
+            new Coupon("NEWBETTER_NEW_30", TYPE_BRAND, "뉴베러 신상품 쿠폰", 30, 50000, 1,
                     "1원 이상 구매 시 최대 50,000원 할인", 2026, 12, 30),
-            new Coupon("WINTER_LONGSLEEVE_30", "겨울 긴소매 쿠폰", 30, 30000, 1,
+            new Coupon("WINTER_LONGSLEEVE_30", TYPE_ITEM, "겨울 긴소매 쿠폰", 30, 30000, 1,
                     "1원 이상 구매 시 최대 30,000원 할인", 2026, 11, 30),
-            new Coupon("FALL_LONGSLEEVE_30", "가을 긴소매 쿠폰", 30, 30000, 1,
+            new Coupon("FALL_LONGSLEEVE_30", TYPE_ITEM, "가을 긴소매 쿠폰", 30, 30000, 1,
                     "1원 이상 구매 시 최대 30,000원 할인", 2026, 8, 18),
-            new Coupon("ALL_5", "전상품 5% 쿠폰", 5, 0, 20000,
+            new Coupon("ALL_5", TYPE_MALL, "전상품 5% 쿠폰", 5, 0, 20000,
                     "20,000원 이상 구매 시 사용", 2026, 8, 31),
     };
 
@@ -71,7 +78,21 @@ public final class CheckoutCoupons {
         List<Coupon> result = new ArrayList<>();
         Calendar now = Calendar.getInstance();
         for (Coupon coupon : ALL) {
-            if (MyPageStore.isCouponReceived(coupon.id) && !coupon.isExpired(now)) {
+            if (MyPageStore.isCouponReceived(coupon.id)
+                    && !MyPageStore.isCouponUsed(coupon.id)
+                    && !coupon.isExpired(now)) {
+                result.add(coupon);
+            }
+        }
+        return result;
+    }
+
+    public static List<Coupon> finished() {
+        List<Coupon> result = new ArrayList<>();
+        Calendar now = Calendar.getInstance();
+        for (Coupon coupon : ALL) {
+            if (MyPageStore.isCouponReceived(coupon.id)
+                    && (MyPageStore.isCouponUsed(coupon.id) || coupon.isExpired(now))) {
                 result.add(coupon);
             }
         }

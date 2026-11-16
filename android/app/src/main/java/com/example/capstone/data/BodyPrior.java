@@ -26,6 +26,16 @@ public final class BodyPrior {
     public static final float INPUT_AGE_MIN = 10f;
     public static final float INPUT_AGE_MAX = 99f;
 
+    /**
+     * 성인(19~79세)이 어림값을 받을 수 있는 키 범위. 학습 자료(사이즈코리아 8차, 키 140~181cm)로 확인한 범위는
+     * {@link #ADULT_KEY_CHECKED_MIN}~{@link #ADULT_KEY_CHECKED_MAX}이고, 이 밖은 일차식을 그대로 늘려 쓰는 것이라 "참고용"으로 표시한다.
+     * (키가 가운데인 사람으로만 학습해 작은 키·큰 키에 적용해도 오차가 더 커지지 않았다. training/README.md 9-10)
+     */
+    public static final float ADULT_KEY_MIN = 130f;
+    public static final float ADULT_KEY_MAX = 200f;
+    public static final float ADULT_KEY_CHECKED_MIN = 135f;
+    public static final float ADULT_KEY_CHECKED_MAX = 190f;
+
     /** 사진 모델 값이 기준선과 이만큼(cm) 넘게 다르면 모델이 틀린 것으로 본다 (학습 자료의 보정 폭 표준편차는 약 4cm) */
     public static final float MODEL_MAX_DIFF_CM = 15f;
 
@@ -74,7 +84,7 @@ public final class BodyPrior {
                     {38.8415f, -0.0738f, 0.4709f, 0.1378f}},
             new float[]{2.41f, 2.31f, 1.75f, 1.67f});
 
-    private static final Group G_19_79 = new Group(19, 79, 135f, 190f, 35f, 120f,
+    private static final Group G_19_79 = new Group(19, 79, ADULT_KEY_MIN, ADULT_KEY_MAX, 35f, 120f,
             new float[][]{
                     {81.8554f, -0.2593f, 0.7417f, 0.1177f},
                     {77.0192f, -0.3637f, 0.8587f, 0.2033f},
@@ -99,7 +109,7 @@ public final class BodyPrior {
         public final float[] values;
         /** 같은 나잇대 평균 오차(cm). 입력이 정확할 때 기준이고, 입력이 틀리면 더 커진다 */
         public final float[] mae;
-        /** 80세 이상처럼 학습 자료 밖이라 참고용인 경우 */
+        /** 80세 이상이거나 성인 키가 확인한 범위(135~190cm) 밖이라 참고용인 경우 */
         public final boolean reference;
         /** 19세 이상(사진 모델은 성인 자료로 학습해서 성인에게만 쓴다) */
         public final boolean adult;
@@ -134,7 +144,8 @@ public final class BodyPrior {
 
     /**
      * 키(cm)·몸무게(kg)·나이로 치수를 어림한다.
-     * 입력이 없거나(0 이하) 학습한 범위 밖이면 null.
+     * 입력이 없거나(0 이하) 계산할 수 있는 범위(나이 10~99, 성인 키 130~200cm 등) 밖이면 null.
+     * 성인 키가 135~190cm 밖이거나 80세 이상이면 reference=true(참고용).
      */
     public static Result estimate(float heightCm, float weightKg, float age) {
         if (!(heightCm > 0f) || !(weightKg > 0f) || !(age > 0f)) {
@@ -158,6 +169,9 @@ public final class BodyPrior {
         }
         if (heightCm < g.keyMin || heightCm > g.keyMax || weightKg < g.kgMin || weightKg > g.kgMax) {
             return null;
+        }
+        if (g == G_19_79 && (heightCm < ADULT_KEY_CHECKED_MIN || heightCm > ADULT_KEY_CHECKED_MAX)) {
+            reference = true;  // 확인한 키 범위 밖은 일차식을 늘려 쓴 값이라 참고용
         }
         float[] values = new float[PART_KEYS.length];
         for (int i = 0; i < values.length; i++) {

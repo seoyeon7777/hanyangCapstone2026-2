@@ -107,9 +107,8 @@ public final class BottomMenu {
 
     private static void moveTo(Activity activity, int tab) {
 
-        // 장바구니·체형 탭은 로그인해야 열 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 그 탭으로)
-        // 찜 탭은 팝업 없이 찜 화면으로 가고, 찜 화면이 "로그인이 필요해요" 안내를 보여 준다 (WishActivity)
-        if ((tab == TAB_CART || tab == TAB_FITTING) && !LoginSession.isLoggedIn(activity)) {
+        // 장바구니 탭은 로그인해야 열 수 있다 (찜·체형 탭은 화면 안에서 로그인 안내)
+        if (tab == TAB_CART && !LoginSession.isLoggedIn(activity)) {
             LoginGate.require(activity, () -> moveTo(activity, tab));
             return;
         }

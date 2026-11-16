@@ -21,7 +21,7 @@ public class OrderCompleteActivity extends AppCompatActivity {
 
     // 시연용 입금 계좌 (실제 계좌가 정해지면 바꿀 것)
     private static final String BANK_ACCOUNT = "100000-01-001001";
-    private static final String BANK_HOLDER = "OOO";
+    private static final String BANK_HOLDER = "홍길동";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,8 +44,8 @@ public class OrderCompleteActivity extends AppCompatActivity {
             tvCompletePrice.setTextColor(0xFF111111);
             tvCompletePrice.setText(
                     "다음 계좌정보로 이체해주시면 결제가 완료됩니다.\n"
-                            + "계좌번호정보: " + BANK_ACCOUNT + "\n"
-                            + "예금주: " + BANK_HOLDER + "\n"
+                            + "계좌번호정보: " + MaskText.account(BANK_ACCOUNT) + "\n"
+                            + "예금주: " + MaskText.holder(BANK_HOLDER) + "\n"
                             + "금액: " + formattedPrice
             );
         } else {

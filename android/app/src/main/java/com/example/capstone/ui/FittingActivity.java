@@ -49,10 +49,6 @@ public class FittingActivity extends AppCompatActivity {
         // 체형 분석은 로그인해야 쓸 수 있다 (찜 화면과 같음). 상품 상세 "측정하러 가기" 등 다른 길로 와도 막는다
         LoginRequiredView.update(this, R.drawable.ic_nav_fitting,
                 "체형 분석은 로그인 후 이용할 수 있어요.", findViewById(R.id.scrollFitting));
-        // 상품 상세 "내 치수 사이즈 확인하러 가기" 등 다른 화면에서 왔으면 왼쪽 위 ‹ 로 돌아갈 수 있게 (탭으로 열었을 때는 그대로)
-        if (!getIntent().getBooleanExtra(EXTRA_AS_TAB, false)) {
-            LoginRequiredView.showBack(this);
-        }
     }
 
     @Override
@@ -75,6 +71,7 @@ public class FittingActivity extends AppCompatActivity {
         if (!readWeightAndAge(false)) {
             return;
         }
+        notifyIfNoEstimate(heightCm);
 
         // 비회원이면 설문 전에 "결과는 앱을 실행하는 동안에만 저장돼요" 안내를 먼저 보여 준다
         if (!LoginSession.isLoggedIn(this)
@@ -185,6 +182,20 @@ public class FittingActivity extends AppCompatActivity {
         return true;
     }
 
+    /** 입력한 값이 치수를 어림할 수 있는 범위 밖이면(저장은 된다) 사진 결과만 쓰게 된다고 미리 알린다. */
+    private void notifyIfNoEstimate(float heightCm) {
+        BodyPrior.Result prior = BodyInput.prior(this, heightCm);
+        if (prior == null) {
+            Toast.makeText(this,
+                    "입력한 값이 어림 가능한 범위 밖이라 사진 결과만 보여 드려요.",
+                    Toast.LENGTH_LONG).show();
+        } else if (prior.reference) {
+            Toast.makeText(this,
+                    "키·나이가 확인한 범위 밖이라 어림한 치수는 참고용이에요.",
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
     /** 입력한 키를 확인해 저장하고 돌려준다. 잘못된 값이면 안내 후 -1. */
     private float readHeight() {
         EditText editHeight = findViewById(R.id.editHeight);
@@ -206,10 +217,7 @@ public class FittingActivity extends AppCompatActivity {
             return -1f;
         }
 
-        getSharedPreferences("avatar_input", MODE_PRIVATE)
-                .edit()
-                .putFloat("height_cm", heightCm)
-                .apply();
+        BodyInput.save(this, heightCm, -1f, -1f);
         return heightCm;
     }
 }

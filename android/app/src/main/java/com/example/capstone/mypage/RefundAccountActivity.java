@@ -122,9 +122,7 @@ public class RefundAccountActivity extends AppCompatActivity {
         boolean hasName = memberName != null && !memberName.trim().isEmpty();
         if (hasName) {
             etHolder.setText(memberName);
-            etHolder.setEnabled(false);
-            etHolder.setTextColor(0xFF777777);
-            tvHolderNote.setText("예금주는 회원님 이름으로 자동 입력돼요. 본인 명의 계좌만 등록할 수 있어요.");
+            etHolder.setSelection(etHolder.length());
         }
 
         Runnable refresh = () -> {
@@ -173,10 +171,6 @@ public class RefundAccountActivity extends AppCompatActivity {
             }
             if (TextUtils.isEmpty(holder)) {
                 toast("예금주명을 입력해주세요.");
-                return;
-            }
-            if (hasName && !holder.equals(memberName)) {
-                toast("회원 본인 명의의 계좌만 등록할 수 있습니다.");
                 return;
             }
             if (MyPageStore.hasRefundAccount(bank[0], accountNo)) {

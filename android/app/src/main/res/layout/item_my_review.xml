@@ -39,7 +39,7 @@
             android:isIndicator="true"
             android:numStars="5"
             android:progressTint="#111111"
-            android:stepSize="1" />
+            android:stepSize="0.5" />
 
         <TextView
             android:id="@+id/tvDate"

@@ -77,6 +77,22 @@ public class MyPageStore {
         public final String courier;
         public final String trackingNo;
 
+        public String groupNo = "";
+        public int paidAmount = -1;
+        public String couponName = "";
+
+        public int productId = -1;
+        public String serverProductId = "";
+
+        public String payMethod = "";
+        public String cardCompany = "";
+        public String installment = "";
+
+        public String receiver = "";
+        public String receiverPhone = "";
+        public String shippingAddress = "";
+        public String deliveryRequest = "";
+
         public Order(
                 String orderNo,
                 String orderDate,
@@ -109,9 +125,31 @@ public class MyPageStore {
         }
 
         public int getTotalPrice() {
-            return price * quantity;
+            return paidAmount >= 0 ? paidAmount : price * quantity;
+        }
+
+        public String getGroupNo() {
+            return groupNo == null || groupNo.isEmpty() ? orderNo : groupNo;
+        }
+
+        public boolean paidByCard() {
+            return PAY_CARD.equals(payMethod);
+        }
+
+        public String getPayMethodText() {
+            if (PAY_CARD.equals(payMethod)) {
+                String text = cardCompany.isEmpty() ? "카드" : cardCompany + "카드";
+                return installment.isEmpty() ? text : text + " (" + installment + ")";
+            }
+            if (PAY_BANK.equals(payMethod)) {
+                return "계좌이체";
+            }
+            return "정보 없음";
         }
     }
+
+    public static final String PAY_CARD = "card";
+    public static final String PAY_BANK = "bank";
 
     // 취소 / 반품 / 교환
     public static class Claim {
@@ -124,6 +162,7 @@ public class MyPageStore {
         public final String requestDate;
         public final String reason;
         public String state;
+        public String refund = "";
 
         public Claim(
                 String claimNo,
@@ -333,6 +372,7 @@ public class MyPageStore {
     private static final List<Inquiry> inquiries = new ArrayList<>();
 
     private static final Set<String> receivedCouponIds = new HashSet<>();
+    private static final java.util.Map<String, String[]> usedCoupons = new java.util.LinkedHashMap<>();
 
     private static final List<RefundAccount> refundAccounts = new ArrayList<>();
     private static boolean kakaoPayLinked = false;
@@ -376,7 +416,7 @@ public class MyPageStore {
                     faq(
                             "체형분석",
                             "선택한 사진은 저장되나요?",
-                            "사진은 치수를 계산하는 데만 쓰이고 서버로 보내지 않아요. 계산에 쓴 사진 정보는 측정이 끝나면 앱의 메모리에서 지워져요. 저장되는 것은 설문 답변과 계산된 치수뿐이에요."
+                            "선택한 사진은 내 폰 안에서만 분석하고, 서버로 보내거나 앱에 저장하지 않아요. 분석이 끝나면 앱이 들고 있던 사진 정보를 바로 지워요. 저장되는 것은 설문 답변과 계산된 치수뿐이에요. 앨범에 있는 원본 사진은 그대로 남아 있어요."
                     ),
                     faq(
                             "체형분석",
@@ -436,12 +476,12 @@ public class MyPageStore {
                     faq(
                             "회원정보",
                             "회원 탈퇴는 어떻게 하나요?",
-                            "마이페이지 > 프로필 수정 하단의 「회원 탈퇴」에서 탈퇴할 수 있습니다. 탈퇴하면 주문 내역, 쿠폰, 리뷰 등 모든 정보가 삭제되며 복구할 수 없습니다."
+                            "마이페이지 > 프로필 수정 하단의 「회원 탈퇴」에서 탈퇴할 수 있습니다. 탈퇴하면 배송지, 쿠폰, 찜, 체형, 리뷰 등 모든 정보가 삭제되며 복구할 수 없습니다. 단, 주문 내역은 관련 법령에 따라 일정 기간 보관됩니다."
                     ),
                     faq(
                             "기타",
                             "문의 답변은 언제 받을 수 있나요?",
-                            "영업일 기준 1~2일 이내에 답변드립니다. 답변은 입력하신 이메일과 1:1 문의 > 문의내역에서 확인할 수 있습니다."
+                            "영업일 기준 1~2일 이내에 답변드립니다. 답변은 1:1 문의 > 문의내역에서 확인할 수 있습니다."
                     )
             )
     );
@@ -495,6 +535,7 @@ public class MyPageStore {
         reviews.clear();
         inquiries.clear();
         receivedCouponIds.clear();
+        usedCoupons.clear();
         refundAccounts.clear();
         kakaoPayLinked = false;
         naverPayLinked = false;
@@ -542,6 +583,18 @@ public class MyPageStore {
             );
 
             order.reviewed = j.optBoolean("reviewed", false);
+            order.groupNo = j.optString("group");
+            order.paidAmount = j.optInt("paid", -1);
+            order.couponName = j.optString("coupon");
+            order.productId = j.optInt("productId", -1);
+            order.serverProductId = j.optString("serverId");
+            order.payMethod = j.optString("pay");
+            order.cardCompany = j.optString("card");
+            order.installment = j.optString("installment");
+            order.receiver = j.optString("receiver");
+            order.receiverPhone = j.optString("receiverPhone");
+            order.shippingAddress = j.optString("address");
+            order.deliveryRequest = j.optString("request");
             orders.add(order);
         }
 
@@ -583,6 +636,7 @@ public class MyPageStore {
                             j.optString("state")
                     )
             );
+            claims.get(claims.size() - 1).refund = j.optString("refund");
         }
 
         JSONArray savedAddresses = all.optJSONArray("addresses");
@@ -660,6 +714,16 @@ public class MyPageStore {
             receivedCouponIds.add(savedCoupons.getString(i));
         }
 
+        JSONObject savedUsed = all.optJSONObject("usedCoupons");
+        if (savedUsed != null) {
+            java.util.Iterator<String> ids = savedUsed.keys();
+            while (ids.hasNext()) {
+                String id = ids.next();
+                JSONObject u = savedUsed.getJSONObject(id);
+                usedCoupons.put(id, new String[]{u.optString("order"), u.optString("date")});
+            }
+        }
+
         kakaoPayLinked = all.optBoolean("kakaoPay");
         naverPayLinked = all.optBoolean("naverPay");
     }
@@ -688,6 +752,18 @@ public class MyPageStore {
                 j.put("reviewed", order.reviewed);
                 j.put("courier", order.courier);
                 j.put("tracking", order.trackingNo);
+                j.put("group", order.groupNo);
+                j.put("paid", order.paidAmount);
+                j.put("coupon", order.couponName);
+                j.put("productId", order.productId);
+                j.put("serverId", order.serverProductId);
+                j.put("pay", order.payMethod);
+                j.put("card", order.cardCompany);
+                j.put("installment", order.installment);
+                j.put("receiver", order.receiver);
+                j.put("receiverPhone", order.receiverPhone);
+                j.put("address", order.shippingAddress);
+                j.put("request", order.deliveryRequest);
 
                 orderArray.put(j);
             }
@@ -722,6 +798,7 @@ public class MyPageStore {
                 j.put("date", claim.requestDate);
                 j.put("reason", claim.reason);
                 j.put("state", claim.state);
+                j.put("refund", claim.refund);
 
                 claimArray.put(j);
             }
@@ -787,6 +864,15 @@ public class MyPageStore {
             all.put("inquiries", inquiryArray);
 
             all.put("coupons", new JSONArray(receivedCouponIds));
+
+            JSONObject usedObject = new JSONObject();
+            for (java.util.Map.Entry<String, String[]> e : usedCoupons.entrySet()) {
+                JSONObject u = new JSONObject();
+                u.put("order", e.getValue()[0]);
+                u.put("date", e.getValue()[1]);
+                usedObject.put(e.getKey(), u);
+            }
+            all.put("usedCoupons", usedObject);
             all.put("kakaoPay", kakaoPayLinked);
             all.put("naverPay", naverPayLinked);
 
@@ -865,7 +951,7 @@ public class MyPageStore {
             for (int i = 0; i < orders.length(); i++) {
                 JSONObject o = orders.getJSONObject(i);
 
-                // 거래 내용만 남긴다 (회원 이름·연락처·주소는 처음부터 주문 기록에 없다)
+                // 거래 내용만 남긴다 (받는 사람·연락처·주소·요청사항은 남기지 않는다)
                 JSONObject record = new JSONObject();
                 record.put("no", o.optString("no"));
                 record.put("date", o.optString("date"));
@@ -875,6 +961,9 @@ public class MyPageStore {
                 record.put("quantity", o.optInt("quantity", 1));
                 record.put("price", o.optInt("price"));
                 record.put("status", o.optInt("status"));
+                record.put("group", o.optString("group"));
+                record.put("paid", o.optInt("paid", -1));
+                record.put("pay", o.optString("pay"));
                 record.put("archivedAt", now);
 
                 // 같은 주문의 반품·교환·취소 기록 (사유 글에는 개인정보가 섞일 수 있어 뺀다)
@@ -978,6 +1067,37 @@ public class MyPageStore {
         return receivedCouponIds.contains(couponId);
     }
 
+    public static boolean isCouponUsed(String couponId) {
+        return usedCoupons.containsKey(couponId);
+    }
+
+    public static String couponUsedDate(String couponId) {
+        String[] used = usedCoupons.get(couponId);
+        return used == null ? "" : used[1];
+    }
+
+    public static void useCoupon(String couponId, String groupNo) {
+        if (couponId == null) {
+            return;
+        }
+        usedCoupons.put(couponId, new String[]{groupNo, today()});
+        save();
+    }
+
+    private static void restoreCouponIfAllCanceled(String groupNo) {
+        for (Order order : orders) {
+            if (order.getGroupNo().equals(groupNo) && order.status != STATUS_CANCELED) {
+                return;
+            }
+        }
+        java.util.Iterator<java.util.Map.Entry<String, String[]>> it = usedCoupons.entrySet().iterator();
+        while (it.hasNext()) {
+            if (groupNo.equals(it.next().getValue()[0])) {
+                it.remove();
+            }
+        }
+    }
+
     public static boolean receiveCoupon(String couponId) {
         boolean added = receivedCouponIds.add(couponId);
 
@@ -1002,11 +1122,27 @@ public class MyPageStore {
         save();
     }
 
+    public static synchronized void addOrders(List<Order> newOrders) {
+        for (int i = newOrders.size() - 1; i >= 0; i--) {
+            Order order = newOrders.get(i);
+            if (order != null && findOrder(order.orderNo) == null) {
+                orders.add(0, order);
+            }
+        }
+        save();
+    }
+
     public static List<Order> getOrders(int status) {
+        return getOrders(status, 0);
+    }
+
+    public static List<Order> getOrders(int status, int months) {
         List<Order> result = new ArrayList<>();
+        String from = months > 0 ? monthsAgo(months) : "";
 
         for (Order order : orders) {
-            if (status == STATUS_ALL || order.status == status) {
+            if ((status == STATUS_ALL || order.status == status)
+                    && order.orderDate.compareTo(from) >= 0) {
                 result.add(order);
             }
         }
@@ -1016,6 +1152,22 @@ public class MyPageStore {
 
     public static int countOrders(int status) {
         return getOrders(status).size();
+    }
+
+    public static int countOrders(int status, int months) {
+        return getOrders(status, months).size();
+    }
+
+    public static final int RECENT_MONTHS = 3;
+
+    private static String monthsAgo(int months) {
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.add(java.util.Calendar.MONTH, -months);
+        return new SimpleDateFormat("yyyy.MM.dd", Locale.KOREA).format(calendar.getTime());
+    }
+
+    public static boolean needsRefundAccount(Order order) {
+        return order != null && !order.paidByCard() && order.status != STATUS_PENDING;
     }
 
     public static Order findOrder(String orderNo) {
@@ -1048,6 +1200,15 @@ public class MyPageStore {
             String type,
             String reason
     ) {
+        requestClaim(order, type, reason, "");
+    }
+
+    public static void requestClaim(
+            Order order,
+            String type,
+            String reason,
+            String refund
+    ) {
         if (order == null) {
             return;
         }
@@ -1057,6 +1218,7 @@ public class MyPageStore {
         if (CLAIM_CANCEL.equals(type)) {
             order.status = STATUS_CANCELED;
             state = CLAIM_STATE_DONE;
+            restoreCouponIfAllCanceled(order.getGroupNo());
 
         } else if (CLAIM_RETURN.equals(type)) {
             order.status = STATUS_RETURNING;
@@ -1084,6 +1246,7 @@ public class MyPageStore {
                         state
                 )
         );
+        claims.get(0).refund = refund == null ? "" : refund;
 
         save();
     }

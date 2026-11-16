@@ -33,8 +33,8 @@ public class MyPageActivity extends AppCompatActivity {
     private TextView tvUserName, tvUserEmail, tvEditProfile;
 
     private TextView tvOrderAll;
-    private TextView tvCountPaid, tvCountReady, tvCountShipping, tvCountDone;
-    private LinearLayout itemOrderPaid, itemOrderReady, itemOrderShipping, itemOrderDone;
+    private TextView tvCountPending, tvCountPaid, tvCountReady, tvCountShipping, tvCountDone;
+    private LinearLayout itemOrderPending, itemOrderPaid, itemOrderReady, itemOrderShipping, itemOrderDone;
 
     private TextView menuOrderList, menuCancelReturn, menuDelivery, menuReview;
     private TextView menuCoupon, menuPaymentMethod, menuRefundAccount;
@@ -84,11 +84,13 @@ public class MyPageActivity extends AppCompatActivity {
         tvEditProfile = findViewById(R.id.tvEditProfile);
 
         tvOrderAll = findViewById(R.id.tvOrderAll);
+        tvCountPending = findViewById(R.id.tvCountPending);
         tvCountPaid = findViewById(R.id.tvCountPaid);
         tvCountReady = findViewById(R.id.tvCountReady);
         tvCountShipping = findViewById(R.id.tvCountShipping);
         tvCountDone = findViewById(R.id.tvCountDone);
 
+        itemOrderPending = findViewById(R.id.itemOrderPending);
         itemOrderPaid = findViewById(R.id.itemOrderPaid);
         itemOrderReady = findViewById(R.id.itemOrderReady);
         itemOrderShipping = findViewById(R.id.itemOrderShipping);
@@ -123,11 +125,13 @@ public class MyPageActivity extends AppCompatActivity {
 
     /** orders + delivery 상태별 개수 반영 */
     private void loadOrderCounts() {
-        // [여기에 DB 입력] 결제완료/배송준비중/배송중/배송완료 상태별 주문 개수 조회 (orders)
-        tvCountPaid.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_PAID)));
-        tvCountReady.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_READY)));
-        tvCountShipping.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_SHIPPING)));
-        tvCountDone.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_DONE)));
+        // [여기에 DB 입력] 주문접수/결제완료/배송준비중/배송중/배송완료 상태별 주문 개수 조회 (orders, 최근 3개월)
+        int months = MyPageStore.RECENT_MONTHS;
+        tvCountPending.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_PENDING, months)));
+        tvCountPaid.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_PAID, months)));
+        tvCountReady.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_READY, months)));
+        tvCountShipping.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_SHIPPING, months)));
+        tvCountDone.setText(String.valueOf(MyPageStore.countOrders(MyPageStore.STATUS_DONE, months)));
     }
 
     private void setListeners() {
@@ -140,6 +144,7 @@ public class MyPageActivity extends AppCompatActivity {
 
         // 주문/배송 전체보기 + 상태별 개수를 누르면 해당 상태로 필터된 주문 목록
         tvOrderAll.setOnClickListener(v -> openOrders(MyPageStore.STATUS_ALL));
+        itemOrderPending.setOnClickListener(v -> openOrders(MyPageStore.STATUS_PENDING));
         itemOrderPaid.setOnClickListener(v -> openOrders(MyPageStore.STATUS_PAID));
         itemOrderReady.setOnClickListener(v -> openOrders(MyPageStore.STATUS_READY));
         itemOrderShipping.setOnClickListener(v -> openOrders(MyPageStore.STATUS_SHIPPING));
