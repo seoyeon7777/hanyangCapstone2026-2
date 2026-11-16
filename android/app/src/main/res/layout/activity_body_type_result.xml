@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -16,16 +14,14 @@
         android:paddingEnd="24dp"
         android:paddingBottom="40dp">
 
-        <!-- 상단 제목 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="체형 자가진단 결과"
             android:textColor="#000000"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"/>
 
-        <!-- 결과 체형 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -33,7 +29,7 @@
             android:gravity="center"
             android:text="나의 골격 체형은"
             android:textColor="#888888"
-            android:textSize="14sp" />
+            android:textSize="14sp"/>
 
         <TextView
             android:id="@+id/resultTitle"
@@ -44,17 +40,15 @@
             android:text="스트레이트 체형"
             android:textColor="#000000"
             android:textSize="30sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"/>
 
-        <!-- 구분선 -->
         <View
             android:layout_width="48dp"
             android:layout_height="2dp"
             android:layout_gravity="center"
             android:layout_marginTop="18dp"
-            android:background="#000000" />
+            android:background="#000000"/>
 
-        <!-- 체형 설명 -->
         <TextView
             android:id="@+id/resultDescription"
             android:layout_width="match_parent"
@@ -64,7 +58,7 @@
             android:lineSpacingExtra="4dp"
             android:text="체형 요약"
             android:textColor="#333333"
-            android:textSize="16sp" />
+            android:textSize="16sp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -80,7 +74,7 @@
                 android:text="이런 특징이 있어요"
                 android:textColor="#111111"
                 android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"/>
 
             <TextView
                 android:id="@+id/resultFeatures"
@@ -90,11 +84,32 @@
                 android:lineSpacingExtra="12dp"
                 android:text="• 특징"
                 android:textColor="#444444"
-                android:textSize="14sp" />
+                android:textSize="14sp"/>
 
+            <ImageView
+                android:id="@+id/imgSurveyType"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_marginTop="16dp"
+                android:scaleType="fitCenter"
+                android:background="#F4F4F4"
+                android:contentDescription="체형 대표 이미지"/>
+
+            <TextView
+                android:id="@+id/btnSurveyFeedback"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:text="내 체형 스타일 피드백 자세히 보기 →"
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:background="#111111"/>
         </LinearLayout>
 
-        <!-- 참고 문구 -->
         <TextView
             android:id="@+id/resultNotice"
             android:layout_width="match_parent"
@@ -104,9 +119,8 @@
             android:lineSpacingExtra="4dp"
             android:text="설문 응답을 바탕으로 한 참고용 결과예요.&#10;정밀 측정을 하면 더 정확해져요."
             android:textColor="#999999"
-            android:textSize="12sp" />
+            android:textSize="12sp"/>
 
-        <!-- 비회원 안내: 결과는 저장되지 않는다 (로그인했을 때는 숨김) -->
         <TextView
             android:id="@+id/resultGuestNotice"
             android:layout_width="match_parent"
@@ -117,9 +131,8 @@
             android:text="결과는 저장되지 않아요.&#10;로그인해야 내 체형으로 저장돼요."
             android:textColor="#E5542F"
             android:textSize="13sp"
-            android:visibility="gone" />
+            android:visibility="gone"/>
 
-        <!-- 다시 검사하기 -->
         <LinearLayout
             android:id="@+id/btnRetry"
             android:layout_width="match_parent"
@@ -136,7 +149,7 @@
                 android:layout_width="18dp"
                 android:layout_height="18dp"
                 android:contentDescription="@null"
-                android:src="@drawable/ic_refresh" />
+                android:src="@drawable/ic_refresh"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -145,13 +158,8 @@
                 android:text="다시 검사하기"
                 android:textColor="#333333"
                 android:textSize="15sp"
-                android:textStyle="bold" />
-
+                android:textStyle="bold"/>
         </LinearLayout>
-
-        <!-- =============================== -->
-        <!-- 정밀 체형 분석 -->
-        <!-- =============================== -->
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -168,7 +176,7 @@
                 android:text="이 결과를 어떻게 할까요?"
                 android:textColor="#111111"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"/>
 
             <TextView
                 android:layout_width="match_parent"
@@ -178,9 +186,8 @@
                 android:lineSpacingExtra="3dp"
                 android:text="전신 사진(정면·옆면)을 올리면 치수까지 더 자세하게 분석해요.&#10;사진 없이 지금 결과만 내 체형으로 저장할 수도 있어요."
                 android:textColor="#777777"
-                android:textSize="13sp" />
+                android:textSize="13sp"/>
 
-            <!-- 1) 정밀 분석 (사진) -->
             <Button
                 android:id="@+id/btnYes"
                 android:layout_width="match_parent"
@@ -191,9 +198,8 @@
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"/>
 
-            <!-- 2) 사진 없이 지금 결과만 저장 -->
             <Button
                 android:id="@+id/btnSaveSurvey"
                 android:layout_width="match_parent"
@@ -204,9 +210,8 @@
                 android:textAllCaps="false"
                 android:textColor="#111111"
                 android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"/>
 
-            <!-- 3) 저장하지 않고 나가기 -->
             <TextView
                 android:id="@+id/btnNo"
                 android:layout_width="match_parent"
@@ -218,10 +223,7 @@
                 android:gravity="center"
                 android:text="저장하지 않고 나가기"
                 android:textColor="#777777"
-                android:textSize="14sp" />
-
+                android:textSize="14sp"/>
         </LinearLayout>
-
     </LinearLayout>
-
 </ScrollView>

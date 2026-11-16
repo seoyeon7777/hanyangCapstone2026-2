@@ -1,4 +1,3 @@
-
 package com.example.capstone.ui;
 
 import android.content.Intent;
@@ -238,6 +237,17 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         }
 
         resultTitle.setText(typeName);
+        String key = resultType == BodyTypeActivity.TYPE_WAVE ? "wave"
+                : resultType == BodyTypeActivity.TYPE_NATURAL ? "natural" : "straight";
+        int bodyImage = getResources().getIdentifier("body_" + key, "drawable", getPackageName());
+        if (bodyImage != 0) {
+            ((android.widget.ImageView) findViewById(R.id.imgSurveyType)).setImageResource(bodyImage);
+        }
+        findViewById(R.id.btnSurveyFeedback).setOnClickListener(v -> {
+            Intent feedback = BodyFeedbackActivity.surveyIntent(this);
+            feedback.putExtra(BodyFeedbackActivity.EXTRA_SURVEY_TYPE, typeName.replace(" 체형", ""));
+            startActivity(feedback);
+        });
 
         // 서버 진단 비율 (예: 스트레이트 38% · 웨이브 41% · 내추럴 21%)
         float ratioS = receivedIntent.getFloatExtra(BodyTypeActivity.EXTRA_RATIO_S, -1f);
@@ -264,26 +274,26 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 "사진으로 치수를 측정하려면 로그인해야 해요.\n로그인하면 방금 한 설문 결과도 내 체형으로 저장돼요.",
                 () -> {
 
-            if (userHeightCm < 100f || userHeightCm > 230f) {
-                Toast.makeText(
-                        this,
-                        "키 정보가 없습니다. 피팅 시작 화면에서 키를 다시 입력해주세요.",
-                        Toast.LENGTH_LONG
-                ).show();
-                return;
-            }
+                    if (userHeightCm < 100f || userHeightCm > 230f) {
+                        Toast.makeText(
+                                this,
+                                "키 정보가 없습니다. 피팅 시작 화면에서 키를 다시 입력해주세요.",
+                                Toast.LENGTH_LONG
+                        ).show();
+                        return;
+                    }
 
-            // 비회원이 여기서 로그인하고 이어가는 경우: 방금 한 설문 결과를 지금 계정의 내 체형으로 저장한다
-            saveSurveyToAccountIfNeeded();
+                    // 비회원이 여기서 로그인하고 이어가는 경우: 방금 한 설문 결과를 지금 계정의 내 체형으로 저장한다
+                    saveSurveyToAccountIfNeeded();
 
-            // 사진을 고르기 전에 옷차림 안내 (다시 보지 않기를 고르면 건너뜀)
-            if (getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
-                    .getBoolean(KEY_SKIP_CLOTHES_TIP, false)) {
-                startMeasurement();
-            } else {
-                showClothesTip();
-            }
-        }));
+                    // 사진을 고르기 전에 옷차림 안내 (다시 보지 않기를 고르면 건너뜀)
+                    if (getSharedPreferences(PREF_TIPS, MODE_PRIVATE)
+                            .getBoolean(KEY_SKIP_CLOTHES_TIP, false)) {
+                        startMeasurement();
+                    } else {
+                        showClothesTip();
+                    }
+                }));
 
         // 이대로 저장하기: 사진 없이 지금 결과만 '내 체형'으로 저장
         findViewById(R.id.btnSaveSurvey).setOnClickListener(v -> saveSurvey());
