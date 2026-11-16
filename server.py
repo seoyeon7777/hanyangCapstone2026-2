@@ -5,7 +5,7 @@ GET  /api/form              판매자 등록 양식 정의 (화면을 그리는 
 POST /api/items/validate    양식 입력 검증 + 태그 미리보기. 저장하지 않는다.
 POST /api/items             상품 등록(저장). source = direct(판매자) | manual(팀 입력)
 GET  /api/items             저장된 상품
-POST /api/recommend         체형은 {"profile": A의 분류 결과} 또는 {"answers": {...q1~q7}, "measurements": {...} (선택)} 중 하나로 보낸다(후자는 body_profile.classify로 B가 대신 진단하고 응답 profile에 결과를 싣는다). (글만 있는 상품은 받지 않는다: source가 direct|manual이거나 tags가 있어야 한다) {"profile": A의 분류 결과, "top_n": 3, "list_size": 10, "mixed_strategy": "blend|quota|quota_safe" (선택), "items": (선택) 저장소 대신 쓸 상품 목록}
+POST /api/recommend         체형은 {"profile": A의 분류 결과} 또는 {"answers": {"version": 2, q1~q15(7개 이상)} (version 없으면 옛 q1~q7), "measurements": {...} (선택)} 중 하나로 보낸다(후자는 body_profile.classify로 B가 대신 진단하고 응답 profile에 결과를 싣는다). (글만 있는 상품은 받지 않는다: source가 direct|manual이거나 tags가 있어야 한다) {"profile": A의 분류 결과, "top_n": 3, "list_size": 10, "mixed_strategy": "blend|quota|quota_safe" (선택), "items": (선택) 저장소 대신 쓸 상품 목록}
 오류는 400 {"ok": false, "error": "..."}. 혼용률은 attrs.composition(비율 0~1) 또는 composition_percent(퍼센트 0~100) 중 하나로 보낸다.
 """
 from flask import Flask, jsonify, request
@@ -30,7 +30,7 @@ def diagnose(body: dict) -> dict:
     except ImportError:
         raise ValueError("answers로 진단하려면 A 파트(body_profile.py)가 같은 폴더에 있어야 한다") from None
     if not isinstance(body["answers"], dict):
-        raise ValueError("answers는 {\"q1\": 1, ..., \"q7\": 3} 모양이어야 한다")
+        raise ValueError("answers는 {\"version\": 2, \"q1\": 1, ..., \"q15\": 3} 모양이어야 한다 (7~15문항)")
     if body.get("measurements") is not None and not isinstance(body["measurements"], dict):
         raise ValueError("measurements는 치수 5개를 담은 객체여야 한다")
     try:

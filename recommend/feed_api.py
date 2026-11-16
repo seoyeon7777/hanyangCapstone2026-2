@@ -4,12 +4,13 @@ app.py에서 등록:  app.register_blueprint(feed_bp)
 
 GET  /api/feed?user_id=u1&S=0.6&W=0.3&N=0.1&season=fall
 POST /api/feed        체형은 셋 중 하나로 보낸다
-                      {"user_id": "u1", "answers": {"q1": 1, ..., "q7": 3}, "measurements": {...}}  ← A 파트가 진단
+                      {"user_id": "u1", "answers": {"version": 2, "q1": 1, ..., "q7"~"q15": 3}, "measurements": {...}}  ← A 파트가 진단
+                      (새 설문 15문항: "version": 2 + 앞에서부터 7~15개. version이 없으면 옛 7문항 q1~q7로 채점)
                       {"user_id": "u1", "profile": A의 classify() 결과}
                       {"user_id": "u1", "body": {"ratio": {"S":0.6,"W":0.3,"N":0.1}}}
 POST /api/feed/event  {"user_id": "u1", "product_id": "t01", "event": "like"}
                       event: click | like | unlike(찜 해제) | purchase | return. 같은 상품 찜은 한 번만 센다
-POST /api/diagnose    {"answers": {"q1": 1, ..., "q7": 3}, "measurements": {...} (선택)}  ← 앱 설문 결과 화면용 체형 진단
+POST /api/diagnose    {"answers": {"version": 2, "q1": 1, ..., "q7"~"q15": 3}, "measurements": {...} (선택)}  ← 앱 설문 결과 화면용 체형 진단
                       체형 채점은 서버(A 파트 body_profile.classify) 한 곳에서만 한다. 앱은 결과를 받아 보여 주기만 한다
 GET  /api/feed/scroll?user_id=u1&S=0.6&W=0.3&N=0.1&page=0&size=10   ← 홈 화면 무한 스크롤용
      /api/feed, /api/feed/scroll 둘 다 mode로 홈 화면 토글을 받는다
@@ -130,7 +131,7 @@ def resolve_request():
         ratio = body_in.get("ratio")
         if data.get("answers") is not None:      # A 파트로 바로 진단
             if not isinstance(data["answers"], dict):
-                raise BadRequest('answers는 {"q1": 1, ..., "q7": 3} 모양이어야 해요')
+                raise BadRequest('answers는 {"version": 2, "q1": 1, ..., "q15": 3} 모양이어야 해요 (7~15문항)')
             if data.get("measurements") is not None and not isinstance(data["measurements"], dict):
                 raise BadRequest("measurements는 치수 5개를 담은 객체여야 해요")
             answers = data["answers"]
@@ -200,7 +201,7 @@ def diagnose(answers, measurements=None):
     설문 답이 틀린 경우만 400.
     """
     if not isinstance(answers, dict):
-        raise BadRequest('answers는 {"q1": 1, ..., "q7": 3} 모양이어야 해요')
+        raise BadRequest('answers는 {"version": 2, "q1": 1, ..., "q15": 3} 모양이어야 해요 (7~15문항)')
     if measurements is not None and not isinstance(measurements, dict):
         raise BadRequest("measurements는 치수 5개를 담은 객체여야 해요")
     try:
@@ -291,7 +292,7 @@ def post_diagnose():
     """앱 설문 결과 화면용: 저장하지 않고 진단만 한다 (홈 추천과 같은 계산)."""
     data = json_body()
     if data.get("answers") is None:
-        raise BadRequest('answers가 필요해요 ({"q1": 1, ..., "q7": 3})')
+        raise BadRequest('answers가 필요해요 ({"version": 2, "q1": 1, ..., "q15": 3}, 7~15문항)')
     result, used, notice = diagnose(data["answers"], data.get("measurements"))
     return jsonify({
         "ok": True,

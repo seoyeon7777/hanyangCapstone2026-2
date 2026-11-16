@@ -1,7 +1,8 @@
 """
 A. 체형 분류 (body_profile.py)
 
-7개 설문 답 + 아바타 치수를 받아 S(스트레이트)·W(웨이브)·N(내추럴) 비율과 판정 결과를 낸다.
+설문 답(새 설문 15문항 중 7~15개, "version": 2) + 아바타 치수를 받아 S(스트레이트)·W(웨이브)·N(내추럴) 비율과 판정 결과를 낸다.
+예전 7문항 답(version 없음)도 옛 표(SURVEY)로 그대로 채점한다 (sample.csv·evaluate.py는 옛 7문항 기준).
 
   [작업 1] 설문 점수 계산, 아바타 점수 계산      score_survey(), score_avatar()
   [작업 2] 비율 맞추기(정규화), 0.6/0.4 합산    normalize(), combine()
@@ -563,7 +564,10 @@ def explain(title, answers, measurements=None):
     print(f"\n{line}\n▶ {title}\n{line}")
 
     print("[1] 입력")
-    for q, spec in SURVEY.items():
+    table = SURVEY15 if is_survey15(answers) else SURVEY   # 새 설문이면 15문항 표
+    for q, spec in table.items():
+        if is_survey15(answers) and answers.get(q) in (None, ""):
+            continue                                       # 새 설문은 7번 이후 안 답한 문항이 있을 수 있다
         n = _to_option(answers.get(q))
         choice = spec["choices"].get(n, f"(잘못된 답: {answers.get(q)!r})")
         print(f"    {q.upper()} {spec['text']}")
@@ -608,22 +612,24 @@ def explain(title, answers, measurements=None):
 
 
 if __name__ == "__main__":
-    explain("테스트 1: 설문을 모두 1번으로 답한 사람 (S 특징이 뚜렷)",
-            {"q1": 1, "q2": 1, "q3": 1, "q4": 1, "q5": 1, "q6": 1, "q7": 1},
+    # 새 설문 15문항: "version": 2, 답 1·2·3 = 보기 A(스트레이트)·B(웨이브)·C(내추럴)
+    explain("테스트 1: 15문항을 모두 A로 답한 사람 (S 특징이 뚜렷)",
+            {"version": 2, **{f"q{i}": 1 for i in range(1, 16)}},
             {"height": 163.0, "shoulder_width": 31.8, "arm_length": 52.0,
              "upper_body_length": 45.0, "leg_length": 86.5})
 
-    explain("테스트 2: 설문을 모두 2번으로 답한 사람 (W 특징이 뚜렷)",
-            {"q1": 2, "q2": 2, "q3": 2, "q4": 2, "q5": 2, "q6": 2, "q7": 2},
+    explain("테스트 2: 10문항까지만 답하고 결과를 본 사람, 모두 B (W 특징이 뚜렷)",
+            {"version": 2, **{f"q{i}": 2 for i in range(1, 11)}},
             {"height": 158.0, "shoulder_width": 29.4, "arm_length": 50.6,
              "upper_body_length": 47.0, "leg_length": 80.5})
 
     explain("테스트 3: S 답과 N 답이 섞인 사람 (혼합형 판정 확인)",
-            {"q1": 3, "q2": 1, "q3": 1, "q4": 3, "q5": 2, "q6": 1, "q7": 3},
+            {"version": 2, "q1": 3, "q2": 1, "q3": 1, "q4": 3, "q5": 2, "q6": 1, "q7": 3,
+             "q8": 3, "q9": 1, "q10": 3, "q11": 1, "q12": 3, "q13": 1, "q14": 3, "q15": 1},
             {"height": 165.0, "shoulder_width": 32.6, "arm_length": 53.9,
              "upper_body_length": 45.5, "leg_length": 87.0})
 
     explain("테스트 4: 어깨너비 값이 비어 있는 경우 (입력 예외 처리 확인)",
-            {"q1": 1, "q2": 1, "q3": 1, "q4": 1, "q5": 1, "q6": 1, "q7": 1},
+            {"version": 2, **{f"q{i}": 1 for i in range(1, 16)}},
             {"height": 162.0, "shoulder_width": None, "arm_length": 52.0,
              "upper_body_length": 45.0, "leg_length": 85.0})
