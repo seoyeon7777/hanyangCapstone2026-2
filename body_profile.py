@@ -112,11 +112,113 @@ SURVEY = {
     },
 }
 
+# ═════════════════════════════════════════════
+# [작업 1-1b] 새 설문 15문항 (11/15, 앱 설문 화면과 같은 순서)
+#   answers에 "version": 2 가 있으면 이 표로 채점한다 (없으면 위의 옛 7문항 표).
+#   보기는 문항마다 A = 스트레이트, B = 웨이브, C = 내추럴 → 고른 체형에 2점 (옛 표의 "뚜렷한 특징" 점수)
+#   weight: 옛 표처럼 어깨(Q3)·전체 실루엣(Q14)은 1.5, 나머지 1.0,
+#           Q15(어울리는 옷)는 몸이 아니라 옷 입은 경험·취향으로 답할 수 있어 0.5
+#   문항마다 세 체형 최고점이 같아(2 × weight) 어느 체형도 유리하지 않다.
+#   7번부터 "여기까지 하고 결과보기"가 있어 q1~q7은 꼭, q8~q15는 앞에서부터 이어서 답한 만큼만 온다.
+# ═════════════════════════════════════════════
+SURVEY_VERSION_KEY = "version"
+SURVEY_V2 = 2
+SURVEY15_MIN = 7           # 이만큼은 꼭 답해야 결과를 낸다
+
+_SURVEY15_ITEMS = [
+    # (문항, weight, A 스트레이트, B 웨이브, C 내추럴)
+    ("목의 길이와 특징은?", 1.0,
+     "목이 비교적 짧고 탄탄하며 두께감이 있다.", "목이 길고 가늘며 여리여리하다.", "목의 힘줄이나 뼈가 도드라져 보인다."),
+    ("쇄골은 어떻게 보이나?", 1.0,
+     "쇄골이 크게 드러나지 않는다.", "쇄골이 가늘고 선명하게 보인다.", "쇄골이 굵거나 뼈의 윤곽이 뚜렷하다."),
+    ("어깨의 특징은?", 1.5,
+     "어깨가 둥글고 두께감이 있다.", "어깨가 좁거나 부드럽게 내려간다.", "어깨뼈가 크거나 각진 느낌이 있다."),
+    ("상체를 옆에서 보면?", 1.0,
+     "가슴과 등 쪽에 입체적인 두께감이 있다.", "상체가 얇고 납작한 편이다.", "두께보다 뼈대나 골격이 눈에 띈다."),
+    ("가슴과 허리의 위치는?", 1.0,
+     "가슴과 허리선이 비교적 높은 편이다.", "가슴과 허리선이 비교적 낮은 편이다.", "위치보다 전체적인 골격의 직선감이 두드러진다."),
+    ("허리의 특징은?", 1.0,
+     "허리 위치가 높고 탄탄한 느낌이다.", "허리가 길어 보이고 곡선이 부드럽다.", "허리 굴곡보다 골반뼈나 골격이 눈에 띈다."),
+    ("골반과 엉덩이의 특징은?", 1.0,
+     "엉덩이가 높고 입체적으로 볼륨감이 있다.", "엉덩이 볼륨이 아래쪽에 있고 부드럽다.", "골반뼈가 뚜렷하고 직선적인 느낌이다."),
+    ("팔과 다리의 특징은?", 1.0,
+     "살과 근육이 탄탄하고 입체적이다.", "가늘고 부드러우며 살이 말랑하다.", "길거나 관절과 뼈의 윤곽이 두드러진다."),
+    ("손목의 특징은?", 1.0,
+     "손목이 둥글고 두께감이 있다.", "손목이 가늘고 납작하다.", "손목뼈가 크거나 튀어나와 보인다."),
+    ("손과 손가락의 특징은?", 1.0,
+     "손바닥에 두께감이 있고 손가락이 탄탄하다.", "손이 얇고 손가락이 가늘다.", "손마디가 크고 관절이 뚜렷하다."),
+    ("무릎과 발목의 특징은?", 1.0,
+     "관절이 작거나 살에 덮여 둥글게 보인다.", "관절이 작고 가느다란 느낌이다.", "무릎뼈와 복사뼈가 크고 선명하다."),
+    ("살이 찌면 어디에 먼저 붙는 편인가?", 1.0,
+     "상체, 가슴, 배, 팔뚝", "허벅지, 엉덩이, 하체", "특정 부위보다 전신에 비교적 고르게 붙는다."),
+    ("피부와 살의 촉감은?", 1.0,
+     "탄력 있고 단단한 편이다.", "부드럽고 말랑한 편이다.", "살보다 뼈나 힘줄의 존재감이 크다."),
+    ("몸 전체의 실루엣은?", 1.5,
+     "입체적이고 탄탄하며 볼륨감이 있다.", "곡선적이고 부드러우며 섬세하다.", "직선적이고 프레임이 크거나 각진 편이다."),
+    ("어떤 옷에서 체형의 장점이 잘 드러나나?", 0.5,
+     "깔끔한 정사이즈 셔츠와 일자핏", "허리선을 강조한 짧은 상의와 부드러운 소재", "여유 있는 셔츠와 루즈한 실루엣"),
+]
+
+SURVEY15 = {
+    f"q{i + 1}": {
+        "text": text,
+        "weight": weight,
+        "choices": {1: a, 2: b, 3: c},
+        "options": {
+            1: {"S": 2, "W": 0, "N": 0},   # A
+            2: {"S": 0, "W": 2, "N": 0},   # B
+            3: {"S": 0, "W": 0, "N": 2},   # C
+        },
+    }
+    for i, (text, weight, a, b, c) in enumerate(_SURVEY15_ITEMS)
+}
+
+
+def is_survey15(answers):
+    """새 15문항 설문 답이면 True ("version": 2)"""
+    return isinstance(answers, dict) and _to_option(answers.get(SURVEY_VERSION_KEY)) == SURVEY_V2
+
+
+def answered_survey15(answers):
+    """새 설문에서 답한 문항 표 (q1부터 이어서 답한 곳까지)"""
+    out = {}
+    for q, spec in SURVEY15.items():
+        if answers.get(q) in (None, ""):
+            break
+        out[q] = spec
+    return out
+
+
+# 새 설문에서 동점일 때 먼저 보는 문항: 전체 실루엣(Q14) → 어깨(Q3) (가중치 1.5인 두 문항)
+SURVEY15_TIE_QUESTIONS = ("q14", "q3")
+_OPTION_TYPE = {1: "S", 2: "W", 3: "N"}
+
+
+def survey_tie_order(answers):
+    """동점일 때 체형 순서. 옛 설문은 S, W, N. 새 설문은 Q14·Q3(그다음 마지막 문항부터)에서 고른 체형을 앞에 둔다
+    (늘 S부터 고르면 무작위 답에서도 S가 조금 더 많이 나온다)"""
+    if not is_survey15(answers):
+        return TYPES
+    order = []
+    # Q14 → Q3 → 그래도 못 가르면 마지막에 답한 문항부터 거꾸로
+    later = [q for q in reversed(list(answered_survey15(answers))) if q not in SURVEY15_TIE_QUESTIONS]
+    for q in list(SURVEY15_TIE_QUESTIONS) + later:
+        t = _OPTION_TYPE.get(_to_option(answers.get(q)))
+        if t and t not in order:
+            order.append(t)
+    return tuple(order + [t for t in TYPES if t not in order])
+
+
+def _survey_table(answers):
+    """이 답을 채점할 문항 표: 새 설문이면 답한 문항만, 아니면 옛 7문항"""
+    return answered_survey15(answers) if is_survey15(answers) else SURVEY
+
+
 # 설문 점수 계산
 def score_survey(answers):
     """설문 원점수 {"S":…, "W":…, "N":…} = 선택지 점수 × 문항 weight 의 합"""
     scores = {t: 0.0 for t in TYPES}
-    for q, spec in SURVEY.items():
+    for q, spec in _survey_table(answers).items():
         opt = spec["options"][_to_option(answers[q])]
         for t in TYPES:
             scores[t] += opt[t] * spec["weight"]
@@ -301,6 +403,12 @@ def survey_ratios(answers):
     튜닝용 21명 기준 정확도: 지금(나누지 않음) 81.0% → 나눔 95.2% (테스트 9명은 둘 다 9/9).
     """
     raw = score_survey(answers)
+    if is_survey15(answers):
+        # 새 설문은 답한 문항(7~15개)의 최고점으로 나눈다 → 몇 문항에서 멈췄든 같은 기준
+        table = answered_survey15(answers)
+        top = {t: sum(max(opt[t] for opt in spec["options"].values()) * spec["weight"]
+                      for spec in table.values()) for t in TYPES}
+        return normalize({t: raw[t] / top[t] for t in TYPES})
     return normalize({t: raw[t] / SURVEY_MAX[t] for t in TYPES})
 
 
@@ -314,8 +422,9 @@ def combine(survey_r, avatar_r, w_survey=W_SURVEY, w_avatar=W_AVATAR):
 #  설문,아바타 점수 바탕으로 대표 체형과 보조 체형을 정하고, 혼합형인지 판정.
 #  S,W,N 중에서 가장 점수가 높은 체형과 두 번째로 높은 체형을 찾고, 둘의 점수 차이가 작으면 혼합형으로 판단
 # ═════════════════════════════════════════════
-def decide_type(ratios, mix_gap=MIX_GAP):
-    ranked = sorted(TYPES, key=lambda t: ratios[t], reverse=True)  # 동점이면 S, W, N 순
+def decide_type(ratios, mix_gap=MIX_GAP, tie_order=TYPES):
+    # 동점이면 tie_order 순 (기본 S, W, N). 소수 계산 오차로 동점이 갈리지 않게 반올림해서 비교
+    ranked = sorted(TYPES, key=lambda t: (-round(ratios[t], 9), tie_order.index(t)))
     first, second = ranked[0], ranked[1]
     confidence = ratios[first] - ratios[second]
     return {
@@ -357,11 +466,28 @@ def _to_option(v):
 def validate_answers(answers):
     if not answers:
         raise InputError("설문 답이 없습니다.")
+    if is_survey15(answers):
+        _validate_survey15(answers)
+        return
     for q, spec in SURVEY.items():
         if q not in answers or answers[q] in (None, ""):
             raise InputError(f"설문 {q}에 답하지 않았습니다.")
         if _to_option(answers[q]) not in spec["options"]:
             raise InputError(f"설문 {q}의 답은 1·2·3 중 하나여야 합니다: {answers[q]!r}")
+
+def _validate_survey15(answers):
+    """새 15문항: q1~q7은 꼭, q8~q15는 앞에서부터 이어서 (중간을 건너뛰면 오류)"""
+    answered = answered_survey15(answers)
+    if len(answered) < SURVEY15_MIN:
+        missing = f"q{len(answered) + 1}"
+        raise InputError(f"설문 {missing}에 답하지 않았습니다. 최소 {SURVEY15_MIN}문항은 답해야 합니다.")
+    for q in SURVEY15:
+        if q not in answered and answers.get(q) not in (None, ""):
+            raise InputError(f"설문 {q} 앞의 문항에 답하지 않았습니다.")
+    for q, spec in answered.items():
+        if _to_option(answers[q]) not in spec["options"]:
+            raise InputError(f"설문 {q}의 답은 1·2·3 중 하나여야 합니다: {answers[q]!r}")
+
 
 # 신체 치수 검증
 def validate_measurements(measurements):
@@ -399,7 +525,8 @@ THRESHOLDS = {
 # ═════════════════════════════════════════════
 def classify(answers, measurements=None):
     """
-    answers      : {"q1": 1, "q2": 3, ..., "q7": 2}   (1·2·3)
+    answers      : {"q1": 1, "q2": 3, ..., "q7": 2}   (1·2·3, 옛 7문항)
+                   또는 {"version": 2, "q1": 1, ..., "q7"~"q15": …}   (새 15문항, 7개 이상 앞에서부터)
     measurements : {"height": 165.0, "shoulder_width": 31.5, "arm_length": 53.1,
                     "upper_body_length": 47.0, "leg_length": 86.1}   (cm)
                    없으면 None → 설문만으로 계산.
@@ -408,14 +535,15 @@ def classify(answers, measurements=None):
     validate_answers(answers)                              # 설문 답변 검증
     
     survey_r = survey_ratios(answers)                      # 설문 점수 계산 및 정규화 (타입별 최고점 보정)
+    tie = survey_tie_order(answers)                        # 동점일 때 먼저 볼 체형 순서
     
     if measurements is None:
-        return decide_type(survey_r)                       # 신체 치수가 없는 경우, 
+        return decide_type(survey_r, tie_order=tie)        # 신체 치수가 없는 경우, 
     
     validate_measurements(measurements)                    # 신체 치수 검증
     
     avatar_r = normalize(score_avatar(measurements))       # 아바타 점수 계산 및 최종 판정
-    return decide_type(combine(survey_r, avatar_r))    
+    return decide_type(combine(survey_r, avatar_r), tie_order=tie)
 
 
 # ═════════════════════════════════════════════

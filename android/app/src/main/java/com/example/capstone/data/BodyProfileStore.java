@@ -21,6 +21,11 @@ public final class BodyProfileStore {
     /** 체형 설문 문항 수: 7번까지 답하면 결과를 볼 수 있고, 15번까지 하면 끝 (BodyTypeActivity) */
     public static final int SURVEY_MIN_ANSWERS = 7;
     public static final int SURVEY_MAX_ANSWERS = 15;
+    /**
+     * 설문 문항표 버전. 서버(body_profile.SURVEY15)가 "version": 2를 보고 새 15문항 표로 채점한다.
+     * 버전이 없는 예전 답(옛 7문항)은 뜻이 달라 읽지 않는다 → 그 카드는 저장된 골격 이름으로 추천
+     */
+    public static final int SURVEY_VERSION = 2;
 
     public static final String[] PART_KEYS = {
             "SHOULDER", "CHEST", "WAIST", "HIP", "ARM_LENGTH", "LEG_LENGTH",
@@ -98,6 +103,7 @@ public final class BodyProfileStore {
                     answers.put(answer);
                 }
                 j.put("surveyAnswers", answers);
+                j.put("surveyVersion", SURVEY_VERSION);
             }
             return j;
         }
@@ -114,7 +120,9 @@ public final class BodyProfileStore {
             if (p.parts == null) {
                 p.parts = new JSONObject();
             }
-            p.surveyAnswers = readAnswers(j.optJSONArray("surveyAnswers"));
+            p.surveyAnswers = j.optInt("surveyVersion", 1) == SURVEY_VERSION
+                    ? readAnswers(j.optJSONArray("surveyAnswers"))
+                    : null;
             return p;
         }
 

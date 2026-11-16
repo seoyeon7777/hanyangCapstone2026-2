@@ -658,6 +658,7 @@ public class BodyTypeActivity extends AppCompatActivity {
                 .putString(AccountPrefs.key(context, AccountPrefs.SURVEY_ANSWERS), answers.toString())
                 .putFloat(AccountPrefs.key(context, AccountPrefs.SURVEY_HEIGHT), heightCm)
                 .putLong(AccountPrefs.key(context, AccountPrefs.SURVEY_AT), System.currentTimeMillis())
+                .putInt(AccountPrefs.key(context, AccountPrefs.SURVEY_VERSION), BodyProfileStore.SURVEY_VERSION)
                 .apply();
 
         // 체형은 서버 진단 결과만 저장한다 (-1 = 아직 진단 전)
@@ -708,6 +709,12 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         String saved = AccountPrefs.survey(context)
                 .getString(AccountPrefs.key(context, AccountPrefs.SURVEY_ANSWERS), "");
+
+        // 옛 7문항 답(버전 없음)은 문항 뜻이 달라 쓰지 않는다
+        if (AccountPrefs.survey(context).getInt(
+                AccountPrefs.key(context, AccountPrefs.SURVEY_VERSION), 1) != BodyProfileStore.SURVEY_VERSION) {
+            return null;
+        }
 
         String[] parts = saved.split(",");
 
