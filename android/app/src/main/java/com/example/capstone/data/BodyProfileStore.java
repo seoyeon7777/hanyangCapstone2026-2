@@ -18,6 +18,10 @@ import java.util.UUID;
 
 public final class BodyProfileStore {
 
+    /** 체형 설문 문항 수: 7번까지 답하면 결과를 볼 수 있고, 15번까지 하면 끝 (BodyTypeActivity) */
+    public static final int SURVEY_MIN_ANSWERS = 7;
+    public static final int SURVEY_MAX_ANSWERS = 15;
+
     public static final String[] PART_KEYS = {
             "SHOULDER", "CHEST", "WAIST", "HIP", "ARM_LENGTH", "LEG_LENGTH",
             "NECK", "BACK_LENGTH", "UPPER_ARM", "FOREARM", "THIGH", "CALF"
@@ -115,11 +119,12 @@ public final class BodyProfileStore {
         }
 
         private static int[] readAnswers(JSONArray array) {
-            if (array == null || array.length() != 7) {
+            if (array == null || array.length() < SURVEY_MIN_ANSWERS
+                    || array.length() > SURVEY_MAX_ANSWERS) {
                 return null;
             }
-            int[] answers = new int[7];
-            for (int i = 0; i < 7; i++) {
+            int[] answers = new int[array.length()];
+            for (int i = 0; i < answers.length; i++) {
                 answers[i] = array.optInt(i, 0);
                 if (answers[i] < 1 || answers[i] > 3) {
                     return null;

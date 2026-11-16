@@ -24,6 +24,7 @@ import com.example.capstone.data.RecommendApi;
 import com.example.capstone.login.LoginSession;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,6 +33,9 @@ import java.util.Locale;
 public class BodyTypeActivity extends AppCompatActivity {
 
     private TextView progress;
+    private TextView progressNotice;
+    private TextView progressPercent;
+    private LinearProgressIndicator progressBar;
     private TextView question;
 
     private MaterialButton an1;
@@ -39,8 +43,9 @@ public class BodyTypeActivity extends AppCompatActivity {
     private MaterialButton an3;
     private Button next;
     private Button prev;
+    private Button btnEarlyResult;
 
-    // 그림 카드 보기 (Q1~Q7)
+    // 그림 카드 보기 (사진이 있는 문항만, 지금은 없음)
     private View cardOptions;
     private MaterialCardView[] cards;
     private View[] cardRadios;
@@ -64,100 +69,149 @@ public class BodyTypeActivity extends AppCompatActivity {
     private int currentQuestion = 0;
     private float userHeightCm;
 
-    // 각 질문에서 선택한 답
-    private final int[] selectedAnswers = new int[7];
+    // 각 질문에서 선택한 답 (1 = A, 2 = B, 3 = C)
+    private final int[] selectedAnswers = new int[BodyProfileStore.SURVEY_MAX_ANSWERS];
+
+    /** 이 문항부터 "여기까지 하고 결과보기"를 보여 준다 (7번 = 0부터 세어 6) */
+    private static final int EARLY_RESULT_FROM = BodyProfileStore.SURVEY_MIN_ANSWERS - 1;
+    /** 이 문항부터 "조금만 더 하면 설문이 완성돼요!" (10~12번) */
+    private static final int ALMOST_DONE_FROM = 9;
+    /** 이 문항부터 "설문 3번만 더 하시면…" (13~15번, 10번 문구 대신) */
+    private static final int LAST_THREE_FROM = 12;
+
+    /** 결과 확인을 누를 때 서버로 보낼 문항 수 (다시 시도할 때도 같은 개수) */
+    private int resultCount = BodyProfileStore.SURVEY_MAX_ANSWERS;
 
 
     private final String[] questions = {
+            "Q1. 목의 길이와 특징은?",
 
-            "Q1. 내 어깨는 어떤 모습에 가까운가요?",
+            "Q2. 쇄골은 어떻게 보이나?",
 
-            "Q2. 목은 어떤 모습에 가까운가요?",
+            "Q3. 어깨의 특징은?",
 
-            "Q3. 쇄골은 평소에 어떻게 보이나요?",
+            "Q4. 상체를 옆에서 보면?",
 
-            "Q4. 손가락이나 무릎을 봤을 때\n뼈마디가 어떤가요?",
+            "Q5. 가슴과 허리의 위치는?",
 
-            "Q5. 거울로 봤을 때\n어느 쪽이 더 길어 보이나요?",
+            "Q6. 허리의 특징은?",
 
-            "Q6. 내 몸은 전체적으로\n어떤 느낌에 가까운가요?",
+            "Q7. 골반과 엉덩이의 특징은?",
 
-            "Q7. 몸 전체의 모양은\n어떤 것과 비슷해 보이나요?"
+            "Q8. 팔과 다리의 특징은?",
+
+            "Q9. 손목의 특징은?",
+
+            "Q10. 손과 손가락의 특징은?",
+
+            "Q11. 무릎과 발목의 특징은?",
+
+            "Q12. 살이 찌면 어디에 먼저 붙는 편인가?",
+
+            "Q13. 피부와 살의 촉감은?",
+
+            "Q14. 몸 전체의 실루엣은?",
+
+            "Q15. 어떤 옷에서 체형의 장점이 잘 드러나나?"
     };
 
     /*
      * 그림 카드로 보여 줄 질문 (질문 번호 → 보기 1~3 사진·제목)
-     * 여기 없는 질문은 기존 버튼 목록으로 보여 줌
+     * 지금은 사진이 없어 모든 문항을 글자 버튼으로 보여 준다. 사진이 생기면 여기에 문항 순서대로 넣는다
      */
-    private static final int[][] CARD_IMAGES = {
-            // Q1 어깨
-            {R.drawable.img_q1_shoulder_1, R.drawable.img_q1_shoulder_2, R.drawable.img_q1_shoulder_3},
-            // Q2 목
-            {R.drawable.img_q2_neck_1, R.drawable.img_q2_neck_2, R.drawable.img_q2_neck_3},
-            // Q3 쇄골
-            {R.drawable.img_q3_collarbone_1, R.drawable.img_q3_collarbone_2, R.drawable.img_q3_collarbone_3},
-            // Q4 뼈마디
-            {R.drawable.img_q4_joint_1, R.drawable.img_q4_joint_2, R.drawable.img_q4_joint_3},
-            // Q5 상체/하체 길이
-            {R.drawable.img_q5_length_1, R.drawable.img_q5_length_2, R.drawable.img_q5_length_3},
-            // Q6 전체 느낌
-            {R.drawable.img_q6_feel_1, R.drawable.img_q6_feel_2, R.drawable.img_q6_feel_3},
-            // Q7 전체 모양
-            {R.drawable.img_q7_shape_1, R.drawable.img_q7_shape_2, R.drawable.img_q7_shape_3}
-    };
+    private static final int[][] CARD_IMAGES = {};
 
-    private static final String[][] CARD_TITLES = {
-            {"둥글고 도톰해 보여요", "얇고 부드러워 보여요", "넓고 각진 느낌이에요"},
-            {"짧고 굵어 보여요", "길고 가늘어 보여요", "그 중간인 것 같아요"},
-            {"거의 보이지 않아요", "조금 보여요", "선명하게 보여요"},
-            {"크게 튀어나와\n보이지 않아요", "보통이에요", "뼈마디가 눈에 잘 보여요"},
-            {"다리가 더 길어 보여요", "비슷해 보여요", "상체가 더 길어 보여요"},
-            {"두께감이 있고\n볼륨감 있어 보여요", "얇고 부드럽게 보여요", "몸의 선보다\n뼈대가 더 눈에 띄어요"},
-            {"둥근 모양", "아래가 넓은 모양", "위가 넓은 모양"}
-    };
+    private static final String[][] CARD_TITLES = {};
 
     private final String[][] answers = {
-
             {
-                    "① 둥글고 도톰해 보여요",
-                    "② 얇고 부드러워 보여요",
-                    "③ 넓고 각진 느낌이에요"
+                    "A. 목이 비교적 짧고 탄탄하며 두께감이 있다.",
+                    "B. 목이 길고 가늘며 여리여리하다.",
+                    "C. 목의 힘줄이나 뼈가 도드라져 보인다."
             },
 
             {
-                    "① 짧고 굵어 보여요",
-                    "② 길고 가늘어 보여요",
-                    "③ 그 중간인 것 같아요"
+                    "A. 쇄골이 크게 드러나지 않는다.",
+                    "B. 쇄골이 가늘고 선명하게 보인다.",
+                    "C. 쇄골이 굵거나 뼈의 윤곽이 뚜렷하다."
             },
 
             {
-                    "① 거의 보이지 않아요",
-                    "② 조금 보여요",
-                    "③ 선명하게 보여요"
+                    "A. 어깨가 둥글고 두께감이 있다.",
+                    "B. 어깨가 좁거나 부드럽게 내려간다.",
+                    "C. 어깨뼈가 크거나 각진 느낌이 있다."
             },
 
             {
-                    "① 크게 튀어나와 보이지 않아요",
-                    "② 보통이에요",
-                    "③ 뼈마디가 눈에 잘 보여요"
+                    "A. 가슴과 등 쪽에 입체적인 두께감이 있다.",
+                    "B. 상체가 얇고 납작한 편이다.",
+                    "C. 두께보다 뼈대나 골격이 눈에 띈다."
             },
 
             {
-                    "① 다리가 더 길어 보여요",
-                    "② 비슷해 보여요",
-                    "③ 상체가 더 길어 보여요"
+                    "A. 가슴과 허리선이 비교적 높은 편이다.",
+                    "B. 가슴과 허리선이 비교적 낮은 편이다.",
+                    "C. 위치보다 전체적인 골격의 직선감이 두드러진다."
             },
 
             {
-                    "① 두께감이 있고 볼륨감 있어 보여요",
-                    "② 얇고 부드럽게 보여요",
-                    "③ 몸의 선보다 뼈대가 더 눈에 띄어요"
+                    "A. 허리 위치가 높고 탄탄한 느낌이다.",
+                    "B. 허리가 길어 보이고 곡선이 부드럽다.",
+                    "C. 허리 굴곡보다 골반뼈나 골격이 눈에 띈다."
             },
 
             {
-                    "① 둥근 모양",
-                    "② 아래가 넓은 모양",
-                    "③ 위가 넓은 모양"
+                    "A. 엉덩이가 높고 입체적으로 볼륨감이 있다.",
+                    "B. 엉덩이 볼륨이 아래쪽에 있고 부드럽다.",
+                    "C. 골반뼈가 뚜렷하고 직선적인 느낌이다."
+            },
+
+            {
+                    "A. 살과 근육이 탄탄하고 입체적이다.",
+                    "B. 가늘고 부드러우며 살이 말랑하다.",
+                    "C. 길거나 관절과 뼈의 윤곽이 두드러진다."
+            },
+
+            {
+                    "A. 손목이 둥글고 두께감이 있다.",
+                    "B. 손목이 가늘고 납작하다.",
+                    "C. 손목뼈가 크거나 튀어나와 보인다."
+            },
+
+            {
+                    "A. 손바닥에 두께감이 있고 손가락이 탄탄하다.",
+                    "B. 손이 얇고 손가락이 가늘다.",
+                    "C. 손마디가 크고 관절이 뚜렷하다."
+            },
+
+            {
+                    "A. 관절이 작거나 살에 덮여 둥글게 보인다.",
+                    "B. 관절이 작고 가느다란 느낌이다.",
+                    "C. 무릎뼈와 복사뼈가 크고 선명하다."
+            },
+
+            {
+                    "A. 상체, 가슴, 배, 팔뚝",
+                    "B. 허벅지, 엉덩이, 하체",
+                    "C. 특정 부위보다 전신에 비교적 고르게 붙는다."
+            },
+
+            {
+                    "A. 탄력 있고 단단한 편이다.",
+                    "B. 부드럽고 말랑한 편이다.",
+                    "C. 살보다 뼈나 힘줄의 존재감이 크다."
+            },
+
+            {
+                    "A. 입체적이고 탄탄하며 볼륨감이 있다.",
+                    "B. 곡선적이고 부드러우며 섬세하다.",
+                    "C. 직선적이고 프레임이 크거나 각진 편이다."
+            },
+
+            {
+                    "A. 깔끔한 정사이즈 셔츠와 일자핏",
+                    "B. 허리선을 강조한 짧은 상의와 부드러운 소재",
+                    "C. 여유 있는 셔츠와 루즈한 실루엣"
             }
     };
 
@@ -173,6 +227,9 @@ public class BodyTypeActivity extends AppCompatActivity {
         );
 
         progress = findViewById(R.id.progress);
+        progressNotice = findViewById(R.id.progressNotice);
+        progressPercent = findViewById(R.id.progressPercent);
+        progressBar = findViewById(R.id.progressBar);
         question = findViewById(R.id.question);
 
         an1 = findViewById(R.id.an1);
@@ -181,6 +238,7 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         next = findViewById(R.id.next);
         prev = findViewById(R.id.prev);
+        btnEarlyResult = findViewById(R.id.btnEarlyResult);
 
         cardOptions = findViewById(R.id.cardOptions);
         cards = new MaterialCardView[]{
@@ -222,6 +280,7 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         next.setOnClickListener(v -> goNext());
         prev.setOnClickListener(v -> goPrev());
+        btnEarlyResult.setOnClickListener(v -> showEarlyResult());
 
         findViewById(R.id.btnCloseSurvey).setOnClickListener(v -> confirmClose());
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -288,7 +347,7 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         updateProgress();
 
-        if (currentQuestion == 6) {
+        if (currentQuestion == questions.length - 1) {
             next.setText("결과 확인");
         } else {
             next.setText("다음");
@@ -296,6 +355,11 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         prev.setEnabled(currentQuestion > 0);
         prev.setAlpha(currentQuestion > 0 ? 1f : 0.4f);
+
+        // 7번부터는 지금까지 답한 문항으로 결과를 볼 수 있다 (문항이 많을수록 정확해짐)
+        // 마지막 15번은 "결과 확인"이 같은 일을 하므로 숨긴다
+        btnEarlyResult.setVisibility(currentQuestion >= EARLY_RESULT_FROM
+                && currentQuestion < questions.length - 1 ? View.VISIBLE : View.GONE);
 
         resetButtonState();
     }
@@ -346,20 +410,41 @@ public class BodyTypeActivity extends AppCompatActivity {
         return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
+    /** 질문 위 진행 정도: "3 / 15", 아래 줄에 "20%" + 게이지, 10번·13번부터 응원 문구 */
     private void updateProgress() {
 
-        StringBuilder text = new StringBuilder();
+        int number = currentQuestion + 1;
+        int total = questions.length;
+        int percent = Math.round(number * 100f / total);
 
-        for (int i = 0; i < 7; i++) {
+        progress.setText(number + " / " + total);
+        progressPercent.setText(percent + "%");
+        progressBar.setMax(total);
+        progressBar.setProgressCompat(number, true);
+        progressBar.setIndicatorColor(gaugeColor(currentQuestion));
 
-            if (i == currentQuestion) {
-                text.append("● ");
-            } else {
-                text.append("○ ");
-            }
+        String notice = "";
+        if (currentQuestion >= LAST_THREE_FROM) {
+            notice = "설문 3번만 더 하시면 더 정확한 결과를 얻게 돼요!";
+        } else if (currentQuestion >= ALMOST_DONE_FROM) {
+            notice = "조금만 더 하면 설문이 완성돼요!";
         }
+        progressNotice.setText(notice);
+        progressNotice.setVisibility(notice.isEmpty() ? View.GONE : View.VISIBLE);
+    }
 
-        progress.setText(text.toString().trim());
+    /** 게이지 색: 1~9번 검정, 10~12번 초록, 13~14번 주황, 15번 노랑 */
+    private int gaugeColor(int index) {
+        if (index >= questions.length - 1) {
+            return Color.parseColor("#FFC107");
+        }
+        if (index >= LAST_THREE_FROM) {
+            return Color.parseColor("#FF8A00");
+        }
+        if (index >= ALMOST_DONE_FROM) {
+            return Color.parseColor("#2EAD4B");
+        }
+        return Color.parseColor("#111111");
     }
 
     private void goNext() {
@@ -375,7 +460,7 @@ public class BodyTypeActivity extends AppCompatActivity {
             return;
         }
 
-        if (currentQuestion < 6) {
+        if (currentQuestion < questions.length - 1) {
 
             currentQuestion++;
 
@@ -383,8 +468,26 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         } else {
 
+            resultCount = questions.length;
             showResult();
         }
+    }
+
+    /** "여기까지 하고 결과보기": 지금 문항까지 고른 답으로 결과를 본다 (7번 문항부터) */
+    private void showEarlyResult() {
+
+        if (selectedAnswers[currentQuestion] == 0) {
+            Toast.makeText(this, "답변을 선택해주세요.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        resultCount = currentQuestion + 1;
+        showResult();
+    }
+
+    /** 결과에 쓰는 답 = 1번부터 resultCount번까지 */
+    private int[] answeredAnswers() {
+        return java.util.Arrays.copyOf(selectedAnswers, resultCount);
     }
 
     /**
@@ -394,6 +497,7 @@ public class BodyTypeActivity extends AppCompatActivity {
     private void showResult() {
 
         next.setEnabled(false);
+        btnEarlyResult.setEnabled(false);
         next.setText("진단 중...");
 
         // 답부터 저장한다 (서버가 꺼져 있어도 다시 시도하거나 홈에서 진단할 수 있게).
@@ -402,7 +506,7 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         RecommendApi.diagnose(
                 this,
-                selectedAnswers.clone(),
+                answeredAnswers(),
                 null,   // 카메라 치수는 진단에 안 쓴다 (팀 결정: 설문만)
                 new RecommendApi.Callback<RecommendApi.Diagnosis>() {
 
@@ -431,7 +535,7 @@ public class BodyTypeActivity extends AppCompatActivity {
                         intent.putExtra(EXTRA_RATIO_N, result.ratioN);
                         intent.putExtra(EXTRA_MIXED, result.mixed);
                         // 비회원이 결과 화면에서 사진 측정 때문에 로그인하면 이 설문도 저장하므로 답을 넘긴다
-                        intent.putExtra(EXTRA_ANSWERS, selectedAnswers.clone());
+                        intent.putExtra(EXTRA_ANSWERS, answeredAnswers());
 
                         // 처음 입력한 키도 결과 화면으로 전달
                         intent.putExtra(
@@ -452,7 +556,8 @@ public class BodyTypeActivity extends AppCompatActivity {
                         }
 
                         next.setEnabled(true);
-                        next.setText("결과 확인");
+                        btnEarlyResult.setEnabled(true);
+                        showQuestion();
 
                         AppDialog.show(
                                 BodyTypeActivity.this,
@@ -533,11 +638,11 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         // 비회원은 기기에 저장하지 않고 앱이 켜져 있는 동안만 메모리에 둔다 (GuestSurvey)
         if (!LoginSession.isLoggedIn(this)) {
-            GuestSurvey.set(selectedAnswers, userHeightCm, resultType);
+            GuestSurvey.set(answeredAnswers(), userHeightCm, resultType);
             return;
         }
 
-        persistSurvey(this, selectedAnswers, userHeightCm, resultType);
+        persistSurvey(this, answeredAnswers(), userHeightCm, resultType);
     }
 
     /** 설문 답·키·체형을 지금 로그인한 계정에 저장한다 (resultType -1 = 아직 진단 전) */
@@ -596,7 +701,7 @@ public class BodyTypeActivity extends AppCompatActivity {
     }
 
     /**
-     * 최근 설문의 7문항 답 (1·2·3). 설문 기록이 없거나 빠진 문항이 있으면 null
+     * 최근 설문의 답 (1·2·3, 7~15문항 — "여기까지 하고 결과보기"를 누른 곳까지). 설문 기록이 없거나 빠진 문항이 있으면 null
      * 추천 서버(RecommendApi)가 체형 진단에 쓴다. 문항 순서와 번호는 서버 A 파트 설문과 같다.
      */
     public static int[] lastSurveyAnswers(Context context) {
@@ -610,13 +715,14 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         String[] parts = saved.split(",");
 
-        if (parts.length != 7) {
+        if (parts.length < BodyProfileStore.SURVEY_MIN_ANSWERS
+                || parts.length > BodyProfileStore.SURVEY_MAX_ANSWERS) {
             return null;
         }
 
-        int[] answers = new int[7];
+        int[] answers = new int[parts.length];
 
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < parts.length; i++) {
             try {
                 answers[i] = Integer.parseInt(parts[i].trim());
             } catch (NumberFormatException e) {

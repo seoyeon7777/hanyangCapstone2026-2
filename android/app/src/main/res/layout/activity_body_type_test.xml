@@ -57,9 +57,45 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
             android:gravity="center"
-            android:text="● ○ ○ ○ ○ ○ ○"
-            android:textColor="#000000"
-            android:textSize="15sp" />
+            android:text="1 / 15"
+            android:textColor="#888888"
+            android:textSize="13sp" />
+
+        <!-- 진행률: 차오르는 게이지 + 그 아래 "7%" (BodyTypeActivity.updateProgress) -->
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressBar"
+            android:layout_width="140dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:max="15"
+            android:progress="1"
+            app:indicatorColor="#111111"
+            app:trackColor="#E6E6E6"
+            app:trackCornerRadius="3dp"
+            app:trackThickness="6dp" />
+
+        <TextView
+            android:id="@+id/progressPercent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:text="7%"
+            android:textColor="#888888"
+            android:textSize="13sp" />
+
+        <!-- 10번부터 "조금만 더 하면…", 13번부터 "설문 3번만 더…" (BodyTypeActivity.updateProgress) -->
+        <TextView
+            android:id="@+id/progressNotice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:lineSpacingExtra="2dp"
+            android:textColor="#888888"
+            android:textSize="12sp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/question"
@@ -355,6 +391,26 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
+        <!-- 7번 문항부터: 지금까지 답한 문항으로 결과 보기 -->
+        <Button
+            android:id="@+id/btnEarlyResult"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="32dp"
+            android:backgroundTint="#4A4A4A"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp"
+            android:text="여기까지 하고 결과보기"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:visibility="gone" />
 
     </LinearLayout>
 
