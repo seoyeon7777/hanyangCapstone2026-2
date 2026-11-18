@@ -2,61 +2,55 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#FFFFFF">
 
-    <!-- 상품 상세 내용 -->
+    <!-- 상단바 -->
+<RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="12dp"
+        android:paddingHorizontal="12dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="9dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@null"
+            android:contentDescription="뒤로가기"
+            android:src="@drawable/ic_back"
+            app:tint="@color/black" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="상품 상세"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- 상세페이지 내용 -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true"
-        android:overScrollMode="never">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- 상단바 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:background="#FFFFFF">
 
-                <TextView
-                    android:id="@+id/btnBack"
-                    android:layout_width="40dp"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:text="‹"
-                    android:textSize="36sp"
-                    android:textColor="#111111"
-                    android:contentDescription="뒤로가기" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="상품 상세"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="#111111" />
-
-                <View
-                    android:layout_width="40dp"
-                    android:layout_height="40dp" />
-
-            </LinearLayout>
-
-            <!-- 상품 이미지: 팀원 이미지 연결 기능 -->
+            <!-- 상품 이미지 -->
             <FrameLayout
                 android:id="@+id/frameDetailImage"
                 android:layout_width="match_parent"
@@ -77,7 +71,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
-                    android:contentDescription="상품 이미지"
                     android:visibility="gone" />
 
             </FrameLayout>
@@ -120,6 +113,16 @@
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/textDetailReason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="3dp"
+                    android:textColor="#666666"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <!-- 구분선 -->
@@ -128,7 +131,7 @@
                 android:layout_height="8dp"
                 android:background="#F5F5F5" />
 
-            <!-- 상품 정보 및 옵션 -->
+            <!-- 상품 정보 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -146,7 +149,8 @@
                     android:textSize="17sp"
                     android:textStyle="bold" />
 
-                <!-- 기존 옵션 선택 UI 유지 -->
+                <!-- 옵션 선택 -->
+                <!-- 누르면 사이즈 / 색상 선택 창이 열린다 -->
                 <LinearLayout
                     android:id="@+id/layoutOptionSelect"
                     android:layout_width="match_parent"
@@ -156,27 +160,16 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:clickable="true"
-                    android:focusable="true">
+                    android:paddingEnd="16dp">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="옵션"
                         android:textColor="#111111"
                         android:textSize="15sp"
                         android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/textOptionSummary"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="16dp"
-                        android:text="색상 · 사이즈 · 수량 선택"
-                        android:textColor="#888888"
-                        android:textSize="14sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -187,36 +180,32 @@
 
                 </LinearLayout>
 
-                <!-- 팀원 사이즈 추천 기능 연결 -->
-                <LinearLayout
+                <TextView
+                    android:id="@+id/textSizeRecommend"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:orientation="vertical"
-                    android:background="#F7F7F7"
-                    android:padding="16dp">
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_option_row"
+                    android:paddingStart="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="12dp"
+                    android:text="내 사이즈 추천 보기  ›"
+                    android:textColor="#D32F2F"
+                    android:textSize="14sp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="MY SIZE"
-                        android:textColor="#111111"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.08" />
-
-                    <TextView
-                        android:id="@+id/textFitGuide"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="체형 측정 후 내 사이즈 확인하기  ›"
-                        android:textColor="#333333"
-                        android:textSize="14sp"
-                        android:clickable="true"
-                        android:focusable="true" />
-
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/textSizeFitNotice"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="12dp"
+                    android:textColor="#666666"
+                    android:textSize="12sp"
+                    android:lineSpacingExtra="4dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
@@ -240,10 +229,9 @@
                 android:textColor="#111111"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:background="#FFFFFF"
-                android:clickable="true"
-                android:focusable="true" />
+                android:background="#FFFFFF" />
 
+            <!-- 아래 여백 -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="24dp"
@@ -253,7 +241,7 @@
 
     </ScrollView>
 
-    <!-- 하단 고정 구매 영역 -->
+    <!-- 하단 구매 영역 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="76dp"
@@ -264,7 +252,7 @@
         android:background="#FFFFFF"
         android:elevation="12dp">
 
-        <!-- 찜 버튼 -->
+        <!-- 찜 -->
         <ImageView
             android:id="@+id/btnDetailHeart"
             android:layout_width="56dp"
@@ -273,11 +261,9 @@
             android:scaleType="fitCenter"
             android:src="@drawable/ic_heart_outline"
             android:contentDescription="찜하기"
-            android:background="#FFFFFF"
-            android:clickable="true"
-            android:focusable="true" />
+            android:background="#FFFFFF" />
 
-        <!-- 기존 3D 가상피팅 버튼 유지 -->
+        <!-- 3D 가상피팅 -->
         <TextView
             android:id="@+id/btnFitting"
             android:layout_width="0dp"
@@ -285,15 +271,13 @@
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:gravity="center"
-            android:text="3D 가상피팅"
+            android:text="바로 구매"
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#111111"
-            android:background="#EEEEEE"
-            android:clickable="true"
-            android:focusable="true" />
+            android:background="#EEEEEE" />
 
-        <!-- 기존 장바구니 버튼 유지 -->
+        <!-- 장바구니 -->
         <TextView
             android:id="@+id/btnAddCart"
             android:layout_width="0dp"
@@ -305,9 +289,7 @@
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="#FFFFFF"
-            android:background="#111111"
-            android:clickable="true"
-            android:focusable="true" />
+            android:background="#111111" />
 
     </LinearLayout>
 
