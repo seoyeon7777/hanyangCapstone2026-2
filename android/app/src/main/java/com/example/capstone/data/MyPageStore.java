@@ -77,6 +77,22 @@ public class MyPageStore {
         public final String courier;
         public final String trackingNo;
 
+        public String groupNo = "";
+        public int paidAmount = -1;
+        public String couponName = "";
+
+        public int productId = -1;
+        public String serverProductId = "";
+
+        public String payMethod = "";
+        public String cardCompany = "";
+        public String installment = "";
+
+        public String receiver = "";
+        public String receiverPhone = "";
+        public String shippingAddress = "";
+        public String deliveryRequest = "";
+
         public Order(
                 String orderNo,
                 String orderDate,
@@ -109,9 +125,31 @@ public class MyPageStore {
         }
 
         public int getTotalPrice() {
-            return price * quantity;
+            return paidAmount >= 0 ? paidAmount : price * quantity;
+        }
+
+        public String getGroupNo() {
+            return groupNo == null || groupNo.isEmpty() ? orderNo : groupNo;
+        }
+
+        public boolean paidByCard() {
+            return PAY_CARD.equals(payMethod);
+        }
+
+        public String getPayMethodText() {
+            if (PAY_CARD.equals(payMethod)) {
+                String text = cardCompany.isEmpty() ? "카드" : cardCompany + "카드";
+                return installment.isEmpty() ? text : text + " (" + installment + ")";
+            }
+            if (PAY_BANK.equals(payMethod)) {
+                return "계좌이체";
+            }
+            return "정보 없음";
         }
     }
+
+    public static final String PAY_CARD = "card";
+    public static final String PAY_BANK = "bank";
 
     // 취소 / 반품 / 교환
     public static class Claim {
@@ -124,6 +162,7 @@ public class MyPageStore {
         public final String requestDate;
         public final String reason;
         public String state;
+        public String refund = "";
 
         public Claim(
                 String claimNo,
@@ -219,6 +258,7 @@ public class MyPageStore {
         public final String bank;
         public final String accountNo;
         public final String holder;
+        public boolean isDefault;
 
         public RefundAccount(
                 String bank,
@@ -282,7 +322,6 @@ public class MyPageStore {
         public final String type;
         public final String title;
         public final String content;
-        public final String email;
         public String status;
         public final String date;
 
@@ -290,14 +329,12 @@ public class MyPageStore {
                 String type,
                 String title,
                 String content,
-                String email,
                 String status,
                 String date
         ) {
             this.type = type;
             this.title = title;
             this.content = content;
-            this.email = email;
             this.status = status;
             this.date = date;
         }
@@ -335,8 +372,9 @@ public class MyPageStore {
     private static final List<Inquiry> inquiries = new ArrayList<>();
 
     private static final Set<String> receivedCouponIds = new HashSet<>();
+    private static final java.util.Map<String, String[]> usedCoupons = new java.util.LinkedHashMap<>();
 
-    private static RefundAccount refundAccount = null;
+    private static final List<RefundAccount> refundAccounts = new ArrayList<>();
     private static boolean kakaoPayLinked = false;
     private static boolean naverPayLinked = false;
 
@@ -346,34 +384,54 @@ public class MyPageStore {
     private static final List<Notice> faqs = new ArrayList<>(
             Arrays.asList(
                     faq(
-                            "가상피팅",
-                            "가상피팅은 어떻게 이용하나요?",
-                            "하단 「피팅」 메뉴에서 키와 전신 사진을 입력하면 내 체형에 맞는 3D 아바타가 만들어집니다. 아바타가 만들어지면 원하는 옷을 입혀 핏을 확인할 수 있습니다."
+                            "체형분석",
+                            "체형분석은 어떻게 이용하나요?",
+                            "로그인한 뒤 하단 「체형」 메뉴에서 「새 체형 추가하기」를 누르세요. 키·몸무게·나이를 입력하고 7개 설문에 답하면 나의 골격 체형(스트레이트·웨이브·내추럴)을 알려 드려요. 결과는 홈의 「체형 맞춤」 추천에 바로 쓰여요."
                     ),
                     faq(
-                            "가상피팅",
-                            "내 아바타 치수가 실제와 달라요.",
-                            "아바타에서 고치고 싶은 부위를 터치하면 확대되고, 슬라이더나 직접 입력으로 cm 단위까지 조정할 수 있습니다."
+                            "체형분석",
+                            "골격 체형은 어떻게 정해지나요?",
+                            "골격 체형은 설문 답변으로 정해져요. 한 체형이 확실히 높으면 그 체형으로, 두 체형이 비슷하면 혼합형으로 보여 드려요. 사진으로 잰 치수는 골격 체형을 바꾸지 않고, 사이즈를 확인하는 데만 쓰여요."
                     ),
                     faq(
-                            "가상피팅",
-                            "전신 사진은 어떻게 찍어야 정확한가요?",
-                            "몸에 붙는 옷을 입고, 밝고 단순한 배경 앞에서 정면 전신이 모두 나오도록 찍어주세요. 카메라는 허리 높이에서 수평으로 들면 가장 정확합니다."
+                            "체형분석",
+                            "「사진으로 정밀 분석하기」와 「이대로 저장하기」는 뭐가 다른가요?",
+                            "「이대로 저장하기」는 설문 결과만 내 체형으로 저장해요. 「사진으로 정밀 분석하기」는 정면·옆면 전신 사진으로 가슴·허리·골반 등의 치수까지 재서 저장해요. 치수가 있으면 상품 상세의 추천 사이즈와 주문 전 사이즈 확인을 받을 수 있어요. 저장하지 않고 나가면 결과는 남지 않아요."
                     ),
                     faq(
-                            "가상피팅",
-                            "촬영한 사진은 저장되나요?",
-                            "촬영한 사진은 신체 치수 추정에만 사용되며, 보관 여부와 기간은 개인정보처리방침을 따릅니다."
+                            "체형분석",
+                            "체형을 여러 개 저장할 수 있나요?",
+                            "최대 10개까지 저장할 수 있어요. 「내 체형관리」에서 체형을 눌러 「현재 체형」으로 고르면, 홈 체형 맞춤 추천과 장바구니·주문 사이즈 확인이 그 체형 기준으로 바뀌어요. 이름 변경과 삭제도 같은 화면에서 할 수 있어요."
                     ),
                     faq(
-                            "가상피팅",
-                            "가상피팅 결과와 실제 착용감이 다를 수 있나요?",
-                            "옷의 소재, 신축성, 개인 체형 차이에 따라 실제 착용감과 차이가 있을 수 있습니다. 상품 상세의 실측 사이즈도 함께 확인해주세요."
+                            "체형분석",
+                            "전신 사진은 어떻게 고르면 정확한가요?",
+                            "머리부터 발끝까지 모두 나오고 몸에 붙는 옷을 입은 정면·옆면 사진을 골라 주세요. 카메라를 기울이지 않고 찍은 사진일수록, 밝고 단순한 배경일수록 정확해요. 정면과 옆면은 같은 사람의 사진이어야 해요."
+                    ),
+                    faq(
+                            "체형분석",
+                            "사진으로 잰 치수가 실제와 달라요.",
+                            "옷의 두께, 자세, 사진 각도에 따라 오차가 생길 수 있어요. 치수를 잰 뒤 나오는 화면에서 가슴·허리·골반 선을 위아래로 끌어 몸에 맞게 조정하면 치수가 다시 계산돼요. 그래도 다르면 몸에 붙는 옷을 입고 찍은 사진으로 다시 분석해 주세요. 결과는 참고용이니 상품의 실측 사이즈도 함께 확인해 주세요."
+                    ),
+                    faq(
+                            "체형분석",
+                            "선택한 사진은 저장되나요?",
+                            "선택한 사진은 내 폰 안에서만 분석하고, 서버로 보내거나 앱에 저장하지 않아요. 분석이 끝나면 앱이 들고 있던 사진 정보를 바로 지워요. 저장되는 것은 설문 답변과 계산된 치수뿐이에요. 앨범에 있는 원본 사진은 그대로 남아 있어요."
+                    ),
+                    faq(
+                            "체형분석",
+                            "추천 사이즈 표시를 끄고 싶어요.",
+                            "「내 체형관리」 아래쪽의 체형 설정에서 「추천 사이즈 표시」, 「측정 권유 팝업」을 각각 켜고 끌 수 있어요. 「새 체형을 현재 체형으로 자동 선택」도 여기에서 바꿀 수 있어요."
+                    ),
+                    faq(
+                            "체형분석",
+                            "체형분석 결과와 실제 착용감이 다를 수 있나요?",
+                            "옷의 소재, 신축성, 개인 체형 차이에 따라 실제 착용감은 다를 수 있어요. 체형 맞춤 추천과 추천 사이즈는 참고용이니 상품 상세의 실측 사이즈도 함께 확인해 주세요."
                     ),
                     faq(
                             "주문/결제",
                             "어떤 결제 수단을 쓸 수 있나요?",
-                            "신용/체크카드, 카카오페이, 네이버페이로 결제할 수 있습니다. 결제 수단은 마이페이지 > 결제 수단에서 관리할 수 있습니다."
+                            "신용/체크카드로 결제할 수 있습니다. 결제 수단은 마이페이지 > 결제 수단에서 관리할 수 있습니다."
                     ),
                     faq(
                             "주문/결제",
@@ -418,96 +476,268 @@ public class MyPageStore {
                     faq(
                             "회원정보",
                             "회원 탈퇴는 어떻게 하나요?",
-                            "마이페이지 > 프로필 수정 하단의 「회원 탈퇴」에서 탈퇴할 수 있습니다. 탈퇴하면 주문 내역, 쿠폰, 리뷰 등 모든 정보가 삭제되며 복구할 수 없습니다."
+                            "마이페이지 > 프로필 수정 하단의 「회원 탈퇴」에서 탈퇴할 수 있습니다. 탈퇴하면 배송지, 쿠폰, 찜, 체형, 리뷰 등 모든 정보가 삭제되며 복구할 수 없습니다. 단, 주문 내역은 관련 법령에 따라 일정 기간 보관됩니다."
                     ),
                     faq(
                             "기타",
                             "문의 답변은 언제 받을 수 있나요?",
-                            "영업일 기준 1~2일 이내에 답변드립니다. 답변은 입력하신 이메일과 1:1 문의 > 문의내역에서 확인할 수 있습니다."
+                            "영업일 기준 1~2일 이내에 답변드립니다. 답변은 1:1 문의 > 문의내역에서 확인할 수 있습니다."
                     )
             )
     );
 
-    // 주문 / 리뷰 영구 저장
-    private static SharedPreferences storage;
+    // 계정별 영구 저장
+    // 한 계정의 기록(주문·리뷰·반품·배송지·카드·환불 계좌·문의·받은 쿠폰)을
+    // 같은 SharedPreferences의 "data@계정" 한 곳에 JSON으로 저장한다.
+    // 계정 이름은 다른 계정별 기록과 같은 BodyProfileStore.accountKey (비로그인은 guest)
+    private static final String STORAGE_NAME = "capstone_order_review_store";
+    private static final String DATA_KEY = "data@";
+    private static final String LEGACY_ORDERS = "orders";     // 예전: 계정 구분 없이 기기에 하나
+    private static final String LEGACY_REVIEWS = "reviews";
 
+    private static SharedPreferences storage;
+    private static Context appContext;
+    private static String loadedAccount;
+
+    /**
+     * 지금 로그인한 계정의 기록을 불러온다. 이미 그 계정이면 아무것도 안 한다.
+     * 계정이 바뀌었으면 이전 계정의 메모리 기록을 비우고 새 계정 것을 읽는다.
+     * (앱 시작, 로그인, 로그아웃, 주문 화면에서 부른다)
+     */
     public static synchronized void init(Context context) {
-        if (storage != null) {
+        appContext = context.getApplicationContext();
+        storage = appContext.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE);
+
+        String account = BodyProfileStore.accountKey(appContext);
+        if (account.equals(loadedAccount)) {
             return;
         }
 
-        storage = context.getApplicationContext()
-                .getSharedPreferences(
-                        "capstone_order_review_store",
-                        Context.MODE_PRIVATE
-                );
-
-        orders.clear();
-        reviews.clear();
+        clearMemory();
+        loadedAccount = account;
+        migrateLegacy(account);
 
         try {
-            JSONArray savedOrders = new JSONArray(
-                    storage.getString("orders", "[]")
-            );
-
-            for (int i = 0; i < savedOrders.length(); i++) {
-                JSONObject j = savedOrders.getJSONObject(i);
-
-                Order order = new Order(
-                        j.optString("no"),
-                        j.optString("date"),
-                        j.optString("brand"),
-                        j.optString("name"),
-                        j.optString("option"),
-                        j.optInt("quantity", 1),
-                        j.optInt("price"),
-                        j.optInt("status", STATUS_PAID),
-                        j.optString("courier"),
-                        j.optString("tracking")
-                );
-
-                order.reviewed = j.optBoolean("reviewed", false);
-                orders.add(order);
-            }
-
-            JSONArray savedReviews = new JSONArray(
-                    storage.getString("reviews", "[]")
-            );
-
-            for (int i = 0; i < savedReviews.length(); i++) {
-                JSONObject j = savedReviews.getJSONObject(i);
-
-                long id = j.optLong("id");
-
-                reviews.add(
-                        new MyReview(
-                                id,
-                                j.optString("orderNo"),
-                                j.optString("name"),
-                                j.optString("option"),
-                                (float) j.optDouble("rating"),
-                                j.optString("content"),
-                                j.optString("date")
-                        )
-                );
-
-                nextId = Math.max(nextId, id + 1);
-            }
-
+            JSONObject all = new JSONObject(storage.getString(DATA_KEY + account, "{}"));
+            readAll(all);
         } catch (Exception e) {
-            Log.e("MyPageStore", "주문/리뷰 불러오기 실패", e);
+            Log.e("MyPageStore", "내 기록 불러오기 실패", e);
         }
     }
 
-    private static synchronized void saveOrderReviews() {
-        if (storage == null) {
+    /** 메모리에 있는 모든 계정 기록을 비운다 (저장된 기록은 그대로) */
+    private static void clearMemory() {
+        user = new User("", "", "", "");
+        orders.clear();
+        claims.clear();
+        addresses.clear();
+        cards.clear();
+        reviews.clear();
+        inquiries.clear();
+        receivedCouponIds.clear();
+        usedCoupons.clear();
+        refundAccounts.clear();
+        kakaoPayLinked = false;
+        naverPayLinked = false;
+        nextId = 1;
+    }
+
+    /** 예전에 계정 구분 없이 저장한 주문·리뷰는 처음 불러오는 로그인 계정으로 한 번 옮긴다 */
+    private static void migrateLegacy(String account) {
+        if ("guest".equals(account)
+                || storage.contains(DATA_KEY + account)
+                || (!storage.contains(LEGACY_ORDERS) && !storage.contains(LEGACY_REVIEWS))) {
             return;
         }
 
-        JSONArray orderArray = new JSONArray();
-        JSONArray reviewArray = new JSONArray();
+        try {
+            JSONObject all = new JSONObject();
+            all.put("orders", new JSONArray(storage.getString(LEGACY_ORDERS, "[]")));
+            all.put("reviews", new JSONArray(storage.getString(LEGACY_REVIEWS, "[]")));
+            storage.edit()
+                    .putString(DATA_KEY + account, all.toString())
+                    .remove(LEGACY_ORDERS)
+                    .remove(LEGACY_REVIEWS)
+                    .apply();
+        } catch (Exception e) {
+            Log.e("MyPageStore", "예전 주문/리뷰 옮기기 실패", e);
+        }
+    }
+
+    private static void readAll(JSONObject all) throws Exception {
+        JSONArray savedOrders = all.optJSONArray("orders");
+        for (int i = 0; savedOrders != null && i < savedOrders.length(); i++) {
+            JSONObject j = savedOrders.getJSONObject(i);
+
+            Order order = new Order(
+                    j.optString("no"),
+                    j.optString("date"),
+                    j.optString("brand"),
+                    j.optString("name"),
+                    j.optString("option"),
+                    j.optInt("quantity", 1),
+                    j.optInt("price"),
+                    j.optInt("status", STATUS_PAID),
+                    j.optString("courier"),
+                    j.optString("tracking")
+            );
+
+            order.reviewed = j.optBoolean("reviewed", false);
+            order.groupNo = j.optString("group");
+            order.paidAmount = j.optInt("paid", -1);
+            order.couponName = j.optString("coupon");
+            order.productId = j.optInt("productId", -1);
+            order.serverProductId = j.optString("serverId");
+            order.payMethod = j.optString("pay");
+            order.cardCompany = j.optString("card");
+            order.installment = j.optString("installment");
+            order.receiver = j.optString("receiver");
+            order.receiverPhone = j.optString("receiverPhone");
+            order.shippingAddress = j.optString("address");
+            order.deliveryRequest = j.optString("request");
+            orders.add(order);
+        }
+
+        JSONArray savedReviews = all.optJSONArray("reviews");
+        for (int i = 0; savedReviews != null && i < savedReviews.length(); i++) {
+            JSONObject j = savedReviews.getJSONObject(i);
+
+            long id = j.optLong("id");
+
+            reviews.add(
+                    new MyReview(
+                            id,
+                            j.optString("orderNo"),
+                            j.optString("name"),
+                            j.optString("option"),
+                            (float) j.optDouble("rating"),
+                            j.optString("content"),
+                            j.optString("date")
+                    )
+            );
+
+            nextId = Math.max(nextId, id + 1);
+        }
+
+        JSONArray savedClaims = all.optJSONArray("claims");
+        for (int i = 0; savedClaims != null && i < savedClaims.length(); i++) {
+            JSONObject j = savedClaims.getJSONObject(i);
+
+            claims.add(
+                    new Claim(
+                            j.optString("no"),
+                            j.optString("type"),
+                            j.optString("orderNo"),
+                            j.optString("name"),
+                            j.optString("option"),
+                            j.optInt("price"),
+                            j.optString("date"),
+                            j.optString("reason"),
+                            j.optString("state")
+                    )
+            );
+            claims.get(claims.size() - 1).refund = j.optString("refund");
+        }
+
+        JSONArray savedAddresses = all.optJSONArray("addresses");
+        for (int i = 0; savedAddresses != null && i < savedAddresses.length(); i++) {
+            JSONObject j = savedAddresses.getJSONObject(i);
+
+            long id = j.optLong("id");
+
+            addresses.add(
+                    new Address(
+                            id,
+                            j.optString("label"),
+                            j.optString("receiver"),
+                            j.optString("phone"),
+                            j.optString("zipCode"),
+                            j.optString("address1"),
+                            j.optString("address2"),
+                            j.optString("request"),
+                            j.optBoolean("isDefault")
+                    )
+            );
+
+            nextId = Math.max(nextId, id + 1);
+        }
+
+        JSONArray savedCards = all.optJSONArray("cards");
+        for (int i = 0; savedCards != null && i < savedCards.length(); i++) {
+            JSONObject j = savedCards.getJSONObject(i);
+
+            long id = j.optLong("id");
+
+            cards.add(
+                    new PaymentCard(
+                            id,
+                            j.optString("company"),
+                            j.optString("lastFour"),
+                            j.optString("expiry"),
+                            j.optBoolean("isDefault")
+                    )
+            );
+
+            nextId = Math.max(nextId, id + 1);
+        }
+
+        JSONArray savedRefunds = all.optJSONArray("refundAccounts");
+        for (int i = 0; savedRefunds != null && i < savedRefunds.length(); i++) {
+            JSONObject j = savedRefunds.getJSONObject(i);
+
+            RefundAccount account = new RefundAccount(
+                    j.optString("bank"),
+                    j.optString("accountNo"),
+                    j.optString("holder")
+            );
+            account.isDefault = j.optBoolean("isDefault");
+            refundAccounts.add(account);
+        }
+
+        JSONArray savedInquiries = all.optJSONArray("inquiries");
+        for (int i = 0; savedInquiries != null && i < savedInquiries.length(); i++) {
+            JSONObject j = savedInquiries.getJSONObject(i);
+
+            inquiries.add(
+                    new Inquiry(
+                            j.optString("type"),
+                            j.optString("title"),
+                            j.optString("content"),
+                            j.optString("status"),
+                            j.optString("date")
+                    )
+            );
+        }
+
+        JSONArray savedCoupons = all.optJSONArray("coupons");
+        for (int i = 0; savedCoupons != null && i < savedCoupons.length(); i++) {
+            receivedCouponIds.add(savedCoupons.getString(i));
+        }
+
+        JSONObject savedUsed = all.optJSONObject("usedCoupons");
+        if (savedUsed != null) {
+            java.util.Iterator<String> ids = savedUsed.keys();
+            while (ids.hasNext()) {
+                String id = ids.next();
+                JSONObject u = savedUsed.getJSONObject(id);
+                usedCoupons.put(id, new String[]{u.optString("order"), u.optString("date")});
+            }
+        }
+
+        kakaoPayLinked = all.optBoolean("kakaoPay");
+        naverPayLinked = all.optBoolean("naverPay");
+    }
+
+    /** 지금 계정의 기록을 저장한다. 기록을 바꾸는 함수는 끝에서 이걸 부른다 */
+    private static synchronized void save() {
+        if (storage == null || loadedAccount == null) {
+            return;
+        }
 
         try {
+            JSONObject all = new JSONObject();
+
+            JSONArray orderArray = new JSONArray();
             for (Order order : orders) {
                 JSONObject j = new JSONObject();
 
@@ -522,10 +752,24 @@ public class MyPageStore {
                 j.put("reviewed", order.reviewed);
                 j.put("courier", order.courier);
                 j.put("tracking", order.trackingNo);
+                j.put("group", order.groupNo);
+                j.put("paid", order.paidAmount);
+                j.put("coupon", order.couponName);
+                j.put("productId", order.productId);
+                j.put("serverId", order.serverProductId);
+                j.put("pay", order.payMethod);
+                j.put("card", order.cardCompany);
+                j.put("installment", order.installment);
+                j.put("receiver", order.receiver);
+                j.put("receiverPhone", order.receiverPhone);
+                j.put("address", order.shippingAddress);
+                j.put("request", order.deliveryRequest);
 
                 orderArray.put(j);
             }
+            all.put("orders", orderArray);
 
+            JSONArray reviewArray = new JSONArray();
             for (MyReview review : reviews) {
                 JSONObject j = new JSONObject();
 
@@ -539,15 +783,224 @@ public class MyPageStore {
 
                 reviewArray.put(j);
             }
+            all.put("reviews", reviewArray);
+
+            JSONArray claimArray = new JSONArray();
+            for (Claim claim : claims) {
+                JSONObject j = new JSONObject();
+
+                j.put("no", claim.claimNo);
+                j.put("type", claim.type);
+                j.put("orderNo", claim.orderNo);
+                j.put("name", claim.productName);
+                j.put("option", claim.option);
+                j.put("price", claim.price);
+                j.put("date", claim.requestDate);
+                j.put("reason", claim.reason);
+                j.put("state", claim.state);
+                j.put("refund", claim.refund);
+
+                claimArray.put(j);
+            }
+            all.put("claims", claimArray);
+
+            JSONArray addressArray = new JSONArray();
+            for (Address address : addresses) {
+                JSONObject j = new JSONObject();
+
+                j.put("id", address.id);
+                j.put("label", address.label);
+                j.put("receiver", address.receiver);
+                j.put("phone", address.phone);
+                j.put("zipCode", address.zipCode);
+                j.put("address1", address.address1);
+                j.put("address2", address.address2);
+                j.put("request", address.request);
+                j.put("isDefault", address.isDefault);
+
+                addressArray.put(j);
+            }
+            all.put("addresses", addressArray);
+
+            JSONArray cardArray = new JSONArray();
+            for (PaymentCard card : cards) {
+                JSONObject j = new JSONObject();
+
+                j.put("id", card.id);
+                j.put("company", card.company);
+                j.put("lastFour", card.lastFour);
+                j.put("expiry", card.expiry);
+                j.put("isDefault", card.isDefault);
+
+                cardArray.put(j);
+            }
+            all.put("cards", cardArray);
+
+            JSONArray refundArray = new JSONArray();
+            for (RefundAccount account : refundAccounts) {
+                JSONObject j = new JSONObject();
+
+                j.put("bank", account.bank);
+                j.put("accountNo", account.accountNo);
+                j.put("holder", account.holder);
+                j.put("isDefault", account.isDefault);
+
+                refundArray.put(j);
+            }
+            all.put("refundAccounts", refundArray);
+
+            JSONArray inquiryArray = new JSONArray();
+            for (Inquiry inquiry : inquiries) {
+                JSONObject j = new JSONObject();
+
+                j.put("type", inquiry.type);
+                j.put("title", inquiry.title);
+                j.put("content", inquiry.content);
+                j.put("status", inquiry.status);
+                j.put("date", inquiry.date);
+
+                inquiryArray.put(j);
+            }
+            all.put("inquiries", inquiryArray);
+
+            all.put("coupons", new JSONArray(receivedCouponIds));
+
+            JSONObject usedObject = new JSONObject();
+            for (java.util.Map.Entry<String, String[]> e : usedCoupons.entrySet()) {
+                JSONObject u = new JSONObject();
+                u.put("order", e.getValue()[0]);
+                u.put("date", e.getValue()[1]);
+                usedObject.put(e.getKey(), u);
+            }
+            all.put("usedCoupons", usedObject);
+            all.put("kakaoPay", kakaoPayLinked);
+            all.put("naverPay", naverPayLinked);
 
             storage.edit()
-                    .putString("orders", orderArray.toString())
-                    .putString("reviews", reviewArray.toString())
+                    .putString(DATA_KEY + loadedAccount, all.toString())
                     .apply();
 
         } catch (Exception e) {
-            Log.e("MyPageStore", "주문/리뷰 저장 실패", e);
+            Log.e("MyPageStore", "내 기록 저장 실패", e);
         }
+    }
+
+    /** 이메일·전화번호가 바뀌어 계정 이름이 바뀌었다: 기록을 새 이름으로 옮긴다 */
+    public static synchronized void moveAccount(Context context, String from, String to) {
+        if (from.equals(to)) {
+            return;
+        }
+
+        SharedPreferences prefs = context.getApplicationContext()
+                .getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE);
+        String saved = prefs.getString(DATA_KEY + from, null);
+
+        if (saved != null) {
+            prefs.edit()
+                    .putString(DATA_KEY + to, saved)
+                    .remove(DATA_KEY + from)
+                    .apply();
+        }
+
+        if (from.equals(loadedAccount)) {
+            loadedAccount = to;   // 메모리의 기록은 그대로 새 계정 것이 된다
+        }
+    }
+
+    /** 탈퇴한 회원의 주문·반품 기록을 개인정보 없이 보관하는 곳 (어느 계정에도 연결하지 않고, 화면에서 읽지 않는다) */
+    private static final String ARCHIVE_KEY = "archived_orders";
+
+    /**
+     * 탈퇴: 이 계정의 기록을 지운다 (메모리에 불러온 것도 비운다).
+     * 다만 주문·반품 기록은 법령에 따라 보관해야 하므로, 이름·번호·주소 같은 개인정보와 계정 연결을 뺀 채
+     * 따로 남긴다 (ARCHIVE_KEY). 배송지·카드·환불 계좌·문의·리뷰·쿠폰은 모두 지운다.
+     */
+    public static synchronized void deleteAccount(Context context, String account) {
+        SharedPreferences prefs = context.getApplicationContext()
+                .getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE);
+
+        archiveOrders(prefs, prefs.getString(DATA_KEY + account, null));
+
+        prefs.edit().remove(DATA_KEY + account).apply();
+
+        if (account.equals(loadedAccount)) {
+            clearMemory();
+            loadedAccount = null;
+        }
+    }
+
+    /** 저장된 기록(JSON)에서 주문·반품만 골라, 개인정보를 뺀 보관용 기록으로 덧붙인다 */
+    private static void archiveOrders(SharedPreferences prefs, String savedData) {
+
+        if (savedData == null) {
+            return;
+        }
+
+        try {
+            JSONObject all = new JSONObject(savedData);
+            JSONArray orders = all.optJSONArray("orders");
+            JSONArray claims = all.optJSONArray("claims");
+
+            if (orders == null || orders.length() == 0) {
+                return;
+            }
+
+            JSONArray archive = new JSONArray(prefs.getString(ARCHIVE_KEY, "[]"));
+            long now = System.currentTimeMillis();
+
+            for (int i = 0; i < orders.length(); i++) {
+                JSONObject o = orders.getJSONObject(i);
+
+                // 거래 내용만 남긴다 (받는 사람·연락처·주소·요청사항은 남기지 않는다)
+                JSONObject record = new JSONObject();
+                record.put("no", o.optString("no"));
+                record.put("date", o.optString("date"));
+                record.put("brand", o.optString("brand"));
+                record.put("name", o.optString("name"));
+                record.put("option", o.optString("option"));
+                record.put("quantity", o.optInt("quantity", 1));
+                record.put("price", o.optInt("price"));
+                record.put("status", o.optInt("status"));
+                record.put("group", o.optString("group"));
+                record.put("paid", o.optInt("paid", -1));
+                record.put("pay", o.optString("pay"));
+                record.put("archivedAt", now);
+
+                // 같은 주문의 반품·교환·취소 기록 (사유 글에는 개인정보가 섞일 수 있어 뺀다)
+                JSONArray orderClaims = new JSONArray();
+                for (int j = 0; claims != null && j < claims.length(); j++) {
+                    JSONObject c = claims.getJSONObject(j);
+                    if (o.optString("no").equals(c.optString("orderNo"))) {
+                        JSONObject claim = new JSONObject();
+                        claim.put("no", c.optString("no"));
+                        claim.put("type", c.optString("type"));
+                        claim.put("date", c.optString("date"));
+                        claim.put("state", c.optString("state"));
+                        orderClaims.put(claim);
+                    }
+                }
+                record.put("claims", orderClaims);
+
+                archive.put(record);
+            }
+
+            prefs.edit().putString(ARCHIVE_KEY, archive.toString()).apply();
+
+        } catch (Exception e) {
+            Log.e("MyPageStore", "주문 기록 보관 실패", e);
+        }
+    }
+
+    /** 예전 형식 이름의 기록을, 새 이름에 기록이 없을 때만 옮긴다 */
+    public static synchronized void adoptAccount(Context context, String from, String to) {
+        SharedPreferences prefs = context.getApplicationContext()
+                .getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE);
+
+        if (from.equals(to) || prefs.contains(DATA_KEY + to)) {
+            return;
+        }
+
+        moveAccount(context, from, to);
     }
 
     // 회원정보
@@ -575,19 +1028,14 @@ public class MyPageStore {
         user.phone = phone;
     }
 
-    public static boolean checkPassword(String password) {
-        // DB 연동 전 임시 처리
-        return true;
-    }
+    /** 로그아웃·탈퇴: 메모리의 기록을 모두 비우고, 지금 계정(비로그인)의 기록을 다시 불러온다 */
+    public static synchronized void logout() {
+        clearMemory();
+        loadedAccount = null;
 
-    public static void changePassword(String newPassword) {
-        user.password = newPassword;
-    }
-
-    public static void logout() {
-        user = new User("", "", "", "");
-        receivedCouponIds.clear();
-        inquiries.clear();
+        if (appContext != null) {
+            init(appContext);
+        }
     }
 
     // 문의
@@ -598,8 +1046,7 @@ public class MyPageStore {
     public static void addInquiry(
             String type,
             String title,
-            String content,
-            String email
+            String content
     ) {
         inquiries.add(
                 0,
@@ -607,11 +1054,12 @@ public class MyPageStore {
                         type,
                         title,
                         content,
-                        email,
                         INQUIRY_WAITING,
                         today()
                 )
         );
+
+        save();
     }
 
     // 쿠폰
@@ -619,8 +1067,45 @@ public class MyPageStore {
         return receivedCouponIds.contains(couponId);
     }
 
+    public static boolean isCouponUsed(String couponId) {
+        return usedCoupons.containsKey(couponId);
+    }
+
+    public static String couponUsedDate(String couponId) {
+        String[] used = usedCoupons.get(couponId);
+        return used == null ? "" : used[1];
+    }
+
+    public static void useCoupon(String couponId, String groupNo) {
+        if (couponId == null) {
+            return;
+        }
+        usedCoupons.put(couponId, new String[]{groupNo, today()});
+        save();
+    }
+
+    private static void restoreCouponIfAllCanceled(String groupNo) {
+        for (Order order : orders) {
+            if (order.getGroupNo().equals(groupNo) && order.status != STATUS_CANCELED) {
+                return;
+            }
+        }
+        java.util.Iterator<java.util.Map.Entry<String, String[]>> it = usedCoupons.entrySet().iterator();
+        while (it.hasNext()) {
+            if (groupNo.equals(it.next().getValue()[0])) {
+                it.remove();
+            }
+        }
+    }
+
     public static boolean receiveCoupon(String couponId) {
-        return receivedCouponIds.add(couponId);
+        boolean added = receivedCouponIds.add(couponId);
+
+        if (added) {
+            save();
+        }
+
+        return added;
     }
 
     // 주문
@@ -634,14 +1119,30 @@ public class MyPageStore {
         }
 
         orders.add(0, order);
-        saveOrderReviews();
+        save();
+    }
+
+    public static synchronized void addOrders(List<Order> newOrders) {
+        for (int i = newOrders.size() - 1; i >= 0; i--) {
+            Order order = newOrders.get(i);
+            if (order != null && findOrder(order.orderNo) == null) {
+                orders.add(0, order);
+            }
+        }
+        save();
     }
 
     public static List<Order> getOrders(int status) {
+        return getOrders(status, 0);
+    }
+
+    public static List<Order> getOrders(int status, int months) {
         List<Order> result = new ArrayList<>();
+        String from = months > 0 ? monthsAgo(months) : "";
 
         for (Order order : orders) {
-            if (status == STATUS_ALL || order.status == status) {
+            if ((status == STATUS_ALL || order.status == status)
+                    && order.orderDate.compareTo(from) >= 0) {
                 result.add(order);
             }
         }
@@ -651,6 +1152,22 @@ public class MyPageStore {
 
     public static int countOrders(int status) {
         return getOrders(status).size();
+    }
+
+    public static int countOrders(int status, int months) {
+        return getOrders(status, months).size();
+    }
+
+    public static final int RECENT_MONTHS = 3;
+
+    private static String monthsAgo(int months) {
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.add(java.util.Calendar.MONTH, -months);
+        return new SimpleDateFormat("yyyy.MM.dd", Locale.KOREA).format(calendar.getTime());
+    }
+
+    public static boolean needsRefundAccount(Order order) {
+        return order != null && !order.paidByCard() && order.status != STATUS_PENDING;
     }
 
     public static Order findOrder(String orderNo) {
@@ -683,6 +1200,15 @@ public class MyPageStore {
             String type,
             String reason
     ) {
+        requestClaim(order, type, reason, "");
+    }
+
+    public static void requestClaim(
+            Order order,
+            String type,
+            String reason,
+            String refund
+    ) {
         if (order == null) {
             return;
         }
@@ -692,6 +1218,7 @@ public class MyPageStore {
         if (CLAIM_CANCEL.equals(type)) {
             order.status = STATUS_CANCELED;
             state = CLAIM_STATE_DONE;
+            restoreCouponIfAllCanceled(order.getGroupNo());
 
         } else if (CLAIM_RETURN.equals(type)) {
             order.status = STATUS_RETURNING;
@@ -719,8 +1246,9 @@ public class MyPageStore {
                         state
                 )
         );
+        claims.get(0).refund = refund == null ? "" : refund;
 
-        saveOrderReviews();
+        save();
     }
 
     public static List<Claim> getClaims(String type) {
@@ -746,7 +1274,7 @@ public class MyPageStore {
 
         if (order != null) {
             order.status = STATUS_DONE;
-            saveOrderReviews();
+            save();
         }
     }
 
@@ -805,16 +1333,19 @@ public class MyPageStore {
         }
 
         ensureDefaultAddress();
+        save();
     }
 
     public static void setDefaultAddress(Address address) {
         clearDefaultAddress();
         address.isDefault = true;
+        save();
     }
 
     public static void deleteAddress(Address address) {
         addresses.remove(address);
         ensureDefaultAddress();
+        save();
     }
 
     private static void clearDefaultAddress() {
@@ -858,6 +1389,8 @@ public class MyPageStore {
                         cards.isEmpty()
                 )
         );
+
+        save();
     }
 
     public static void setDefaultCard(PaymentCard card) {
@@ -866,6 +1399,7 @@ public class MyPageStore {
         }
 
         card.isDefault = true;
+        save();
     }
 
     public static void deleteCard(PaymentCard card) {
@@ -874,6 +1408,8 @@ public class MyPageStore {
         if (card.isDefault && !cards.isEmpty()) {
             cards.get(0).isDefault = true;
         }
+
+        save();
     }
 
     public static boolean isKakaoPayLinked() {
@@ -882,6 +1418,7 @@ public class MyPageStore {
 
     public static void setKakaoPayLinked(boolean linked) {
         kakaoPayLinked = linked;
+        save();
     }
 
     public static boolean isNaverPayLinked() {
@@ -890,19 +1427,55 @@ public class MyPageStore {
 
     public static void setNaverPayLinked(boolean linked) {
         naverPayLinked = linked;
+        save();
     }
 
     // 환불 계좌
+    public static List<RefundAccount> getRefundAccounts() {
+        return new ArrayList<>(refundAccounts);
+    }
+
     public static RefundAccount getRefundAccount() {
-        return refundAccount;
+        for (RefundAccount a : refundAccounts) {
+            if (a.isDefault) {
+                return a;
+            }
+        }
+        return null;
     }
 
-    public static void saveRefundAccount(RefundAccount account) {
-        refundAccount = account;
+    public static void addRefundAccount(RefundAccount account) {
+        account.isDefault = refundAccounts.isEmpty();
+        refundAccounts.add(account);
+        save();
     }
 
-    public static void deleteRefundAccount() {
-        refundAccount = null;
+    public static boolean hasRefundAccount(String bank, String accountNo) {
+        for (RefundAccount a : refundAccounts) {
+            if (a.bank.equals(bank) && a.accountNo.equals(accountNo)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void setDefaultRefundAccount(RefundAccount account) {
+        for (RefundAccount a : refundAccounts) {
+            a.isDefault = false;
+        }
+
+        account.isDefault = true;
+        save();
+    }
+
+    public static void deleteRefundAccount(RefundAccount account) {
+        refundAccounts.remove(account);
+
+        if (account.isDefault && !refundAccounts.isEmpty()) {
+            refundAccounts.get(0).isDefault = true;
+        }
+
+        save();
     }
 
     // 리뷰
@@ -955,7 +1528,7 @@ public class MyPageStore {
         );
 
         order.reviewed = true;
-        saveOrderReviews();
+        save();
     }
 
     public static void updateReview(
@@ -971,7 +1544,7 @@ public class MyPageStore {
         review.content = content;
         review.writtenDate = today();
 
-        saveOrderReviews();
+        save();
     }
 
     public static void deleteReview(MyReview review) {
@@ -987,7 +1560,7 @@ public class MyPageStore {
             order.reviewed = false;
         }
 
-        saveOrderReviews();
+        save();
     }
 
     // 공지사항 / FAQ
