@@ -24,7 +24,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
+import com.example.capstone.login.LoginGate;
+import com.example.capstone.login.LoginSession;
 import com.example.capstone.adapter.CartAdapter;
+import com.example.capstone.data.BodyProfileStore;
+import com.example.capstone.data.CartStore;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.Product;
@@ -49,6 +53,7 @@ public class CartActivity extends AppCompatActivity {
     private TextView totalPriceText;
     private TextView totalQuantityText;
 
+    private LinearLayout cartContent;
     private FrameLayout cartFrame;
     private LinearLayout emptyLayout;
     private LinearLayout recommendationSection;
@@ -59,6 +64,7 @@ public class CartActivity extends AppCompatActivity {
     private CheckBox selectAllCheck;
 
     private CartAdapter cartAdapter;
+
     private final List<Product> cartProducts = new ArrayList<>();
 
     @Override
@@ -74,12 +80,14 @@ public class CartActivity extends AppCompatActivity {
         recyclerCart.setLayoutManager(
                 new LinearLayoutManager(this)
         );
+
         recyclerCart.setNestedScrollingEnabled(true);
 
         cartAdapter = new CartAdapter(
                 cartProducts,
                 this::showCartProducts
         );
+
         recyclerCart.setAdapter(cartAdapter);
 
         setupCartScreen();
@@ -91,14 +99,20 @@ public class CartActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        BodyProfileStore.syncActiveProfile(this);
         showCartProducts();
     }
 
+    // 장바구니 화면 구성
     private void setupCartScreen() {
-        ViewGroup parent = (ViewGroup) recyclerCart.getParent();
+
+        ViewGroup parent =
+                (ViewGroup) recyclerCart.getParent();
+
         if (parent == null) return;
 
         int index = parent.indexOfChild(recyclerCart);
+
         ViewGroup.LayoutParams oldParams =
                 recyclerCart.getLayoutParams();
 
@@ -107,22 +121,31 @@ public class CartActivity extends AppCompatActivity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(WHITE);
+
+        cartContent = root;
+
         parent.addView(root, index, oldParams);
 
         titleCount = findViewById(R.id.textCartTitle);
 
         root.addView(divider());
+
         createSelectAllRow(root);
 
         cartFrame = new FrameLayout(this);
+
         root.addView(
                 cartFrame,
-                new LinearLayout.LayoutParams(-1, 0, 1f)
+                new LinearLayout.LayoutParams(
+                        -1, 0, 1f
+                )
         );
 
         cartFrame.addView(
                 recyclerCart,
-                new FrameLayout.LayoutParams(-1, -1)
+                new FrameLayout.LayoutParams(
+                        -1, -1
+                )
         );
 
         createEmptyView();
@@ -131,6 +154,7 @@ public class CartActivity extends AppCompatActivity {
     }
 
     private void createSelectAllRow(LinearLayout root) {
+
         selectAllRow = new LinearLayout(this);
         selectAllRow.setOrientation(LinearLayout.HORIZONTAL);
         selectAllRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -138,7 +162,9 @@ public class CartActivity extends AppCompatActivity {
 
         root.addView(
                 selectAllRow,
-                new LinearLayout.LayoutParams(-1, dp(48))
+                new LinearLayout.LayoutParams(
+                        -1, dp(48)
+                )
         );
 
         selectAllCheck = new CheckBox(this);
@@ -152,11 +178,10 @@ public class CartActivity extends AppCompatActivity {
         selectAllCheck.setText("전체 선택");
 
         selectAllCheck.setOnClickListener(v -> {
+
             boolean checked = selectAllCheck.isChecked();
 
-            for (Product product : cartProducts) {
-                product.setCartSelected(checked);
-            }
+            CartStore.setAllSelected(this, checked);
 
             showCartProducts();
         });
@@ -167,60 +192,87 @@ public class CartActivity extends AppCompatActivity {
         root.addView(selectAllDivider);
     }
 
+    // 장바구니가 비어 있을 때
     private void createEmptyView() {
+
         emptyLayout = new LinearLayout(this);
         emptyLayout.setOrientation(LinearLayout.VERTICAL);
         emptyLayout.setGravity(Gravity.CENTER);
         emptyLayout.setBackgroundColor(WHITE);
 
         ImageView icon = new ImageView(this);
+
         icon.setImageResource(R.drawable.ic_cart_empty);
 
         LinearLayout.LayoutParams iconParams =
-                new LinearLayout.LayoutParams(dp(56), dp(56));
+                new LinearLayout.LayoutParams(
+                        dp(56), dp(56)
+                );
+
         iconParams.bottomMargin = dp(12);
+
         emptyLayout.addView(icon, iconParams);
 
         TextView message = makeText(
                 "장바구니에 담긴 상품이 없어요",
                 15, true, BLACK
         );
+
         message.setGravity(Gravity.CENTER);
         emptyLayout.addView(message);
 
         TextView subMessage = makeText(
                 "마음에 드는 상품을 담아보세요",
-                12, false, GRAY
+                13, false, GRAY
         );
+
         subMessage.setGravity(Gravity.CENTER);
-        emptyLayout.addView(
-                subMessage,
-                new LinearLayout.LayoutParams(-1, dp(32))
-        );
+
+        LinearLayout.LayoutParams subParams =
+                new LinearLayout.LayoutParams(
+                        -2, -2
+                );
+
+        subParams.topMargin = dp(6);
+
+        emptyLayout.addView(subMessage, subParams);
 
         TextView browseButton = makeText(
                 "상품 둘러보기",
                 13, false, BLACK
         );
+
         browseButton.setGravity(Gravity.CENTER);
         browseButton.setBackground(
                 rounded(WHITE, BORDER, 24)
         );
 
         LinearLayout.LayoutParams buttonParams =
-                new LinearLayout.LayoutParams(dp(132), dp(42));
-        buttonParams.topMargin = dp(18);
+                new LinearLayout.LayoutParams(
+                        dp(132), dp(42)
+                );
 
-        emptyLayout.addView(browseButton, buttonParams);
+        buttonParams.topMargin = dp(20);
+
+        emptyLayout.addView(
+                browseButton, buttonParams
+        );
+
         browseButton.setOnClickListener(v -> goHome());
 
         cartFrame.addView(
                 emptyLayout,
-                new FrameLayout.LayoutParams(-1, -1)
+                new FrameLayout.LayoutParams(
+                        -1, -1
+                )
         );
     }
 
-    private void createRecommendationSection(LinearLayout root) {
+    // 추천 상품 영역
+    private void createRecommendationSection(
+            LinearLayout root
+    ) {
+
         recommendationSection = new LinearLayout(this);
         recommendationSection.setOrientation(
                 LinearLayout.VERTICAL
@@ -229,35 +281,46 @@ public class CartActivity extends AppCompatActivity {
 
         root.addView(
                 recommendationSection,
-                new LinearLayout.LayoutParams(-1, dp(238))
+                new LinearLayout.LayoutParams(
+                        -1, dp(238)
+                )
         );
 
         View topGap = new View(this);
         topGap.setBackgroundColor(LIGHT);
+
         recommendationSection.addView(
                 topGap,
-                new LinearLayout.LayoutParams(-1, dp(6))
+                new LinearLayout.LayoutParams(
+                        -1, dp(6)
+                )
         );
 
         TextView title = makeText(
                 "이런 상품은 어때요?",
                 16, true, BLACK
         );
+
         title.setGravity(Gravity.CENTER_VERTICAL);
         title.setPadding(dp(16), 0, 0, 0);
 
         recommendationSection.addView(
                 title,
-                new LinearLayout.LayoutParams(-1, dp(52))
+                new LinearLayout.LayoutParams(
+                        -1, dp(52)
+                )
         );
 
         HorizontalScrollView scroll =
                 new HorizontalScrollView(this);
+
         scroll.setHorizontalScrollBarEnabled(false);
 
         recommendationSection.addView(
                 scroll,
-                new LinearLayout.LayoutParams(-1, 0, 1f)
+                new LinearLayout.LayoutParams(
+                        -1, 0, 1f
+                )
         );
 
         recommendationRow = new LinearLayout(this);
@@ -269,10 +332,12 @@ public class CartActivity extends AppCompatActivity {
         );
 
         scroll.addView(recommendationRow);
+
         renderRecommendations();
     }
 
     private void renderRecommendations() {
+
         if (recommendationRow == null) return;
 
         recommendationRow.removeAllViews();
@@ -280,7 +345,8 @@ public class CartActivity extends AppCompatActivity {
         int added = 0;
 
         for (Product product : DummyData.getProducts()) {
-            if (product.isInCart()) continue;
+
+            if (CartStore.contains(this, product)) continue;
             if (added >= 6) break;
 
             added++;
@@ -289,16 +355,23 @@ public class CartActivity extends AppCompatActivity {
     }
 
     private void createRecommendationCard(Product product) {
+
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
 
         LinearLayout.LayoutParams cardParams =
-                new LinearLayout.LayoutParams(dp(126), -2);
-        cardParams.setMargins(dp(4), 0, dp(4), 0);
+                new LinearLayout.LayoutParams(
+                        dp(126), -2
+                );
+
+        cardParams.setMargins(
+                dp(4), 0, dp(4), 0
+        );
 
         recommendationRow.addView(card, cardParams);
 
         FrameLayout imageFrame = new FrameLayout(this);
+
         imageFrame.setBackgroundColor(
                 product.getId() % 2 == 0
                         ? 0xFFE7E7E7
@@ -307,7 +380,9 @@ public class CartActivity extends AppCompatActivity {
 
         card.addView(
                 imageFrame,
-                new LinearLayout.LayoutParams(-1, dp(105))
+                new LinearLayout.LayoutParams(
+                        -1, dp(105)
+                )
         );
 
         TextView category = makeText(
@@ -316,17 +391,21 @@ public class CartActivity extends AppCompatActivity {
                         : product.getCategory(),
                 12, false, GRAY
         );
+
         category.setGravity(Gravity.CENTER);
 
         imageFrame.addView(
                 category,
-                new FrameLayout.LayoutParams(-1, -1)
+                new FrameLayout.LayoutParams(
+                        -1, -1
+                )
         );
 
         TextView brand = makeText(
                 product.getBrand(),
                 10, false, GRAY
         );
+
         brand.setPadding(0, dp(7), 0, 0);
         card.addView(brand);
 
@@ -334,22 +413,26 @@ public class CartActivity extends AppCompatActivity {
                 product.getName(),
                 12, false, BLACK
         );
+
         name.setSingleLine(true);
         name.setEllipsize(
                 android.text.TextUtils.TruncateAt.END
         );
+
         card.addView(name);
 
         TextView price = makeText(
                 formatPrice(product.getPrice()),
                 12, true, BLACK
         );
+
         card.addView(price);
 
         card.setOnClickListener(v -> openDetail(product));
     }
 
     private void openDetail(Product product) {
+
         Intent intent = new Intent(
                 this, ProductDetailActivity.class
         );
@@ -358,25 +441,30 @@ public class CartActivity extends AppCompatActivity {
         intent.putExtra("product_brand", product.getBrand());
         intent.putExtra("product_name", product.getName());
         intent.putExtra("product_price", product.getPrice());
-        intent.putExtra(
-                "server_product_id",
-                product.getServerId()
-        );
+        intent.putExtra("server_product_id", product.getServerId());
 
         startActivity(intent);
     }
 
+    // 총 상품 금액 영역
     private void createSummarySection(LinearLayout root) {
+
         summaryLayout = new LinearLayout(this);
-        summaryLayout.setOrientation(LinearLayout.VERTICAL);
+        summaryLayout.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
         summaryLayout.setPadding(
                 dp(18), dp(12), dp(18), dp(12)
         );
+
         summaryLayout.setBackgroundColor(WHITE);
 
         root.addView(
                 summaryLayout,
-                new LinearLayout.LayoutParams(-1, dp(82))
+                new LinearLayout.LayoutParams(
+                        -1, dp(82)
+                )
         );
 
         LinearLayout quantityRow = new LinearLayout(this);
@@ -384,20 +472,26 @@ public class CartActivity extends AppCompatActivity {
 
         summaryLayout.addView(
                 quantityRow,
-                new LinearLayout.LayoutParams(-1, dp(26))
+                new LinearLayout.LayoutParams(
+                        -1, dp(26)
+                )
         );
 
         TextView quantityLabel = makeText(
                 "선택 상품", 13, false, GRAY
         );
+
         quantityRow.addView(
                 quantityLabel,
-                new LinearLayout.LayoutParams(0, -2, 1f)
+                new LinearLayout.LayoutParams(
+                        0, -2, 1f
+                )
         );
 
         totalQuantityText = makeText(
                 "0개", 13, false, BLACK
         );
+
         quantityRow.addView(totalQuantityText);
 
         LinearLayout priceRow = new LinearLayout(this);
@@ -405,29 +499,38 @@ public class CartActivity extends AppCompatActivity {
 
         summaryLayout.addView(
                 priceRow,
-                new LinearLayout.LayoutParams(-1, dp(32))
+                new LinearLayout.LayoutParams(
+                        -1, dp(32)
+                )
         );
 
         TextView totalLabel = makeText(
                 "총 상품 금액", 15, true, BLACK
         );
+
         priceRow.addView(
                 totalLabel,
-                new LinearLayout.LayoutParams(0, -2, 1f)
+                new LinearLayout.LayoutParams(
+                        0, -2, 1f
+                )
         );
 
         totalPriceText = makeText(
                 "0원", 17, true, BLACK
         );
+
         priceRow.addView(totalPriceText);
     }
 
+    // 검은색 주문 버튼
     private void setupOrderButton() {
+
         if (btnGoOrder == null) return;
 
         btnGoOrder.setBackgroundTintList(
                 ColorStateList.valueOf(BLACK)
         );
+
         btnGoOrder.setTextColor(WHITE);
         btnGoOrder.setTextSize(16);
         btnGoOrder.setAllCaps(false);
@@ -437,18 +540,25 @@ public class CartActivity extends AppCompatActivity {
         );
 
         btnGoOrder.setOnClickListener(v -> {
-            StringBuilder productNames = new StringBuilder();
+
+            // 구매는 로그인해야 한다. 비회원이면 로그인 안내 → 로그인(가입) 뒤 장바구니로 돌아오고,
+            // 다시 주문하기를 누르면 체형 측정 확인 창이 뜬다 (비회원 장바구니는 로그인 계정 장바구니에 합쳐진다)
+            if (!LoginSession.isLoggedIn(this)) {
+                LoginGate.require(this, "로그인하면 구매할 수 있어요.", () -> { });
+                return;
+            }
+
+            StringBuilder productNames =
+                    new StringBuilder();
 
             int totalQuantity = 0;
             int totalPrice = 0;
-
             List<Product> ordered = new ArrayList<>();
 
-            for (Product product : DummyData.getProducts()) {
-                if (!product.isInCart()) continue;
-                if (!product.isCartSelected()) continue;
+            for (Product product : CartStore.selectedLines(this)) {
 
                 int quantity = product.getCartQuantity();
+
                 if (quantity <= 0) continue;
 
                 ordered.add(product);
@@ -464,6 +574,7 @@ public class CartActivity extends AppCompatActivity {
             }
 
             if (totalQuantity == 0) {
+
                 Toast.makeText(
                         this,
                         cartProducts.isEmpty()
@@ -471,54 +582,52 @@ public class CartActivity extends AppCompatActivity {
                                 : "주문할 상품을 선택해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
+
                 return;
             }
 
             final String names = productNames.toString();
-            final String option =
-                    DummyData.orderedOptionText(ordered);
+            final String option = DummyData.orderedOptionText(ordered);
+            // 주문할 장바구니 줄 번호. 결제를 마치면 이 줄만 장바구니에서 빠진다
+            final long[] lineIds = new long[ordered.size()];
+            for (int i = 0; i < lineIds.length; i++) {
+                lineIds[i] = ordered.get(i).getCartLineId();
+            }
             final int quantity = totalQuantity;
             final int price = totalPrice;
 
-            List<FitResult> warnings =
-                    SizeFitChecker.checkCart();
-
-            if (!warnings.isEmpty()) {
-                SizeWarningDialog.show(
-                        CartActivity.this,
-                        warnings,
-                        SizeWarningDialog.Action.ORDER,
-                        () -> goOrder(
-                                names, option, quantity, price
-                        )
-                );
-                return;
-            }
-
-            goOrder(names, option, quantity, price);
+            goOrder(names, option, quantity, price, lineIds);
         });
     }
 
+    // 주문 화면으로 이동
     private void goOrder(
             String productNames,
             String productOption,
             int totalQuantity,
-            int totalPrice
+            int totalPrice,
+            long[] lineIds
     ) {
+
         Intent intent = new Intent(
                 CartActivity.this,
                 OrderActivity.class
         );
 
+        intent.putExtra(OrderActivity.EXTRA_CART_LINE_IDS, lineIds);
+
         intent.putExtra(
                 "productNames", productNames
         );
+
         intent.putExtra(
                 "productOption", productOption
         );
+
         intent.putExtra(
                 "totalQuantity", totalQuantity
         );
+
         intent.putExtra(
                 "totalPrice", totalPrice
         );
@@ -526,7 +635,10 @@ public class CartActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    // 장바구니 상품과 금액 갱신
     private void showCartProducts() {
+
+        // 비회원도 담은 상품을 볼 수 있다 (주문하기를 누를 때 로그인 안내)
         cartProducts.clear();
 
         int cartQuantity = 0;
@@ -534,10 +646,11 @@ public class CartActivity extends AppCompatActivity {
         int totalPrice = 0;
         int selectedCount = 0;
 
-        for (Product product : DummyData.getProducts()) {
-            if (!product.isInCart()) continue;
+        // 앱을 꺼도 남는 계정별 장바구니 (같은 상품도 옵션이 다르면 줄이 따로)
+        for (Product product : CartStore.lines(this)) {
 
             int quantity = product.getCartQuantity();
+
             if (quantity <= 0) continue;
 
             cartProducts.add(product);
@@ -568,8 +681,7 @@ public class CartActivity extends AppCompatActivity {
                             && selectedCount == cartProducts.size()
             );
             selectAllCheck.setText(
-                    "전체 선택 (" + selectedCount
-                            + "/" + cartProducts.size() + ")"
+                    "전체 선택 (" + selectedCount + "/" + cartProducts.size() + ")"
             );
         }
 
@@ -604,9 +716,7 @@ public class CartActivity extends AppCompatActivity {
         }
 
         if (recommendationSection != null) {
-            recommendationSection.setVisibility(
-                    empty ? View.VISIBLE : View.GONE
-            );
+            recommendationSection.setVisibility(View.GONE);
         }
 
         if (summaryLayout != null) {
@@ -616,6 +726,7 @@ public class CartActivity extends AppCompatActivity {
         }
 
         if (btnGoOrder != null) {
+
             btnGoOrder.setVisibility(
                     empty ? View.GONE : View.VISIBLE
             );
@@ -634,7 +745,9 @@ public class CartActivity extends AppCompatActivity {
         renderRecommendations();
     }
 
+    // 홈 이동
     private void goHome() {
+
         Intent intent = new Intent(
                 this, MainActivity.class
         );
@@ -646,12 +759,14 @@ public class CartActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    // 공통 UI 함수
     private TextView makeText(
             String text,
             int size,
             boolean bold,
             int color
     ) {
+
         TextView view = new TextView(this);
 
         view.setText(text);
@@ -673,6 +788,7 @@ public class CartActivity extends AppCompatActivity {
             int stroke,
             int radius
     ) {
+
         GradientDrawable drawable =
                 new GradientDrawable();
 
@@ -684,23 +800,28 @@ public class CartActivity extends AppCompatActivity {
     }
 
     private View divider() {
+
         View line = new View(this);
         line.setBackgroundColor(BORDER);
 
         line.setLayoutParams(
-                new LinearLayout.LayoutParams(-1, dp(1))
+                new LinearLayout.LayoutParams(
+                        -1, dp(1)
+                )
         );
 
         return line;
     }
 
     private String formatPrice(int price) {
+
         return NumberFormat
                 .getNumberInstance(Locale.KOREA)
                 .format(price) + "원";
     }
 
     private int dp(float value) {
+
         return Math.round(
                 value * getResources()
                         .getDisplayMetrics().density
