@@ -14,6 +14,7 @@ import com.example.capstone.data.ProfilePhotoStore;
 import com.example.capstone.login.AuthCode;
 import com.example.capstone.login.LoginSession;
 import com.example.capstone.ui.AppDialog;
+import com.example.capstone.ui.EmailCheck;
 import com.example.capstone.ui.EmailDomainInput;
 
 import android.content.Context;
@@ -206,7 +207,7 @@ public class EditProfileActivity extends AppCompatActivity {
         btnSendMail.setOnClickListener(v -> {
             String email = input.email();
             if (email == null || email.isEmpty()) {
-                toast(input.isDomainMissing() ? "이메일 주소(@ 뒤)를 선택해주세요." : "이메일 형식이 올바르지 않습니다.");
+                toast(input.isDomainMissing() ? "이메일 주소(@ 뒤)를 선택해주세요." : EmailCheck.FORMAT_ERROR);
                 return;
             }
             if (email.equals(user.email)) {
@@ -218,15 +219,35 @@ public class EditProfileActivity extends AppCompatActivity {
                 toast("이미 가입된 이메일입니다.");
                 return;
             }
-            // 메일 서버가 없어서 인증번호를 안내 창에 보여 준다 (다시 받으면 시간도 처음부터)
-            authCode.issue(this, email, AuthCode.maskEmail(email));
-            sent[0] = email;
-            etCode.setText("");
-            btnSendMail.setText("인증번호 다시 받기");
-            tvNotice.setText("안내 창에 보이는 인증번호 4자리를 입력해 주십시오. (5분 동안 유효)");
-            tvNotice.setVisibility(View.VISIBLE);
-            layoutCode.setVisibility(View.VISIBLE);
-            setVerifyEnabled(btnVerify, true);
+            // 형식과 도메인을 가입·결제 이메일과 같은 방식(EmailCheck)으로 확인한 뒤 인증번호를 보낸다
+            btnSendMail.setEnabled(false);
+            EmailCheck.verify(email, new EmailCheck.Listener() {
+                @Override
+                public void onValid() {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+                    btnSendMail.setEnabled(true);
+                    // 메일 서버가 없어서 인증번호를 안내 창에 보여 준다 (다시 받으면 시간도 처음부터)
+                    authCode.issue(EditProfileActivity.this, email, AuthCode.maskEmail(email));
+                    sent[0] = email;
+                    etCode.setText("");
+                    btnSendMail.setText("인증번호 다시 받기");
+                    tvNotice.setText("안내 창에 보이는 인증번호 4자리를 입력해 주십시오. (5분 동안 유효)");
+                    tvNotice.setVisibility(View.VISIBLE);
+                    layoutCode.setVisibility(View.VISIBLE);
+                    setVerifyEnabled(btnVerify, true);
+                }
+
+                @Override
+                public void onInvalid(String message) {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+                    btnSendMail.setEnabled(true);
+                    toast(message);
+                }
+            });
         });
 
         btnVerify.setOnClickListener(v -> {

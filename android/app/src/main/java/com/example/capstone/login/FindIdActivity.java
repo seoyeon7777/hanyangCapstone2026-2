@@ -2,6 +2,7 @@ package com.example.capstone.login;
 
 import com.example.capstone.R;
 import com.example.capstone.data.LocalAccounts;
+import com.example.capstone.ui.EmailCheck;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -203,11 +204,41 @@ public class FindIdActivity extends AppCompatActivity {
         if (contact == null) {
             Toast.makeText(this, byPhone
                             ? "휴대폰 번호를 정확히 입력해주세요."
-                            : "올바른 이메일 형식이 아닙니다. (예: example@gmail.com)",
+                            : EmailCheck.FORMAT_ERROR,
                     Toast.LENGTH_SHORT).show();
             return;
         }
 
+        if (byPhone) {
+            sendAuthCodeTo(contact);
+            return;
+        }
+
+        // 이메일은 다른 이메일 입력과 같은 방식(형식 + 도메인)으로 확인한 뒤 조회한다
+        btnRequestAuth.setEnabled(false);
+        EmailCheck.verify(contact, new EmailCheck.Listener() {
+            @Override
+            public void onValid() {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                btnRequestAuth.setEnabled(true);
+                sendAuthCodeTo(contact);
+            }
+
+            @Override
+            public void onInvalid(String message) {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                btnRequestAuth.setEnabled(true);
+                Toast.makeText(FindIdActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    /** 확인된 연락처로 가입한 계정을 찾아 인증번호를 보낸다 */
+    private void sendAuthCodeTo(String contact) {
         // [여기에 DB 입력] 이 휴대폰·이메일로 가입된 회원 조회 (users)
         LocalAccounts.Account account = byPhone
                 ? LocalAccounts.findAccountByPhone(this, contact)
@@ -298,7 +329,7 @@ public class FindIdActivity extends AppCompatActivity {
 
         String email = input.toLowerCase(Locale.ROOT);
         if (email.indexOf('@') <= 0 || email.indexOf('@') != email.lastIndexOf('@')
-                || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                || !EmailCheck.isValidFormat(email)) {
             return null;
         }
         return email;
