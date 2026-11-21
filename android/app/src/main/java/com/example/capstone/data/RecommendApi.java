@@ -56,7 +56,6 @@ public final class RecommendApi {
     // Supabase(싱가포르)를 쓰면 첫 요청이 느릴 수 있어서 넉넉하게
     /** 사용자에게 보여 주는 오류 안내 (서버·DB·요청 같은 내부 말은 쓰지 않는다) */
     public static final String MSG_CONNECT_FAIL = "연결에 실패했어요. 잠시 후 다시 시도해 주세요.";
-    public static final String MSG_AUTO_RETRY = "연결에 실패했어요. 잠시 후 자동으로 다시 시도해요.";
     public static final String MSG_SERVER_ERROR = "서버에 오류가 나서 실패했어요. 잠시 후 다시 시도해 주세요.";
     public static final String MSG_READ_FAIL = "서버 응답을 읽지 못했어요. 잠시 후 다시 시도해 주세요.";
     public static final String MSG_REQUEST_FAIL = "문제가 생겨 요청하지 못했어요. 잠시 후 다시 시도해 주세요.";
