@@ -491,7 +491,7 @@ public class MyPageStore {
                     faq(
                             "취소/반품/교환",
                             "반품·교환은 언제까지 가능한가요?",
-                            "주문일로부터 7일 이내에 신청할 수 있습니다. 착용, 세탁했거나 택을 제거한 상품은 반품·교환이 어렵습니다."
+                            "배송완료 후 7일 이내에 신청할 수 있습니다. 결제 후 3일이 지나면 배송완료로 처리돼요. 착용, 세탁했거나 택을 제거한 상품은 반품·교환이 어렵습니다."
                     ),
                     faq(
                             "취소/반품/교환",
@@ -1172,6 +1172,7 @@ public class MyPageStore {
     }
 
     public static List<Order> getOrders(int status, int months) {
+        advanceDeliveries();
         List<Order> result = new ArrayList<>();
         String from = months > 0 ? monthsAgo(months) : "";
 
@@ -1209,6 +1210,8 @@ public class MyPageStore {
         if (orderNo == null) {
             return null;
         }
+
+        advanceDeliveries();
 
         for (Order order : orders) {
             if (order.orderNo.equals(orderNo)) {
@@ -1515,6 +1518,7 @@ public class MyPageStore {
 
     // 리뷰
     public static List<Order> getWritableReviewOrders() {
+        advanceDeliveries();
         List<Order> result = new ArrayList<>();
 
         for (Order order : orders) {
@@ -1620,21 +1624,57 @@ public class MyPageStore {
         return new DecimalFormat("#,###").format(price) + "원";
     }
 
-    /** 반품·교환을 신청할 수 있는 기간(일). 앱에는 배송완료 날짜가 없어 주문일부터 센다 */
+    /**
+     * (임시) 배송 서버가 없어서 결제 후 이 일수가 지나면 자동으로 배송완료로 본다.
+     * 실제 배송 연동이 생기면 advanceDeliveries와 함께 지우고 서버 상태를 쓴다.
+     */
+    public static final int DELIVERY_DAYS = 3;
+
+    /** 반품·교환을 신청할 수 있는 기간(일). 배송완료일(= 주문일 + DELIVERY_DAYS)부터 센다 */
     public static final int RETURN_DAYS = 7;
 
-    /** 주문일("yyyy.MM.dd")로부터 RETURN_DAYS일이 지났으면 true. 날짜를 읽을 수 없으면 false(막지 않는다) */
-    public static boolean isReturnPeriodOver(String orderDate, long nowMillis) {
+    /** 결제 후 DELIVERY_DAYS일이 지난 주문(결제완료·상품준비중·배송중)을 배송완료로 바꾼다. 바뀐 게 있으면 저장한다 */
+    private static void advanceDeliveries() {
+        long now = System.currentTimeMillis();
+        boolean changed = false;
+
+        for (Order order : orders) {
+            if ((order.status == STATUS_PAID || order.status == STATUS_READY
+                    || order.status == STATUS_SHIPPING)
+                    && isDelivered(order.orderDate, now)) {
+                order.status = STATUS_DONE;
+                changed = true;
+            }
+        }
+
+        if (changed && storage != null) {
+            save();
+        }
+    }
+
+    /** 주문일("yyyy.MM.dd")로부터 DELIVERY_DAYS일이 지났으면 true. 날짜를 읽을 수 없으면 false */
+    public static boolean isDelivered(String orderDate, long nowMillis) {
+        long days = daysSince(orderDate, nowMillis);
+        return days >= DELIVERY_DAYS;
+    }
+
+    /** 주문일부터 지난 날 수. 날짜를 읽을 수 없으면 -1 */
+    private static long daysSince(String orderDate, long nowMillis) {
         try {
             Date ordered = new SimpleDateFormat("yyyy.MM.dd", Locale.KOREA).parse(orderDate);
             if (ordered == null) {
-                return false;
+                return -1;
             }
-            long days = (nowMillis - ordered.getTime()) / (24L * 60 * 60 * 1000);
-            return days > RETURN_DAYS;
+            return (nowMillis - ordered.getTime()) / (24L * 60 * 60 * 1000);
         } catch (Exception e) {
-            return false;
+            return -1;
         }
+    }
+
+    /** 배송완료일(주문일 + DELIVERY_DAYS)로부터 RETURN_DAYS일이 지났으면 true. 날짜를 읽을 수 없으면 false(막지 않는다) */
+    public static boolean isReturnPeriodOver(String orderDate, long nowMillis) {
+        long days = daysSince(orderDate, nowMillis);
+        return days >= 0 && days > DELIVERY_DAYS + RETURN_DAYS;
     }
 
     public static String today() {
