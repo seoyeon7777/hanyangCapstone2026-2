@@ -56,7 +56,17 @@ public final class RecommendApi {
     // Supabase(싱가포르)를 쓰면 첫 요청이 느릴 수 있어서 넉넉하게
     /** 사용자에게 보여 주는 오류 안내 (서버·DB·요청 같은 내부 말은 쓰지 않는다) */
     public static final String MSG_CONNECT_FAIL = "연결에 실패했어요. 잠시 후 다시 시도해 주세요.";
-    public static final String MSG_SERVER_ERROR = "서버에 오류가 나서 실패했어요. 잠시 후 다시 시도해 주세요.";
+    /** 홈 스크롤 중 실패: 앱이 잠시 뒤 알아서 다시 불러오므로 기다리라고만 안내한다 */
+    public static final String MSG_WAIT = "연결에 실패했어요. 잠시만 기다려 주세요.";
+    /**
+     * 화면에 보여 줄 오류 문구. 400대 요청 오류는 서버가 개발자용 문구를 보내므로 쓰지 않고 일반 안내로 바꾼다
+     * (코드 자체는 그대로 넘겨서 화면이 400을 따로 처리할 수 있다)
+     */
+    private static String userMessage(int code, String serverMessage) {
+        return code >= 400 && code < 500 ? MSG_REQUEST_FAIL : serverMessage;
+    }
+
+ = "서버에 오류가 나서 실패했어요. 잠시 후 다시 시도해 주세요.";
     public static final String MSG_READ_FAIL = "서버 응답을 읽지 못했어요. 잠시 후 다시 시도해 주세요.";
     public static final String MSG_REQUEST_FAIL = "문제가 생겨 요청하지 못했어요. 잠시 후 다시 시도해 주세요.";
     private static final int TIMEOUT_MS = 10000;
@@ -340,7 +350,7 @@ public final class RecommendApi {
 
             @Override
             public void onError(int code, String message) {
-                callback.onError(code, message);
+                callback.onError(code, userMessage(code, message));
             }
         });
     }
@@ -706,7 +716,7 @@ public final class RecommendApi {
 
             @Override
             public void onError(int code, String message) {
-                callback.onError(code, message);
+                callback.onError(code, userMessage(code, message));
             }
         });
     }

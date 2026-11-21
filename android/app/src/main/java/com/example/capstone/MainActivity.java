@@ -655,7 +655,7 @@ public class MainActivity extends AppCompatActivity {
                                 homeErrorShown = true;
                                 Toast.makeText(
                                         MainActivity.this,
-                                        RecommendApi.MSG_CONNECT_FAIL,
+                                        RecommendApi.MSG_WAIT,
                                         Toast.LENGTH_LONG
                                 ).show();
                             }
