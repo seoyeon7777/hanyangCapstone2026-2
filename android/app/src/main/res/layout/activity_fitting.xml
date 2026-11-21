@@ -263,7 +263,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="7가지 질문으로 골격 체형 특징 분석"
+                            android:text="15가지 질문으로 골격 체형 특징 분석"
                             android:textColor="#888888"
                             android:textSize="12sp" />
 

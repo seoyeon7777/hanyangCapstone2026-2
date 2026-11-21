@@ -54,6 +54,7 @@ public class AddressEditActivity extends AppCompatActivity {
         etLabel = findViewById(R.id.etLabel);
         etReceiver = findViewById(R.id.etReceiver);
         etPhone = findViewById(R.id.etPhone);
+        com.example.capstone.login.PhoneInput.attach(etPhone);   // 010-0000-0000 모양으로 자동 입력
         etZipCode = findViewById(R.id.etZipCode);
         etAddress1 = findViewById(R.id.etAddress1);
         etAddress2 = findViewById(R.id.etAddress2);

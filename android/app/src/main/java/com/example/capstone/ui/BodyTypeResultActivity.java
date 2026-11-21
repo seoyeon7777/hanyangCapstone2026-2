@@ -81,7 +81,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                         + "• 어깨·팔꿈치·무릎이 보이는 옷 (롱코트, 긴 치마, 두꺼운 패딩은 피하기)\n"
                         + "• 팔은 몸에서 살짝 벌리고, 단색 배경 앞에서 전신이 나오게\n"
                         + "• 머리를 묶으면 머리 꼭대기가 더 정확히 잡혀요\n"
-                        + "\n옷이 헐렁하면 가슴·허리·골반 둘레가 실제보다 크게 나와요."
+                        + "\n옷이 헐렁하면 가슴·허리·엉덩이 둘레가 실제보다 크게 나와요."
         );
         message.setTextSize(14f);
         message.setLineSpacing(0f, 1.2f);

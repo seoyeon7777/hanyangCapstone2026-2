@@ -264,7 +264,7 @@
             <TextView
                 android:id="@+id/textResultHip"
                 style="@style/MeasurementCard"
-                android:text="골반둘레"/>
+                android:text="엉덩이둘레"/>
 
             <TextView
                 android:id="@+id/textResultThigh"

@@ -238,7 +238,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="18dp"
                     android:layout_marginBottom="6dp"
-                    android:text="이메일 (선택)"
+                    android:text="전자영수증 받을 이메일 (선택)"
                     android:textColor="#666666"
                     android:textSize="14sp" />
 
@@ -247,12 +247,20 @@
                     android:layout_width="match_parent"
                     android:layout_height="52dp"
                     android:background="@drawable/bg_pay_field"
-                    android:hint="결제 내역을 받을 이메일"
+                    android:hint="전자영수증을 받을 이메일"
                     android:inputType="textEmailAddress"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:textColor="#111111"
                     android:textSize="16sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="입력하면 결제 내역을 전자영수증으로 보내 드려요. (메일 발송은 준비 중이라 지금은 보내지 않아요)"
+                    android:textColor="#888888"
+                    android:textSize="12sp" />
 
                 <CheckBox
                     android:id="@+id/cbConfirmPay"

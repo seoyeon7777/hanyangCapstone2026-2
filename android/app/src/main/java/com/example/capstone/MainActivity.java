@@ -687,6 +687,13 @@ public class MainActivity extends AppCompatActivity {
                             homeProducts.addAll(DummyData.getProducts());
                             productAdapter.notifyDataSetChanged();
 
+                            // 서버 없이 보여 주는 기본 상품은 맞춤 추천이 아니므로 체형 맞춤 토글도 끈다
+                            if (bodyMode) {
+                                setModeSilently(false);
+                                updateHomeTitle("");
+                                message += " 체형 맞춤을 잠시 껐어요.";
+                            }
+
                             message += " 기본 상품을 보여 줄게요";
                         }
 

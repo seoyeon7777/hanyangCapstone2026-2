@@ -415,7 +415,11 @@ public class ProductDetailActivity extends AppCompatActivity {
                 (size, color, quantity) -> {
 
                     saveSelection(size, color, quantity);
-                    // 장바구니 담기는 비회원도 되고, 체형 측정 확인은 장바구니에서 주문할 때 한다
+                    // 장바구니 담기도 로그인해야 한다 (찜·바로 구매와 같다). 체형 측정 확인은 장바구니에서 주문할 때 한다
+                    if (!LoginSession.isLoggedIn(this)) {
+                        LoginGate.require(this, "로그인하면 장바구니에 담을 수 있어요.", () -> { });
+                        return;
+                    }
                     addToCart();
                 }
         );

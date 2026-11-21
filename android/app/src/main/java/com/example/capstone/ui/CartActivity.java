@@ -541,13 +541,6 @@ public class CartActivity extends AppCompatActivity {
 
         btnGoOrder.setOnClickListener(v -> {
 
-            // 구매는 로그인해야 한다. 비회원이면 로그인 안내 → 로그인(가입) 뒤 장바구니로 돌아오고,
-            // 다시 주문하기를 누르면 체형 측정 확인 창이 뜬다 (비회원 장바구니는 로그인 계정 장바구니에 합쳐진다)
-            if (!LoginSession.isLoggedIn(this)) {
-                LoginGate.require(this, "로그인하면 구매할 수 있어요.", () -> { });
-                return;
-            }
-
             StringBuilder productNames =
                     new StringBuilder();
 
@@ -583,6 +576,13 @@ public class CartActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT
                 ).show();
 
+                return;
+            }
+
+            // 구매는 로그인해야 한다. 비회원이면 로그인 안내 → 로그인(가입) 뒤 장바구니로 돌아오고,
+            // 다시 주문하기를 누르면 체형 측정 확인 창이 뜬다 (선택부터 확인한 뒤 로그인을 묻는다)
+            if (!LoginSession.isLoggedIn(this)) {
+                LoginGate.require(this, "로그인하면 구매할 수 있어요.", () -> { });
                 return;
             }
 
@@ -682,8 +682,9 @@ public class CartActivity extends AppCompatActivity {
         }
 
         if (titleCount != null) {
+            // "전체 선택 (n/m)"과 같은 기준(담은 상품 줄 수)으로 센다
             titleCount.setText(
-                    "장바구니 " + cartQuantity
+                    "장바구니 " + cartProducts.size()
             );
         }
 

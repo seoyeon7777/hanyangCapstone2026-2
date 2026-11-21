@@ -288,7 +288,7 @@ public class MeasurementResultActivity extends AppCompatActivity {
         );
 
         textHip.setText(
-                formatCard(estimated[BodyPrior.HIP] ? "골반둘레(추정)" : "골반둘레", hip)
+                formatCard(estimated[BodyPrior.HIP] ? "엉덩이둘레(추정)" : "엉덩이둘레", hip)
         );
 
         textThigh.setText(

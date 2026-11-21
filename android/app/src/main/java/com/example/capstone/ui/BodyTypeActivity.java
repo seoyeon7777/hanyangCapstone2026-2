@@ -424,8 +424,10 @@ public class BodyTypeActivity extends AppCompatActivity {
         progressBar.setIndicatorColor(gaugeColor(currentQuestion));
 
         String notice = "";
-        if (currentQuestion >= LAST_THREE_FROM) {
-            notice = "설문 3번만 더 하시면 더 정확한 결과를 얻게 돼요!";
+        if (number >= total) {
+            notice = "마지막 문항이에요! 답하고 결과를 확인해 보세요";
+        } else if (currentQuestion >= LAST_THREE_FROM) {
+            notice = "설문 " + (total - currentQuestion) + "번만 더 하시면 더 정확한 결과를 얻게 돼요!";
         } else if (currentQuestion >= ALMOST_DONE_FROM) {
             notice = "조금만 더 하면 설문이 완성돼요!";
         }
