@@ -692,9 +692,9 @@ public class MainActivity extends AppCompatActivity {
                             if (bodyMode) {
                                 setModeSilently(false);
                                 updateHomeTitle("");
-                                message = "연결에 실패했어요. 체형 맞춤을 끄고 기본 상품을 보여 드려요.";
+                                message = "연결에 실패해서 체형 맞춤을 껐어요. 잠시 후 다시 시도해 주세요.";
                             } else {
-                                message = "연결에 실패했어요. 기본 상품을 보여 드려요.";
+                                message = RecommendApi.MSG_CONNECT_FAIL;
                             }
                         }
 
