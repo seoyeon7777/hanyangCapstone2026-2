@@ -129,7 +129,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="궁금한 점을 남겨주세요"
+                    android:text="궁금한 점을 남겨 주십시오"
                     android:textColor="@color/black"
                     android:textSize="20sp"
                     android:textStyle="bold" />
@@ -175,7 +175,7 @@
                     android:layout_height="48dp"
                     android:layout_marginBottom="20dp"
                     android:background="@drawable/bg_edit"
-                    android:hint="제목을 입력해주세요"
+                    android:hint="제목을 입력해 주십시오"
                     android:inputType="text"
                     android:maxLength="50"
                     android:paddingHorizontal="16dp"
@@ -196,7 +196,7 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_edit"
                     android:gravity="top|start"
-                    android:hint="문의하실 내용을 자세히 적어주세요"
+                    android:hint="문의하실 내용을 자세히 적어 주십시오"
                     android:inputType="textMultiLine"
                     android:maxLength="1000"
                     android:minHeight="160dp"
@@ -219,7 +219,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="24dp"
-                    android:text="개인정보(주민등록번호, 카드번호 등)는 남기지 말아주세요."
+                    android:text="개인정보(주민등록번호, 카드번호 등)는 남기지 말아 주십시오."
                     android:textColor="#5A5A5A"
                     android:textSize="12sp" />
 

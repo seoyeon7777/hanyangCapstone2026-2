@@ -80,8 +80,8 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                 "• 몸에 붙는 옷 (레깅스·슬림한 티 등), 가능하면 어두운 단색\n"
                         + "• 어깨·팔꿈치·무릎이 보이는 옷 (롱코트, 긴 치마, 두꺼운 패딩은 피하기)\n"
                         + "• 팔은 몸에서 살짝 벌리고, 단색 배경 앞에서 전신이 나오게\n"
-                        + "• 머리를 묶으면 머리 꼭대기가 더 정확히 잡혀요\n"
-                        + "\n옷이 헐렁하면 가슴·허리·엉덩이 둘레가 실제보다 크게 나와요."
+                        + "• 머리를 묶으면 머리 꼭대기가 더 정확히 잡힙니다\n"
+                        + "\n옷이 헐렁하면 가슴·허리·엉덩이 둘레가 실제보다 크게 나옵니다."
         );
         message.setTextSize(14f);
         message.setLineSpacing(0f, 1.2f);
@@ -109,7 +109,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         // 비회원이면 로그인 안내 → 로그인을 마치면 이어서 저장한다 (LoginGate)
         if (!LoginSession.isLoggedIn(this)) {
             LoginGate.require(this,
-                    "체형은 로그인한 계정에 저장돼요.\n로그인하면 방금 한 설문 결과가 바로 저장돼요.",
+                    "체형은 로그인한 계정에 저장됩니다.\n로그인하면 방금 한 설문 결과가 바로 저장됩니다.",
                     () -> {
                         saveSurveyToAccountIfNeeded();
                         saveSurvey();
@@ -120,7 +120,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         if (!BodyProfileStore.canAddProfile(this)) {
             AppDialog.alert(this, "체형 저장",
                     "체형은 최대 " + BodyProfileStore.MAX_PROFILES
-                            + "개까지 저장할 수 있어요. '내 체형 관리'에서 안 쓰는 체형을 지운 뒤 다시 저장해 주세요.",
+                            + "개까지 저장할 수 있습니다. '내 체형 관리'에서 안 쓰는 체형을 지운 뒤 다시 저장해 주십시오.",
                     "확인");
             return;
         }
@@ -128,7 +128,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         BodyProfileStore.Profile saved = BodyTypeActivity.saveSurveyProfile(this);
 
         if (saved == null) {
-            Toast.makeText(this, "저장할 진단 결과가 없어요. 설문을 다시 해 주세요.",
+            Toast.makeText(this, "저장할 진단 결과가 없습니다. 설문을 다시 해 주십시오.",
                     Toast.LENGTH_SHORT).show();
             return;
         }
@@ -143,8 +143,8 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
     private void confirmLeave() {
         AppDialog.show(this, false,
-                "저장하지 않고 나갈까요?",
-                "이번 결과는 '내 체형'에 저장되지 않아요.",
+                "저장하지 않고 나가시겠습니까?",
+                "이번 결과는 '내 체형'에 저장되지 않습니다.",
                 "나가기", this::finish,
                 "이대로 저장하기", this::saveSurvey);
     }
@@ -199,12 +199,12 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
                 typeName = "웨이브 체형";
 
-                summary = "부드러운 곡선이 돋보이는 체형이에요.";
+                summary = "부드러운 곡선이 돋보이는 체형입니다.";
 
                 features =
                         "• 부드럽고 곡선적인 신체 윤곽\n"
                                 + "• 하체 중심의 비율\n"
-                                + "• 허리선을 살린 스타일이 잘 어울려요";
+                                + "• 허리선을 살린 스타일이 잘 어울립니다";
 
                 break;
 
@@ -212,12 +212,12 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
                 typeName = "내추럴 체형";
 
-                summary = "뼈대와 관절의 존재감이 느껴지는 체형이에요.";
+                summary = "뼈대와 관절의 존재감이 느껴지는 체형입니다.";
 
                 features =
                         "• 뼈대와 관절의 존재감\n"
                                 + "• 자연스러운 신체 윤곽\n"
-                                + "• 여유 있는 실루엣이 잘 어울려요";
+                                + "• 여유 있는 실루엣이 잘 어울립니다";
 
                 break;
 
@@ -226,12 +226,12 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
                 typeName = "스트레이트 체형";
 
-                summary = "입체감 있고 탄탄한 실루엣의 체형이에요.";
+                summary = "입체감 있고 탄탄한 실루엣의 체형입니다.";
 
                 features =
                         "• 상체의 입체감\n"
                                 + "• 탄탄하고 곧은 신체 윤곽\n"
-                                + "• 깔끔하고 정돈된 스타일이 잘 어울려요";
+                                + "• 깔끔하고 정돈된 스타일이 잘 어울립니다";
 
                 break;
         }
@@ -261,7 +261,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                     + " · 내추럴 " + Math.round(ratioN * 100) + "%";
 
             if (receivedIntent.getBooleanExtra(BodyTypeActivity.EXTRA_MIXED, false)) {
-                summary += "\n두 체형의 특징이 함께 보여요. 추천도 두 체형을 섞어서 골라 드려요.";
+                summary += "\n두 체형의 특징이 함께 보입니다. 추천도 두 체형을 섞어서 골라 드립니다.";
             }
         }
 
@@ -271,7 +271,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
         // 자세한 신체 분석 → 정면·옆면 사진 고르기. 로그인해야 할 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 이어서 시작)
         btnYes.setOnClickListener(v -> LoginGate.require(this,
-                "사진으로 치수를 측정하려면 로그인해야 해요.\n로그인하면 방금 한 설문 결과도 내 체형으로 저장돼요.",
+                "사진으로 치수를 측정하려면 로그인해야 합니다.\n로그인하면 방금 한 설문 결과도 내 체형으로 저장됩니다.",
                 () -> BodyInputDialog.show(this, userHeightCm, height -> {
 
                     // 설문 뒤 이 창에서 받은 키 (설문에는 키를 안 쓴다)

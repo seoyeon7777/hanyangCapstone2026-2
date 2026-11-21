@@ -227,7 +227,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:lineSpacingExtra="2dp"
-            android:text="(추정)은 사진으로 잰 값이 없거나, 키·몸무게·나이로 어림한 값과 너무 달라서 어림한 값으로 대신한 항목이에요."
+            android:text="(추정)은 사진으로 잰 값이 없거나, 키·몸무게·나이로 어림한 값과 너무 달라서 어림한 값으로 대신한 항목입니다."
             android:textColor="#888888"
             android:textSize="12sp"
             android:visibility="gone"/>

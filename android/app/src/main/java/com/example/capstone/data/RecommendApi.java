@@ -317,7 +317,7 @@ public final class RecommendApi {
                 }
             }
         } catch (JSONException e) {
-            callback.onError(0, "요청을 만들지 못했어요");
+            callback.onError(0, "요청을 만들지 못했습니다");
             return;
         }
 
@@ -329,7 +329,7 @@ public final class RecommendApi {
                 try {
                     callback.onSuccess(parsePage(appContext, result));
                 } catch (JSONException e) {
-                    callback.onError(0, "서버 응답을 읽지 못했어요");
+                    callback.onError(0, "서버 응답을 읽지 못했습니다");
                 }
             }
 
@@ -674,7 +674,7 @@ public final class RecommendApi {
                 body.put("measurements", measurements);
             }
         } catch (JSONException e) {
-            callback.onError(0, "요청을 만들지 못했어요");
+            callback.onError(0, "요청을 만들지 못했습니다");
             return;
         }
 
@@ -685,7 +685,7 @@ public final class RecommendApi {
                 String primary = result.optString("primary", "");
 
                 if (ratios == null || primary.isEmpty()) {
-                    callback.onError(0, "서버 응답을 읽지 못했어요");
+                    callback.onError(0, "서버 응답을 읽지 못했습니다");
                     return;
                 }
 
@@ -1028,7 +1028,7 @@ public final class RecommendApi {
         try {
             body.put("email", email);
         } catch (JSONException e) {
-            callback.onError(0, "이메일을 보낼 수 없어요");
+            callback.onError(0, "이메일을 보낼 수 없습니다");
             return;
         }
         // 메일 서버를 거치느라 오래 걸릴 수 있어 넉넉히 기다린다
@@ -1040,7 +1040,7 @@ public final class RecommendApi {
 
             @Override
             public void onError(int code, String message) {
-                callback.onError(code, code == 0 ? "서버에 연결할 수 없어요" : message);
+                callback.onError(code, code == 0 ? "서버에 연결할 수 없습니다" : message);
             }
         });
     }
@@ -1054,7 +1054,7 @@ public final class RecommendApi {
         try {
             body.put("email", email);
         } catch (JSONException e) {
-            callback.onError(0, "이메일을 확인할 수 없어요");
+            callback.onError(0, "이메일을 확인할 수 없습니다");
             return;
         }
         post("/api/email/check", body, TIMEOUT_MS, EVENT_IO, new Callback<JSONObject>() {
@@ -1076,7 +1076,7 @@ public final class RecommendApi {
         try {
             body.put("request_id", requestId);
         } catch (JSONException e) {
-            callback.onError(0, "인증 요청을 확인할 수 없어요");
+            callback.onError(0, "인증 요청을 확인할 수 없습니다");
             return;
         }
         post("/api/email/status", body, TIMEOUT_MS, EVENT_IO, new Callback<JSONObject>() {
@@ -1087,7 +1087,7 @@ public final class RecommendApi {
 
             @Override
             public void onError(int code, String message) {
-                callback.onError(code, code == 0 ? "서버에 연결할 수 없어요" : message);
+                callback.onError(code, code == 0 ? "서버에 연결할 수 없습니다" : message);
             }
         });
     }
@@ -1149,16 +1149,16 @@ public final class RecommendApi {
                 if (httpCode > 0 && e instanceof JSONException) {
                     // 서버는 답했는데 JSON이 아니다 (프록시 오류 화면 등): 연결 문제로 보이지 않게 따로 알린다
                     final int answered = httpCode >= 400 ? httpCode : 502;
-                    main().post(() -> callback.onError(answered, "일시적인 문제가 생겼어요. 잠시 후 다시 시도해 주세요"));
+                    main().post(() -> callback.onError(answered, "일시적인 문제가 생겼습니다. 잠시 후 다시 시도해 주십시오"));
                 } else {
                     if (e instanceof IOException) {
                         lastConnectFailAt = System.currentTimeMillis();
                     }
-                    main().post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
+                    main().post(() -> callback.onError(0, "추천 서버에 연결할 수 없습니다"));
                 }
             } catch (RuntimeException e) {
                 // 예상 못 한 오류도 콜백을 부른다 (안 부르면 홈 피드가 "불러오는 중"에서 멈춘다)
-                main().post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
+                main().post(() -> callback.onError(0, "추천 서버에 연결할 수 없습니다"));
             } finally {
                 if (connection != null) {
                     connection.disconnect();

@@ -297,8 +297,8 @@ public class BodyTypeActivity extends AppCompatActivity {
 
     private void confirmClose() {
         AppDialog.show(this, true,
-                "자가진단을 그만할까요?",
-                "지금까지 고른 답은 저장되지 않아요.",
+                "자가진단을 그만하시겠습니까?",
+                "지금까지 고른 답은 저장되지 않습니다.",
                 "그만하기", this::finish,
                 "계속하기", null);
     }
@@ -425,11 +425,11 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         String notice = "";
         if (number >= total) {
-            notice = "마지막 문항이에요! 답하고 결과를 확인해 보세요";
+            notice = "마지막 문항입니다! 답하고 결과를 확인해 보십시오";
         } else if (currentQuestion >= LAST_THREE_FROM) {
-            notice = "설문 " + (total - currentQuestion) + "번만 더 하시면 더 정확한 결과를 얻게 돼요!";
+            notice = "설문 " + (total - currentQuestion) + "번만 더 하시면 더 정확한 결과를 얻게 됩니다!";
         } else if (currentQuestion >= ALMOST_DONE_FROM) {
-            notice = "조금만 더 하면 설문이 완성돼요!";
+            notice = "조금만 더 하면 설문이 완성됩니다!";
         }
         progressNotice.setText(notice);
         progressNotice.setVisibility(notice.isEmpty() ? View.GONE : View.VISIBLE);
@@ -455,7 +455,7 @@ public class BodyTypeActivity extends AppCompatActivity {
 
             Toast.makeText(
                     this,
-                    "답변을 선택해주세요.",
+                    "답변을 선택해 주십시오.",
                     Toast.LENGTH_SHORT
             ).show();
 
@@ -479,7 +479,7 @@ public class BodyTypeActivity extends AppCompatActivity {
     private void showEarlyResult() {
 
         if (selectedAnswers[currentQuestion] == 0) {
-            Toast.makeText(this, "답변을 선택해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "답변을 선택해 주십시오.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -564,8 +564,8 @@ public class BodyTypeActivity extends AppCompatActivity {
                         AppDialog.show(
                                 BodyTypeActivity.this,
                                 true,
-                                "체형 진단을 하지 못했어요",
-                                message + "\n답은 저장해 두었어요. 추천 서버가 켜져 있는지 확인하고 다시 시도해 주세요.",
+                                "체형 진단을 하지 못했습니다",
+                                message + "\n답은 저장해 두었습니다. 추천 서버가 켜져 있는지 확인하고 다시 시도해 주십시오.",
                                 "나중에",
                                 BodyTypeActivity.this::finish,
                                 "다시 시도",

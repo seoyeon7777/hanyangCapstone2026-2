@@ -52,8 +52,8 @@ final class MeasurementResultLauncher {
         if (bad.length() == 0) {
             return null;
         }
-        return "정면·옆면 사진의 몸 비율이 맞지 않아요 (두께÷폭 " + bad + ").\n"
-                + "다른 사람의 사진이거나 같은 사진을 두 번 넣었다면 둘레가 크게 틀릴 수 있어요.";
+        return "정면·옆면 사진의 몸 비율이 맞지 않습니다 (두께÷폭 " + bad + ").\n"
+                + "다른 사람의 사진이거나 같은 사진을 두 번 넣었다면 둘레가 크게 틀릴 수 있습니다.";
     }
 
     /** 결과 화면을 연다. 가슴·허리·골반이 사진에서 잡히지 않으면 안내만 하고 false. */
@@ -67,7 +67,7 @@ final class MeasurementResultLauncher {
             circ[i] = CircumferenceCalculator.calculateEllipseCircumference(width[i], depth[i]);
             if (circ[i] <= 0f) {
                 Toast.makeText(context,
-                        MeasurementSession.LABELS[i] + " 위치에서 몸이 잡히지 않아요. 전신이 나온 다른 사진으로 다시 해주세요.",
+                        MeasurementSession.LABELS[i] + " 위치에서 몸이 잡히지 않습니다. 전신이 나온 다른 사진으로 다시 해 주십시오.",
                         Toast.LENGTH_LONG).show();
                 return false;
             }

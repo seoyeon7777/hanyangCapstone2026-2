@@ -123,13 +123,13 @@ public class MyBodyActivity extends AppCompatActivity {
 
         String message = "선택한 체형 " + targets.size() + "개를 삭제하시겠습니까?";
         if (includesActive) {
-            message += "\n현재 체형도 삭제돼요. 남은 체형이 있으면 그중 하나가 현재 체형이 되고, 없으면 현재 체형이 비어요.";
+            message += "\n현재 체형도 삭제됩니다. 남은 체형이 있으면 그중 하나가 현재 체형이 되고, 없으면 현재 체형이 비어 있습니다.";
         }
         MyPageUi.confirm(this, "선택 삭제", message, () -> {
             for (String id : targets) {
                 BodyProfileStore.delete(this, id);
             }
-            Toast.makeText(this, "체형 " + targets.size() + "개를 삭제했어요.",
+            Toast.makeText(this, "체형 " + targets.size() + "개를 삭제했습니다.",
                     Toast.LENGTH_SHORT).show();
             setSelectMode(false);
         });
@@ -158,7 +158,7 @@ public class MyBodyActivity extends AppCompatActivity {
         super.onResume();
         // 체형은 로그인해야 쓸 수 있다 (찜 화면과 같음): 비로그인이면 로그인 안내만 보여 준다
         if (!LoginRequiredView.update(this, R.drawable.ic_nav_fitting,
-                "체형 분석은 로그인 후 이용할 수 있어요.", findViewById(R.id.scrollMyBody))) {
+                "체형 분석은 로그인 후 이용할 수 있습니다.", findViewById(R.id.scrollMyBody))) {
             return;
         }
         if (layoutProfiles != null) {
@@ -174,11 +174,11 @@ public class MyBodyActivity extends AppCompatActivity {
         tvEmptyProfiles.setVisibility(profiles.isEmpty() ? View.VISIBLE : View.GONE);
         if (!LoginSession.isLoggedIn(this)) {
             // 비로그인: 체형은 계정에 저장되므로 로그인 안내 (새 체형 추가하기로 설문은 해 볼 수 있음)
-            tvEmptyProfiles.setText("로그인하면 체형을 여러 개 저장하고\n그중 하나를 현재 체형으로 고를 수 있어요.\n눌러서 로그인하기 ›");
+            tvEmptyProfiles.setText("로그인하면 체형을 여러 개 저장하고\n그중 하나를 현재 체형으로 고를 수 있습니다.\n눌러서 로그인하기 ›");
             tvEmptyProfiles.setOnClickListener(v ->
                     startActivity(new Intent(this, LoginMainActivity.class)));
         } else {
-            tvEmptyProfiles.setText("저장된 체형 정보가 없어요.\n'새 체형 추가하기'로 체형을 분석해 보세요.");
+            tvEmptyProfiles.setText("저장된 체형 정보가 없습니다.\n'새 체형 추가하기'로 체형을 분석해 보십시오.");
             tvEmptyProfiles.setOnClickListener(null);
         }
         updateSelectBar(profiles.size());
@@ -275,7 +275,7 @@ public class MyBodyActivity extends AppCompatActivity {
         card.findViewById(R.id.tvDelete).setOnClickListener(v -> {
             String message = "'" + profile.name + "'을(를) 삭제하시겠습니까?";
             if (active) {
-                message += "\n현재 체형이에요. 삭제하면 남은 체형이 있으면 그중 하나가 현재 체형이 되고, 없으면 현재 체형이 비어요.";
+                message += "\n현재 체형입니다. 삭제하면 남은 체형이 있으면 그중 하나가 현재 체형이 되고, 없으면 현재 체형이 비어 있습니다.";
             }
             MyPageUi.confirm(this, "체형 삭제", message, () -> {
                 BodyProfileStore.delete(this, profile.id);
@@ -292,14 +292,14 @@ public class MyBodyActivity extends AppCompatActivity {
 
     private void remeasurePhoto(BodyProfileStore.Profile profile) {
         MyPageUi.confirm(this, "사진 다시 분석",
-                "'" + profile.name + "'의 치수를 새로 잴까요? 새 사진으로 분석하면 이 체형의 치수가 바뀌어요.",
+                "'" + profile.name + "'의 치수를 새로 재시겠습니까? 새 사진으로 분석하면 이 체형의 치수가 바뀝니다.",
                 () -> com.example.capstone.ui.BodyInputDialog.show(this, profile.heightCm,
                         height -> startActivity(PhotoMeasurementActivity.remeasureIntent(this, profile.id, height))));
     }
 
     private void selectAsCurrent(BodyProfileStore.Profile profile) {
         BodyProfileStore.setActive(this, profile.id);
-        Toast.makeText(this, "'" + profile.name + "'을(를) 현재 체형으로 선택했어요. 홈 추천도 이 체형으로 바뀌어요.",
+        Toast.makeText(this, "'" + profile.name + "'을(를) 현재 체형으로 선택했습니다. 홈 추천도 이 체형으로 바뀝니다.",
                 Toast.LENGTH_SHORT).show();
         loadProfiles();
     }
@@ -313,7 +313,7 @@ public class MyBodyActivity extends AppCompatActivity {
                 profile.name, "체형 이름", InputType.TYPE_CLASS_TEXT,
                 "변경", name -> {
                     if (name.isEmpty()) {
-                        Toast.makeText(this, "이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "이름을 입력해 주십시오.", Toast.LENGTH_SHORT).show();
                         return false;
                     }
                     BodyProfileStore.rename(this, profile.id, name);

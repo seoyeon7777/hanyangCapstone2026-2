@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:gravity="center"
-        android:text="주문 안내와 소식을 받을 이메일이에요."
+        android:text="주문 안내와 소식을 받을 이메일입니다."
         android:textColor="#555555"
         android:textSize="14sp" />
 

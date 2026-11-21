@@ -261,7 +261,7 @@ public class ReviewActivity extends AppCompatActivity {
         );
 
         TextView message = makeText(
-                "아직 등록된 리뷰가 없어요",
+                "아직 등록된 리뷰가 없습니다",
                 15,
                 true,
                 BLACK
@@ -278,7 +278,7 @@ public class ReviewActivity extends AppCompatActivity {
         );
 
         TextView description = makeText(
-                "첫 번째 리뷰를 기다리고 있어요.",
+                "첫 번째 리뷰를 기다리고 있습니다.",
                 12,
                 false,
                 GRAY
@@ -374,7 +374,7 @@ public class ReviewActivity extends AppCompatActivity {
         content.addView(summary);
 
         TextView satisfaction = makeText(
-                percentage + "%가 만족했어요",
+                percentage + "%가 만족했습니다",
                 24,
                 true,
                 BLACK
@@ -540,7 +540,7 @@ public class ReviewActivity extends AppCompatActivity {
             );
 
             TextView message = makeText(
-                    "조건에 맞는 리뷰가 없어요",
+                    "조건에 맞는 리뷰가 없습니다",
                     14,
                     false,
                     GRAY

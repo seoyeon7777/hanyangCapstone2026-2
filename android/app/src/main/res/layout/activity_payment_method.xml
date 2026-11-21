@@ -87,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:gravity="center"
-                android:text="카드를 등록하면 주문할 때 바로 결제할 수 있어요."
+                android:text="카드를 등록하면 주문할 때 바로 결제할 수 있습니다."
                 android:textColor="#999999"
                 android:textSize="12sp" />
 

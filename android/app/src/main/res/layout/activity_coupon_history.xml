@@ -28,7 +28,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                android:text="사용했거나 기간이 지난 쿠폰이에요"
+                android:text="사용했거나 기간이 지난 쿠폰입니다"
                 android:textColor="#888888"
                 android:textSize="13sp" />
 
@@ -43,7 +43,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
                 android:gravity="center"
-                android:text="사용했거나 만료된 쿠폰이 없어요"
+                android:text="사용했거나 만료된 쿠폰이 없습니다"
                 android:textColor="#999999"
                 android:textSize="15sp"
                 android:visibility="gone" />

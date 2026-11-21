@@ -99,8 +99,8 @@ public class ResetPwActivity extends AppCompatActivity {
         etEmail.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         etEmail.setImeHintLocales(new LocaleList(Locale.ENGLISH));
         ((TextView) findViewById(R.id.tvGuide)).setText(byPhone
-                ? "아이디를 입력하면 가입한 휴대폰으로 인증번호를 보내드려요."
-                : "아이디를 입력하면 등록한 이메일로 인증번호를 보내드려요.");
+                ? "아이디를 입력하면 가입한 휴대폰으로 인증번호를 보내드립니다."
+                : "아이디를 입력하면 등록한 이메일로 인증번호를 보내드립니다.");
     }
 
     private void setListeners() {
@@ -214,7 +214,7 @@ public class ResetPwActivity extends AppCompatActivity {
         String id = etEmail.getText().toString().trim();
 
         if (TextUtils.isEmpty(id)) {
-            Toast.makeText(this, "아이디를 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "아이디를 입력해 주십시오.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -229,7 +229,7 @@ public class ResetPwActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(target)) {
             Toast.makeText(this, byPhone
                             ? "이 계정에 등록된 휴대폰 번호가 없습니다."
-                            : "이 계정에 등록된 이메일이 없습니다. 휴대폰으로 인증해주세요.",
+                            : "이 계정에 등록된 이메일이 없습니다. 휴대폰으로 인증해 주십시오.",
                     Toast.LENGTH_SHORT).show();
             return;
         }
@@ -248,7 +248,7 @@ public class ResetPwActivity extends AppCompatActivity {
         String input = etAuthCode.getText().toString().trim();
 
         if (input.length() != AUTH_CODE_LENGTH) {
-            Toast.makeText(this, "인증번호 " + AUTH_CODE_LENGTH + "자리를 입력해주세요.",
+            Toast.makeText(this, "인증번호 " + AUTH_CODE_LENGTH + "자리를 입력해 주십시오.",
                     Toast.LENGTH_SHORT).show();
             return;
         }
@@ -268,7 +268,7 @@ public class ResetPwActivity extends AppCompatActivity {
 
         containerNewPw.setVisibility(View.VISIBLE);
         setConfirmEnabled(true);
-        Toast.makeText(this, "인증이 완료되었습니다. 새 비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "인증이 완료되었습니다. 새 비밀번호를 입력해 주십시오.", Toast.LENGTH_SHORT).show();
     }
 
     /** 새 비밀번호로 변경한다. */
@@ -277,7 +277,7 @@ public class ResetPwActivity extends AppCompatActivity {
         String pw2 = etPasswordConfirm.getText().toString().trim();
 
         if (!isCodeVerified || account == null) {
-            Toast.makeText(this, "인증확인을 완료해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "인증확인을 완료해 주십시오.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -300,7 +300,7 @@ public class ResetPwActivity extends AppCompatActivity {
 
         // [여기에 DB 입력] 사용한 인증번호 만료 처리 (auth_codes)
         authCode.clear();
-        Toast.makeText(this, "비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.",
+        Toast.makeText(this, "비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주십시오.",
                 Toast.LENGTH_SHORT).show();
 
         // 비밀번호가 바뀌었으니 기존 로그인 상태는 지우고 로그인 화면으로 돌아간다.

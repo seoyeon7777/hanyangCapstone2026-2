@@ -83,7 +83,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:paddingHorizontal="4dp"
-            android:text="통장에 적힌 예금주 이름을 그대로 입력해 주세요."
+            android:text="통장에 적힌 예금주 이름을 그대로 입력해 주십시오."
             android:textColor="#999999"
             android:textSize="12sp" />
 

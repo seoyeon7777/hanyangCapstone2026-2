@@ -386,7 +386,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         textSizeRecommend.setClickable(false);
         String recommended = SizeFitChecker.recommendSize(SizeChart.categoryOf(currentProduct), profile);
         textSizeRecommend.setText(recommended == null
-                ? "이 상품은 사이즈 비교 정보가 없어요"
+                ? "이 상품은 사이즈 비교 정보가 없습니다"
                 : "내 치수 기준 추천 사이즈: " + recommended);
     }
 
@@ -412,7 +412,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                     // 바로 구매는 로그인해야 한다. 비회원이면 로그인 안내 → 로그인(가입) 뒤 이 화면으로 돌아오고,
                     // 다시 바로 구매를 누르면 체형 측정 확인 창(측정하러 가기 / 그냥 구매)이 뜬다
                     if (!LoginSession.isLoggedIn(this)) {
-                        LoginGate.require(this, "로그인하면 바로 구매할 수 있어요.", () -> { });
+                        LoginGate.require(this, "로그인하면 바로 구매할 수 있습니다.", () -> { });
                         return;
                     }
                     checkFitThen(this::buyNow, SizeWarningDialog.Action.ORDER);
@@ -423,7 +423,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                     saveSelection(size, color, quantity);
                     // 장바구니 담기도 로그인해야 한다 (찜·바로 구매와 같다). 체형 측정 확인은 장바구니에서 주문할 때 한다
                     if (!LoginSession.isLoggedIn(this)) {
-                        LoginGate.require(this, "로그인하면 장바구니에 담을 수 있어요.", () -> { });
+                        LoginGate.require(this, "로그인하면 장바구니에 담을 수 있습니다.", () -> { });
                         return;
                     }
                     addToCart();
@@ -517,7 +517,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         String message = selectedSize + " / " + selectedColor + " / " + selectedQuantity + "개";
 
         AppDialog.show(this, false,
-                "장바구니에 담았어요",
+                "장바구니에 담았습니다",
                 message,
                 "계속 쇼핑하기", null,
                 "장바구니 이동", () -> startActivity(new Intent(this, CartActivity.class)));

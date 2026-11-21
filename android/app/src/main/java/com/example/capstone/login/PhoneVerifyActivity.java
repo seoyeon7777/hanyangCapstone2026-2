@@ -97,7 +97,7 @@ public class PhoneVerifyActivity extends AppCompatActivity {
             btnVerify.setText("다시 요청");
 
             tvAuthCodeNotice.setText(
-                    "인증번호: " + sentCode + " (문자 발송 기능 준비 중이라 화면에 보여 드려요)");
+                    "인증번호: " + sentCode + " (문자 발송 기능 준비 중이라 화면에 보여 드립니다)");
             tvAuthCodeNotice.setVisibility(View.VISIBLE);
 
             etAuthCode.setText("");
@@ -151,7 +151,7 @@ public class PhoneVerifyActivity extends AppCompatActivity {
             if (!isCodeSent || !authCode.equals(sentCode)) {
                 AppDialog.notice(
                         this,
-                        "인증번호가 올바르지 않습니다.\n다시 입력해 주세요.",
+                        "인증번호가 올바르지 않습니다.\n다시 입력해 주십시오.",
                         "확인"
                 );
                 return;
@@ -235,19 +235,19 @@ public class PhoneVerifyActivity extends AppCompatActivity {
         String last = etPhoneLast.getText().toString().trim();
 
         if (TextUtils.isEmpty(mid) || TextUtils.isEmpty(last)) {
-            toast("휴대폰 번호를 입력해주세요.");
+            toast("휴대폰 번호를 입력해 주십시오.");
             return null;
         }
 
         if (!mid.matches("[0-9]{4}") || !last.matches("[0-9]{4}")) {
-            toast("휴대폰 번호를 정확히 입력해주세요. (010-0000-0000)");
+            toast("휴대폰 번호를 정확히 입력해 주십시오. (010-0000-0000)");
             return null;
         }
 
         String phone = LocalAccounts.normalizePhone("010" + mid + last);
 
         if (phone == null) {
-            toast("휴대폰 번호를 정확히 입력해주세요. (010-0000-0000)");
+            toast("휴대폰 번호를 정확히 입력해 주십시오. (010-0000-0000)");
             return null;
         }
 

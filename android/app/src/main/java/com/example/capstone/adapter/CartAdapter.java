@@ -224,7 +224,7 @@ public class CartAdapter
             AppDialog.show(
                     v.getContext(),
                     false,
-                    "장바구니에서 뺄까요?",
+                    "장바구니에서 빼시겠습니까?",
                     currentProduct.getName(),
                     "취소",
                     null,

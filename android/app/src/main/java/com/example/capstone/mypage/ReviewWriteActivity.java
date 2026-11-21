@@ -32,7 +32,7 @@ public class ReviewWriteActivity extends AppCompatActivity {
     private static final int CONTENT_MAX_LENGTH = 500;
 
     private static final String[] RATING_LABELS = {
-            "별점을 선택해주세요", "별로예요", "그저 그래요", "괜찮아요", "좋아요", "최고예요"
+            "별점을 선택해 주십시오", "별로입니다", "그저 그렇습니다", "괜찮습니다", "좋습니다", "최고입니다"
     };
 
     private RatingBar ratingBar;
@@ -146,11 +146,11 @@ public class ReviewWriteActivity extends AppCompatActivity {
         String content = etContent.getText().toString().trim();
 
         if (rating < 0.5f) {
-            Toast.makeText(this, "별점을 선택해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "별점을 선택해 주십시오.", Toast.LENGTH_SHORT).show();
             return;
         }
         if (content.length() < CONTENT_MIN_LENGTH) {
-            Toast.makeText(this, "리뷰를 " + CONTENT_MIN_LENGTH + "자 이상 입력해주세요.",
+            Toast.makeText(this, "리뷰를 " + CONTENT_MIN_LENGTH + "자 이상 입력해 주십시오.",
                     Toast.LENGTH_SHORT).show();
             return;
         }

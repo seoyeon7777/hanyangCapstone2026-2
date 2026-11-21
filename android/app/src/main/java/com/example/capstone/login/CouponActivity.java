@@ -314,7 +314,7 @@ public class CouponActivity extends AppCompatActivity {
         String code = etCouponCode.getText().toString().replaceAll("\\s", "");
 
         if (TextUtils.isEmpty(code)) {
-            Toast.makeText(this, "쿠폰번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "쿠폰번호를 입력해 주십시오.", Toast.LENGTH_SHORT).show();
             return;
         }
 

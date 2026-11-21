@@ -47,7 +47,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="계정에 등록된 휴대폰 번호를 입력해주세요."
+        android:text="계정에 등록된 휴대폰 번호를 입력해 주십시오."
         android:textSize="13sp"
         android:textColor="@color/black"
         android:layout_marginTop="8dp"
@@ -139,7 +139,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="아직 계정이 없으신가요?  "
+            android:text="아직 계정이 없으십니까?  "
             android:textSize="13sp"
             android:textColor="#5A5A5A" />
 

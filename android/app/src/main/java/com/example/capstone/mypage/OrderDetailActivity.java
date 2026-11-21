@@ -222,7 +222,7 @@ public class OrderDetailActivity extends AppCompatActivity {
             }
         }
         if (product == null) {
-            Toast.makeText(activity, "상품 정보를 찾을 수 없어요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "상품 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
             return;
         }
 

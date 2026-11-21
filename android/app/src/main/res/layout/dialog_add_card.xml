@@ -54,7 +54,7 @@
                 android:id="@+id/tvPreviewCompany"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="카드사를 선택해주세요"
+                android:text="카드사를 선택해 주십시오"
                 android:textColor="#FFFFFF"
                 android:textSize="15sp"
                 android:textStyle="bold" />
@@ -159,7 +159,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:text="카드 정보는 결제대행사(PG)에 안전하게 보관돼요."
+            android:text="카드 정보는 결제대행사(PG)에 안전하게 보관됩니다."
             android:textColor="#999999"
             android:textSize="12sp" />
 

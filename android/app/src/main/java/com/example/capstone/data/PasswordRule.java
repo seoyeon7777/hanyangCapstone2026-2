@@ -8,7 +8,7 @@ package com.example.capstone.data;
 public final class PasswordRule {
 
     public static final String MESSAGE =
-            "새 비밀번호는 영문 대소문자, 숫자, 특수문자 중 2가지 이상을 조합해 8~16자로 입력해주세요.";
+            "새 비밀번호는 영문 대소문자, 숫자, 특수문자 중 2가지 이상을 조합해 8~16자로 입력해 주십시오.";
 
     private PasswordRule() {
     }

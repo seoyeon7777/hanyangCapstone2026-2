@@ -84,7 +84,7 @@ public class RefundAccountActivity extends AppCompatActivity {
             btnSetDefault.setOnClickListener(v -> {
                 // [여기에 DB 입력] 대표 환불 계좌 변경 (refund_accounts)
                 MyPageStore.setDefaultRefundAccount(account);
-                toast(account.bank + " 계좌를 대표 계좌로 설정했어요.");
+                toast(account.bank + " 계좌를 대표 계좌로 설정했습니다.");
                 renderAccounts();
             });
 
@@ -162,19 +162,19 @@ public class RefundAccountActivity extends AppCompatActivity {
             String holder = etHolder.getText().toString().trim();
 
             if (bank[0] == null) {
-                toast("은행을 선택해주세요.");
+                toast("은행을 선택해 주십시오.");
                 return;
             }
             if (accountNo.length() < 10 || accountNo.length() > 16) {
-                toast("계좌번호를 정확히 입력해주세요. (10~16자리)");
+                toast("계좌번호를 정확히 입력해 주십시오. (10~16자리)");
                 return;
             }
             if (TextUtils.isEmpty(holder)) {
-                toast("예금주명을 입력해주세요.");
+                toast("예금주명을 입력해 주십시오.");
                 return;
             }
             if (MyPageStore.hasRefundAccount(bank[0], accountNo)) {
-                toast("이미 등록된 계좌예요.");
+                toast("이미 등록된 계좌입니다.");
                 return;
             }
 

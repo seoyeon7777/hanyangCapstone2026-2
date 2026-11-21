@@ -74,8 +74,8 @@ public class OrderActivity extends AppCompatActivity {
 
     private Spinner spOrderRequest;
     private static final String[] DELIVERY_REQUESTS = {
-            "선택 안 함", "문 앞에 놓아주세요", "경비실에 맡겨주세요",
-            "택배함에 넣어주세요", "배송 전 연락 바랍니다", "부재 시 문 앞에 놓아주세요",
+            "선택 안 함", "문 앞에 놓아 주십시오", "경비실에 맡겨 주십시오",
+            "택배함에 넣어 주십시오", "배송 전 연락 바랍니다", "부재 시 문 앞에 놓아 주십시오",
             "직접 입력"
     };
     private EditText etOrderRequest;
@@ -273,7 +273,7 @@ public class OrderActivity extends AppCompatActivity {
 
         if (coupons.isEmpty()) {
             Toast.makeText(this,
-                    "사용할 수 있는 쿠폰이 없어요. 마이페이지 > 쿠폰함에서 받을 수 있어요.",
+                    "사용할 수 있는 쿠폰이 없습니다. 마이페이지 > 쿠폰함에서 받을 수 있습니다.",
                     Toast.LENGTH_LONG).show();
             return;
         }
@@ -337,8 +337,8 @@ public class OrderActivity extends AppCompatActivity {
         boolean usable = discount > 0;
         // 쓸 수 없는 이유: 쿠폰을 쓸 수 있는 상품이 없을 때와 최소 주문 금액에 못 미칠 때를 나눠 알려 준다
         String unusableReason = coupon.appliesToAny(lines)
-                ? "이번 주문에는 사용할 수 없어요"
-                : "이 주문 상품에는 쓸 수 없어요";
+                ? "이번 주문에는 사용할 수 없습니다"
+                : "이 주문 상품에는 쓸 수 없습니다";
 
         ((TextView) card.findViewById(R.id.tvCouponDiscount)).setText(coupon.discountText());
         ((TextView) card.findViewById(R.id.tvCouponName)).setText(coupon.name);
@@ -403,7 +403,7 @@ public class OrderActivity extends AppCompatActivity {
         }
 
         if (selectedAddress() == null) {
-            Toast.makeText(this, "배송지를 등록해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "배송지를 등록해 주십시오.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -413,7 +413,7 @@ public class OrderActivity extends AppCompatActivity {
         if (checkedPaymentId == -1) {
             Toast.makeText(
                     this,
-                    "결제 방법을 선택해주세요.",
+                    "결제 방법을 선택해 주십시오.",
                     Toast.LENGTH_SHORT
             ).show();
             return;

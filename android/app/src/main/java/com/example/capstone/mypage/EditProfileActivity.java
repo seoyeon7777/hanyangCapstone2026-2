@@ -110,7 +110,7 @@ public class EditProfileActivity extends AppCompatActivity {
         tvWithdraw.setPaintFlags(tvWithdraw.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
         tvWithdraw.setOnClickListener(v -> AppDialog.show(this, true,
                 "정말 탈퇴하시겠습니까?",
-                "탈퇴하면 배송지, 쿠폰, 찜, 체형 등 모든 정보가 삭제되며 복구할 수 없어요.\n단, 주문 내역은 관련 법령에 따라 일정 기간 보관돼요.",
+                "탈퇴하면 배송지, 쿠폰, 찜, 체형 등 모든 정보가 삭제되며 복구할 수 없습니다.\n단, 주문 내역은 관련 법령에 따라 일정 기간 보관됩니다.",
                 "취소", null,
                 "탈퇴하기", this::withdraw));
     }
@@ -121,7 +121,7 @@ public class EditProfileActivity extends AppCompatActivity {
             return;
         }
         AppDialog.show(this, false,
-                "프로필 사진", "새 사진을 고르거나 기본 이미지로 바꿀 수 있어요.",
+                "프로필 사진", "새 사진을 고르거나 기본 이미지로 바꿀 수 있습니다.",
                 "기본 이미지로", () -> {
                     ProfilePhotoStore.delete(this);
                     showPhoto();
@@ -148,7 +148,7 @@ public class EditProfileActivity extends AppCompatActivity {
                     showPhoto();
                     toast("프로필 사진이 변경되었습니다.");
                 } else {
-                    toast("사진을 불러오지 못했어요. 다른 사진을 골라 주세요.");
+                    toast("사진을 불러오지 못했습니다. 다른 사진을 골라 주십시오.");
                 }
             });
         }).start();
@@ -206,11 +206,11 @@ public class EditProfileActivity extends AppCompatActivity {
         btnSendMail.setOnClickListener(v -> {
             String email = input.email();
             if (email == null || email.isEmpty()) {
-                toast(input.isDomainMissing() ? "이메일 주소(@ 뒤)를 선택해주세요." : "이메일 형식이 올바르지 않습니다.");
+                toast(input.isDomainMissing() ? "이메일 주소(@ 뒤)를 선택해 주십시오." : "이메일 형식이 올바르지 않습니다.");
                 return;
             }
             if (email.equals(user.email)) {
-                toast("지금 등록된 이메일과 같아요.");
+                toast("지금 등록된 이메일과 같습니다.");
                 return;
             }
             // [여기에 DB 입력] 다른 회원이 쓰는 이메일인지 중복 확인 (users)
@@ -223,7 +223,7 @@ public class EditProfileActivity extends AppCompatActivity {
             sent[0] = email;
             etCode.setText("");
             btnSendMail.setText("인증번호 다시 받기");
-            tvNotice.setText("안내 창에 보이는 인증번호 4자리를 입력해 주세요. (5분 동안 유효)");
+            tvNotice.setText("안내 창에 보이는 인증번호 4자리를 입력해 주십시오. (5분 동안 유효)");
             tvNotice.setVisibility(View.VISIBLE);
             layoutCode.setVisibility(View.VISIBLE);
             setVerifyEnabled(btnVerify, true);
@@ -333,7 +333,7 @@ public class EditProfileActivity extends AppCompatActivity {
         sw.setChecked(prefs.getBoolean(key, false));
         sw.setOnCheckedChangeListener((b, checked) -> {
             prefs.edit().putBoolean(key, checked).apply();
-            toast("마케팅 정보 " + label + " 수신을 " + (checked ? "동의" : "거부") + "했어요.");
+            toast("마케팅 정보 " + label + " 수신을 " + (checked ? "동의" : "거부") + "했습니다.");
         });
     }
 

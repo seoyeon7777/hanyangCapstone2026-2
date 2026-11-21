@@ -114,7 +114,7 @@ public class CardPaymentActivity extends AppCompatActivity {
             String receiptEmail = etReceipt.getText().toString().trim();
             if (!receiptEmail.isEmpty()
                     && !android.util.Patterns.EMAIL_ADDRESS.matcher(receiptEmail).matches()) {
-                android.widget.Toast.makeText(this, "이메일 형식이 올바르지 않아요.",
+                android.widget.Toast.makeText(this, "이메일 형식이 올바르지 않습니다.",
                         android.widget.Toast.LENGTH_SHORT).show();
                 etReceipt.requestFocus();
                 return;

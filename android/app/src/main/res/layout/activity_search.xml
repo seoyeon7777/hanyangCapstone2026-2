@@ -132,7 +132,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:text="검색 결과가 없습니다.\n다른 검색어를 입력해주세요."
+            android:text="검색 결과가 없습니다.\n다른 검색어를 입력해 주십시오."
             android:textSize="15sp"
             android:textColor="#999999"
             android:lineSpacingExtra="8dp"

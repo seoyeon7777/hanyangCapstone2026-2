@@ -140,7 +140,7 @@
             android:id="@+id/etAuthCode"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:hint="인증번호를 입력해주세요."
+            android:hint="인증번호를 입력해 주십시오."
             android:inputType="number"
             android:maxLength="4"
             android:background="@drawable/bg_edit"

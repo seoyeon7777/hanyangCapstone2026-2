@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="28dp"
-                android:text="상품은 만족하셨나요?"
+                android:text="상품은 만족하셨습니까?"
                 android:textColor="@color/black"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -88,7 +88,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="24dp"
-                android:text="별점을 선택해주세요" />
+                android:text="별점을 선택해 주십시오" />
 
             <!-- ============ 내용 ============ -->
             <TextView
@@ -101,7 +101,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_edit"
                 android:gravity="top|start"
-                android:hint="사이즈, 핏, 색감 등 솔직한 후기를 남겨주세요. (10자 이상)"
+                android:hint="사이즈, 핏, 색감 등 솔직한 후기를 남겨 주십시오. (10자 이상)"
                 android:inputType="textMultiLine"
                 android:maxLength="500"
                 android:minHeight="180dp"

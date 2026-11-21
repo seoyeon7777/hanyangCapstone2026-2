@@ -110,7 +110,7 @@ public class ClaimRequestActivity extends AppCompatActivity {
         View accountsLayout = findViewById(R.id.layoutRefundAccounts);
 
         if (!order.paidByCard() && order.status == MyPageStore.STATUS_PENDING) {
-            method.setText("입금 전 주문이라 환불할 금액이 없어요");
+            method.setText("입금 전 주문이라 환불할 금액이 없습니다");
             method.setVisibility(View.VISIBLE);
             accountsLayout.setVisibility(View.GONE);
             return;
@@ -132,12 +132,12 @@ public class ClaimRequestActivity extends AppCompatActivity {
 
         method.setVisibility(View.VISIBLE);
         if (order.paidByCard()) {
-            method.setText("고른 계좌로 환불돼요");
+            method.setText("고른 계좌로 환불됩니다");
             method.setVisibility(selectedAccountNo == null ? View.GONE : View.VISIBLE);
         } else {
             method.setText(accounts.isEmpty()
-                    ? "환불받을 계좌를 등록해 주세요"
-                    : "환불받을 계좌를 골라 주세요");
+                    ? "환불받을 계좌를 등록해 주십시오"
+                    : "환불받을 계좌를 골라 주십시오");
         }
 
         containerAccounts.removeAllViews();
@@ -182,7 +182,7 @@ public class ClaimRequestActivity extends AppCompatActivity {
     private void submit() {
         String reason = etDetail.getText().toString().trim();
         if (reason.isEmpty()) {
-            Toast.makeText(this, "사유를 적어 주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "사유를 적어 주십시오.", Toast.LENGTH_SHORT).show();
             etDetail.requestFocus();
             return;
         }
@@ -197,7 +197,7 @@ public class ClaimRequestActivity extends AppCompatActivity {
             } else if (order.paidByCard() || MyPageStore.needsRefundAccount(order)) {
                 RefundAccount account = selectedAccountNo == null ? null : findAccount(selectedAccountNo);
                 if (account == null) {
-                    Toast.makeText(this, "환불받을 계좌를 등록하거나 골라 주세요.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "환불받을 계좌를 등록하거나 골라 주십시오.", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 refund = account.bank + " " + account.getMaskedAccountNo();
@@ -209,7 +209,7 @@ public class ClaimRequestActivity extends AppCompatActivity {
         final String claimRefund = refund;
         AppDialog.show(this, false,
                 claimType + " 신청",
-                "신청하면 되돌릴 수 없어요. 계속할까요?",
+                "신청하면 되돌릴 수 없습니다. 계속하시겠습니까?",
                 "닫기", null,
                 "신청하기", () -> sendClaim(claimType, reason, claimRefund));
     }

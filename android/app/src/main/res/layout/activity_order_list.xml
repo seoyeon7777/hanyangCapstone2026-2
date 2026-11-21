@@ -97,7 +97,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="350dp"
                 android:gravity="center"
-                android:text="아직 주문 내역이 없어요"
+                android:text="아직 주문 내역이 없습니다"
                 android:textColor="#999999"
                 android:textSize="15sp" />
         </LinearLayout>
