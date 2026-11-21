@@ -438,6 +438,7 @@ match_score(body, item) -> {
 - **찜 화면 레이아웃**: `btnWishBack` id가 두 번 있던 것(lint 오류)을 지움. 코드는 처음부터 앞의 ImageButton만 썼다
 - **단위 테스트 20개 실패 해결**: PC에서 도는 JVM 테스트에는 안드로이드의 `org.json`·`Log`가 비어 있어서 실패하던 것(앱 동작과 무관). `app/build.gradle.kts`에 `testImplementation("org.json:json:20231013")`와 `testOptions { unitTests.isReturnDefaultValues = true }`를 넣어 91개 모두 통과. 이전 항목들에 적힌 "20개 실패는 org.json 환경 문제"는 이 수정 이후 해당 없음
 - **서버**: 깨진 JSON 본문을 보내면 "체형 비율이 필요해요" 대신 "요청 본문이 올바른 JSON이 아니에요"(400). `test_api.py` 1개 추가(30개)
+- **공지사항**: 항상 비어 있던 목록에 공지 4개를 `MyPageStore.notices`에 직접 넣음(11/21 업데이트·사진은 기기 안 처리·이용 방법·시연용 안내). 공지 서버가 생기면 이 목록을 서버에서 받도록 바꿀 것
 - 안 한 것: lint 경고(`ContentDescription` 33곳·`Autofill` 55곳 등. 앱 동작과 무관한 접근성·자동완성 개선이라 미룸)
 
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
