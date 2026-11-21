@@ -517,7 +517,10 @@ public class MeasurementResultActivity extends AppCompatActivity {
                         BodyProfileStore.Profile saved = BodyProfileStore.save(
                                 MeasurementResultActivity.this,
                                 editId,
-                                name, heightCm, 0f, bodyType, parts, surveyAnswers);
+                                name, heightCm,
+                                com.example.capstone.data.BodyInput.weight(MeasurementResultActivity.this),
+                                com.example.capstone.data.BodyInput.age(MeasurementResultActivity.this),
+                                0f, bodyType, parts, surveyAnswers);
                         MeasurementSession.continueProfileId = null;
                         MeasurementSession.remeasure = false;
                         startActivity(BodySaveCompleteActivity.newIntent(

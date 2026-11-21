@@ -63,6 +63,9 @@ public final class BodyProfileStore {
         public String name;
         public long savedAt;
         public float heightCm;
+        /** 사진으로 치수를 잴 때 넣은 몸무게(kg)·나이. 0이면 기록 없음(예전 카드·설문만 한 카드). 예전에 잰 값인지 알아보라고 카드에 남긴다 */
+        public float weightKg;
+        public float age;
         public float bodyFat;
         public String bodyType;
         public JSONObject parts;
@@ -89,6 +92,8 @@ public final class BodyProfileStore {
             j.put("name", name);
             j.put("savedAt", savedAt);
             j.put("height", heightCm);
+            j.put("weight", weightKg);
+            j.put("age", age);
             j.put("bodyFat", bodyFat);
             j.put("bodyType", bodyType);
             j.put("parts", parts == null ? new JSONObject() : parts);
@@ -108,6 +113,8 @@ public final class BodyProfileStore {
             p.name = j.optString("name");
             p.savedAt = j.optLong("savedAt");
             p.heightCm = (float) j.optDouble("height", -1d);
+            p.weightKg = (float) j.optDouble("weight", 0d);
+            p.age = (float) j.optDouble("age", 0d);
             p.bodyFat = (float) j.optDouble("bodyFat", 0d);
             p.bodyType = j.optString("bodyType", "표준");
             p.parts = j.optJSONObject("parts");
@@ -259,6 +266,14 @@ public final class BodyProfileStore {
     public static Profile save(Context context, String editId, String name, float heightCm,
                                float bodyFat, String bodyType, JSONObject parts,
                                int[] surveyAnswers) {
+        return save(context, editId, name, heightCm, -1f, -1f, bodyFat, bodyType, parts, surveyAnswers);
+    }
+
+    /** weightKg·age가 0 미만이면 기존 카드의 값을 그대로 둔다(새 카드면 기록 없음) */
+    public static Profile save(Context context, String editId, String name, float heightCm,
+                               float weightKg, float age,
+                               float bodyFat, String bodyType, JSONObject parts,
+                               int[] surveyAnswers) {
         List<Profile> list = getProfiles(context);
         Profile target = null;
         if (editId != null) {
@@ -278,6 +293,12 @@ public final class BodyProfileStore {
         target.name = name;
         target.savedAt = System.currentTimeMillis();
         target.heightCm = heightCm;
+        if (weightKg >= 0f) {
+            target.weightKg = weightKg;
+        }
+        if (age >= 0f) {
+            target.age = age;
+        }
         target.bodyFat = bodyFat;
         target.bodyType = bodyType;
         target.parts = parts;

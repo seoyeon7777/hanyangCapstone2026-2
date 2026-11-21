@@ -202,6 +202,8 @@ public class MyBodyActivity extends AppCompatActivity {
         boolean surveyOnly = profile.isSurveyOnly();
         ((TextView) card.findViewById(R.id.tvProfileSummary)).setText(
                 (profile.heightCm > 0f ? "키 " + BodyValueTable.cm(profile.heightCm) + " · " : "")
+                        + (profile.weightKg > 0f ? "몸무게 " + BodyValueTable.cm(profile.weightKg).replace("cm", "kg") + " · " : "")
+                        + (profile.age > 0f ? "나이 " + Math.round(profile.age) + "세 · " : "")
                         + "체형 " + profile.bodyType
                         + (surveyOnly ? " (설문)" : "")
                         + " · " + profile.savedDate());
