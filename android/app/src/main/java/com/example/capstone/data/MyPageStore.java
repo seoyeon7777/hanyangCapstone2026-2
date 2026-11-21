@@ -368,7 +368,42 @@ public class MyPageStore {
     private static final List<Address> addresses = new ArrayList<>();
     private static final List<PaymentCard> cards = new ArrayList<>();
     private static final List<MyReview> reviews = new ArrayList<>();
-    private static final List<Notice> notices = new ArrayList<>();
+    // 공지사항: 지금은 서버가 없어 몇 개를 코드에 넣어 둔다 (최신 순)
+    private static final List<Notice> notices = new ArrayList<>(
+            Arrays.asList(
+                    new Notice(
+                            "업데이트",
+                            "11월 앱 업데이트 안내",
+                            "2026.11.21",
+                            "· 장바구니 담기도 로그인 후 이용할 수 있어요 (찜·바로 구매와 같아요).\n"
+                                    + "· 주문 취소·반품 신청 전에 확인 창이 뜨고, 배송지 연락처는 010-0000-0000 모양으로 입력돼요.\n"
+                                    + "· 결제 화면에서 전자영수증 받을 이메일을 적을 수 있어요 (메일 발송은 준비 중이에요).\n"
+                                    + "· 주소 검색과 설문 안내 문구를 다듬었어요."
+                    ),
+                    new Notice(
+                            "안내",
+                            "체형 분석 사진은 기기 안에서만 처리돼요",
+                            "2026.11.15",
+                            "정면·옆면 사진은 서버로 보내지 않고 내 폰 안에서만 분석해요. 분석이 끝나면 앱이 들고 있던 사진은 바로 지워요. "
+                                    + "앨범에 있는 원본 사진은 지우지 않아요."
+                    ),
+                    new Notice(
+                            "안내",
+                            "체형 맞춤 서비스 이용 방법",
+                            "2026.11.10",
+                            "하단 「체형」 메뉴에서 키·몸무게·나이를 입력하고 설문(최대 15문항)에 답하면 스트레이트·웨이브·내추럴 중 "
+                                    + "나의 골격 체형을 알려 드려요. 사진으로 정밀 분석하면 치수까지 재서 추천 사이즈를 볼 수 있어요. "
+                                    + "체형은 여러 개 저장하고 「현재 체형」으로 고를 수 있어요."
+                    ),
+                    new Notice(
+                            "공지",
+                            "시연용 서비스 안내",
+                            "2026.11.01",
+                            "이 앱은 캡스톤 프로젝트 시연용이에요. 결제·인증번호·전자영수증은 실제로 처리되거나 발송되지 않고, "
+                                    + "인증번호는 화면에 보여 드려요. 상품과 가격도 예시예요."
+                    )
+            )
+    );
     private static final List<Inquiry> inquiries = new ArrayList<>();
 
     private static final Set<String> receivedCouponIds = new HashSet<>();
