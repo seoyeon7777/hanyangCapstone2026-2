@@ -148,7 +148,7 @@ public class EditProfileActivity extends AppCompatActivity {
                     showPhoto();
                     toast("프로필 사진이 변경되었습니다.");
                 } else {
-                    toast("사진을 불러오지 못했습니다. 다른 사진을 골라 주십시오.");
+                    toast("사진을 불러오지 못했어요. 다른 사진을 골라 주세요.");
                 }
             });
         }).start();
@@ -206,11 +206,11 @@ public class EditProfileActivity extends AppCompatActivity {
         btnSendMail.setOnClickListener(v -> {
             String email = input.email();
             if (email == null || email.isEmpty()) {
-                toast(input.isDomainMissing() ? "이메일 주소(@ 뒤)를 선택해 주십시오." : "이메일 형식이 올바르지 않습니다.");
+                toast(input.isDomainMissing() ? "이메일 주소(@ 뒤)를 선택해주세요." : "이메일 형식이 올바르지 않습니다.");
                 return;
             }
             if (email.equals(user.email)) {
-                toast("지금 등록된 이메일과 같습니다.");
+                toast("지금 등록된 이메일과 같아요.");
                 return;
             }
             // [여기에 DB 입력] 다른 회원이 쓰는 이메일인지 중복 확인 (users)
@@ -333,7 +333,7 @@ public class EditProfileActivity extends AppCompatActivity {
         sw.setChecked(prefs.getBoolean(key, false));
         sw.setOnCheckedChangeListener((b, checked) -> {
             prefs.edit().putBoolean(key, checked).apply();
-            toast("마케팅 정보 " + label + " 수신을 " + (checked ? "동의" : "거부") + "했습니다.");
+            toast("마케팅 정보 " + label + " 수신을 " + (checked ? "동의" : "거부") + "했어요.");
         });
     }
 

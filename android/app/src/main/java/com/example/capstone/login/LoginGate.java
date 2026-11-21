@@ -42,7 +42,7 @@ public final class LoginGate {
 
         Activity activity = findActivity(context);
         if (activity == null) {
-            Toast.makeText(context, "로그인이 필요합니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "로그인이 필요해요.", Toast.LENGTH_SHORT).show();
             return;
         }
 

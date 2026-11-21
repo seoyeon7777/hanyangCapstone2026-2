@@ -572,7 +572,7 @@ public class CartActivity extends AppCompatActivity {
                         this,
                         cartProducts.isEmpty()
                                 ? "장바구니에 상품이 없습니다."
-                                : "주문할 상품을 선택해 주십시오.",
+                                : "주문할 상품을 선택해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 

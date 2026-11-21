@@ -455,7 +455,7 @@ public class BodyTypeActivity extends AppCompatActivity {
 
             Toast.makeText(
                     this,
-                    "답변을 선택해 주십시오.",
+                    "답변을 선택해주세요.",
                     Toast.LENGTH_SHORT
             ).show();
 
@@ -479,7 +479,7 @@ public class BodyTypeActivity extends AppCompatActivity {
     private void showEarlyResult() {
 
         if (selectedAnswers[currentQuestion] == 0) {
-            Toast.makeText(this, "답변을 선택해 주십시오.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "답변을 선택해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 

@@ -129,7 +129,7 @@ public class MyBodyActivity extends AppCompatActivity {
             for (String id : targets) {
                 BodyProfileStore.delete(this, id);
             }
-            Toast.makeText(this, "체형 " + targets.size() + "개를 삭제했습니다.",
+            Toast.makeText(this, "체형 " + targets.size() + "개를 삭제했어요.",
                     Toast.LENGTH_SHORT).show();
             setSelectMode(false);
         });
@@ -299,7 +299,7 @@ public class MyBodyActivity extends AppCompatActivity {
 
     private void selectAsCurrent(BodyProfileStore.Profile profile) {
         BodyProfileStore.setActive(this, profile.id);
-        Toast.makeText(this, "'" + profile.name + "'을(를) 현재 체형으로 선택했습니다. 홈 추천도 이 체형으로 바뀝니다.",
+        Toast.makeText(this, "'" + profile.name + "'을(를) 현재 체형으로 선택했어요. 홈 추천도 이 체형으로 바뀌어요.",
                 Toast.LENGTH_SHORT).show();
         loadProfiles();
     }
@@ -313,7 +313,7 @@ public class MyBodyActivity extends AppCompatActivity {
                 profile.name, "체형 이름", InputType.TYPE_CLASS_TEXT,
                 "변경", name -> {
                     if (name.isEmpty()) {
-                        Toast.makeText(this, "이름을 입력해 주십시오.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
                         return false;
                     }
                     BodyProfileStore.rename(this, profile.id, name);

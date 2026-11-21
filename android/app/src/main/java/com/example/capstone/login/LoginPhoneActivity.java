@@ -91,7 +91,7 @@ public class LoginPhoneActivity extends AppCompatActivity {
             if (TextUtils.isEmpty(phone)) {
                 Toast.makeText(
                         this,
-                        "휴대폰 번호를 입력해 주십시오.",
+                        "휴대폰 번호를 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
                 return;
@@ -112,7 +112,7 @@ public class LoginPhoneActivity extends AppCompatActivity {
             if (TextUtils.isEmpty(phone)) {
                 Toast.makeText(
                         this,
-                        "휴대폰 번호를 입력해 주십시오.",
+                        "휴대폰 번호를 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
                 return;
@@ -121,7 +121,7 @@ public class LoginPhoneActivity extends AppCompatActivity {
             if (TextUtils.isEmpty(password)) {
                 Toast.makeText(
                         this,
-                        "비밀번호를 입력해 주십시오.",
+                        "비밀번호를 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
                 return;
@@ -130,7 +130,7 @@ public class LoginPhoneActivity extends AppCompatActivity {
             if (LocalAccounts.normalizePhone(phone) == null) {
                 Toast.makeText(
                         this,
-                        "휴대폰 번호를 정확히 입력해 주십시오.",
+                        "휴대폰 번호를 정확히 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
                 return;

@@ -128,7 +128,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         BodyProfileStore.Profile saved = BodyTypeActivity.saveSurveyProfile(this);
 
         if (saved == null) {
-            Toast.makeText(this, "저장할 진단 결과가 없습니다. 설문을 다시 해 주십시오.",
+            Toast.makeText(this, "저장할 진단 결과가 없어요. 설문을 다시 해 주세요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }

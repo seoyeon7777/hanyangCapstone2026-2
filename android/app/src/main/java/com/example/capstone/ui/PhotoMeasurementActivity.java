@@ -370,7 +370,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
 
                         Toast.makeText(
                                 this,
-                                "정면과 옆면 사진을 모두 선택해 주십시오.",
+                                "정면과 옆면 사진을 모두 선택해주세요.",
                                 Toast.LENGTH_SHORT
                         ).show();
 

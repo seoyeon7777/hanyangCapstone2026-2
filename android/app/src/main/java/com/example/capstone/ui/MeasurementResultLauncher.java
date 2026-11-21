@@ -67,7 +67,7 @@ final class MeasurementResultLauncher {
             circ[i] = CircumferenceCalculator.calculateEllipseCircumference(width[i], depth[i]);
             if (circ[i] <= 0f) {
                 Toast.makeText(context,
-                        MeasurementSession.LABELS[i] + " 위치에서 몸이 잡히지 않습니다. 전신이 나온 다른 사진으로 다시 해 주십시오.",
+                        MeasurementSession.LABELS[i] + " 위치에서 몸이 잡히지 않아요. 전신이 나온 다른 사진으로 다시 해주세요.",
                         Toast.LENGTH_LONG).show();
                 return false;
             }

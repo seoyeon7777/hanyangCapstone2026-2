@@ -273,7 +273,7 @@ public class OrderActivity extends AppCompatActivity {
 
         if (coupons.isEmpty()) {
             Toast.makeText(this,
-                    "사용할 수 있는 쿠폰이 없습니다. 마이페이지 > 쿠폰함에서 받을 수 있습니다.",
+                    "사용할 수 있는 쿠폰이 없어요. 마이페이지 > 쿠폰함에서 받을 수 있어요.",
                     Toast.LENGTH_LONG).show();
             return;
         }
@@ -403,7 +403,7 @@ public class OrderActivity extends AppCompatActivity {
         }
 
         if (selectedAddress() == null) {
-            Toast.makeText(this, "배송지를 등록해 주십시오.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "배송지를 등록해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -413,7 +413,7 @@ public class OrderActivity extends AppCompatActivity {
         if (checkedPaymentId == -1) {
             Toast.makeText(
                     this,
-                    "결제 방법을 선택해 주십시오.",
+                    "결제 방법을 선택해주세요.",
                     Toast.LENGTH_SHORT
             ).show();
             return;

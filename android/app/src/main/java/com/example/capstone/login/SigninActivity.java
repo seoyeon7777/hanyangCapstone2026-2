@@ -324,7 +324,7 @@ public class SigninActivity extends AppCompatActivity {
             if (TextUtils.isEmpty(id)) {
                 Toast.makeText(
                         this,
-                        "아이디를 입력해 주십시오.",
+                        "아이디를 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -506,7 +506,7 @@ public class SigninActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "아이디를 입력해 주십시오.",
+                        "아이디를 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -528,7 +528,7 @@ public class SigninActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "아이디 중복확인을 해 주십시오.",
+                        "아이디 중복확인을 해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -563,7 +563,7 @@ public class SigninActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "이름을 입력해 주십시오.",
+                        "이름을 입력해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -578,8 +578,8 @@ public class SigninActivity extends AppCompatActivity {
                 Toast.makeText(
                         this,
                         emailInput.isDomainMissing()
-                                ? "이메일 주소(@ 뒤)를 선택해 주십시오."
-                                : "이메일을 정확히 입력해 주십시오. 쓰지 않으려면 비워 두십시오.",
+                                ? "이메일 주소(@ 뒤)를 선택해주세요."
+                                : "이메일을 정확히 입력해주세요. 쓰지 않으려면 비워 두세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -607,7 +607,7 @@ public class SigninActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "생년월일을 모두 선택하거나 모두 비워 주십시오.",
+                        "생년월일을 모두 선택하거나 모두 비워 주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -622,7 +622,7 @@ public class SigninActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "생년월일을 정확히 선택해 주십시오.",
+                        "생년월일을 정확히 선택해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -635,7 +635,7 @@ public class SigninActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "필수 약관에 모두 동의해 주십시오.",
+                        "필수 약관에 모두 동의해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 

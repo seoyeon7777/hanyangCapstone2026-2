@@ -182,7 +182,7 @@ public class ClaimRequestActivity extends AppCompatActivity {
     private void submit() {
         String reason = etDetail.getText().toString().trim();
         if (reason.isEmpty()) {
-            Toast.makeText(this, "사유를 적어 주십시오.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "사유를 적어 주세요.", Toast.LENGTH_SHORT).show();
             etDetail.requestFocus();
             return;
         }
@@ -197,7 +197,7 @@ public class ClaimRequestActivity extends AppCompatActivity {
             } else if (order.paidByCard() || MyPageStore.needsRefundAccount(order)) {
                 RefundAccount account = selectedAccountNo == null ? null : findAccount(selectedAccountNo);
                 if (account == null) {
-                    Toast.makeText(this, "환불받을 계좌를 등록하거나 골라 주십시오.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "환불받을 계좌를 등록하거나 골라 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 refund = account.bank + " " + account.getMaskedAccountNo();

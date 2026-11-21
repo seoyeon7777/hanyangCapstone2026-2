@@ -250,17 +250,17 @@ public class InquiryActivity extends AppCompatActivity {
         String content = etContent.getText().toString().trim();
 
         if (TextUtils.isEmpty(type) || TYPE_PLACEHOLDER.equals(type)) {
-            Toast.makeText(this, "문의 유형을 선택해 주십시오.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "문의 유형을 선택해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (TextUtils.isEmpty(title)) {
-            Toast.makeText(this, "제목을 입력해 주십시오.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "제목을 입력해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (TextUtils.isEmpty(content) || content.length() < CONTENT_MIN_LENGTH) {
-            Toast.makeText(this, "내용을 " + CONTENT_MIN_LENGTH + "자 이상 입력해 주십시오.",
+            Toast.makeText(this, "내용을 " + CONTENT_MIN_LENGTH + "자 이상 입력해주세요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }

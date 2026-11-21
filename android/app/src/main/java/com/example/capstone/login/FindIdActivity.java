@@ -195,7 +195,7 @@ public class FindIdActivity extends AppCompatActivity {
 
         if (contact == null) {
             Toast.makeText(this, byPhone
-                            ? "휴대폰 번호를 정확히 입력해 주십시오."
+                            ? "휴대폰 번호를 정확히 입력해주세요."
                             : "올바른 이메일 형식이 아닙니다. (예: example@gmail.com)",
                     Toast.LENGTH_SHORT).show();
             return;
@@ -231,7 +231,7 @@ public class FindIdActivity extends AppCompatActivity {
         String input = etAuthCode.getText().toString().trim();
 
         if (input.length() != AuthCode.LENGTH) {
-            Toast.makeText(this, "인증번호 " + AuthCode.LENGTH + "자리를 입력해 주십시오.",
+            Toast.makeText(this, "인증번호 " + AuthCode.LENGTH + "자리를 입력해주세요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }
@@ -262,12 +262,12 @@ public class FindIdActivity extends AppCompatActivity {
         }
 
         if (foundAccount == null) {
-            Toast.makeText(this, "인증받기를 눌러 본인확인을 해 주십시오.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "인증받기를 눌러 본인확인을 해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (!isCodeVerified) {
-            Toast.makeText(this, "인증확인을 완료해 주십시오.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "인증확인을 완료해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 

@@ -179,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
                 lastBackAt = now;
                 Toast.makeText(
                         MainActivity.this,
-                        "뒤로 버튼을 한 번 더 누르면 종료됩니다",
+                        "뒤로 버튼을 한 번 더 누르면 종료돼요",
                         Toast.LENGTH_SHORT
                 ).show();
             }
@@ -655,7 +655,7 @@ public class MainActivity extends AppCompatActivity {
                                 homeErrorShown = true;
                                 Toast.makeText(
                                         MainActivity.this,
-                                        message + " 잠시 뒤 다시 불러오겠습니다",
+                                        message + " 잠시 뒤 다시 불러올게요",
                                         Toast.LENGTH_LONG
                                 ).show();
                             }
@@ -673,7 +673,7 @@ public class MainActivity extends AppCompatActivity {
 
                             Toast.makeText(
                                     MainActivity.this,
-                                    "체형 진단을 하면 골격 맞춤 추천을 볼 수 있습니다. 지금은 일반 추천을 보여 드리겠습니다",
+                                    "체형 진단을 하면 골격 맞춤 추천을 볼 수 있어요. 지금은 일반 추천을 보여 줄게요",
                                     Toast.LENGTH_LONG
                             ).show();
 
