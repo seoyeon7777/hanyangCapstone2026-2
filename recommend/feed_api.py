@@ -101,7 +101,7 @@ def store_error(e):
     # DB(Supabase)가 꺼져 있거나 일시 정지됨 → 앱은 503을 보고 "잠시 후 다시" 안내.
     # 자세한 원인은 서버 화면에만 남긴다 (앱 사용자에게 개발자용 문구가 보이지 않게)
     current_app.logger.error("DB 오류: %s (Supabase 프로젝트가 일시 정지됐는지 확인)", e)
-    return jsonify({"ok": False, "error": "DB에 잠시 연결할 수 없습니다. 잠시 후 다시 시도해 주십시오"}), 503
+    return jsonify({"ok": False, "error": "DB에 잠시 연결할 수 없어요. 잠시 후 다시 시도해 주세요"}), 503
 
 
 def json_body():

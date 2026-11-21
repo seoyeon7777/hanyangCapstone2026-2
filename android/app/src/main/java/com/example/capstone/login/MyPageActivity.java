@@ -171,7 +171,7 @@ public class MyPageActivity extends AppCompatActivity {
         // 로그아웃
         tvLogout.setOnClickListener(v -> AppDialog.show(this, false,
                 "로그아웃",
-                "로그아웃 하시겠습니까?",
+                "로그아웃 할까요?",
                 "취소", null,
                 "로그아웃", this::logout));
     }
@@ -188,7 +188,7 @@ public class MyPageActivity extends AppCompatActivity {
         // [여기에 DB 입력] 로그인 세션/토큰 삭제
         LoginSession.logout(this);
         MyPageStore.logout();
-        Toast.makeText(this, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "로그아웃 되었어요.", Toast.LENGTH_SHORT).show();
 
         // 뒤로가기로 마이페이지에 다시 들어오지 못하도록 쌓인 화면을 모두 비우고 메인으로
         Intent intent = new Intent(MyPageActivity.this, MainActivity.class);

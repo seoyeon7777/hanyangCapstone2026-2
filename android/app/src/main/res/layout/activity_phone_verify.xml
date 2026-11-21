@@ -47,7 +47,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="본인확인을 위해 인증을 진행해 주십시오."
+        android:text="본인확인을 위해 인증을 진행해 주세요."
         android:textSize="13sp"
         android:textColor="@color/black"
         android:layout_marginTop="8dp"
@@ -147,7 +147,7 @@
         android:id="@+id/etAuthCode"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:hint="인증번호를 입력해 주십시오."
+        android:hint="인증번호를 입력해 주세요."
         android:inputType="number"
         android:maxLength="4"
         android:background="@drawable/bg_edit"
@@ -174,7 +174,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginBottom="12dp"
         android:paddingVertical="4dp"
-        android:text="인증번호가 안 옵니다."
+        android:text="인증번호가 안 와요."
         android:textColor="#888888"
         android:textSize="13sp"/>
 

@@ -100,7 +100,7 @@ public class LoginPhoneActivity extends AppCompatActivity {
             // [여기에 DB 입력] 가입된 휴대폰 번호인지 확인 후 인증번호 발송 (users)
             Toast.makeText(
                     this,
-                    "인증번호가 발송되었습니다.",
+                    "인증번호가 발송되었어요.",
                     Toast.LENGTH_SHORT
             ).show();
         });
@@ -142,7 +142,7 @@ public class LoginPhoneActivity extends AppCompatActivity {
             if (account == null) {
                 Toast.makeText(
                         this,
-                        "휴대폰 번호 또는 비밀번호가 올바르지 않습니다.",
+                        "휴대폰 번호 또는 비밀번호가 올바르지 않아요.",
                         Toast.LENGTH_SHORT
                 ).show();
                 return;

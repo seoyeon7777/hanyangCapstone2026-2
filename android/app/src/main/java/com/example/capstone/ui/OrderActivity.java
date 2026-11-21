@@ -74,8 +74,8 @@ public class OrderActivity extends AppCompatActivity {
 
     private Spinner spOrderRequest;
     private static final String[] DELIVERY_REQUESTS = {
-            "선택 안 함", "문 앞에 놓아 주십시오", "경비실에 맡겨 주십시오",
-            "택배함에 넣어 주십시오", "배송 전 연락 바랍니다", "부재 시 문 앞에 놓아 주십시오",
+            "선택 안 함", "문 앞에 놓아 주세요", "경비실에 맡겨 주세요",
+            "택배함에 넣어 주세요", "배송 전 연락 주세요", "부재 시 문 앞에 놓아 주세요",
             "직접 입력"
     };
     private EditText etOrderRequest;
@@ -337,8 +337,8 @@ public class OrderActivity extends AppCompatActivity {
         boolean usable = discount > 0;
         // 쓸 수 없는 이유: 쿠폰을 쓸 수 있는 상품이 없을 때와 최소 주문 금액에 못 미칠 때를 나눠 알려 준다
         String unusableReason = coupon.appliesToAny(lines)
-                ? "이번 주문에는 사용할 수 없습니다"
-                : "이 주문 상품에는 쓸 수 없습니다";
+                ? "이번 주문에는 사용할 수 없어요"
+                : "이 주문 상품에는 쓸 수 없어요";
 
         ((TextView) card.findViewById(R.id.tvCouponDiscount)).setText(coupon.discountText());
         ((TextView) card.findViewById(R.id.tvCouponName)).setText(coupon.name);

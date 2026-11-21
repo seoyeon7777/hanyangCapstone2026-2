@@ -92,7 +92,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:gravity="top"
-        android:hint="상품에 대한 리뷰를 작성해 주십시오."
+        android:hint="상품에 대한 리뷰를 작성해 주세요."
         android:inputType="textMultiLine"
         android:padding="12dp"
         android:textColor="#111111"
@@ -135,7 +135,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="30dp"
-        android:text="아직 작성된 리뷰가 없습니다."
+        android:text="아직 작성된 리뷰가 없어요."
         android:textColor="#777777"
         android:textSize="14sp" />
 

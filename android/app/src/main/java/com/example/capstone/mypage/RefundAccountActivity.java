@@ -50,7 +50,7 @@ public class RefundAccountActivity extends AppCompatActivity {
 
         findViewById(R.id.btnAddAccount).setOnClickListener(v -> {
             if (MyPageStore.getRefundAccounts().size() >= MAX_ACCOUNT) {
-                toast("환불 계좌는 최대 " + MAX_ACCOUNT + "개까지 등록할 수 있습니다.");
+                toast("환불 계좌는 최대 " + MAX_ACCOUNT + "개까지 등록할 수 있어요.");
                 return;
             }
             showAddAccountSheet();
@@ -90,7 +90,7 @@ public class RefundAccountActivity extends AppCompatActivity {
 
             view.findViewById(R.id.btnDelete).setOnClickListener(v ->
                     MyPageUi.confirm(this, "환불 계좌 삭제",
-                            account.bank + " " + account.getMaskedAccountNo() + " 계좌를 삭제하시겠습니까?", () -> {
+                            account.bank + " " + account.getMaskedAccountNo() + " 계좌를 삭제할까요?", () -> {
                                 // [여기에 DB 입력] 환불 계좌 삭제 (refund_accounts)
                                 MyPageStore.deleteRefundAccount(account);
                                 renderAccounts();
@@ -180,7 +180,7 @@ public class RefundAccountActivity extends AppCompatActivity {
 
             // [여기에 DB 입력] 예금주 실명 확인(1원 인증 등) 후 환불 계좌 저장 (refund_accounts)
             MyPageStore.addRefundAccount(new RefundAccount(bank[0], accountNo, holder));
-            toast("환불 계좌가 등록되었습니다.");
+            toast("환불 계좌가 등록되었어요.");
             renderAccounts();
             sheet.dismiss();
         });

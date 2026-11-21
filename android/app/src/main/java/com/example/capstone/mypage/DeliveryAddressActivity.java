@@ -52,7 +52,7 @@ public class DeliveryAddressActivity extends AppCompatActivity {
 
         btnAddAddress.setOnClickListener(v -> {
             if (MyPageStore.getAddresses().size() >= MAX_ADDRESS) {
-                Toast.makeText(this, "배송지는 최대 " + MAX_ADDRESS + "개까지 등록할 수 있습니다.",
+                Toast.makeText(this, "배송지는 최대 " + MAX_ADDRESS + "개까지 등록할 수 있어요.",
                         Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -123,7 +123,7 @@ public class DeliveryAddressActivity extends AppCompatActivity {
         btnSetDefault.setVisibility(address.isDefault ? View.GONE : View.VISIBLE);
         btnSetDefault.setOnClickListener(v -> {
             MyPageStore.setDefaultAddress(address);
-            Toast.makeText(this, "기본 배송지로 설정되었습니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "기본 배송지로 설정되었어요.", Toast.LENGTH_SHORT).show();
             renderAddresses();
         });
 
@@ -131,7 +131,7 @@ public class DeliveryAddressActivity extends AppCompatActivity {
                 startActivity(AddressEditActivity.newEditIntent(this, address.id)));
 
         view.findViewById(R.id.btnDelete).setOnClickListener(v ->
-                MyPageUi.confirm(this, "배송지 삭제", "'" + address.label + "' 배송지를 삭제하시겠습니까?", () -> {
+                MyPageUi.confirm(this, "배송지 삭제", "'" + address.label + "' 배송지를 삭제할까요?", () -> {
                     MyPageStore.deleteAddress(address);
                     renderAddresses();
                 }));

@@ -465,7 +465,7 @@ public class SearchActivity extends AppCompatActivity {
         if (recentTerms.isEmpty()) {
 
             TextView emptyRecent = makeText(
-                    "최근 검색 내역이 없습니다.",
+                    "최근 검색 내역이 없어요.",
                     13,
                     false,
                     GRAY

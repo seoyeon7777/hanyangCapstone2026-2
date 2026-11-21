@@ -121,9 +121,9 @@ public class CartAdapter
                             Toast.makeText(
                                     v.getContext(),
                                     merged
-                                            ? "같은 옵션(" + size + " / " + color + ")이 이미 있어서 수량을 합쳤습니다."
+                                            ? "같은 옵션(" + size + " / " + color + ")이 이미 있어서 수량을 합쳤어요."
                                             : "옵션을 " + size + " / " + color
-                                            + " / " + quantity + "개로 변경했습니다.",
+                                            + " / " + quantity + "개로 변경했어요.",
                                     Toast.LENGTH_SHORT
                             ).show();
 
@@ -224,7 +224,7 @@ public class CartAdapter
             AppDialog.show(
                     v.getContext(),
                     false,
-                    "장바구니에서 빼시겠습니까?",
+                    "장바구니에서 뺄까요?",
                     currentProduct.getName(),
                     "취소",
                     null,

@@ -32,7 +32,7 @@ public class ReviewWriteActivity extends AppCompatActivity {
     private static final int CONTENT_MAX_LENGTH = 500;
 
     private static final String[] RATING_LABELS = {
-            "별점을 선택해 주십시오", "별로입니다", "그저 그렇습니다", "괜찮습니다", "좋습니다", "최고입니다"
+            "별점을 선택해 주세요", "별로예요", "그저 그래요", "괜찮아요", "좋아요", "최고예요"
     };
 
     private RatingBar ratingBar;
@@ -70,7 +70,7 @@ public class ReviewWriteActivity extends AppCompatActivity {
         }
 
         if (review == null && order == null) {
-            Toast.makeText(this, "리뷰 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "리뷰 정보를 찾을 수 없어요.", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -157,10 +157,10 @@ public class ReviewWriteActivity extends AppCompatActivity {
 
         if (review != null) {
             MyPageStore.updateReview(review, rating, content);
-            Toast.makeText(this, "리뷰가 수정되었습니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "리뷰가 수정되었어요.", Toast.LENGTH_SHORT).show();
         } else {
             MyPageStore.addReview(order, rating, content);
-            Toast.makeText(this, "리뷰가 등록되었습니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "리뷰가 등록되었어요.", Toast.LENGTH_SHORT).show();
         }
         finish();
     }

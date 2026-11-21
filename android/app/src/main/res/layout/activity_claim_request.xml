@@ -152,7 +152,7 @@
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_edit"
                 android:gravity="top|start"
-                android:hint="사유를 적어 주십시오"
+                android:hint="사유를 적어 주세요"
                 android:inputType="textMultiLine"
                 android:maxLength="200"
                 android:minHeight="120dp"

@@ -61,7 +61,7 @@ def test_tag_item_from_name(rules):
 def test_reasons(rules):
     # 혼합 점수에 긍정 기여가 큰 순서. 칼라는 S에서 크게, 크롭은 W 비율(17%)만큼 작게 기여한다.
     out = matching.reasons(["neck:collar", "len:crop"], SINGLE_S, rules)
-    assert out == ["칼라가 목선을 세워 짧은 목을 보완합니다", "짧은 기장이 허리선을 올려 다리가 길어 보입니다"]
+    assert out == ["칼라가 목선을 세워 짧은 목을 보완해요", "짧은 기장이 허리선을 올려 다리가 길어 보여요"]
 
 
 def test_reasons_skip_tags_with_non_positive_combined_contribution(real_rules):

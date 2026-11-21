@@ -153,7 +153,7 @@ public class AddressEditActivity extends AppCompatActivity {
                     && existing.zipCode.trim().equals(zip)
                     && existing.address1.trim().equals(address1)
                     && existing.address2.trim().equals(address2)) {
-                toast("이미 등록된 동일한 배송지가 있습니다.");
+                toast("이미 등록된 동일한 배송지가 있어요.");
                 return;
             }
         }
@@ -162,7 +162,7 @@ public class AddressEditActivity extends AppCompatActivity {
         MyPageStore.saveAddress(new Address(id, label, receiver, phone, zip,
                 address1, address2, editing == null ? "" : editing.request, cbDefault.isChecked()));
 
-        toast(editing == null ? "배송지가 추가되었습니다." : "배송지가 수정되었습니다.");
+        toast(editing == null ? "배송지가 추가되었어요." : "배송지가 수정되었어요.");
         finish();
     }
 

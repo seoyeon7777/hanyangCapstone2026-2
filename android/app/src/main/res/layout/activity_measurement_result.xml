@@ -26,7 +26,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="정면·옆면 사진을 분석하여 추정한 신체 치수입니다."
+            android:text="정면·옆면 사진을 분석하여 추정한 신체 치수예요."
             android:textColor="#666666"
             android:textSize="14sp"
             android:layout_marginTop="8dp"/>
@@ -39,7 +39,7 @@
             android:layout_marginTop="20dp"
             android:background="#F5F5F5"
             android:padding="16dp"
-            android:text="ⓘ  본 결과는 사진 기반으로 추정한 값으로, 실제 치수와 차이가 있을 수 있습니다."
+            android:text="ⓘ  본 결과는 사진 기반으로 추정한 값으로, 실제 치수와 차이가 있을 수 있어요."
             android:textColor="#555555"
             android:textSize="13sp"/>
 
@@ -227,7 +227,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:lineSpacingExtra="2dp"
-            android:text="(추정)은 사진으로 잰 값이 없거나, 키·몸무게·나이로 어림한 값과 너무 달라서 어림한 값으로 대신한 항목입니다."
+            android:text="(추정)은 사진으로 잰 값이 없거나, 키·몸무게·나이로 어림한 값과 너무 달라서 어림한 값으로 대신한 항목이에요."
             android:textColor="#888888"
             android:textSize="12sp"
             android:visibility="gone"/>

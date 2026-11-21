@@ -35,7 +35,7 @@ public class BodySaveCompleteActivity extends AppCompatActivity {
         TextView tvSavedName = findViewById(R.id.tvSavedName);
         tvSavedName.setText("'" +
                 (name == null ? "내 체형" : name) +
-                "'(으)로 저장했습니다");
+                "'(으)로 저장했어요");
 
         findViewById(R.id.btnFeedback).setOnClickListener(v -> {
             Intent intent = new Intent(

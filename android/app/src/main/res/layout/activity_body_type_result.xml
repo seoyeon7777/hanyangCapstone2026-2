@@ -71,7 +71,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="이런 특징이 있습니다"
+                android:text="이런 특징이 있어요"
                 android:textColor="#111111"
                 android:textSize="15sp"
                 android:textStyle="bold"/>
@@ -117,7 +117,7 @@
             android:layout_marginTop="16dp"
             android:gravity="center"
             android:lineSpacingExtra="4dp"
-            android:text="설문 응답을 바탕으로 한 참고용 결과입니다.&#10;정밀 측정을 하면 더 정확해집니다."
+            android:text="설문 응답을 바탕으로 한 참고용 결과예요.&#10;정밀 측정을 하면 더 정확해져요."
             android:textColor="#999999"
             android:textSize="12sp"/>
 
@@ -128,7 +128,7 @@
             android:layout_marginTop="12dp"
             android:gravity="center"
             android:lineSpacingExtra="4dp"
-            android:text="결과는 저장되지 않습니다.&#10;로그인해야 내 체형으로 저장됩니다."
+            android:text="결과는 저장되지 않아요.&#10;로그인해야 내 체형으로 저장돼요."
             android:textColor="#E5542F"
             android:textSize="13sp"
             android:visibility="gone"/>
@@ -173,7 +173,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="이 결과를 어떻게 하시겠습니까?"
+                android:text="이 결과를 어떻게 할까요?"
                 android:textColor="#111111"
                 android:textSize="18sp"
                 android:textStyle="bold"/>
@@ -184,7 +184,7 @@
                 android:layout_marginTop="10dp"
                 android:gravity="center"
                 android:lineSpacingExtra="3dp"
-                android:text="전신 사진(정면·옆면)을 올리면 치수까지 더 자세하게 분석합니다.&#10;사진 없이 지금 결과만 내 체형으로 저장할 수도 있습니다."
+                android:text="전신 사진(정면·옆면)을 올리면 치수까지 더 자세하게 분석해요.&#10;사진 없이 지금 결과만 내 체형으로 저장할 수도 있어요."
                 android:textColor="#777777"
                 android:textSize="13sp"/>
 

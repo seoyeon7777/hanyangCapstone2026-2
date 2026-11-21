@@ -59,7 +59,7 @@ public class AddressSearchActivity extends AppCompatActivity {
             }
             return out.toString("UTF-8");
         } catch (IOException e) {
-            return "<p style='padding:40px;text-align:center'>주소 검색을 불러오지 못했습니다.</p>";
+            return "<p style='padding:40px;text-align:center'>주소 검색을 불러오지 못했어요.</p>";
         }
     }
 

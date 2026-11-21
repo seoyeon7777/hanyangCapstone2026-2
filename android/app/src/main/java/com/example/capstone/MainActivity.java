@@ -477,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
                 && RecommendApi.isCatalogLoading();
 
         textHomeEmpty.setText(
-                catalogMissing ? "서버에 연결할 수 없습니다" : emptyText
+                catalogMissing ? "서버에 연결할 수 없어요" : emptyText
         );
 
         textHomeEmpty.setVisibility(
@@ -691,10 +691,10 @@ public class MainActivity extends AppCompatActivity {
                             if (bodyMode) {
                                 setModeSilently(false);
                                 updateHomeTitle("");
-                                message += " 체형 맞춤을 잠시 껐습니다.";
+                                message += " 체형 맞춤을 잠시 껐어요.";
                             }
 
-                            message += " 기본 상품을 보여 드리겠습니다";
+                            message += " 기본 상품을 보여 줄게요";
                         }
 
                         Toast.makeText(
@@ -767,13 +767,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void showBodyModeGuide() {
         if (!LoginSession.isLoggedIn(this)) {
-            AppDialog.show(this, false, "", "해당 기능은 로그인을 해야 쓸 수 있습니다.",
+            AppDialog.show(this, false, "", "해당 기능은 로그인을 해야 쓸 수 있어요.",
                     "닫기", null,
                     "로그인하러 가기",
                     () -> startActivity(new Intent(this, LoginMainActivity.class)));
             return;
         }
-        AppDialog.show(this, false, "", "해당 기능은 체형 진단을 해야 쓸 수 있습니다.",
+        AppDialog.show(this, false, "", "해당 기능은 체형 진단을 해야 쓸 수 있어요.",
                 "닫기", null,
                 "체형 진단하러 가기",
                 () -> startActivity(new Intent(this, FittingActivity.class)));

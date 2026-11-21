@@ -12,7 +12,7 @@ public class ProductTest {
     @Test
     public void serverDetailsUpdatedButLikeAndCartKept() {
         Product product = new Product(-1, "옛브랜드", "칼라 셔츠", 39000);
-        product.setServerInfo("t01", "칼라가 목선을 세워 줍니다.");
+        product.setServerInfo("t01", "칼라가 목선을 세워 줘요.");
         product.setLiked(true);
         product.setInCart(true);
 

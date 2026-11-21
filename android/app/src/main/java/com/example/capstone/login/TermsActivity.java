@@ -57,7 +57,7 @@ public class TermsActivity extends AppCompatActivity {
                 out.append(line).append('\n');
             }
         } catch (IOException | android.content.res.Resources.NotFoundException e) {
-            return "약관 내용을 불러오지 못했습니다.";
+            return "약관 내용을 불러오지 못했어요.";
         }
         return out.toString();
     }

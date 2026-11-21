@@ -282,7 +282,7 @@ public class WishActivity extends AppCompatActivity {
         emptyView.addView(heart, heartParams);
 
         TextView message = makeText(
-                "찜한 상품이 없습니다",
+                "찜한 상품이 없어요",
                 15,
                 true,
                 BLACK
@@ -293,7 +293,7 @@ public class WishActivity extends AppCompatActivity {
         emptyView.addView(message);
 
         TextView subMessage = makeText(
-                "마음에 드는 상품에 하트를 눌러 보십시오",
+                "마음에 드는 상품에 하트를 눌러 보세요",
                 13,
                 false,
                 GRAY
@@ -458,7 +458,7 @@ public class WishActivity extends AppCompatActivity {
         if (!LoginRequiredView.update(
                 this,
                 R.drawable.ic_wish_empty,
-                "찜 목록은 로그인 후 이용할 수 있습니다.",
+                "찜 목록은 로그인 후 이용할 수 있어요.",
                 wishContent)) {
             // 비로그인: 제목 "찜" 글씨 대신 이전 화면 버튼 (자리는 남겨 장바구니 아이콘은 오른쪽 그대로)
             title.setText("");

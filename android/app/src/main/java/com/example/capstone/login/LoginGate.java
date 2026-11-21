@@ -30,7 +30,7 @@ public final class LoginGate {
 
     /** 로그인한 상태에서만 action을 실행한다. 아니면 로그인 안내 창을 띄운다. */
     public static void require(Context context, Runnable action) {
-        require(context, "로그인하거나 회원가입을 하면 이용할 수 있습니다.", action);
+        require(context, "로그인하거나 회원가입을 하면 이용할 수 있어요.", action);
     }
 
     /** 위와 같고, 안내 창의 문구를 직접 정한다 */
@@ -47,7 +47,7 @@ public final class LoginGate {
         }
 
         AppDialog.show(activity, false,
-                "로그인이 필요합니다",
+                "로그인이 필요해요",
                 message,
                 "취소", null,
                 "로그인하러 가기", () -> startLogin(activity, action));

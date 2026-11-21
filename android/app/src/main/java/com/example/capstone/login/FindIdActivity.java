@@ -246,8 +246,8 @@ public class FindIdActivity extends AppCompatActivity {
 
         if (account == null) {
             Toast.makeText(this, byPhone
-                            ? "이 휴대폰 번호로 가입된 계정이 없습니다."
-                            : "이 이메일로 가입된 계정이 없습니다.",
+                            ? "이 휴대폰 번호로 가입된 계정이 없어요."
+                            : "이 이메일로 가입된 계정이 없어요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }
@@ -290,7 +290,7 @@ public class FindIdActivity extends AppCompatActivity {
         btnVerifyCode.setText("인증완료");
         btnVerifyCode.setEnabled(false);
         setConfirmEnabled(true);
-        Toast.makeText(this, "인증이 완료되었습니다.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "인증이 완료되었어요.", Toast.LENGTH_SHORT).show();
     }
 
     /** 본인확인을 마친 뒤 아이디를 화면에 보여준다. */

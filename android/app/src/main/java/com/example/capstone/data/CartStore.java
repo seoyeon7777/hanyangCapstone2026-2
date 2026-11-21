@@ -30,7 +30,7 @@ import java.util.Set;
 public final class CartStore {
 
     public static final int MAX_QUANTITY = 99;
-    public static final String MAX_QUANTITY_MESSAGE = "최대 99개까지 담을 수 있습니다.";
+    public static final String MAX_QUANTITY_MESSAGE = "최대 99개까지 담을 수 있어요.";
 
     private static final String TAG = "CartStore";
     private static final String PREF = "cart_store";

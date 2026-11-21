@@ -97,7 +97,7 @@ public class PhoneVerifyActivity extends AppCompatActivity {
             btnVerify.setText("다시 요청");
 
             tvAuthCodeNotice.setText(
-                    "인증번호: " + sentCode + " (문자 발송 기능 준비 중이라 화면에 보여 드립니다)");
+                    "인증번호: " + sentCode + " (문자 발송 기능 준비 중이라 화면에 보여 드려요)");
             tvAuthCodeNotice.setVisibility(View.VISIBLE);
 
             etAuthCode.setText("");
@@ -105,7 +105,7 @@ public class PhoneVerifyActivity extends AppCompatActivity {
 
             Toast.makeText(
                     this,
-                    phone + " (으)로 인증번호가 발송되었습니다.",
+                    phone + " (으)로 인증번호가 발송되었어요.",
                     Toast.LENGTH_SHORT
             ).show();
         });
@@ -151,7 +151,7 @@ public class PhoneVerifyActivity extends AppCompatActivity {
             if (!isCodeSent || !authCode.equals(sentCode)) {
                 AppDialog.notice(
                         this,
-                        "인증번호가 올바르지 않습니다.\n다시 입력해 주십시오.",
+                        "인증번호가 올바르지 않아요.\n다시 입력해 주세요.",
                         "확인"
                 );
                 return;
@@ -253,7 +253,7 @@ public class PhoneVerifyActivity extends AppCompatActivity {
 
         // [여기에 DB 입력] 이미 가입된 휴대폰 번호인지 확인 (users)
         if (LocalAccounts.isTaken(this, "", phone)) {
-            toast("이미 가입된 휴대폰 번호입니다.");
+            toast("이미 가입된 휴대폰 번호예요.");
             return null;
         }
 

@@ -176,7 +176,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
                 android:gravity="center"
-                android:text="이 종류의 쿠폰이 없습니다"
+                android:text="이 종류의 쿠폰이 없어요"
                 android:textColor="#999999"
                 android:textSize="14sp"
                 android:visibility="gone" />
@@ -206,7 +206,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="보유한 쿠폰이 없습니다"
+                    android:text="보유한 쿠폰이 없어요"
                     android:textColor="#111111"
                     android:textSize="15sp"
                     android:textStyle="bold" />
@@ -215,7 +215,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="쿠폰 받기에서 쿠폰을 받아 보십시오"
+                    android:text="쿠폰 받기에서 쿠폰을 받아 보세요"
                     android:textColor="#999999"
                     android:textSize="13sp" />
 
@@ -312,7 +312,7 @@
                         android:layout_width="0dp"
                         android:layout_height="48dp"
                         android:layout_weight="1"
-                        android:hint="쿠폰번호를 입력해 주십시오"
+                        android:hint="쿠폰번호를 입력해 주세요"
                         android:inputType="textCapCharacters"
                         android:maxLength="20"
                         android:background="@drawable/bg_edit"

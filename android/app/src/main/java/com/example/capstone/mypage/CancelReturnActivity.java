@@ -101,9 +101,9 @@ public class CancelReturnActivity extends AppCompatActivity {
         Button btnWithdraw = view.findViewById(R.id.btnWithdraw);
         btnWithdraw.setVisibility(processing ? View.VISIBLE : View.GONE);
         btnWithdraw.setOnClickListener(v -> MyPageUi.confirm(this, "신청 철회",
-                claim.type + " 신청을 철회하시겠습니까?", () -> {
+                claim.type + " 신청을 철회할까요?", () -> {
                     MyPageStore.withdrawClaim(claim);
-                    Toast.makeText(this, "신청이 철회되었습니다.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "신청이 철회되었어요.", Toast.LENGTH_SHORT).show();
                     renderClaims();
                 }));
 

@@ -110,7 +110,7 @@ public class ClaimRequestActivity extends AppCompatActivity {
         View accountsLayout = findViewById(R.id.layoutRefundAccounts);
 
         if (!order.paidByCard() && order.status == MyPageStore.STATUS_PENDING) {
-            method.setText("입금 전 주문이라 환불할 금액이 없습니다");
+            method.setText("입금 전 주문이라 환불할 금액이 없어요");
             method.setVisibility(View.VISIBLE);
             accountsLayout.setVisibility(View.GONE);
             return;
@@ -132,12 +132,12 @@ public class ClaimRequestActivity extends AppCompatActivity {
 
         method.setVisibility(View.VISIBLE);
         if (order.paidByCard()) {
-            method.setText("고른 계좌로 환불됩니다");
+            method.setText("고른 계좌로 환불돼요");
             method.setVisibility(selectedAccountNo == null ? View.GONE : View.VISIBLE);
         } else {
             method.setText(accounts.isEmpty()
-                    ? "환불받을 계좌를 등록해 주십시오"
-                    : "환불받을 계좌를 골라 주십시오");
+                    ? "환불받을 계좌를 등록해 주세요"
+                    : "환불받을 계좌를 골라 주세요");
         }
 
         containerAccounts.removeAllViews();
@@ -209,7 +209,7 @@ public class ClaimRequestActivity extends AppCompatActivity {
         final String claimRefund = refund;
         AppDialog.show(this, false,
                 claimType + " 신청",
-                "신청하면 되돌릴 수 없습니다. 계속하시겠습니까?",
+                "신청하면 되돌릴 수 없어요. 계속할까요?",
                 "닫기", null,
                 "신청하기", () -> sendClaim(claimType, reason, claimRefund));
     }
@@ -219,7 +219,7 @@ public class ClaimRequestActivity extends AppCompatActivity {
         if (MyPageStore.CLAIM_RETURN.equals(type)) {
             RecommendApi.recordReturn(this, order.orderNo);
         }
-        Toast.makeText(this, type + " 신청이 완료되었습니다.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, type + " 신청이 완료되었어요.", Toast.LENGTH_SHORT).show();
         finish();
     }
 }

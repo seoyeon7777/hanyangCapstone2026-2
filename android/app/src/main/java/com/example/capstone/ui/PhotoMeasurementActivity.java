@@ -383,7 +383,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
 
 
                     textPhotoStatus.setText(
-                            "정면 사진을 분석하고 있습니다..."
+                            "정면 사진을 분석하고 있어요..."
                     );
 
 
@@ -416,13 +416,13 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         if (ready) {
 
             textPhotoStatus.setText(
-                    "사진 준비 완료 · 신체 분석을 시작해 주십시오."
+                    "사진 준비 완료 · 신체 분석을 시작해 주세요."
             );
 
         } else {
 
             textPhotoStatus.setText(
-                    "정면과 옆면 사진을 모두 선택해 주십시오."
+                    "정면과 옆면 사진을 모두 선택해 주세요."
             );
         }
     }
@@ -457,7 +457,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
 
                         if (basicResult == null) {
                             analysisError(
-                                    "정면 사진에서 전신을 정확하게 인식하지 못했습니다."
+                                    "정면 사진에서 전신을 정확하게 인식하지 못했어요."
                             );
                             return;
                         }
@@ -466,7 +466,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
 
                         if (frontSilhouette == null) {
                             analysisError(
-                                    "정면 사진에서 신체 외곽선을 인식하지 못했습니다."
+                                    "정면 사진에서 신체 외곽선을 인식하지 못했어요."
                             );
                             return;
                         }
@@ -474,7 +474,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                         textFrontStatus.setText("✓ 정면 신체 분석 완료");
                         AnalysisTimer.mark("정면 관절·윤곽");
                         textPhotoStatus.setText(
-                                "옆면 사진을 분석하고 있습니다...");
+                                "옆면 사진을 분석하고 있어요...");
 
                         analyzeSidePhoto();
                     })
@@ -485,7 +485,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     );
 
         } catch (IOException e) {
-            analysisError("정면 사진을 불러올 수 없습니다.");
+            analysisError("정면 사진을 불러올 수 없어요.");
         }
     }
 
@@ -520,7 +520,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     );
 
         } catch (IOException e) {
-            analysisError("옆면 사진을 불러올 수 없습니다.");
+            analysisError("옆면 사진을 불러올 수 없어요.");
         }
     }
 
@@ -531,7 +531,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                 SilhouetteBuilder.build(mask, axis);
 
         if (sideSilhouette == null) {
-            analysisError("옆면 사진에서 신체 외곽선을 인식하지 못했습니다.");
+            analysisError("옆면 사진에서 신체 외곽선을 인식하지 못했어요.");
             return;
         }
 
@@ -551,7 +551,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         final float age = BodyInput.age(this);
         final BodyPrior.Result prior = BodyPrior.estimate(userHeightCm, weightKg, age);
         if (prior != null && prior.adult && frontPose != null && sidePose != null) {
-            textPhotoStatus.setText("사진을 분석하고 있습니다. 잠시만 기다려 주십시오.");
+            textPhotoStatus.setText("사진을 분석하고 있어요. 잠시만 기다려 주세요.");
             btnAnalyzePhotos.setEnabled(false);
             BodyPhotoPipeline.run(this, segmenter, frontPhotoUri, frontPose, sidePhotoUri, sidePose,
                     userHeightCm, weightKg, age, prior, circ -> {
@@ -565,7 +565,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     });
             return;
         }
-        textPhotoStatus.setText("분석이 끝났습니다. 결과를 불러옵니다.");
+        textPhotoStatus.setText("분석이 끝났어요. 결과를 불러와요.");
         openResultOrWarn();
     }
 
@@ -576,7 +576,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
             openResultAndRelease();
             return;
         }
-        AppDialog.show(this, true, "치수가 이상할 수 있습니다", warning + "\n그래도 계산하시겠습니까?",
+        AppDialog.show(this, true, "치수가 이상할 수 있어요", warning + "\n그래도 계산할까요?",
                 "사진 다시 고르기", null,
                 "그래도 계산", this::openResultAndRelease);
     }
@@ -617,16 +617,16 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         }
 
         if (textFrontStatus != null) {
-            textFrontStatus.setText("정면 사진을 선택해 주십시오.");
+            textFrontStatus.setText("정면 사진을 선택해 주세요.");
         }
         if (textSideStatus != null) {
-            textSideStatus.setText("옆면 사진을 선택해 주십시오.");
+            textSideStatus.setText("옆면 사진을 선택해 주세요.");
         }
         if (btnAnalyzePhotos != null) {
             btnAnalyzePhotos.setEnabled(false);
         }
         if (textPhotoStatus != null) {
-            textPhotoStatus.setText("사진은 분석이 끝나는 대로 지워졌습니다. 다시 분석하려면 사진을 새로 골라 주십시오.");
+            textPhotoStatus.setText("사진은 분석이 끝나는 대로 지워졌어요. 다시 분석하려면 사진을 새로 골라 주세요.");
         }
     }
 

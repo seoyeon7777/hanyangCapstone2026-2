@@ -207,8 +207,8 @@ public class ProductOptionSheet {
 
                 textSelected.setText(
                         !hasSize
-                                ? "사이즈를 선택해 주십시오"
-                                : "색상을 선택해 주십시오"
+                                ? "사이즈를 선택해 주세요"
+                                : "색상을 선택해 주세요"
                 );
 
                 textSelected.setTextColor(0xFF888888);

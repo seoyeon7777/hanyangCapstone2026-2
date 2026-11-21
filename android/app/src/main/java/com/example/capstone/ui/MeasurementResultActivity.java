@@ -317,15 +317,15 @@ public class MeasurementResultActivity extends AppCompatActivity {
         final boolean photoModelFailed = prior != null && prior.adult && !modelUsed;
         TextView estNote = findViewById(R.id.textResultEstNote);
         if (photoModelFailed) {
-            estNote.setText("사진 분석을 마치지 못해 둘레는 키·몸무게·나이로 어림하거나 간단한 계산으로 구한 값입니다. 정확하지 않을 수 있으니 사진을 다시 골라 보십시오.");
+            estNote.setText("사진 분석을 마치지 못해 둘레는 키·몸무게·나이로 어림하거나 간단한 계산으로 구한 값이에요. 정확하지 않을 수 있으니 사진을 다시 골라 보세요.");
         }
         // 키·몸무게·나이로 어림할 수 없는 범위면 사진 모델도 못 돌아 간단한 사진 계산 값만 나온다
         final boolean noPrior = prior == null;
         final boolean referenceOnly = prior != null && prior.reference;
         if (noPrior) {
-            estNote.setText("입력한 키·몸무게·나이가 치수를 어림할 수 있는 범위(키 130~200cm, 몸무게 35~120kg 등)를 벗어나서 간단한 사진 계산 값만 보여 줍니다. 오차가 클 수 있습니다.");
+            estNote.setText("입력한 키·몸무게·나이가 치수를 어림할 수 있는 범위(키 130~200cm, 몸무게 35~120kg 등)를 벗어나서 간단한 사진 계산 값만 보여 줘요. 오차가 클 수 있어요.");
         } else if (referenceOnly && !photoModelFailed && !anyEstimated) {
-            estNote.setText("입력한 키·나이가 확인한 범위(키 135~190cm, 79세 이하)를 벗어나서 이 치수는 참고용입니다.");
+            estNote.setText("입력한 키·나이가 확인한 범위(키 135~190cm, 79세 이하)를 벗어나서 이 치수는 참고용이에요.");
         }
         estNote.setVisibility(anyEstimated || photoModelFailed || noPrior || referenceOnly ? View.VISIBLE : View.GONE);
 
@@ -470,8 +470,8 @@ public class MeasurementResultActivity extends AppCompatActivity {
 
         if (!LoginSession.isLoggedIn(this)) {
             AppDialog.show(this, false,
-                    "로그인이 필요합니다",
-                    "체형 정보는 로그인 후 내 계정에 저장할 수 있습니다.",
+                    "로그인이 필요해요",
+                    "체형 정보는 로그인 후 내 계정에 저장할 수 있어요.",
                     "취소", null,
                     "로그인하기", () ->
                             startActivity(new Intent(this, LoginMainActivity.class)));
@@ -500,7 +500,7 @@ public class MeasurementResultActivity extends AppCompatActivity {
             if (!BodyProfileStore.canAddProfile(this)) {
                 AppDialog.alert(this, "체형 저장",
                         "체형은 최대 " + BodyProfileStore.MAX_PROFILES
-                                + "개까지 저장할 수 있습니다. '내 체형 관리'에서 안 쓰는 체형을 지운 뒤 다시 저장해 주십시오.",
+                                + "개까지 저장할 수 있어요. '내 체형 관리'에서 안 쓰는 체형을 지운 뒤 다시 저장해 주세요.",
                         "확인");
                 return;
             }

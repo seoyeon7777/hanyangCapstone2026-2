@@ -33,11 +33,11 @@ public class SigninActivity extends AppCompatActivity {
     public static final String EXTRA_PHONE = "extra_phone";
 
     private static final String ID_RULE_MESSAGE =
-            "아이디는 영문 소문자와 숫자를 포함해 4~16자로 입력해 주십시오.";
+            "아이디는 영문 소문자와 숫자를 포함해 4~16자로 입력해 주세요.";
     private static final String PASSWORD_RULE_MESSAGE =
-            "비밀번호는 영문 대소문자, 숫자, 특수문자 중 2가지 이상을 조합해 8~16자로 입력해 주십시오.";
+            "비밀번호는 영문 대소문자, 숫자, 특수문자 중 2가지 이상을 조합해 8~16자로 입력해 주세요.";
     private static final String PASSWORD_CHAR_MESSAGE =
-            "비밀번호에 쓸 수 없는 문자가 있습니다. 특수문자는 안내된 것만 쓸 수 있습니다.";
+            "비밀번호에 쓸 수 없는 문자가 있어요. 특수문자는 안내된 것만 쓸 수 있어요.";
 
     private ImageButton btnBack, btnHome;
 
@@ -346,7 +346,7 @@ public class SigninActivity extends AppCompatActivity {
             if (LocalAccounts.idExists(this, id)) {
                 Toast.makeText(
                         this,
-                        "이미 사용 중인 아이디입니다.",
+                        "이미 사용 중인 아이디예요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -357,7 +357,7 @@ public class SigninActivity extends AppCompatActivity {
 
             Toast.makeText(
                     this,
-                    "사용 가능한 아이디입니다.",
+                    "사용 가능한 아이디예요.",
                     Toast.LENGTH_SHORT
             ).show();
         });
@@ -553,7 +553,7 @@ public class SigninActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "비밀번호가 일치하지 않습니다.",
+                        "비밀번호가 일치하지 않아요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -592,7 +592,7 @@ public class SigninActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "이미 가입된 이메일입니다.",
+                        "이미 가입된 이메일이에요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -690,7 +690,7 @@ public class SigninActivity extends AppCompatActivity {
             if (!saved) {
                 Toast.makeText(
                         this,
-                        "이미 가입된 아이디, 휴대폰 번호 또는 이메일입니다.",
+                        "이미 가입된 아이디, 휴대폰 번호 또는 이메일이에요.",
                         Toast.LENGTH_SHORT
                 ).show();
 

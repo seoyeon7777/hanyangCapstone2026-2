@@ -253,7 +253,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:paddingHorizontal="20dp"
-                android:text="주문·배송 안내는 수신 동의와 상관없이 보내드립니다."
+                android:text="주문·배송 안내는 수신 동의와 상관없이 보내드려요."
                 android:textColor="#999999"
                 android:textSize="12sp" />
 

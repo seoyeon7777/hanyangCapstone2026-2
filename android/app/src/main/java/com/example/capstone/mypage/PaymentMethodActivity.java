@@ -50,7 +50,7 @@ public class PaymentMethodActivity extends AppCompatActivity {
 
         findViewById(R.id.btnAddCard).setOnClickListener(v -> {
             if (MyPageStore.getCards().size() >= MAX_CARD) {
-                toast("카드는 최대 " + MAX_CARD + "장까지 등록할 수 있습니다.");
+                toast("카드는 최대 " + MAX_CARD + "장까지 등록할 수 있어요.");
                 return;
             }
             showAddCardSheet();
@@ -87,7 +87,7 @@ public class PaymentMethodActivity extends AppCompatActivity {
 
             view.findViewById(R.id.btnDelete).setOnClickListener(v ->
                     MyPageUi.confirm(this, "카드 삭제",
-                            card.company + " (" + card.lastFour + ") 카드를 삭제하시겠습니까?", () -> {
+                            card.company + " (" + card.lastFour + ") 카드를 삭제할까요?", () -> {
                                 MyPageStore.deleteCard(card);
                                 renderCards();
                             }));
@@ -193,7 +193,7 @@ public class PaymentMethodActivity extends AppCompatActivity {
 
             // [여기에 DB 입력] PG사 카드 등록(빌링키 발급) 후 끝 4자리만 저장 (payments)
             MyPageStore.addCard(company[0], number, expiry);
-            toast("카드가 등록되었습니다.");
+            toast("카드가 등록되었어요.");
             renderCards();
             sheet.dismiss();
         });

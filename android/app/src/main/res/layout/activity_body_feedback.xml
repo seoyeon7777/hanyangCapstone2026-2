@@ -101,7 +101,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="내추럴 체형 입니다"
+                    android:text="내추럴 체형이에요"
                     android:textSize="27sp"
                     android:textStyle="bold"
                     android:textColor="#111111"/>
@@ -111,7 +111,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="체형 분석 결과를 확인해 보십시오."
+                    android:text="체형 분석 결과를 확인해 보세요."
                     android:textSize="14sp"
                     android:lineSpacingExtra="5dp"
                     android:textColor="#777777"/>
@@ -539,7 +539,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:text="이런 스타일은 어떻습니까?"
+                    android:text="이런 스타일은 어때요?"
                     android:textSize="23sp"
                     android:textStyle="bold"
                     android:textColor="#111111"/>
@@ -778,7 +778,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="정면·측면 사진을 분석하면 신체 치수와 비율을 확인할 수 있습니다."
+                    android:text="정면·측면 사진을 분석하면 신체 치수와 비율을 확인할 수 있어요."
                     android:textSize="13sp"
                     android:lineSpacingExtra="5dp"
                     android:textColor="#BBBBBB"/>
@@ -827,7 +827,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="※ 체형 유형과 스타일 추천은 참고용 가이드이며 개인의 취향과 실제 착용감에 따라 달라질 수 있습니다."
+                    android:text="※ 체형 유형과 스타일 추천은 참고용 가이드이며 개인의 취향과 실제 착용감에 따라 달라질 수 있어요."
                     android:textSize="11sp"
                     android:lineSpacingExtra="4dp"
                     android:textColor="#999999"/>

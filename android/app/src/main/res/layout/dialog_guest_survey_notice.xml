@@ -22,7 +22,7 @@
         android:layout_marginTop="10dp"
         android:gravity="center"
         android:lineSpacingExtra="4dp"
-        android:text="비회원은 분석 결과가 앱을 실행하는 동안에만 저장됩니다.\n앱을 끄면 사라지니, 저장하고 싶다면 로그인해 주십시오."
+        android:text="비회원은 분석 결과가 앱을 실행하는 동안에만 저장돼요.\n앱을 끄면 사라지니, 저장하고 싶다면 로그인해 주세요."
         android:textColor="#555555"
         android:textSize="14sp" />
 

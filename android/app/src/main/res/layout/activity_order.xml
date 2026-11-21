@@ -202,7 +202,7 @@
             android:layout_marginTop="-4dp"
             android:layout_marginBottom="12dp"
             android:background="@drawable/bg_edit"
-            android:hint="배송 요청사항을 직접 입력해 주십시오 (50자 이내)"
+            android:hint="배송 요청사항을 직접 입력해 주세요 (50자 이내)"
             android:inputType="text"
             android:maxLength="50"
             android:paddingHorizontal="16dp"

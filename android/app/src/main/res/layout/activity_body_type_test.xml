@@ -104,7 +104,7 @@
             android:layout_marginTop="45dp"
             android:gravity="center"
             android:lineSpacingExtra="4dp"
-            android:text="Q1. 내 어깨는 어떤 모습에 가깝습니까?"
+            android:text="Q1. 내 어깨는 어떤 모습에 가까운가요?"
             android:textColor="#000000"
             android:textSize="20.5sp"
             android:textStyle="bold" />
@@ -119,7 +119,7 @@
             android:gravity="center_vertical"
             android:paddingLeft="18dp"
             android:paddingRight="18dp"
-            android:text="① 둥글고 도톰해 보입니다"
+            android:text="① 둥글고 도톰해 보여요"
             android:textAllCaps="false"
             android:textColor="#000000"
             android:textSize="15sp" />
@@ -134,7 +134,7 @@
             android:gravity="center_vertical"
             android:paddingLeft="18dp"
             android:paddingRight="18dp"
-            android:text="② 얇고 부드러워 보입니다"
+            android:text="② 얇고 부드러워 보여요"
             android:textAllCaps="false"
             android:textColor="#000000"
             android:textSize="15sp" />
@@ -149,7 +149,7 @@
             android:gravity="center_vertical"
             android:paddingLeft="18dp"
             android:paddingRight="18dp"
-            android:text="③ 넓고 각진 느낌입니다"
+            android:text="③ 넓고 각진 느낌이에요"
             android:textAllCaps="false"
             android:textColor="#000000"
             android:textSize="15sp" />
@@ -200,7 +200,7 @@
                             android:id="@+id/cardImage1"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:contentDescription="둥글고 도톰해 보입니다"
+                            android:contentDescription="둥글고 도톰해 보여요"
                             android:scaleType="fitCenter"
                             android:src="@drawable/img_q1_shoulder_1" />
 
@@ -219,7 +219,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="둥글고 도톰해 보입니다"
+                        android:text="둥글고 도톰해 보여요"
                         android:textColor="#000000"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -258,7 +258,7 @@
                             android:id="@+id/cardImage2"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:contentDescription="얇고 부드러워 보입니다"
+                            android:contentDescription="얇고 부드러워 보여요"
                             android:scaleType="fitCenter"
                             android:src="@drawable/img_q1_shoulder_2" />
 
@@ -277,7 +277,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="얇고 부드러워 보입니다"
+                        android:text="얇고 부드러워 보여요"
                         android:textColor="#000000"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -325,7 +325,7 @@
                             android:id="@+id/cardImage3"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:contentDescription="넓고 각진 느낌입니다"
+                            android:contentDescription="넓고 각진 느낌이에요"
                             android:scaleType="fitCenter"
                             android:src="@drawable/img_q1_shoulder_3" />
 
@@ -344,7 +344,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="넓고 각진 느낌입니다"
+                        android:text="넓고 각진 느낌이에요"
                         android:textColor="#000000"
                         android:textSize="14sp"
                         android:textStyle="bold" />

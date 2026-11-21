@@ -214,7 +214,7 @@ public class CartActivity extends AppCompatActivity {
         emptyLayout.addView(icon, iconParams);
 
         TextView message = makeText(
-                "장바구니에 담긴 상품이 없습니다",
+                "장바구니에 담긴 상품이 없어요",
                 15, true, BLACK
         );
 
@@ -222,7 +222,7 @@ public class CartActivity extends AppCompatActivity {
         emptyLayout.addView(message);
 
         TextView subMessage = makeText(
-                "마음에 드는 상품을 담아 보십시오",
+                "마음에 드는 상품을 담아 보세요",
                 13, false, GRAY
         );
 
@@ -297,7 +297,7 @@ public class CartActivity extends AppCompatActivity {
         );
 
         TextView title = makeText(
-                "이런 상품은 어떻습니까?",
+                "이런 상품은 어때요?",
                 16, true, BLACK
         );
 
@@ -571,7 +571,7 @@ public class CartActivity extends AppCompatActivity {
                 Toast.makeText(
                         this,
                         cartProducts.isEmpty()
-                                ? "장바구니에 상품이 없습니다."
+                                ? "장바구니에 상품이 없어요."
                                 : "주문할 상품을 선택해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
@@ -582,7 +582,7 @@ public class CartActivity extends AppCompatActivity {
             // 구매는 로그인해야 한다. 비회원이면 로그인 안내 → 로그인(가입) 뒤 장바구니로 돌아오고,
             // 다시 주문하기를 누르면 체형 측정 확인 창이 뜬다 (선택부터 확인한 뒤 로그인을 묻는다)
             if (!LoginSession.isLoggedIn(this)) {
-                LoginGate.require(this, "로그인하면 구매할 수 있습니다.", () -> { });
+                LoginGate.require(this, "로그인하면 구매할 수 있어요.", () -> { });
                 return;
             }
 
@@ -752,7 +752,7 @@ public class CartActivity extends AppCompatActivity {
 
             btnGoOrder.setText(
                     selectedCount == 0
-                            ? "주문할 상품을 선택해 주십시오"
+                            ? "주문할 상품을 선택해 주세요"
                             : formatPrice(totalPrice) + " 주문하기"
             );
         }

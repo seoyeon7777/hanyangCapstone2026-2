@@ -94,7 +94,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:gravity="center"
-            android:text="이대로 저장하시겠습니까?"
+            android:text="이대로 저장할까요?"
             android:textColor="#333333"
             android:textSize="15sp"
             android:textStyle="bold" />

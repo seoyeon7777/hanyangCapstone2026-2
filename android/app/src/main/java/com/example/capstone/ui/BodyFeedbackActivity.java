@@ -132,7 +132,7 @@ public class BodyFeedbackActivity extends AppCompatActivity {
                 findViewById(R.id.tvTypeHeadline);
 
         if (type == null) {
-            tvHeadline.setText("아직 체형 분석 전입니다");
+            tvHeadline.setText("아직 체형 분석 전이에요");
             return;
         }
 
@@ -140,7 +140,7 @@ public class BodyFeedbackActivity extends AppCompatActivity {
 
         SpannableStringBuilder text =
                 new SpannableStringBuilder(
-                        typeText + " 입니다");
+                        typeText + "이에요");
 
         text.setSpan(
                 new StyleSpan(Typeface.BOLD),
@@ -181,10 +181,10 @@ public class BodyFeedbackActivity extends AppCompatActivity {
 
                 tvTypeDescription.setText(
                         "부드러운 신체 윤곽과 곡선적인 실루엣이\n" +
-                                "특징으로 설명되는 체형입니다.");
+                                "특징으로 설명되는 체형이에요.");
 
                 tvStyle.setText(
-                        "허리선을 강조하는 스타일을 참고해 보십시오.");
+                        "허리선을 강조하는 스타일을 참고해 보세요.");
 
                 tvTops.setText(
                         "크롭 가디건\n" +
@@ -201,7 +201,7 @@ public class BodyFeedbackActivity extends AppCompatActivity {
                 tvTip.setText(
                         "상의는 비교적 짧게, 하의는 허리선이 " +
                                 "높은 디자인을 선택하면 비율을 " +
-                                "강조하는 스타일을 연출할 수 있습니다.");
+                                "강조하는 스타일을 연출할 수 있어요.");
 
                 break;
 
@@ -209,10 +209,10 @@ public class BodyFeedbackActivity extends AppCompatActivity {
 
                 tvTypeDescription.setText(
                         "골격과 관절의 윤곽이 비교적 두드러지는\n" +
-                                "특징으로 설명되는 체형입니다.");
+                                "특징으로 설명되는 체형이에요.");
 
                 tvStyle.setText(
-                        "여유 있는 실루엣을 참고해 보십시오.");
+                        "여유 있는 실루엣을 참고해 보세요.");
 
                 tvTops.setText(
                         "오버핏 셔츠\n" +
@@ -229,7 +229,7 @@ public class BodyFeedbackActivity extends AppCompatActivity {
                 tvTip.setText(
                         "몸에 너무 밀착되지 않는 디자인과 " +
                                 "자연스럽게 떨어지는 소재를 활용하면 " +
-                                "편안한 스타일을 연출할 수 있습니다.");
+                                "편안한 스타일을 연출할 수 있어요.");
 
                 break;
 
@@ -238,10 +238,10 @@ public class BodyFeedbackActivity extends AppCompatActivity {
 
                 tvTypeDescription.setText(
                         "상체의 입체감과 비교적 곧은 실루엣이\n" +
-                                "특징으로 설명되는 체형입니다.");
+                                "특징으로 설명되는 체형이에요.");
 
                 tvStyle.setText(
-                        "깔끔하고 정돈된 스타일을 참고해 보십시오.");
+                        "깔끔하고 정돈된 스타일을 참고해 보세요.");
 
                 tvTops.setText(
                         "베이직 티셔츠\n" +
@@ -258,7 +258,7 @@ public class BodyFeedbackActivity extends AppCompatActivity {
                 tvTip.setText(
                         "너무 과한 장식보다는 단정한 디자인과 " +
                                 "적당한 여유가 있는 핏을 활용하면 " +
-                                "균형 잡힌 스타일을 연출할 수 있습니다.");
+                                "균형 잡힌 스타일을 연출할 수 있어요.");
 
                 break;
         }
@@ -382,7 +382,7 @@ public class BodyFeedbackActivity extends AppCompatActivity {
         } else {
 
             description.setText(
-                    "체형 진단 후 맞춤 액세서리를 추천해 드립니다.");
+                    "체형 진단 후 맞춤 액세서리를 추천해 드려요.");
 
             necklace.setText("심플한 펜던트 목걸이");
             earrings.setText("기본 링 귀걸이");

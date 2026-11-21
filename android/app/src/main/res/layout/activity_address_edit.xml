@@ -39,7 +39,7 @@
             <EditText
                 android:id="@+id/etReceiver"
                 style="@style/MyPageEdit"
-                android:hint="이름을 입력해 주십시오"
+                android:hint="이름을 입력해 주세요"
                 android:maxLength="20" />
 
             <TextView
