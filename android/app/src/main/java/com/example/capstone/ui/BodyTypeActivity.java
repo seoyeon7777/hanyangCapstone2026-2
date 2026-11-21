@@ -565,7 +565,7 @@ public class BodyTypeActivity extends AppCompatActivity {
                                 BodyTypeActivity.this,
                                 true,
                                 "체형 진단을 하지 못했어요",
-                                message + "\n답은 저장해 두었어요. 추천 서버가 켜져 있는지 확인하고 다시 시도해 주세요.",
+                                message + "\n설문 답변은 저장해 두었어요.",
                                 "나중에",
                                 BodyTypeActivity.this::finish,
                                 "다시 시도",

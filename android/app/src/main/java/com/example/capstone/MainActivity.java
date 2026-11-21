@@ -477,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
                 && RecommendApi.isCatalogLoading();
 
         textHomeEmpty.setText(
-                catalogMissing ? "서버에 연결할 수 없어요" : emptyText
+                catalogMissing ? RecommendApi.MSG_CONNECT_FAIL : emptyText
         );
 
         textHomeEmpty.setVisibility(
@@ -655,7 +655,7 @@ public class MainActivity extends AppCompatActivity {
                                 homeErrorShown = true;
                                 Toast.makeText(
                                         MainActivity.this,
-                                        message + " 잠시 뒤 다시 불러올게요",
+                                        RecommendApi.MSG_AUTO_RETRY,
                                         Toast.LENGTH_LONG
                                 ).show();
                             }
@@ -673,7 +673,7 @@ public class MainActivity extends AppCompatActivity {
 
                             Toast.makeText(
                                     MainActivity.this,
-                                    "체형 진단을 하면 골격 맞춤 추천을 볼 수 있어요. 지금은 일반 추천을 보여 줄게요",
+                                    "체형 진단을 하면 골격 맞춤 추천을 볼 수 있어요. 지금은 일반 추천을 보여 드려요",
                                     Toast.LENGTH_LONG
                             ).show();
 
@@ -694,7 +694,7 @@ public class MainActivity extends AppCompatActivity {
                                 message += " 체형 맞춤을 잠시 껐어요.";
                             }
 
-                            message += " 기본 상품을 보여 줄게요";
+                            message += " 기본 상품을 보여 드려요";
                         }
 
                         Toast.makeText(

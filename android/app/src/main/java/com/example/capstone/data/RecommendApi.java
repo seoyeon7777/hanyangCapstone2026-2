@@ -54,6 +54,12 @@ public final class RecommendApi {
     public static final int PAGE_SIZE = 10;
 
     // Supabase(싱가포르)를 쓰면 첫 요청이 느릴 수 있어서 넉넉하게
+    /** 사용자에게 보여 주는 오류 안내 (서버·DB·요청 같은 내부 말은 쓰지 않는다) */
+    public static final String MSG_CONNECT_FAIL = "연결에 실패했어요. 잠시 후 다시 시도해 주세요.";
+    public static final String MSG_AUTO_RETRY = "연결에 실패했어요. 잠시 후 자동으로 다시 시도해요.";
+    public static final String MSG_SERVER_ERROR = "서버에 오류가 나서 실패했어요. 잠시 후 다시 시도해 주세요.";
+    public static final String MSG_READ_FAIL = "서버 응답을 읽지 못했어요. 잠시 후 다시 시도해 주세요.";
+    public static final String MSG_REQUEST_FAIL = "문제가 생겨 요청하지 못했어요. 잠시 후 다시 시도해 주세요.";
     private static final int TIMEOUT_MS = 10000;
 
     // 클릭·찜 기록은 화면과 상관없으니 짧게 기다린다 (주소가 틀려도 기록이 쌓여 늦어지지 않게)
@@ -317,7 +323,7 @@ public final class RecommendApi {
                 }
             }
         } catch (JSONException e) {
-            callback.onError(0, "요청을 만들지 못했어요");
+            callback.onError(0, MSG_REQUEST_FAIL);
             return;
         }
 
@@ -329,7 +335,7 @@ public final class RecommendApi {
                 try {
                     callback.onSuccess(parsePage(appContext, result));
                 } catch (JSONException e) {
-                    callback.onError(0, "서버 응답을 읽지 못했어요");
+                    callback.onError(0, MSG_READ_FAIL);
                 }
             }
 
@@ -674,7 +680,7 @@ public final class RecommendApi {
                 body.put("measurements", measurements);
             }
         } catch (JSONException e) {
-            callback.onError(0, "요청을 만들지 못했어요");
+            callback.onError(0, MSG_REQUEST_FAIL);
             return;
         }
 
@@ -685,7 +691,7 @@ public final class RecommendApi {
                 String primary = result.optString("primary", "");
 
                 if (ratios == null || primary.isEmpty()) {
-                    callback.onError(0, "서버 응답을 읽지 못했어요");
+                    callback.onError(0, MSG_READ_FAIL);
                     return;
                 }
 
@@ -1040,7 +1046,7 @@ public final class RecommendApi {
 
             @Override
             public void onError(int code, String message) {
-                callback.onError(code, code == 0 ? "서버에 연결할 수 없어요" : message);
+                callback.onError(code, code == 0 ? MSG_CONNECT_FAIL : message);
             }
         });
     }
@@ -1087,7 +1093,7 @@ public final class RecommendApi {
 
             @Override
             public void onError(int code, String message) {
-                callback.onError(code, code == 0 ? "서버에 연결할 수 없어요" : message);
+                callback.onError(code, code == 0 ? MSG_CONNECT_FAIL : message);
             }
         });
     }
@@ -1141,7 +1147,7 @@ public final class RecommendApi {
                     main().post(() -> callback.onSuccess(json));
                 } else {
                     // 서버 오류는 {"ok": false, "error": "..."} 모양
-                    String message = json.optString("error", "서버 오류 (" + code + ")");
+                    String message = json.optString("error", MSG_SERVER_ERROR);
                     main().post(() -> callback.onError(code, message));
                 }
 
@@ -1149,16 +1155,16 @@ public final class RecommendApi {
                 if (httpCode > 0 && e instanceof JSONException) {
                     // 서버는 답했는데 JSON이 아니다 (프록시 오류 화면 등): 연결 문제로 보이지 않게 따로 알린다
                     final int answered = httpCode >= 400 ? httpCode : 502;
-                    main().post(() -> callback.onError(answered, "일시적인 문제가 생겼어요. 잠시 후 다시 시도해 주세요"));
+                    main().post(() -> callback.onError(answered, "일시적인 문제가 생겼어요. 잠시 후 다시 시도해 주세요."));
                 } else {
                     if (e instanceof IOException) {
                         lastConnectFailAt = System.currentTimeMillis();
                     }
-                    main().post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
+                    main().post(() -> callback.onError(0, MSG_CONNECT_FAIL));
                 }
             } catch (RuntimeException e) {
                 // 예상 못 한 오류도 콜백을 부른다 (안 부르면 홈 피드가 "불러오는 중"에서 멈춘다)
-                main().post(() -> callback.onError(0, "추천 서버에 연결할 수 없어요"));
+                main().post(() -> callback.onError(0, MSG_CONNECT_FAIL));
             } finally {
                 if (connection != null) {
                     connection.disconnect();

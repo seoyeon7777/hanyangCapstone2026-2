@@ -44,7 +44,7 @@ def http_error(e):
 def server_error(e):
     """예상 못 한 오류도 HTML 대신 JSON으로 (자세한 내용은 서버 화면에만 남긴다)."""
     app.logger.exception(e)
-    return jsonify({"ok": False, "error": "서버 오류가 났어요"}), 500
+    return jsonify({"ok": False, "error": "서버에 오류가 나서 실패했어요. 잠시 후 다시 시도해 주세요."}), 500
 
 
 def lan_ip():
