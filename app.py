@@ -44,7 +44,7 @@ def http_error(e):
 def server_error(e):
     """예상 못 한 오류도 HTML 대신 JSON으로 (자세한 내용은 서버 화면에만 남긴다)."""
     app.logger.exception(e)
-    return jsonify({"ok": False, "error": "서버 오류가 났어요"}), 500
+    return jsonify({"ok": False, "error": "서버 오류가 났습니다"}), 500
 
 
 def lan_ip():
@@ -63,9 +63,9 @@ if __name__ == "__main__":
     debug = os.environ.get("FLASK_DEBUG") == "1"
     # 상품·사용자 기록을 어디에 두는지 (recommend/store.py)
     if STORE.kind == "postgres":
-        print("\n  데이터           DB (database_url.txt 또는 DATABASE_URL) - 서버를 꺼도 기록이 남아요")
+        print("\n  데이터           DB (database_url.txt 또는 DATABASE_URL) - 서버를 꺼도 기록이 남습니다")
     else:
-        print("\n  데이터           메모리 + recommend/data/items.json - 서버를 끄면 기록이 사라져요")
+        print("\n  데이터           메모리 + recommend/data/items.json - 서버를 끄면 기록이 사라집니다")
     print(f"  PC 브라우저      http://127.0.0.1:{port}/feed-demo")
     print(f"  에뮬레이터       http://10.0.2.2:{port}")
     if host == "0.0.0.0":

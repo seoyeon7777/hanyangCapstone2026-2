@@ -143,12 +143,12 @@ class PgStore:
         try:
             import psycopg
         except ImportError:
-            raise StoreError("DB를 쓰려면 psycopg가 필요해요: pip install -r requirements.txt")
+            raise StoreError("DB를 쓰려면 psycopg가 필요합니다: pip install -r requirements.txt")
         try:
             # prepare_threshold=None: Supabase 연결 풀러(pgbouncer)에서 prepared statement 오류가 나지 않게
             return psycopg.connect(self.url, autocommit=True, prepare_threshold=None, connect_timeout=10)
         except psycopg.Error as e:
-            raise StoreError(f"DB에 연결할 수 없어요 ({type(e).__name__})")
+            raise StoreError(f"DB에 연결할 수 없습니다 ({type(e).__name__})")
 
     def _borrow(self):
         """쉬는 연결을 빌린다. 없으면 새로 열고, 이미 DB_POOL_SIZE개가 열려 있으면 하나가 돌아올 때까지 기다린다."""
@@ -164,7 +164,7 @@ class PgStore:
             try:
                 return self._idle.get(timeout=30)
             except queue.Empty:
-                raise StoreError("DB 연결을 기다리다 시간이 초과됐어요")
+                raise StoreError("DB 연결을 기다리다 시간이 초과됐습니다")
         try:
             return self._connect()
         except StoreError:
@@ -202,11 +202,11 @@ class PgStore:
             except psycopg.OperationalError as e:
                 self._give_back(conn, broken=True)
                 if attempt == 2:
-                    raise StoreError(f"DB 작업이 실패했어요 ({type(e).__name__})")
+                    raise StoreError(f"DB 작업이 실패했습니다 ({type(e).__name__})")
                 continue
             except psycopg.Error as e:
                 self._give_back(conn)
-                raise StoreError(f"DB 작업이 실패했어요 ({type(e).__name__}: {e})")
+                raise StoreError(f"DB 작업이 실패했습니다 ({type(e).__name__}: {e})")
             except BaseException:
                 self._give_back(conn, broken=True)
                 raise

@@ -56,12 +56,12 @@ def make_body(ratio):
     try:
         ratio = {t: float(ratio.get(t, 0)) for t in ("S", "W", "N")}
     except (TypeError, ValueError, AttributeError):
-        raise BadRequest("ratio는 S, W, N 숫자여야 해요")
+        raise BadRequest("ratio는 S, W, N 숫자여야 합니다")
     if not all(math.isfinite(v) for v in ratio.values()):
-        raise BadRequest("ratio에 NaN·무한대는 쓸 수 없어요")
+        raise BadRequest("ratio에 NaN·무한대는 쓸 수 없습니다")
     total = sum(ratio.values())
     if total <= 0 or any(v < 0 for v in ratio.values()):
-        raise BadRequest("ratio는 0 이상이고 합이 0보다 커야 해요")
+        raise BadRequest("ratio는 0 이상이고 합이 0보다 커야 합니다")
     ratio = {t: v / total for t, v in ratio.items()}
     kind, primary = classify_kind(ratio)
     return {"ratio": ratio, "kind": kind, "primary": primary}
@@ -101,7 +101,7 @@ def store_error(e):
     # DB(Supabase)가 꺼져 있거나 일시 정지됨 → 앱은 503을 보고 "잠시 후 다시" 안내.
     # 자세한 원인은 서버 화면에만 남긴다 (앱 사용자에게 개발자용 문구가 보이지 않게)
     current_app.logger.error("DB 오류: %s (Supabase 프로젝트가 일시 정지됐는지 확인)", e)
-    return jsonify({"ok": False, "error": "DB에 잠시 연결할 수 없어요. 잠시 후 다시 시도해 주세요"}), 503
+    return jsonify({"ok": False, "error": "DB에 잠시 연결할 수 없습니다. 잠시 후 다시 시도해 주십시오"}), 503
 
 
 def json_body():
@@ -109,10 +109,10 @@ def json_body():
     data = request.get_json(silent=True)
     if data is None:
         if request.get_data():   # 본문은 왔는데 JSON으로 읽지 못함 (깨진 JSON 등)
-            raise BadRequest("요청 본문이 올바른 JSON이 아니에요")
+            raise BadRequest("요청 본문이 올바른 JSON 형식이 아닙니다")
         return {}
     if not isinstance(data, dict):
-        raise BadRequest("요청 본문은 JSON 객체({ ... })여야 해요")
+        raise BadRequest("요청 본문은 JSON 객체({ ... })여야 합니다")
     return data
 
 
@@ -128,13 +128,13 @@ def resolve_request():
         data = json_body()
         body_in = data.get("body") or {}
         if not isinstance(body_in, dict):
-            raise BadRequest('body는 {"ratio": {"S": .., "W": .., "N": ..}} 모양이어야 해요')
+            raise BadRequest('body는 {"ratio": {"S": .., "W": .., "N": ..}} 모양이어야 합니다')
         ratio = body_in.get("ratio")
         if data.get("answers") is not None:      # A 파트로 바로 진단
             if not isinstance(data["answers"], dict):
-                raise BadRequest('answers는 {"q1": 1, ..., "q7": 3} 모양이어야 해요')
+                raise BadRequest('answers는 {"q1": 1, ..., "q7": 3} 모양이어야 합니다')
             if data.get("measurements") is not None and not isinstance(data["measurements"], dict):
-                raise BadRequest("measurements는 치수 5개를 담은 객체여야 해요")
+                raise BadRequest("measurements는 치수 5개를 담은 객체여야 합니다")
             answers = data["answers"]
             body = from_profile(diagnose(answers, data.get("measurements"))[0])
         elif data.get("profile") is not None:    # 이미 진단한 A 결과
@@ -142,9 +142,9 @@ def resolve_request():
                 body = make_body(data["profile"]["ratios"])
                 is_mixed = data["profile"]["is_mixed"]
             except (KeyError, TypeError):
-                raise BadRequest("profile은 A 파트 classify() 결과 모양이어야 해요 (ratios, is_mixed)")
+                raise BadRequest("profile은 A 파트 classify() 결과 모양이어야 합니다 (ratios, is_mixed)")
             if not isinstance(is_mixed, bool):
-                raise BadRequest("profile.is_mixed는 true 또는 false여야 해요")
+                raise BadRequest("profile.is_mixed는 true 또는 false여야 합니다")
             body["kind"] = "mixed" if is_mixed else "single"
     else:
         data = request.args
@@ -153,11 +153,11 @@ def resolve_request():
 
     user_id = data.get("user_id")
     if user_id is not None and not isinstance(user_id, str):
-        raise BadRequest("user_id는 문자열이어야 해요")
+        raise BadRequest("user_id는 문자열이어야 합니다")
     user = STORE.user(user_id) if user_id else None
     mode = data.get("mode") or "body"
     if mode not in MODES:
-        raise BadRequest(f"mode는 {', '.join(MODES)} 중 하나여야 해요 (body = 토글 ON, general = 토글 OFF)")
+        raise BadRequest(f"mode는 {', '.join(MODES)} 중 하나여야 합니다 (body = 토글 ON, general = 토글 OFF)")
 
     from_request = body is not None or ratio is not None
     if body is not None:
@@ -167,11 +167,11 @@ def resolve_request():
     elif user and user.get("body"):
         body = user["body"]  # 이전에 보낸 체형 재사용
     elif mode == "body":
-        raise BadRequest("체형 비율(S, W, N)이 필요해요 (체형 없이 보려면 mode=general)")
+        raise BadRequest("체형 비율(S, W, N)이 필요합니다 (체형 없이 보려면 mode=general)")
 
     season = data.get("season") or current_season()
     if season not in SEASONS:
-        raise BadRequest(f"season은 {', '.join(SEASONS)} 중 하나여야 해요")
+        raise BadRequest(f"season은 {', '.join(SEASONS)} 중 하나여야 합니다")
 
     if user_id:
         if user is None:
@@ -202,9 +202,9 @@ def diagnose(answers, measurements=None):
     설문 답이 틀린 경우만 400.
     """
     if not isinstance(answers, dict):
-        raise BadRequest('answers는 {"q1": 1, ..., "q7": 3} 모양이어야 해요')
+        raise BadRequest('answers는 {"q1": 1, ..., "q7": 3} 모양이어야 합니다')
     if measurements is not None and not isinstance(measurements, dict):
-        raise BadRequest("measurements는 치수 5개를 담은 객체여야 해요")
+        raise BadRequest("measurements는 치수 5개를 담은 객체여야 합니다")
     try:
         survey_only = classify(answers)
     except InputError as e:
@@ -214,19 +214,19 @@ def diagnose(answers, measurements=None):
     try:
         return classify(answers, measurements), True, ""
     except (InputError, TypeError, ValueError) as e:
-        return survey_only, False, f"치수 값을 쓸 수 없어서 설문만으로 진단했어요 ({e})"
+        return survey_only, False, f"치수 값을 쓸 수 없어서 설문만으로 진단했습니다 ({e})"
 
 
 def int_arg(data, name, default, low, high):
     raw = data.get(name, default)
     if isinstance(raw, bool):
-        raise BadRequest(f"{name}는 정수여야 해요")
+        raise BadRequest(f"{name}는 정수여야 합니다")
     try:
         value = int(raw)
     except (TypeError, ValueError):
-        raise BadRequest(f"{name}는 정수여야 해요")
+        raise BadRequest(f"{name}는 정수여야 합니다")
     if not low <= value <= high:
-        raise BadRequest(f"{name}는 {low}~{high} 사이여야 해요")
+        raise BadRequest(f"{name}는 {low}~{high} 사이여야 합니다")
     return value
 
 
@@ -282,9 +282,9 @@ def shown_arg(data):
     if isinstance(shown, str):
         shown = [s for s in shown.split(",") if s]
     if not isinstance(shown, list) or not all(isinstance(s, str) for s in shown):
-        raise BadRequest("shown은 product_id 문자열 목록이어야 해요")
+        raise BadRequest("shown은 product_id 문자열 목록이어야 합니다")
     if len(shown) > SCROLL_MAX_SHOWN:
-        raise BadRequest(f"shown은 최대 {SCROLL_MAX_SHOWN}개까지 보낼 수 있어요")
+        raise BadRequest(f"shown은 최대 {SCROLL_MAX_SHOWN}개까지 보낼 수 있습니다")
     return shown
 
 
@@ -293,7 +293,7 @@ def post_diagnose():
     """앱 설문 결과 화면용: 저장하지 않고 진단만 한다 (홈 추천과 같은 계산)."""
     data = json_body()
     if data.get("answers") is None:
-        raise BadRequest('answers가 필요해요 ({"q1": 1, ..., "q7": 3})')
+        raise BadRequest('answers가 필요합니다 ({"q1": 1, ..., "q7": 3})')
     result, used, notice = diagnose(data["answers"], data.get("measurements"))
     return jsonify({
         "ok": True,
@@ -317,13 +317,13 @@ def post_event():
     data = json_body()
     user_id, product_id = data.get("user_id"), data.get("product_id")
     if not isinstance(user_id, str) or not isinstance(product_id, str):
-        raise BadRequest("user_id와 product_id는 문자열이어야 해요")
+        raise BadRequest("user_id와 product_id는 문자열이어야 합니다")
     user = STORE.user(user_id)
     if not user:
-        raise BadRequest("먼저 /api/feed 또는 /api/feed/scroll을 user_id와 함께 불러 주세요")
+        raise BadRequest("먼저 /api/feed 또는 /api/feed/scroll을 user_id와 함께 불러 주십시오")
     item = STORE.item(product_id)
     if not item:
-        raise BadRequest("없는 상품이에요")
+        raise BadRequest("없는 상품입니다")
     event = data.get("event")
     try:
         if event == UNLIKE_EVENT:

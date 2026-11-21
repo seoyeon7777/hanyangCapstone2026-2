@@ -249,14 +249,14 @@ def test_outfits_rules():
 # ── 6단계: reason, update_pref, need_rediagnosis ─────────────
 def test_reason_sentence():
     r = final_score(STRAIGHT, ITEMS["t01"])  # good_tags: collar, slim_fit, firm_fabric
-    assert reason(r) == "칼라가 목선을 세워 주고, 몸에 맞는 핏이 라인을 정돈해 줘요."
+    assert reason(r) == "칼라가 목선을 세워 주고, 몸에 맞는 핏이 라인을 정돈해 줍니다."
 
 
 def test_reason_single_tag_and_fallback_and_excluded():
     one = fake("x", 0.5, tag="wide")
-    assert reason(one) == "와이드 핏이 다리 라인을 편안하게 감싸요."
-    assert reason(fake("y", 0.5)) == "지금 계절과 인기를 반영한 추천이에요."
-    assert reason(final_score(STRAIGHT, ITEMS["t06"])) == "체형에 맞지 않는 디자인이 있어 추천에서 뺐어요."
+    assert reason(one) == "와이드 핏이 다리 라인을 편안하게 감쌉니다."
+    assert reason(fake("y", 0.5)) == "지금 계절과 인기를 반영한 추천입니다."
+    assert reason(final_score(STRAIGHT, ITEMS["t06"])) == "체형에 맞지 않는 디자인이 있어 추천에서 뺐습니다."
 
 
 def test_update_pref():
@@ -351,14 +351,14 @@ def test_general_score_hand_calc():
     assert close(r["score"], 0.75)
     assert r["body"] is None and not r["excluded"]
     # 인기 0.8 ≥ 0.75 → 인기 문장, 가을 상품 → 계절 문장 (취향 0.5 < 0.55라 취향 문장 없음)
-    assert reason(r) == "요즘 많이 찾는 인기 상품이에요. 지금 계절에 입기 좋아요."
+    assert reason(r) == "요즘 많이 찾는 인기 상품입니다. 지금 계절에 입기 좋습니다."
 
 
 def test_general_uses_click_history():
     # collar를 좋아함 → 취향 1.0 → 0.4 + 0.3 + 0.2 = 0.9, 이유 첫 문장이 "자주 본 스타일"
     r = general_score(ITEMS["t01"], pref={"collar": 1.0}, season="fall")
     assert close(r["score"], 0.9)
-    assert reason(r).startswith("자주 본 스타일과 비슷해요.")
+    assert reason(r).startswith("자주 본 스타일과 비슷합니다.")
 
 
 def test_general_ignores_body_and_never_excludes():
@@ -420,8 +420,8 @@ def test_general_pref_reason_needs_several_events():
     # 칼라 셔츠 t01에서 pref에 있는 태그는 collar 하나 → 취향 = 0.5 + 값/2
     one_like = general_score(ITEMS["t01"], {"collar": 0.1}, season="fall")      # 0.55
     three_likes = general_score(ITEMS["t01"], {"collar": 0.3}, season="fall")   # 0.65
-    assert "자주 본 스타일과 비슷해요" not in one_like["reasons"]
-    assert three_likes["reasons"][0] == "자주 본 스타일과 비슷해요"
+    assert "자주 본 스타일과 비슷합니다" not in one_like["reasons"]
+    assert three_likes["reasons"][0] == "자주 본 스타일과 비슷합니다"
 
 
 def test_mode_validation():

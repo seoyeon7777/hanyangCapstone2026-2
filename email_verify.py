@@ -71,7 +71,7 @@ def smtp_config():
         if os.environ.get(key):
             config[key] = os.environ[key]
     if not (config.get("SMTP_HOST") and config.get("SMTP_USER") and config.get("SMTP_PASSWORD")):
-        raise MailConfigError("메일 서버 설정이 없어요 (email_smtp.txt 또는 SMTP_ 환경변수)")
+        raise MailConfigError("메일 서버 설정이 없습니다 (email_smtp.txt 또는 SMTP_ 환경변수)")
     return config
 
 
@@ -163,7 +163,7 @@ def domain_exists(domain):
     return result
 
 
-NO_DOMAIN_MESSAGE = "존재하지 않는 이메일 주소예요. 다시 확인해 주세요."
+NO_DOMAIN_MESSAGE = "존재하지 않는 이메일 주소입니다. 다시 확인해 주십시오."
 
 
 @email_bp.post("/api/email/check")
@@ -171,10 +171,10 @@ def check():
     """회원가입 이메일(선택)용: 형식 + 도메인이 실제로 있는지. 확인을 못 하면 exists는 null"""
     body = _json_body()
     if body is None:
-        return _error("요청 본문은 JSON 객체여야 해요", 400)
+        return _error("요청 본문은 JSON 객체여야 합니다", 400)
     email = normalize_email(body.get("email"))
     if email is None:
-        return _error("이메일 형식이 올바르지 않아요", 400)
+        return _error("이메일 형식이 올바르지 않습니다", 400)
     exists = domain_exists(email.split("@", 1)[1])
     if exists is False:
         return _error(NO_DOMAIN_MESSAGE, 400)
@@ -197,10 +197,10 @@ def _json_body():
 def send():
     body = _json_body()
     if body is None:
-        return _error("요청 본문은 JSON 객체여야 해요", 400)
+        return _error("요청 본문은 JSON 객체여야 합니다", 400)
     email = normalize_email(body.get("email"))
     if email is None:
-        return _error("이메일 형식이 올바르지 않아요", 400)
+        return _error("이메일 형식이 올바르지 않습니다", 400)
     if domain_exists(email.split("@", 1)[1]) is False:
         return _error(NO_DOMAIN_MESSAGE, 400)
 
@@ -208,30 +208,30 @@ def send():
     with _LOCK:
         _forget_expired(now)
         if now - _LAST_SENT.get(email, 0) < RESEND_SECONDS:
-            return _error(f"인증 메일은 {RESEND_SECONDS}초에 한 번만 보낼 수 있어요. 잠시 후 다시 시도해 주세요", 429)
+            return _error(f"인증 메일은 {RESEND_SECONDS}초에 한 번만 보낼 수 있습니다. 잠시 후 다시 시도해 주십시오", 429)
 
     request_id = secrets.token_urlsafe(16)
     token = secrets.token_urlsafe(24)
     link = f"{link_base()}/api/email/confirm?token={token}"
-    text = (f"아래 링크를 눌러 이메일 인증을 완료해 주세요. (30분 동안 유효)\n\n{link}\n\n"
-            "인증을 마친 뒤 앱으로 돌아가 '인증확인'을 눌러 주세요.\n"
+    text = (f"아래 링크를 눌러 이메일 인증을 완료해 주십시오. (30분 동안 유효)\n\n{link}\n\n"
+            "인증을 마친 뒤 앱으로 돌아가 '인증확인'을 눌러 주십시오.\n"
             "본인이 요청하지 않았다면 이 메일을 무시하셔도 됩니다.")
     html_body = (
         "<div style='font-family:sans-serif;font-size:15px;line-height:1.6'>"
-        "<p>아래 버튼을 눌러 이메일 인증을 완료해 주세요. (30분 동안 유효)</p>"
+        "<p>아래 버튼을 눌러 이메일 인증을 완료해 주십시오. (30분 동안 유효)</p>"
         f"<p><a href='{html.escape(link)}' style='display:inline-block;padding:12px 20px;"
         "background:#111;color:#fff;text-decoration:none;border-radius:8px'>이메일 인증하기</a></p>"
-        "<p>인증을 마친 뒤 앱으로 돌아가 <b>인증확인</b>을 눌러 주세요.</p>"
+        "<p>인증을 마친 뒤 앱으로 돌아가 <b>인증확인</b>을 눌러 주십시오.</p>"
         "<p style='color:#888;font-size:13px'>본인이 요청하지 않았다면 이 메일을 무시하셔도 됩니다.</p></div>"
     )
 
     try:
-        SENDER(email, "[골격 맞춤 쇼핑] 이메일 인증을 완료해 주세요", text, html_body)
+        SENDER(email, "[골격 맞춤 쇼핑] 이메일 인증을 완료해 주십시오", text, html_body)
     except MailConfigError as e:
         return _error(str(e), 503)
     except (smtplib.SMTPException, OSError):
         # 받는 주소가 없거나 메일 서버에 못 붙은 경우 (자세한 이유는 서버 로그에만)
-        return _error("인증 메일을 보내지 못했어요. 주소를 확인하고 다시 시도해 주세요", 502)
+        return _error("인증 메일을 보내지 못했습니다. 주소를 확인하고 다시 시도해 주십시오", 502)
 
     with _LOCK:
         _REQUESTS[request_id] = {"email": email, "token": token, "created": now, "verified": False}
@@ -250,11 +250,11 @@ def confirm():
             _REQUESTS[request_id]["verified"] = True
             email = _REQUESTS[request_id]["email"]
     if not request_id:
-        page = ("<h2>인증 링크가 만료되었거나 올바르지 않아요</h2>"
-                "<p>앱에서 인증 메일을 다시 받아 주세요.</p>")
+        page = ("<h2>인증 링크가 만료되었거나 올바르지 않습니다</h2>"
+                "<p>앱에서 인증 메일을 다시 받아 주십시오.</p>")
         return _page(page), 400
-    page = (f"<h2>이메일 인증이 완료되었어요</h2><p>{html.escape(email)}</p>"
-            "<p>앱으로 돌아가 <b>인증확인</b>을 눌러 주세요.</p>")
+    page = (f"<h2>이메일 인증이 완료되었습니다</h2><p>{html.escape(email)}</p>"
+            "<p>앱으로 돌아가 <b>인증확인</b>을 눌러 주십시오.</p>")
     return _page(page)
 
 
@@ -269,13 +269,13 @@ def _page(inner):
 def status():
     body = _json_body()
     if body is None:
-        return _error("요청 본문은 JSON 객체여야 해요", 400)
+        return _error("요청 본문은 JSON 객체여야 합니다", 400)
     request_id = body.get("request_id")
     if not isinstance(request_id, str):
-        return _error("request_id가 필요해요", 400)
+        return _error("request_id가 필요합니다", 400)
     with _LOCK:
         _forget_expired(time.time())
         item = _REQUESTS.get(request_id)
         if item is None:
-            return _error("인증 요청이 만료되었어요. 인증 메일을 다시 받아 주세요", 404)
+            return _error("인증 요청이 만료되었습니다. 인증 메일을 다시 받아 주십시오", 404)
         return jsonify({"ok": True, "verified": item["verified"], "email": item["email"]})

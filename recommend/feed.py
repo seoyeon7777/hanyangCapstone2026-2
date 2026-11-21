@@ -133,7 +133,7 @@ def general_score(item, pref=None, season="fall"):
 def score_by_mode(mode, body, items, pref=None, season="fall"):
     """토글 상태에 맞는 점수 목록. mode: "body"(ON, 골격 맞춤) | "general"(OFF, 일반)."""
     if mode not in MODES:
-        raise ValueError(f"mode는 {', '.join(MODES)} 중 하나여야 해요")
+        raise ValueError(f"mode는 {', '.join(MODES)} 중 하나여야 합니다")
     if mode == "general":
         return [general_score(item, pref, season) for item in items]
     return score_all(body, items, pref, season)
@@ -290,7 +290,7 @@ def reason(r):
 
     매칭(B)이 만든 이유 문장(r["reasons"])이 있으면 앞에서 REASON_MAX_TAGS(2)개를 쓴다.
     없으면 good_tags 앞 2개를 REASON_TEXT로 이어 붙인다 (임시 매칭용).
-    예) ["collar", "slim_fit"] → "칼라가 목선을 세워 주고, 몸에 맞는 핏이 라인을 정돈해 줘요."
+    예) ["collar", "slim_fit"] → "칼라가 목선을 세워 주고, 몸에 맞는 핏이 라인을 정돈해 줍니다."
     """
     if r["excluded"]:
         return REASON_EXCLUDED

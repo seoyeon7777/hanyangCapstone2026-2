@@ -11,15 +11,15 @@
 <!-- 1. 키 입력 + 사진 올리기 -->
 <section id="screen-setup" class="screen">
   <h1>신체 치수 측정</h1>
-  <p class="sub">정면·옆면 전신 사진을 올리면 신체 치수를 추정해요. 사진은 서버로 보내지 않고 이 기기 안에서만 분석해요.</p>
+  <p class="sub">정면·옆면 전신 사진을 올리면 신체 치수를 추정합니다. 사진은 서버로 보내지 않고 이 기기 안에서만 분석합니다.</p>
 
   <label for="height">키 (cm)</label>
   <input id="height" type="number" inputmode="decimal" min="100" max="220" step="0.1" value="160">
 
   <label for="weight">몸무게 (kg, 선택)</label>
-  <input id="weight" type="number" inputmode="decimal" min="30" max="150" step="0.1" placeholder="넣으면 키·몸무게 기반 추정도 같이 보여 드려요">
+  <input id="weight" type="number" inputmode="decimal" min="30" max="150" step="0.1" placeholder="넣으면 키·몸무게 기반 추정도 같이 보여 드립니다">
   <label for="age">나이 (선택)</label>
-  <input id="age" type="number" inputmode="numeric" min="18" max="90" step="1" placeholder="넣으면 조금 더 정확해져요">
+  <input id="age" type="number" inputmode="numeric" min="18" max="90" step="1" placeholder="넣으면 조금 더 정확해집니다">
 
   <div class="photos album-slots">
     <figure>
@@ -34,18 +34,18 @@
   <input id="file-front" type="file" accept="image/*" class="hidden">
   <input id="file-side" type="file" accept="image/*" class="hidden">
 
-  <p id="album-status" class="msg">정면과 옆면 사진을 모두 선택해주세요.</p>
+  <p id="album-status" class="msg">정면과 옆면 사진을 모두 선택해 주십시오.</p>
   <button id="btn-album-analyze" class="primary" disabled>분석하기</button>
   <p id="setup-msg" class="msg"></p>
 
-  <h3>사진 찍는 방법 (정확도에 큰 영향을 줘요)</h3>
+  <h3>사진 찍는 방법 (정확도에 큰 영향을 줍니다)</h3>
   <ul class="tips">
-    <li>머리부터 발끝까지 <b>전신</b>이 나오게, 몸이 사진 높이의 70% 이상이 되도록 2~3m 거리에서 찍어요.</li>
-    <li>폰을 <b>세로로 똑바로</b> 세우고, 카메라는 가슴 높이쯤에 두세요. 위나 아래로 기울이지 마세요.</li>
-    <li><b>정면</b>: 팔을 몸에서 조금(약 30°) 띄우고 똑바로 서요.</li>
-    <li><b>옆면</b>: 오른쪽을 보고 서서 팔은 몸 옆에 내려요.</li>
-    <li><b>몸에 붙는 옷</b>을 입고, 단색 배경에서 밝은 곳에서 찍으세요. 헐렁하거나 어두운 옷은 실제보다 크게(특히 허리) 나와요.</li>
-    <li>정면과 옆면은 <b>같은 거리·같은 높이</b>에서 찍으면 더 정확해요.</li>
+    <li>머리부터 발끝까지 <b>전신</b>이 나오게, 몸이 사진 높이의 70% 이상이 되도록 2~3m 거리에서 찍습니다.</li>
+    <li>폰을 <b>세로로 똑바로</b> 세우고, 카메라는 가슴 높이쯤에 두십시오. 위나 아래로 기울이지 마십시오.</li>
+    <li><b>정면</b>: 팔을 몸에서 조금(약 30°) 띄우고 똑바로 섭니다.</li>
+    <li><b>옆면</b>: 오른쪽을 보고 서서 팔은 몸 옆에 내립니다.</li>
+    <li><b>몸에 붙는 옷</b>을 입고, 단색 배경에서 밝은 곳에서 찍으십시오. 헐렁하거나 어두운 옷은 실제보다 크게(특히 허리) 나옵니다.</li>
+    <li>정면과 옆면은 <b>같은 거리·같은 높이</b>에서 찍으면 더 정확합니다.</li>
   </ul>
 </section>
 
@@ -56,7 +56,7 @@
 <section id="screen-result" class="screen hidden">
   <h1>신체 측정 결과</h1>
   <p class="sub">정면·옆면 사진을 분석하여 추정한 신체 치수입니다.</p>
-  <p class="notice">ⓘ 사진 기반 추정값이라 실제 치수와 차이가 있을 수 있어요.</p>
+  <p class="notice">ⓘ 사진 기반 추정값이라 실제 치수와 차이가 있을 수 있습니다.</p>
   <ul id="warnings" class="warnings hidden"></ul>
 
   <h3>기본 신체 정보</h3>
@@ -67,7 +67,7 @@
   <figure><img id="img-side" alt="옆면"><figcaption>옆면</figcaption></figure></div>
 
   <h3>윤곽·측정 위치 (확인용)</h3>
-  <p class="sub">초록이 몸으로 인식한 부분, 선이 측정한 높이(노랑 가슴·빨강 허리·파랑 골반)예요. 팔이 초록에 섞여 있으면 알려주세요.</p>
+  <p class="sub">초록이 몸으로 인식한 부분, 선이 측정한 높이(노랑 가슴·빨강 허리·파랑 골반)입니다. 팔이 초록에 섞여 있으면 알려 주십시오.</p>
   <div class="photos"><figure><img id="dbg-front" alt="정면 윤곽"></figure>
   <figure><img id="dbg-side" alt="옆면 윤곽"></figure></div>
 

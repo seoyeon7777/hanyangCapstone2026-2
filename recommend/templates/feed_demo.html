@@ -55,12 +55,12 @@
 <body>
 <div class="wrap">
   <h1>추천 피드 (연습 화면)</h1>
-  <p class="sub">스크롤을 내리면 알고리즘 순서대로 다음 상품을 불러와요.</p>
+  <p class="sub">스크롤을 내리면 알고리즘 순서대로 다음 상품을 불러옵니다.</p>
 
   <div class="toggle-row">
     <div>
       <div class="label" id="modeLabel">골격 맞춤 추천 ON</div>
-      <div class="hint" id="modeHint">내 체형에 어울리는 옷을 먼저 보여 줘요</div>
+      <div class="hint" id="modeHint">내 체형에 어울리는 옷을 먼저 보여 줍니다</div>
     </div>
     <label class="switch"><input type="checkbox" id="algoToggle" checked><span class="slider"></span></label>
   </div>
@@ -127,7 +127,7 @@
 
       page += 1;
       hasMore = data.has_more;
-      sentinel.textContent = hasMore ? "불러오는 중…" : "모든 추천을 다 봤어요";
+      sentinel.textContent = hasMore ? "불러오는 중…" : "모든 추천을 다 봤습니다";
     } catch (e) {
       sentinel.textContent = "오류: " + e.message;
       hasMore = false;
@@ -180,8 +180,8 @@
   toggle.addEventListener("change", () => {
     const on = toggle.checked;
     document.getElementById("modeLabel").textContent = on ? "골격 맞춤 추천 ON" : "골격 맞춤 추천 OFF";
-    document.getElementById("modeHint").textContent = on ? "내 체형에 어울리는 옷을 먼저 보여 줘요"
-                                                         : "인기 상품과 자주 본 스타일 위주로 보여 줘요";
+    document.getElementById("modeHint").textContent = on ? "내 체형에 어울리는 옷을 먼저 보여 줍니다"
+                                                         : "인기 상품과 자주 본 스타일 위주로 보여 줍니다";
     document.getElementById("controls").classList.toggle("off", !on);
     document.getElementById("notice").style.display = "none";
     restart();
