@@ -201,8 +201,8 @@ public class MyBodyActivity extends AppCompatActivity {
                 .setBackgroundResource(active ? R.drawable.bg_card : R.drawable.bg_info_box);
         boolean surveyOnly = profile.isSurveyOnly();
         ((TextView) card.findViewById(R.id.tvProfileSummary)).setText(
-                "키 " + (profile.heightCm > 0f ? BodyValueTable.cm(profile.heightCm) : "-")
-                        + " · 체형 " + profile.bodyType
+                (profile.heightCm > 0f ? "키 " + BodyValueTable.cm(profile.heightCm) + " · " : "")
+                        + "체형 " + profile.bodyType
                         + (surveyOnly ? " (설문)" : "")
                         + " · " + profile.savedDate());
 
@@ -278,13 +278,9 @@ public class MyBodyActivity extends AppCompatActivity {
     }
 
     private void continuePhoto(BodyProfileStore.Profile profile) {
-        float height = profile.heightCm > 0f ? profile.heightCm : BodyInput.height(this);
-        if (height < 100f || height > 230f) {
-            Toast.makeText(this, "키 정보가 없어요. '새 체형 추가하기'에서 키를 입력해 주세요.",
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-        startActivity(PhotoMeasurementActivity.continueIntent(this, profile.id, height));
+        // 설문만 한 카드는 키·몸무게·나이를 아직 안 받았을 수 있다 → 치수를 재기 직전에 받는다
+        com.example.capstone.ui.BodyInputDialog.show(this, profile.heightCm,
+                height -> startActivity(PhotoMeasurementActivity.continueIntent(this, profile.id, height)));
     }
 
     private void selectAsCurrent(BodyProfileStore.Profile profile) {

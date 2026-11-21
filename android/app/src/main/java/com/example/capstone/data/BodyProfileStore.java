@@ -367,7 +367,8 @@ public final class BodyProfileStore {
         UserBodyProfile profile = UserBodyProfile.getInstance();
         profile.clear();
         Profile active = getActive(context);
-        float height = active != null ? active.heightCm : BodyInput.height(context);
+        // 설문만 한 카드는 키가 없을 수 있다(키는 사진으로 치수를 잴 때 받는다) → 지난번에 넣은 키를 쓴다
+        float height = active != null && active.heightCm > 0f ? active.heightCm : BodyInput.height(context);
 
         // 가슴·허리·엉덩이·허벅지는 키·몸무게·나이로 어림한 값(기준선)과 맞춘다:
         // 측정값이 없거나 옷·팔 때문에 기준선과 크게 다르면 기준선 값을 쓰고 "추정"으로 표시한다.
