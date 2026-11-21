@@ -66,7 +66,7 @@ public final class RecommendApi {
         return code >= 400 && code < 500 ? MSG_REQUEST_FAIL : serverMessage;
     }
 
- = "서버에 오류가 나서 실패했어요. 잠시 후 다시 시도해 주세요.";
+    public static final String MSG_SERVER_ERROR = "서버에 오류가 나서 실패했어요. 잠시 후 다시 시도해 주세요.";
     public static final String MSG_READ_FAIL = "서버 응답을 읽지 못했어요. 잠시 후 다시 시도해 주세요.";
     public static final String MSG_REQUEST_FAIL = "문제가 생겨 요청하지 못했어요. 잠시 후 다시 시도해 주세요.";
     private static final int TIMEOUT_MS = 10000;
