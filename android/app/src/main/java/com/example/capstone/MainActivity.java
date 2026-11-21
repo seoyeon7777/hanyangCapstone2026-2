@@ -688,13 +688,14 @@ public class MainActivity extends AppCompatActivity {
                             productAdapter.notifyDataSetChanged();
 
                             // 서버 없이 보여 주는 기본 상품은 맞춤 추천이 아니므로 체형 맞춤 토글도 끈다
+                            // 토스트는 두 줄 안에 들어가게 짧게 쓴다 (길면 끝이 잘린다)
                             if (bodyMode) {
                                 setModeSilently(false);
                                 updateHomeTitle("");
-                                message += " 체형 맞춤을 잠시 껐어요.";
+                                message = "연결에 실패했어요. 체형 맞춤을 끄고 기본 상품을 보여 드려요.";
+                            } else {
+                                message = "연결에 실패했어요. 기본 상품을 보여 드려요.";
                             }
-
-                            message += " 기본 상품을 보여 드려요";
                         }
 
                         Toast.makeText(
