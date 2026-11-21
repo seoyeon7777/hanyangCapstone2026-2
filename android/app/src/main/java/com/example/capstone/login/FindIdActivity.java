@@ -32,7 +32,8 @@ public class FindIdActivity extends AppCompatActivity {
 
     private Button btnByPhone, btnByEmail;
     private TextView tvContactLabel;
-    private EditText etPhone, etAuthCode;
+    private PhoneFields phoneFields;      // 휴대폰으로 찾을 때 (010 + 4자리 + 4자리)
+    private EditText etPhone, etAuthCode;  // etPhone은 이메일로 찾을 때만 보인다
     private Button btnRequestAuth, btnVerifyCode, btnConfirm;
 
     private LinearLayout containerResult;
@@ -66,6 +67,7 @@ public class FindIdActivity extends AppCompatActivity {
         btnByEmail = findViewById(R.id.btnByEmail);
 
         tvContactLabel = findViewById(R.id.tvContactLabel);
+        phoneFields = new PhoneFields(findViewById(R.id.phoneFields));
         etPhone = findViewById(R.id.etPhone);
         etAuthCode = findViewById(R.id.etAuthCode);
 
@@ -92,12 +94,12 @@ public class FindIdActivity extends AppCompatActivity {
 
         if (byPhone) {
             tvContactLabel.setText("휴대폰 번호");
-            etPhone.setHint("010-0000-0000");
-            PhoneInput.attach(etPhone);
+            phoneFields.setVisible(true);
+            etPhone.setVisibility(View.GONE);
         } else {
             tvContactLabel.setText("이메일");
-            etPhone.setHint("example@gmail.com");
-            PhoneInput.detach(etPhone);
+            phoneFields.setVisible(false);
+            etPhone.setVisibility(View.VISIBLE);
             etPhone.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
         }
     }
@@ -136,6 +138,7 @@ public class FindIdActivity extends AppCompatActivity {
         }
         byPhone = phone;
         etPhone.setText("");
+        phoneFields.clear();
         resetFlow();
         applyMethod();
     }
@@ -174,12 +177,16 @@ public class FindIdActivity extends AppCompatActivity {
 
         // 인증확인 버튼
         // 인증번호를 받은 뒤 번호·이메일을 고치면 처음부터 다시 (처음 요청한 계정이 그대로 인증되는 것을 막는다)
+        Runnable contactChanged = () -> {
+            if (sentTarget != null && !sentTarget.equals(normalizedContact())) {
+                resetFlow();
+            }
+        };
+        phoneFields.setOnChanged(contactChanged);
         etPhone.addTextChangedListener(new SimpleWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (sentTarget != null && !sentTarget.equals(normalizedContact())) {
-                    resetFlow();
-                }
+                contactChanged.run();
             }
         });
         btnVerifyCode.setOnClickListener(v -> verifyAuthCode());
@@ -214,9 +221,12 @@ public class FindIdActivity extends AppCompatActivity {
             return;
         }
 
-        String shown = byPhone ? LocalAccounts.formatPhone(contact) : contact;
-        etPhone.setText(shown);
-        etPhone.setSelection(shown.length());
+        if (byPhone) {
+            phoneFields.setNumber(contact);
+        } else {
+            etPhone.setText(contact);
+            etPhone.setSelection(contact.length());
+        }
         resetFlow();
 
         // [여기에 DB 입력] 발송한 인증번호를 만료시각과 함께 저장 (auth_codes)
@@ -280,11 +290,11 @@ public class FindIdActivity extends AppCompatActivity {
 
     /** 입력한 연락처를 정규화한다 (전화번호는 010-0000-0000, 이메일은 소문자). 올바르지 않으면 null */
     private String normalizedContact() {
-        String input = etPhone.getText().toString().replaceAll("\\s", "");
-
         if (byPhone) {
-            return LocalAccounts.normalizePhone(input);
+            return phoneFields.number();
         }
+
+        String input = etPhone.getText().toString().replaceAll("\\s", "");
 
         String email = input.toLowerCase(Locale.ROOT);
         if (email.indexOf('@') <= 0 || email.indexOf('@') != email.lastIndexOf('@')

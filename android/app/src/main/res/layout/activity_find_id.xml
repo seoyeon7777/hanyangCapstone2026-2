@@ -98,17 +98,29 @@
         android:orientation="horizontal"
         android:layout_marginBottom="16dp">
 
-        <EditText
-            android:id="@+id/etPhone"
+        <FrameLayout
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="010-0000-0000"
-            android:inputType="number"
-            android:background="@drawable/bg_edit"
-            android:paddingHorizontal="16dp"
-            android:textSize="14sp"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp">
+
+            <include
+                android:id="@+id/phoneFields"
+                layout="@layout/view_phone_fields"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/etPhone"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:visibility="gone"
+                android:hint="example@gmail.com"
+                android:inputType="textEmailAddress"
+                android:background="@drawable/bg_edit"
+                android:paddingHorizontal="16dp"
+                android:textSize="14sp" />
+        </FrameLayout>
 
         <Button
             android:id="@+id/btnRequestAuth"
