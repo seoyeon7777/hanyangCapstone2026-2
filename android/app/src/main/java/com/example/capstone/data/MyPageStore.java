@@ -491,7 +491,7 @@ public class MyPageStore {
                     faq(
                             "취소/반품/교환",
                             "반품·교환은 언제까지 가능한가요?",
-                            "상품을 받은 날로부터 7일 이내에 신청할 수 있습니다. 착용, 세탁했거나 택을 제거한 상품은 반품·교환이 어렵습니다."
+                            "주문일로부터 7일 이내에 신청할 수 있습니다. 착용, 세탁했거나 택을 제거한 상품은 반품·교환이 어렵습니다."
                     ),
                     faq(
                             "취소/반품/교환",
@@ -1618,6 +1618,23 @@ public class MyPageStore {
     // 공통
     public static String formatPrice(int price) {
         return new DecimalFormat("#,###").format(price) + "원";
+    }
+
+    /** 반품·교환을 신청할 수 있는 기간(일). 앱에는 배송완료 날짜가 없어 주문일부터 센다 */
+    public static final int RETURN_DAYS = 7;
+
+    /** 주문일("yyyy.MM.dd")로부터 RETURN_DAYS일이 지났으면 true. 날짜를 읽을 수 없으면 false(막지 않는다) */
+    public static boolean isReturnPeriodOver(String orderDate, long nowMillis) {
+        try {
+            Date ordered = new SimpleDateFormat("yyyy.MM.dd", Locale.KOREA).parse(orderDate);
+            if (ordered == null) {
+                return false;
+            }
+            long days = (nowMillis - ordered.getTime()) / (24L * 60 * 60 * 1000);
+            return days > RETURN_DAYS;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public static String today() {

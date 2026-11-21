@@ -232,6 +232,11 @@ public class MyBodyActivity extends AppCompatActivity {
             });
         }
 
+        // 치수까지 측정한 체형: 사진을 다시 분석해 이 카드의 치수를 새로 잰다 (키·몸무게·나이도 다시 확인)
+        TextView tvRemeasure = card.findViewById(R.id.tvRemeasure);
+        tvRemeasure.setVisibility(!surveyOnly && !selectMode ? View.VISIBLE : View.GONE);
+        tvRemeasure.setOnClickListener(v -> remeasurePhoto(profile));
+
         TextView btnSetActive = card.findViewById(R.id.btnSetActive);
         btnSetActive.setText(active ? "현재 체형" : "현재 체형으로 선택");
         btnSetActive.setEnabled(!active);
@@ -281,6 +286,13 @@ public class MyBodyActivity extends AppCompatActivity {
         // 설문만 한 카드는 키·몸무게·나이를 아직 안 받았을 수 있다 → 치수를 재기 직전에 받는다
         com.example.capstone.ui.BodyInputDialog.show(this, profile.heightCm,
                 height -> startActivity(PhotoMeasurementActivity.continueIntent(this, profile.id, height)));
+    }
+
+    private void remeasurePhoto(BodyProfileStore.Profile profile) {
+        MyPageUi.confirm(this, "사진 다시 분석",
+                "'" + profile.name + "'의 치수를 새로 잴까요? 새 사진으로 분석하면 이 체형의 치수가 바뀌어요.",
+                () -> com.example.capstone.ui.BodyInputDialog.show(this, profile.heightCm,
+                        height -> startActivity(PhotoMeasurementActivity.remeasureIntent(this, profile.id, height))));
     }
 
     private void selectAsCurrent(BodyProfileStore.Profile profile) {

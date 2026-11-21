@@ -152,6 +152,9 @@ public final class RecommendApi {
      * 2) 옛 카드라 설문 답이 없으면 카드의 체형 이름을 100%로
      * 3) 대표 체형이 없으면: 비로그인은 최근 설문 답, 로그인했으면 null (저장한 체형만 쓴다). 아무것도 없으면 null
      */
+    /** 서버 설문 채점 방식: 2 = 앱의 새 15문항 (서버 body_profile.SURVEY_V2). 안 보내면 서버는 옛 7문항 채점을 쓴다 */
+    private static final int SURVEY_VERSION = 2;
+
     private static JSONObject bodyInput(Context context) throws JSONException {
 
         BodyProfileStore.Profile active = BodyProfileStore.getActive(context);
@@ -161,6 +164,7 @@ public final class RecommendApi {
             if (active.surveyAnswers != null) {
                 JSONObject input = new JSONObject();
                 input.put("answers", answersJson(active.surveyAnswers));
+                input.put("survey_version", SURVEY_VERSION);
                 return input;
             }
 
@@ -187,6 +191,7 @@ public final class RecommendApi {
 
         JSONObject input = new JSONObject();
         input.put("answers", answersJson(answers));
+        input.put("survey_version", SURVEY_VERSION);
         return input;
     }
 
@@ -669,6 +674,7 @@ public final class RecommendApi {
             }
 
             body.put("answers", answerJson);
+            body.put("survey_version", SURVEY_VERSION);
 
             if (measurements != null) {
                 body.put("measurements", measurements);

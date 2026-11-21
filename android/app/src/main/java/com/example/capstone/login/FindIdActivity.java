@@ -271,7 +271,7 @@ public class FindIdActivity extends AppCompatActivity {
             return;
         }
 
-        tvFoundAccount.setText(foundAccount.id);
+        tvFoundAccount.setText(com.example.capstone.ui.MaskText.userId(foundAccount.id));   // 인증 뒤에도 전체는 안 보여 준다
         containerResult.setVisibility(View.VISIBLE);
 
         isAccountFound = true;

@@ -285,6 +285,12 @@ public class ProductDetailActivity extends AppCompatActivity {
                         "server_product_id",
                         currentProduct.getServerId()
                 );
+
+                // 상품 리뷰는 상품 이름으로 찾는다 (서버 상품 번호는 앱을 켤 때마다 달라진다)
+                intent.putExtra(
+                        "product_name",
+                        currentProduct.getName()
+                );
             }
 
             startActivity(intent);

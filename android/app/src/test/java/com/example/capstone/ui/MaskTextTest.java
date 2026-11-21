@@ -35,4 +35,12 @@ public class MaskTextTest {
         assertEquals("1***5", MaskText.account("12345"));
         assertEquals("", MaskText.account(null));
     }
+
+    @Test
+    public void userIdKeepsFirstTwoAndLastCharacters() {
+        assertEquals("te*****2", MaskText.userId("tester02"));
+        assertEquals("ab*d", MaskText.userId("abcd"));
+        assertEquals("a**", MaskText.userId("abc"));
+        assertEquals("", MaskText.userId(null));
+    }
 }

@@ -246,8 +246,17 @@ public class OrderListActivity extends AppCompatActivity {
 
         btnCancel.setOnClickListener(v ->
                 startActivity(ClaimRequestActivity.newIntent(this, order.orderNo, true)));
-        btnReturn.setOnClickListener(v ->
-                startActivity(ClaimRequestActivity.newIntent(this, order.orderNo, false)));
+        btnReturn.setOnClickListener(v -> {
+            // 주문일로부터 7일이 지났으면 신청을 받지 않는다 (FAQ·약관과 같은 기준)
+            if (MyPageStore.isReturnPeriodOver(order.orderDate, System.currentTimeMillis())) {
+                AppDialog.alert(this, "반품·교환 기간이 지났어요",
+                        "주문일(" + order.orderDate + ")로부터 " + MyPageStore.RETURN_DAYS
+                                + "일 이내에만 신청할 수 있어요. 그 뒤에는 1:1 문의로 알려 주세요.",
+                        "확인");
+                return;
+            }
+            startActivity(ClaimRequestActivity.newIntent(this, order.orderNo, false));
+        });
         btnTracking.setOnClickListener(v -> showTracking(order));
         btnReview.setOnClickListener(v ->
                 startActivity(ReviewWriteActivity.newWriteIntent(this, order.orderNo)));

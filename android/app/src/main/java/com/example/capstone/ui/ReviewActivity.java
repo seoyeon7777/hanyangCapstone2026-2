@@ -1,6 +1,5 @@
 package com.example.capstone.ui;
 
-import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -17,8 +16,8 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.R;
+import com.example.capstone.data.MyPageStore;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -34,6 +33,7 @@ public class ReviewActivity extends AppCompatActivity {
     private static final int BORDER = 0xFFE8E8E8;
 
     private int productId;
+    private String productName;
     private boolean satisfiedOnly = false;
 
     private final List<JSONObject> reviews =
@@ -50,6 +50,7 @@ public class ReviewActivity extends AppCompatActivity {
                 "product_id",
                 -1
         );
+        productName = getIntent().getStringExtra("product_name");
 
         createScreen();
         loadReviews();
@@ -167,31 +168,37 @@ public class ReviewActivity extends AppCompatActivity {
     // 상품별 리뷰 불러오기
     // =====================================
 
+    /**
+     * 이 상품의 리뷰: 지금 로그인한 계정이 이 기기에서 쓴 리뷰만 보인다 (리뷰 서버가 없어 다른 사람 리뷰는 못 보여 준다).
+     * "내가 쓴 리뷰"(MyPageStore)에 저장된 것을 상품 이름으로 걸러 낸다.
+     */
     private void loadReviews() {
 
         reviews.clear();
 
-        SharedPreferences prefs =
-                getSharedPreferences(
-                        "capstone_reviews",
-                        MODE_PRIVATE
-                );
+        if (productName == null || productName.isEmpty()) {
+            return;
+        }
 
-        String json = prefs.getString(
-                "reviews_product_" + productId,
-                "[]"
-        );
+        MyPageStore.init(this);
 
-        try {
-            JSONArray array = new JSONArray(json);
+        for (MyPageStore.MyReview review : MyPageStore.getMyReviews()) {
 
-            for (int i = 0; i < array.length(); i++) {
-                reviews.add(
-                        array.getJSONObject(i)
-                );
+            if (!productName.equals(review.productName)) {
+                continue;
             }
 
-        } catch (Exception ignored) {
+            try {
+                JSONObject json = new JSONObject();
+                json.put("title", review.option == null || review.option.isEmpty()
+                        ? "구매 후기"
+                        : review.option + " 구매");
+                json.put("content", review.content);
+                json.put("date", review.writtenDate);
+                json.put("rating", review.rating);
+                reviews.add(json);
+            } catch (Exception ignored) {
+            }
         }
     }
 

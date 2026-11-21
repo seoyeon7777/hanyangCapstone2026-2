@@ -105,6 +105,18 @@
         android:textColor="#666666"
         android:textSize="12sp" />
 
+    <!-- 치수까지 측정한 체형에만 보임: 사진을 다시 분석해 이 체형의 치수를 새로 잰다 -->
+    <TextView
+        android:id="@+id/tvRemeasure"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingBottom="8dp"
+        android:text="사진 다시 분석하기 ›"
+        android:textColor="#666666"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
     <LinearLayout
         android:id="@+id/layoutProfileActions"
         android:layout_width="match_parent"

@@ -481,8 +481,8 @@ public class MeasurementResultActivity extends AppCompatActivity {
         // 설문만 한 카드에서 "사진 분석 이어서 하기"로 왔으면 그 카드에 치수를 채운다 (골격·설문 답은 그 카드 것)
         BodyProfileStore.Profile continued =
                 BodyProfileStore.find(this, MeasurementSession.continueProfileId);
-        if (continued != null && !continued.isSurveyOnly()) {
-            continued = null;   // 이미 치수가 있는 카드면 이어서 하지 않고 새 카드로
+        if (continued != null && !continued.isSurveyOnly() && !MeasurementSession.remeasure) {
+            continued = null;   // 이미 치수가 있는 카드면 이어서 하지 않고 새 카드로 ("사진 다시 분석하기"일 때만 그 카드에 덮어쓴다)
         }
 
         final String bodyType;
@@ -519,6 +519,7 @@ public class MeasurementResultActivity extends AppCompatActivity {
                                 editId,
                                 name, heightCm, 0f, bodyType, parts, surveyAnswers);
                         MeasurementSession.continueProfileId = null;
+                        MeasurementSession.remeasure = false;
                         startActivity(BodySaveCompleteActivity.newIntent(
                                 MeasurementResultActivity.this, saved.name));
                         finish();
@@ -538,6 +539,7 @@ public class MeasurementResultActivity extends AppCompatActivity {
                         intent.putExtra(BodyMeasurementContract.EXTRA_USER_HEIGHT_CM, heightCm);
                         intent.putExtra(PhotoMeasurementActivity.EXTRA_CONTINUE_PROFILE_ID,
                                 MeasurementSession.continueProfileId);   // 이어서 하던 카드는 그대로
+                        intent.putExtra(PhotoMeasurementActivity.EXTRA_REMEASURE, MeasurementSession.remeasure);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         startActivity(intent);
                         finish();

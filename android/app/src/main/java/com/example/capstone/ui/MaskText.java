@@ -29,6 +29,25 @@ public final class MaskText {
     }
 
     /**
+     * 아이디를 앞 2글자와 마지막 1글자만 남기고 *로 가린다. tester02 → te*****2, abcd → ab*d, abc → a**.
+     * 아이디 찾기 결과가 인증 뒤에도 전체가 그대로 보이지 않게 한다.
+     */
+    public static String userId(String id) {
+        if (id == null) {
+            return "";
+        }
+        String s = id.trim();
+        int n = s.length();
+        if (n <= 1) {
+            return s;
+        }
+        if (n <= 3) {
+            return s.charAt(0) + "*".repeat(n - 1);
+        }
+        return s.substring(0, 2) + "*".repeat(n - 3) + s.charAt(n - 1);
+    }
+
+    /**
      * 계좌번호의 숫자 중 앞 4자리·뒤 4자리만 남기고 *로 가린다. 하이픈 등 숫자가 아닌 글자는 그대로 둔다.
      * 숫자가 8자리 이하면 앞뒤가 겹치므로 앞 1자리·뒤 1자리만 남긴다.
      */

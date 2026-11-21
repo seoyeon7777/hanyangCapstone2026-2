@@ -47,6 +47,13 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                 .putExtra("USER_HEIGHT_CM", heightCm);
     }
 
+    /** 치수가 있는 체형 카드의 사진을 다시 분석해 그 카드의 치수를 덮어쓴다 */
+    public static final String EXTRA_REMEASURE = "remeasure";
+
+    public static Intent remeasureIntent(android.content.Context context, String profileId, float heightCm) {
+        return continueIntent(context, profileId, heightCm).putExtra(EXTRA_REMEASURE, true);
+    }
+
 
     // =====================================================
     // 화면
@@ -263,6 +270,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         // 설문만 한 체형에 사진 분석을 이어서 하는지 (없으면 새 체형)
         MeasurementSession.continueProfileId =
                 getIntent().getStringExtra(EXTRA_CONTINUE_PROFILE_ID);
+        MeasurementSession.remeasure = getIntent().getBooleanExtra(EXTRA_REMEASURE, false);
 
         // 나가기 (전에는 화면에 나가는 버튼이 없어 시스템 뒤로가기로만 나갈 수 있었다)
         findViewById(R.id.btnPhotoBack)
