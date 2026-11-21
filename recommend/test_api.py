@@ -408,29 +408,6 @@ def test_broken_json_body_gets_json_error_not_missing_ratio():
     assert client.post("/api/feed/scroll?mode=general").status_code in (200, 400)
 
 
-def test_diagnose_survey_version_2_scores_new_fifteen_questions():
-    reset()
-    a15 = {f"q{i}": 2 for i in range(1, 16)}
-    d = client.post("/api/diagnose", json={"answers": a15, "survey_version": 2}).get_json()
-    assert d["primary"] == "W" and abs(d["ratios"]["W"] - 1.0) < 1e-9
-    a7 = {f"q{i}": 3 for i in range(1, 8)}                 # 조기 결과: 7개만
-    d7 = client.post("/api/diagnose", json={"answers": a7, "survey_version": 2}).get_json()
-    assert d7["primary"] == "N"
-    assert client.post("/api/diagnose", json={"answers": a15, "survey_version": 3}).status_code == 400
-    assert client.post("/api/diagnose", json={"answers": {"q1": 1, "q2": 1}, "survey_version": 2}).status_code == 400
-    # survey_version이 없으면 옛 방식(q1~q7)으로 채점 → 같은 15개 답도 q8~q15는 무시
-    old = client.post("/api/diagnose", json={"answers": a15}).get_json()
-    assert old["ok"] is True
-
-
-def test_feed_with_survey_version_2_answers_saves_body_for_user():
-    reset()
-    a9 = {f"q{i}": 1 for i in range(1, 10)}
-    r = client.post("/api/feed/scroll", json={"user_id": "v2u", "answers": a9, "survey_version": 2, "mode": "body"})
-    assert r.status_code == 200
-    assert r.get_json()["body"]["primary"] == "S"
-
-
 def test_items_carry_seasons_for_app_filter():
     # 앱 카테고리 화면의 계절 필터는 상품의 seasons로 거른다 → 홈·카탈로그 응답의 모든 상품에 seasons가 있어야 한다
     reset()

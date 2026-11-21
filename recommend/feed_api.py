@@ -9,8 +9,7 @@ POST /api/feed        체형은 셋 중 하나로 보낸다
                       {"user_id": "u1", "body": {"ratio": {"S":0.6,"W":0.3,"N":0.1}}}
 POST /api/feed/event  {"user_id": "u1", "product_id": "t01", "event": "like"}
                       event: click | like | unlike(찜 해제) | purchase | return. 같은 상품 찜은 한 번만 센다
-POST /api/diagnose    {"answers": {"q1": 1, ..., "q7": 3}, "measurements": {...} (선택), "survey_version": 2 (선택)}  ← 앱 설문 결과 화면용 체형 진단
-                      survey_version=2: 앱의 새 15문항(q1~q15 중 7개 이상, 보기 A·B·C = S·W·N 1점씩). 없으면 옛 7문항 채점
+POST /api/diagnose    {"answers": {"q1": 1, ..., "q7": 3}, "measurements": {...} (선택)}  ← 앱 설문 결과 화면용 체형 진단
                       체형 채점은 서버(A 파트 body_profile.classify) 한 곳에서만 한다. 앱은 결과를 받아 보여 주기만 한다
 GET  /api/feed/scroll?user_id=u1&S=0.6&W=0.3&N=0.1&page=0&size=10   ← 홈 화면 무한 스크롤용
      /api/feed, /api/feed/scroll 둘 다 mode로 홈 화면 토글을 받는다
@@ -137,7 +136,7 @@ def resolve_request():
             if data.get("measurements") is not None and not isinstance(data["measurements"], dict):
                 raise BadRequest("measurements는 치수 5개를 담은 객체여야 해요")
             answers = data["answers"]
-            body = from_profile(diagnose(answers, data.get("measurements"), survey_version_arg(data))[0])
+            body = from_profile(diagnose(answers, data.get("measurements"))[0])
         elif data.get("profile") is not None:    # 이미 진단한 A 결과
             try:
                 body = make_body(data["profile"]["ratios"])
@@ -195,15 +194,7 @@ def body_changed(user, body, answers):
     return answers is not None and answers != user.get("answers")
 
 
-def survey_version_arg(data):
-    """요청의 survey_version: 없으면 1(옛 7문항 채점), 2면 앱의 새 15문항 채점. 그 밖의 값은 400."""
-    version = data.get("survey_version", 1)
-    if version not in (1, 2) or isinstance(version, bool):
-        raise BadRequest("survey_version은 1 또는 2여야 해요")
-    return version
-
-
-def diagnose(answers, measurements=None, survey_version=1):
+def diagnose(answers, measurements=None):
     """A 파트로 체형 진단 → (classify 결과, 치수를 썼는지, 안내 문장).
 
     지금은 설문만 쓴다 (rec_config.DIAGNOSIS_USE_MEASUREMENTS = False, 팀 결정). 치수가 와도 무시한다.
@@ -215,13 +206,13 @@ def diagnose(answers, measurements=None, survey_version=1):
     if measurements is not None and not isinstance(measurements, dict):
         raise BadRequest("measurements는 치수 5개를 담은 객체여야 해요")
     try:
-        survey_only = classify(answers, survey_version=survey_version)
+        survey_only = classify(answers)
     except InputError as e:
         raise BadRequest(str(e))
     if measurements is None or not rec_config.DIAGNOSIS_USE_MEASUREMENTS:
         return survey_only, False, ""
     try:
-        return classify(answers, measurements, survey_version), True, ""
+        return classify(answers, measurements), True, ""
     except (InputError, TypeError, ValueError) as e:
         return survey_only, False, f"치수 값을 쓸 수 없어서 설문만으로 진단했어요 ({e})"
 
@@ -303,7 +294,7 @@ def post_diagnose():
     data = json_body()
     if data.get("answers") is None:
         raise BadRequest('answers가 필요해요 ({"q1": 1, ..., "q7": 3})')
-    result, used, notice = diagnose(data["answers"], data.get("measurements"), survey_version_arg(data))
+    result, used, notice = diagnose(data["answers"], data.get("measurements"))
     return jsonify({
         "ok": True,
         "primary": result["primary"],

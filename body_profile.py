@@ -112,53 +112,6 @@ SURVEY = {
     },
 }
 
-# ═════════════════════════════════════════════
-# 설문 V2: 앱의 새 15문항 (11/15 지현, 11/21 서버 채점 연결)
-#   모든 문항이 보기 A·B·C = 스트레이트·웨이브·내추럴에 대응하는 구조라서
-#   문항마다 1점·같은 가중치로 센다 (옛 7문항 점수표와 문항 내용이 달라 그 가중치는 쓰지 않는다).
-#   앱은 7~15개까지 답하면 결과를 보여 주므로(조기 결과), 답한 문항만으로 비율을 낸다.
-#   옛 7문항(SURVEY)과 섞이지 않게 요청에 survey_version=2가 있을 때만 쓴다 (기본은 옛 방식).
-# ═════════════════════════════════════════════
-SURVEY_V2_COUNT = 15
-SURVEY_V2_MIN_ANSWERS = 7
-SURVEY_V2 = {
-    f"q{i}": {
-        "weight": 1.0,
-        "choices": {1: "A", 2: "B", 3: "C"},
-        "options": {
-            1: {"S": 1, "W": 0, "N": 0},
-            2: {"S": 0, "W": 1, "N": 0},
-            3: {"S": 0, "W": 0, "N": 1},
-        },
-    }
-    for i in range(1, SURVEY_V2_COUNT + 1)
-}
-
-
-def validate_answers_v2(answers):
-    """V2: q1~q15 중 최소 7개에 1·2·3으로 답해야 한다 (순서는 q1부터 차례로 답한 것으로 본다)."""
-    if not answers:
-        raise InputError("설문 답이 없습니다.")
-    given = [q for q in SURVEY_V2 if answers.get(q) not in (None, "")]
-    for q in given:
-        if _to_option(answers[q]) not in SURVEY_V2[q]["options"]:
-            raise InputError(f"설문 {q}의 답은 1·2·3 중 하나여야 합니다: {answers[q]!r}")
-    if len(given) < SURVEY_V2_MIN_ANSWERS:
-        raise InputError(f"설문은 최소 {SURVEY_V2_MIN_ANSWERS}문항에 답해야 합니다 (지금 {len(given)}개).")
-
-
-def survey_ratios_v2(answers):
-    """V2 설문 비율. 답한 문항의 점수를 타입별로 더해 합이 1인 비율로 바꾼다 (타입별 최고점이 같아 따로 보정하지 않는다)."""
-    scores = {t: 0.0 for t in TYPES}
-    for q, spec in SURVEY_V2.items():
-        if answers.get(q) in (None, ""):
-            continue
-        opt = spec["options"][_to_option(answers[q])]
-        for t in TYPES:
-            scores[t] += opt[t] * spec["weight"]
-    return normalize(scores)
-
-
 # 설문 점수 계산
 def score_survey(answers):
     """설문 원점수 {"S":…, "W":…, "N":…} = 선택지 점수 × 문항 weight 의 합"""
@@ -444,21 +397,17 @@ THRESHOLDS = {
 # ═════════════════════════════════════════════
 # B·C가 호출하는 함수
 # ═════════════════════════════════════════════
-def classify(answers, measurements=None, survey_version=1):
+def classify(answers, measurements=None):
     """
     answers      : {"q1": 1, "q2": 3, ..., "q7": 2}   (1·2·3)
-                   survey_version=2면 앱의 새 15문항: q1~q15 중 7개 이상 (SURVEY_V2)
     measurements : {"height": 165.0, "shoulder_width": 31.5, "arm_length": 53.1,
                     "upper_body_length": 47.0, "leg_length": 86.1}   (cm)
                    없으면 None → 설문만으로 계산.
                    선택 키(있으면 점수에 더함): "chest_depth"(가슴두께 cm), "shoulder_slope"(어깨 경사각 도), "age"(나이)
     """
-    if survey_version == 2:
-        validate_answers_v2(answers)
-        survey_r = survey_ratios_v2(answers)
-    else:
-        validate_answers(answers)                          # 설문 답변 검증
-        survey_r = survey_ratios(answers)                  # 설문 점수 계산 및 정규화 (타입별 최고점 보정)
+    validate_answers(answers)                              # 설문 답변 검증
+    
+    survey_r = survey_ratios(answers)                      # 설문 점수 계산 및 정규화 (타입별 최고점 보정)
     
     if measurements is None:
         return decide_type(survey_r)                       # 신체 치수가 없는 경우, 
