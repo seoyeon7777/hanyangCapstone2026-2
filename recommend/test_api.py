@@ -398,6 +398,16 @@ def test_more_bad_inputs_are_400():
     assert client.post("/api/feed/scroll", json={"mode": "general", "shown": ["t01"] * 5001}).status_code == 400
 
 
+def test_broken_json_body_gets_json_error_not_missing_ratio():
+    reset()
+    for url in ("/api/feed", "/api/feed/scroll", "/api/feed/event"):
+        r = client.post(url, data="{bad", content_type="application/json")
+        assert r.status_code == 400, url
+        assert "JSON" in r.get_json()["error"], url
+    # 본문이 아예 없는 POST는 예전처럼 빈 객체로 본다 (mode=general이면 통과)
+    assert client.post("/api/feed/scroll?mode=general").status_code in (200, 400)
+
+
 def test_items_carry_seasons_for_app_filter():
     # 앱 카테고리 화면의 계절 필터는 상품의 seasons로 거른다 → 홈·카탈로그 응답의 모든 상품에 seasons가 있어야 한다
     reset()

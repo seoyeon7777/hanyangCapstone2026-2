@@ -105,9 +105,11 @@ def store_error(e):
 
 
 def json_body():
-    """POST 본문(JSON 객체). 비어 있으면 {}, 객체가 아니면(목록·문자열 등) 400."""
+    """POST 본문(JSON 객체). 비어 있으면 {}, JSON이 아니거나 객체가 아니면(목록·문자열 등) 400."""
     data = request.get_json(silent=True)
     if data is None:
+        if request.get_data():   # 본문은 왔는데 JSON으로 읽지 못함 (깨진 JSON 등)
+            raise BadRequest("요청 본문이 올바른 JSON이 아니에요")
         return {}
     if not isinstance(data, dict):
         raise BadRequest("요청 본문은 JSON 객체({ ... })여야 해요")
