@@ -456,7 +456,7 @@ match_score(body, item) -> {
 - **반품·교환은 배송완료 후 7일 이내**: 배송완료일(= 주문일 + 3일)부터 센다(`MyPageStore.RETURN_DAYS`, `isReturnPeriodOver`). 지나면 "반품·교환 기간이 지났어요" 안내. FAQ도 "배송완료 후"로
 - **쿠폰 적용 범위**(`CheckoutCoupons`): 뉴베러 신상품 쿠폰 = 신상품(`DummyData.isNew`), 겨울·가을 긴소매 쿠폰 = 상의 중 반팔·민소매가 아닌 것, 전상품 5% = 전체. 할인은 쓸 수 있는 상품 금액만으로 계산하고, 쓸 수 없으면 "이 주문 상품에는 쓸 수 없어요"로 표시(`OrderActivity.couponLines`)
 - **사진 다시 분석하기**: 치수까지 측정한 체형 카드에 "사진 다시 분석하기 ›" 추가(`MyBodyActivity.remeasurePhoto`). 확인 → 키·몸무게·나이 입력 창 → 사진 분석 → 저장하면 그 카드의 이름·설문·골격은 그대로 두고 키·치수만 새 값으로 덮어쓴다(`MeasurementSession.remeasure`, `PhotoMeasurementActivity.remeasureIntent`). 설문만 한 카드의 "사진 분석 이어서 하기"와 구분
-- 확인: pytest 264·test_api 30·test_feed 41·test_integration 8, 앱 단위 테스트 99개 통과(`CheckoutCouponsTest`·`ReturnPeriodTest` 추가). 에뮬레이터에서 리뷰 작성 → 상품 리뷰 화면에 표시, 배송완료 후 7일 지난 주문 반품 막힘/1일 지난 주문은 신청 화면, 쿠폰(바지는 둘 다 사용 불가·신상 스커트는 신상 쿠폰만 −12,300원), 사진 다시 분석(같은 카드 유지·키 156→160·치수 교체)을 확인. 긴소매 상의에 쿠폰이 붙는 화면은 서버 상품(가격 0)과 이름이 겹쳐 에뮬레이터에서 못 열었고 단위 테스트로만 확인
+- 확인: pytest 264·test_api 30·test_feed 41·test_integration 8, 앱 단위 테스트 99개 통과(`CheckoutCouponsTest`·`ReturnPeriodTest` 추가). 에뮬레이터에서 리뷰 작성 → 상품 리뷰 화면에 표시, 배송완료 후 7일 지난 주문 반품 막힘/1일 지난 주문은 신청 화면, 쿠폰(바지는 둘 다 사용 불가·신상 스커트는 신상 쿠폰만 −12,300원), 사진 다시 분석(같은 카드 유지·키 156→160·치수 교체)을 확인. 긴소매 상의(베이직 셔츠 19,000원)는 겨울 긴소매 쿠폰 "이번 주문 할인 -5,700원"·신상품 쿠폰 "이 주문 상품에는 쓸 수 없어요"로 보이고 적용됨을 에뮬레이터에서 확인
 
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
