@@ -450,6 +450,15 @@ match_score(body, item) -> {
 - FAQ·공지의 "키·몸무게·나이를 입력하고 설문에 답하면"을 새 순서로 고침
 - 확인: 단위 테스트 92개 통과(`surveyOnlyCardWorksWithoutHeight` 추가). 에뮬레이터에서 키 없이 설문 → 이대로 저장 → 카드 요약(키 없음) → 사진 분석 이어서 하기 → 입력 창(빈 칸, 검증 토스트) → 사진 화면에 입력한 키 표시, 설문 → 사진으로 정밀 분석(미리 채워진 값) → 사진 분석 결과까지 확인
 
+### 4-30. 남아 있던 문제 6건 수정 (11/21)
+- **서버 설문 채점을 새 15문항에 맞춤**: `body_profile.SURVEY_V2`(q1~q15, 보기 A·B·C = 스트레이트·웨이브·내추럴, 문항마다 1점 같은 가중치). 앱이 7~14개만 답해도(조기 결과) 답한 문항 기준 비율로 계산하고 7개 미만이면 오류. `classify(answers, measurements, survey_version)`, `feed_api.survey_version_arg`가 요청의 `survey_version`(1 또는 2, 그 밖은 400)을 받는다. 앱(`RecommendApi.SURVEY_VERSION = 2`)은 진단·홈 추천 요청에 항상 2를 보낸다. 옛 방식(기본)은 그대로라 기존 테스트가 안 깨진다. 새 문항으로는 정확도를 잴 데이터가 아직 없다(`sample.csv`는 옛 7문항 답). 저장된 옛 설문 카드의 답도 이제 새 방식으로 채점된다
+- **상품 "리뷰 보기"**: 리뷰가 어디에도 저장되지 않아 항상 비어 있었다 → `ReviewActivity`가 지금 로그인한 계정이 쓴 리뷰(`MyPageStore.getMyReviews`)를 상품 이름으로 걸러 보여 준다(`ProductDetailActivity`가 `product_name`을 넘김). 리뷰 서버가 없어 다른 사람 리뷰는 못 보여 준다
+- **반품·교환은 주문일로부터 7일 이내**: 앱에 배송완료 날짜가 없어 주문일 기준(`MyPageStore.RETURN_DAYS`, `isReturnPeriodOver`). 지나면 "반품·교환 기간이 지났어요" 안내. FAQ도 "주문일로부터"로
+- **쿠폰 적용 범위**(`CheckoutCoupons`): 뉴베러 신상품 쿠폰 = 신상품(`DummyData.isNew`), 겨울·가을 긴소매 쿠폰 = 상의 중 반팔·민소매가 아닌 것, 전상품 5% = 전체. 할인은 쓸 수 있는 상품 금액만으로 계산하고, 쓸 수 없으면 "이 주문 상품에는 쓸 수 없어요"로 표시(`OrderActivity.couponLines`)
+- **아이디 찾기**: 인증 뒤에도 아이디 전체가 보이던 것을 앞 2글자·마지막 1글자만 보이게 가림(`MaskText.userId`, tester02 → te*****2)
+- **사진 다시 분석하기**: 치수까지 측정한 체형 카드에 "사진 다시 분석하기 ›" 추가(`MyBodyActivity.remeasurePhoto`). 확인 → 키·몸무게·나이 입력 창 → 사진 분석 → 저장하면 그 카드의 이름·설문·골격은 그대로 두고 키·치수만 새 값으로 덮어쓴다(`MeasurementSession.remeasure`, `PhotoMeasurementActivity.remeasureIntent`). 설문만 한 카드의 "사진 분석 이어서 하기"와 구분
+- 확인: pytest 271·test_api 32·test_feed 41·test_integration 8, 앱 단위 테스트 99개 통과(`CheckoutCouponsTest`·`ReturnPeriodTest`·`MaskText` 추가). 에뮬레이터에서 새 설문 채점(B만 답하면 웨이브 100%), 리뷰 작성 → 상품 리뷰 화면에 표시, 11일 지난 주문 반품 막힘/1일 지난 주문은 신청 화면, 쿠폰(바지는 둘 다 사용 불가·신상 스커트는 신상 쿠폰만 −12,300원), 아이디 찾기 가림, 사진 다시 분석(같은 카드 유지·키 156→160·치수 교체)을 확인. 긴소매 상의에 쿠폰이 붙는 화면은 서버 상품(가격 0)과 이름이 겹쳐 에뮬레이터에서 못 열었고 단위 테스트로만 확인
+
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
   - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)
@@ -457,7 +466,7 @@ match_score(body, item) -> {
 - `feed_api.diagnose()`: /api/diagnose와 /api/feed·/api/feed/scroll이 같이 쓴다. **치수가 이상하면(범위 밖·빠짐) 400 대신 설문만으로 진단**하고 notice에 이유. 설문 답이 틀린 경우만 400. 치수가 객체가 아니면 400
 - 앱: 설문 마지막 "결과 확인" → `RecommendApi.diagnose`(답 + `cameraMeasurements`) → 서버 결과로 `BodyTypeResultActivity` (체형 + 비율 % + 혼합형 안내). 서버에 못 붙으면 답만 저장하고 "다시 시도/나중에" 창
 - (11/15, 지현) **앱 설문을 새 15문항(A·B·C 글자 보기, 사진 없음)으로 바꿈**. 질문 위 "n / 15" + 게이지(1~9 검정·10~12 초록·13~14 주황·15 노랑) + "%", 10~12번 "조금만 더 하면 설문이 완성돼요!", 13~15번 "설문 3번만 더 하시면…". 7~14번에 "여기까지 하고 결과보기"(그 문항까지 답한 7~14개로 진단), 15번은 "결과 확인". 저장된 답은 7~15개(`BodyProfileStore.SURVEY_MIN/MAX_ANSWERS`)
-  - **주의: 서버 채점은 아직 옛 7문항 그대로**(팀원 결정으로 안 건드림). 서버는 q1~q7만 옛 문항 뜻으로 채점하고 q8~q15는 무시 → 새 문항에 맞는 결과를 내려면 A 파트 `body_profile.SURVEY`를 새 15문항에 맞게 바꿔야 한다
+  - (11/21 해결, 4-30) 서버 채점을 새 15문항에 맞췄다: 요청에 `survey_version: 2`를 보내면 `body_profile.SURVEY_V2`(보기 A·B·C = S·W·N, 문항마다 1점, 7~15개 답)로 채점한다. 안 보내면 옛 7문항 채점 그대로(기존 테스트·`sample.csv` 정확도 보존)
   - `lastSurveyType`은 이제 서버 진단 결과만 저장 (진단 전이면 없음 → `lastSurveySummary`는 "진단 전"). `MeasurementResultActivity`의 `finalBodyType`도 `/api/diagnose`를 쓴다
 - **팀 결정(10/24): 카메라 치수는 진단에 섞지 않고 설문만** — `rec_config.DIAGNOSIS_USE_MEASUREMENTS = False`. 서버는 치수가 와도 무시하고(`used_measurements` false), 앱도 안 보낸다(`loadFeed`·`diagnose`·`finalBodyType`). `RecommendApi.cameraMeasurements`는 다시 켤 때를 위해 남김
   - 이유(10/24 분석): 치수 점수만으로는 sample.csv 내추럴 1/10, 애매한 설문에 치수를 더하면 웨이브 32→49%·내추럴 33→19%로 쏠림. 내추럴용 치수 지표가 약하고(최대점 N 1.1 / W 2.25), 기준 구간이 좁아(상체÷다리 0.5511~0.5639) 1cm 오차로 뒤집힘
@@ -476,10 +485,10 @@ match_score(body, item) -> {
 
 ## 5. 정답 테스트 (반드시 통과)
 
-`python -m pytest` (맨 위에서) — 255개 중 253개 통과 (`tests/test_a_connection.py`의 2개는 main에서도 실패 중, B 담당. pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
+`python -m pytest` (맨 위에서) — 271개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 30개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_api.py` — 현재 32개 통과 (Flask 필요: `pip install -r requirements.txt`).
 `TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 10개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
@@ -569,7 +578,8 @@ match_score(body, item) -> {
 - [x] 11/16 통합(4-27): 혜림 4-26, 지현 15문항 설문, 연오 4-22~4-25, 유빈 결과·피드백 화면
 - [x] 앱 전체 점검 후 수정(4-28, 11/21): 주소 검색 도메인, 서버 끊김 홈, 결제 이메일 검사, 취소 확인 창, 장바구니 담기 로그인 통일, 단위 테스트 91개 통과 등
 - [x] 키·몸무게·나이를 사진 분석 직전에 받도록 순서 변경(4-29, 11/21)
-- [ ] 서버 설문 채점(body_profile.SURVEY)을 새 15문항에 맞추기 — 지금은 q1~q7만 옛 뜻으로 채점 (A 담당)
+- [x] 남아 있던 문제 6건 수정(4-30, 11/21): 서버 설문 채점 15문항, 상품 리뷰 보기, 반품 7일, 쿠폰 범위, 아이디 가리기, 사진 다시 분석
+- [x] 서버 설문 채점을 새 15문항에 맞추기 (4-30, survey_version 2)
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend
