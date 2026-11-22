@@ -519,7 +519,6 @@ public class MeasurementResultActivity extends AppCompatActivity {
                                 editId,
                                 name, heightCm,
                                 com.example.capstone.data.BodyInput.weight(MeasurementResultActivity.this),
-                                com.example.capstone.data.BodyInput.age(MeasurementResultActivity.this),
                                 0f, bodyType, parts, surveyAnswers);
                         MeasurementSession.continueProfileId = null;
                         MeasurementSession.remeasure = false;

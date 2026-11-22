@@ -147,22 +147,20 @@ public class BodyProfileSurveyTest {
     }
 
     @Test
-    public void cardKeepsWeightAndAgeUntilRemeasured() throws Exception {
-        // 카드에 측정 때 넣은 몸무게·나이를 남기고, 이름만 바꾸는 저장은 그 값을 건드리지 않는다
+    public void cardKeepsWeightUntilRemeasured() throws Exception {
+        // 카드에 측정 때 넣은 몸무게를 남기고, 이름만 바꾸는 저장은 그 값을 건드리지 않는다
         LoginSession.login(context, "가", "a@test.com", "");
         JSONObject parts = new JSONObject();
         parts.put("SHOULDER", 40.0);
         BodyProfileStore.Profile card = BodyProfileStore.save(
-                context, null, "측정", 165f, 58.5f, 31f, 0f, "스트레이트", parts, ANSWERS);
+                context, null, "측정", 165f, 58.5f, 0f, "스트레이트", parts, ANSWERS);
         assertEquals(58.5f, BodyProfileStore.getProfiles(context).get(0).weightKg, 0.01f);
-        assertEquals(31f, BodyProfileStore.getProfiles(context).get(0).age, 0.01f);
 
         BodyProfileStore.save(context, card.id, "새 이름", 165f, 0f, "스트레이트", parts, ANSWERS);
         assertEquals(58.5f, BodyProfileStore.getProfiles(context).get(0).weightKg, 0.01f);
 
-        BodyProfileStore.save(context, card.id, "새 이름", 166f, 52f, 32f, 0f, "스트레이트", parts, ANSWERS);
+        BodyProfileStore.save(context, card.id, "새 이름", 166f, 52f, 0f, "스트레이트", parts, ANSWERS);
         assertEquals(52f, BodyProfileStore.getProfiles(context).get(0).weightKg, 0.01f);
-        assertEquals(32f, BodyProfileStore.getProfiles(context).get(0).age, 0.01f);
     }
 
     @Test
