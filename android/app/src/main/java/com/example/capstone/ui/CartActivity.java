@@ -689,8 +689,9 @@ public class CartActivity extends AppCompatActivity {
         }
 
         if (totalQuantityText != null) {
+            // 위의 제목·"전체 선택 (n/m)"과 같은 기준(선택한 상품 줄 수)으로 센다. 수량은 총 상품 금액에 반영된다
             totalQuantityText.setText(
-                    totalQuantity + "개"
+                    selectedCount + "개"
             );
         }
 
