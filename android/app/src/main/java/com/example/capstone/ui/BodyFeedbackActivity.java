@@ -285,7 +285,7 @@ public class BodyFeedbackActivity extends AppCompatActivity {
                                 "✓ 직각에 가까운 어깨선\n" +
                                 "✓ 여유로운 실루엣과 캐주얼 스타일 참고";
 
-                people = "한소희 · 리사 · 카즈하 · 안유진";
+                people = "한소희 · 리사 · 카즈하";
                 break;
 
             default:
@@ -421,6 +421,20 @@ public class BodyFeedbackActivity extends AppCompatActivity {
                     viewId,
                     "style_" + key + "_" + i);
         }
+
+        for (int i = 1; i <= 3; i++) {
+            int viewId = getResources().getIdentifier(
+                    "imgCelebrity" + i,
+                    "id",
+                    getPackageName()
+            );
+
+            setOptionalImage(
+                    viewId,
+                    "celebrity_" + key + "_" + i
+            );
+        }
+
 
         findViewById(R.id.tvBodyImageHint)
                 .setVisibility(
