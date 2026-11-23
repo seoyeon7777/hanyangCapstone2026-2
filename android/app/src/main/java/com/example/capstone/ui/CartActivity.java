@@ -572,7 +572,7 @@ public class CartActivity extends AppCompatActivity {
                         this,
                         cartProducts.isEmpty()
                                 ? "장바구니에 상품이 없어요."
-                                : "주문할 상품을 선택해주세요.",
+                                : "주문할 상품을 선택해 주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -638,7 +638,22 @@ public class CartActivity extends AppCompatActivity {
     // 장바구니 상품과 금액 갱신
     private void showCartProducts() {
 
-        // 비회원도 담은 상품을 볼 수 있다 (주문하기를 누를 때 로그인 안내)
+        // 비회원은 찜 화면과 같이 로그인 안내만 보여 준다 (담기·구매가 로그인 필요라 보여 줄 장바구니가 없다).
+        // 제목 글씨는 비우고 하단 주문 버튼도 숨긴다
+        if (!LoginRequiredView.update(
+                this,
+                R.drawable.ic_cart_empty,
+                "장바구니는 로그인 후 이용할 수 있어요.",
+                cartContent)) {
+            if (titleCount != null) {
+                titleCount.setText("");
+            }
+            if (btnGoOrder != null) {
+                btnGoOrder.setVisibility(View.GONE);
+            }
+            return;
+        }
+
         cartProducts.clear();
 
         int cartQuantity = 0;

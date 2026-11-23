@@ -239,19 +239,19 @@ public class PhoneVerifyActivity extends AppCompatActivity {
         String last = etPhoneLast.getText().toString().trim();
 
         if (TextUtils.isEmpty(mid) || TextUtils.isEmpty(last)) {
-            toast("휴대폰 번호를 입력해주세요.");
+            toast("휴대폰 번호를 입력해 주세요.");
             return null;
         }
 
         if (!mid.matches("[0-9]{4}") || !last.matches("[0-9]{4}")) {
-            toast("휴대폰 번호를 정확히 입력해주세요. (010-0000-0000)");
+            toast("휴대폰 번호를 정확히 입력해 주세요. (010-0000-0000)");
             return null;
         }
 
         String phone = LocalAccounts.normalizePhone("010" + mid + last);
 
         if (phone == null) {
-            toast("휴대폰 번호를 정확히 입력해주세요. (010-0000-0000)");
+            toast("휴대폰 번호를 정확히 입력해 주세요. (010-0000-0000)");
             return null;
         }
 

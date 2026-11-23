@@ -208,7 +208,7 @@ public class EditProfileActivity extends AppCompatActivity {
         btnSendMail.setOnClickListener(v -> {
             String email = input.email();
             if (email == null || email.isEmpty()) {
-                toast(input.isDomainMissing() ? "이메일 주소(@ 뒤)를 선택해주세요." : EmailCheck.FORMAT_ERROR);
+                toast(input.isDomainMissing() ? "이메일 주소(@ 뒤)를 선택해 주세요." : EmailCheck.FORMAT_ERROR);
                 return;
             }
             if (email.equals(user.email)) {
@@ -439,7 +439,7 @@ public class EditProfileActivity extends AppCompatActivity {
         sw.setChecked(prefs.getBoolean(key, false));
         sw.setOnCheckedChangeListener((b, checked) -> {
             prefs.edit().putBoolean(key, checked).apply();
-            toast("마케팅 정보 " + label + " 수신을 " + (checked ? "동의" : "거부") + "했어요.");
+            toast("마케팅 정보 " + label + (checked ? " 수신에 동의했어요." : " 수신을 거부했어요."));
         });
     }
 

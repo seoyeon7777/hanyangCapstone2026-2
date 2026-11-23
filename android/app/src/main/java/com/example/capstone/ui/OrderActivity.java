@@ -403,7 +403,7 @@ public class OrderActivity extends AppCompatActivity {
         }
 
         if (selectedAddress() == null) {
-            Toast.makeText(this, "배송지를 등록해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "배송지를 등록해 주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -413,7 +413,7 @@ public class OrderActivity extends AppCompatActivity {
         if (checkedPaymentId == -1) {
             Toast.makeText(
                     this,
-                    "결제 방법을 선택해주세요.",
+                    "결제 방법을 선택해 주세요.",
                     Toast.LENGTH_SHORT
             ).show();
             return;

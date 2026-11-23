@@ -326,7 +326,7 @@ public class ProductOptionSheet {
 
                 Toast.makeText(
                         context,
-                        "사이즈를 선택해주세요.",
+                        "사이즈를 선택해 주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -338,7 +338,7 @@ public class ProductOptionSheet {
 
                 Toast.makeText(
                         context,
-                        "색상을 선택해주세요.",
+                        "색상을 선택해 주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 

@@ -312,7 +312,7 @@ public class MyBodyActivity extends AppCompatActivity {
                 profile.name, "체형 이름", InputType.TYPE_CLASS_TEXT,
                 "변경", name -> {
                     if (name.isEmpty()) {
-                        Toast.makeText(this, "이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "이름을 입력해 주세요.", Toast.LENGTH_SHORT).show();
                         return false;
                     }
                     BodyProfileStore.rename(this, profile.id, name);

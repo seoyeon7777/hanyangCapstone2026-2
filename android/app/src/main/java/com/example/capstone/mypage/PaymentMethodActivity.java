@@ -175,19 +175,19 @@ public class PaymentMethodActivity extends AppCompatActivity {
             String expiry = normalizeExpiry(etExpiry.getText().toString());
 
             if (company[0] == null) {
-                toast("카드사를 선택해주세요.");
+                toast("카드사를 선택해 주세요.");
                 return;
             }
             if (number.length() < 15) {
-                toast("카드번호를 정확히 입력해주세요.");
+                toast("카드번호를 정확히 입력해 주세요.");
                 return;
             }
             if (expiry == null) {
-                toast("유효기간을 정확히 입력해주세요. (지난 날짜는 안 돼요)");
+                toast("유효기간을 정확히 입력해 주세요. (지난 날짜는 안 돼요)");
                 return;
             }
             if (etCardPw.length() != 2) {
-                toast("카드 비밀번호 앞 2자리를 입력해주세요.");
+                toast("카드 비밀번호 앞 2자리를 입력해 주세요.");
                 return;
             }
 

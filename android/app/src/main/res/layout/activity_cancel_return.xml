@@ -89,7 +89,7 @@
                 android:background="@drawable/bg_info_box"
                 android:lineSpacingExtra="4dp"
                 android:padding="16dp"
-                android:text="· 주문취소는 결제완료 상태에서만 가능해요.\n· 반품/교환은 배송완료 후 7일 이내에 신청할 수 있어요.\n· 단순 변심에 의한 반품/교환은 왕복 배송비가 부과돼요."
+                android:text="· 주문 취소는 주문접수·결제완료 상태에서만 가능해요.\n· 반품/교환은 배송완료 후 7일 이내에 신청할 수 있어요.\n· 지금은 배송비가 무료라 반품/교환 때도 따로 받지 않아요."
                 android:textColor="#5A5A5A"
                 android:textSize="12sp" />
         </LinearLayout>

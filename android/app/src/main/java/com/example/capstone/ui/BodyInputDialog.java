@@ -88,18 +88,18 @@ public final class BodyInputDialog {
     private static float readHeight(Activity activity, EditText edit) {
         String text = edit.getText().toString().trim();
         if (text.isEmpty()) {
-            Toast.makeText(activity, "키를 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "키를 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return -1f;
         }
         float value;
         try {
             value = Float.parseFloat(text);
         } catch (NumberFormatException e) {
-            Toast.makeText(activity, "키를 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "키를 숫자로 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return -1f;
         }
         if (value < 100f || value > 230f) {
-            Toast.makeText(activity, "키를 100~230cm 사이로 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "키를 100~230cm 사이로 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return -1f;
         }
         return value;
@@ -108,18 +108,18 @@ public final class BodyInputDialog {
     private static float readWeight(Activity activity, EditText edit) {
         String text = edit.getText().toString().trim();
         if (text.isEmpty()) {
-            Toast.makeText(activity, "몸무게를 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "몸무게를 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return -1f;
         }
         float value;
         try {
             value = Float.parseFloat(text);
         } catch (NumberFormatException e) {
-            Toast.makeText(activity, "몸무게를 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "몸무게를 숫자로 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return -1f;
         }
         if (value < 25f || value > 150f) {
-            Toast.makeText(activity, "몸무게를 25~150kg 사이로 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "몸무게를 25~150kg 사이로 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return -1f;
         }
         return value;
@@ -128,18 +128,18 @@ public final class BodyInputDialog {
     private static float readAge(Activity activity, EditText edit) {
         String text = edit.getText().toString().trim();
         if (text.isEmpty()) {
-            Toast.makeText(activity, "나이를 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "나이를 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return -1f;
         }
         int value;
         try {
             value = Integer.parseInt(text);
         } catch (NumberFormatException e) {
-            Toast.makeText(activity, "나이를 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "나이를 숫자로 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return -1f;
         }
         if (value < BodyPrior.INPUT_AGE_MIN || value > BodyPrior.INPUT_AGE_MAX) {
-            Toast.makeText(activity, "나이를 10~99세 사이로 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "나이를 10~99세 사이로 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return -1f;
         }
         return value;

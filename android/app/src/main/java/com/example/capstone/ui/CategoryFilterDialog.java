@@ -568,7 +568,7 @@ public class CategoryFilterDialog {
 
             if (min < 0 || max < 0
                     || (max > 0 && min > max)) {
-                toast("가격 범위를 확인해주세요.");
+                toast("가격 범위를 확인해 주세요.");
                 return;
             }
 
@@ -585,7 +585,7 @@ public class CategoryFilterDialog {
                         Float.parseFloat(height);
 
                 if (value < 100 || value > 230) {
-                    toast("키는 100~230cm로 입력해주세요.");
+                    toast("키는 100~230cm로 입력해 주세요.");
                     return;
                 }
             }
@@ -595,7 +595,7 @@ public class CategoryFilterDialog {
                         Float.parseFloat(weight);
 
                 if (value <= 0 || value > 400) {
-                    toast("몸무게를 확인해주세요.");
+                    toast("몸무게를 확인해 주세요.");
                     return;
                 }
             }
@@ -627,7 +627,7 @@ public class CategoryFilterDialog {
             dialog.dismiss();
 
         } catch (NumberFormatException e) {
-            toast("숫자를 올바르게 입력해주세요.");
+            toast("숫자를 올바르게 입력해 주세요.");
         }
     }
 

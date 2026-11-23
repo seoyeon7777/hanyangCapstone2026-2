@@ -146,11 +146,11 @@ public class ReviewWriteActivity extends AppCompatActivity {
         String content = etContent.getText().toString().trim();
 
         if (rating < 0.5f) {
-            Toast.makeText(this, "별점을 선택해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "별점을 선택해 주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
         if (content.length() < CONTENT_MIN_LENGTH) {
-            Toast.makeText(this, "리뷰를 " + CONTENT_MIN_LENGTH + "자 이상 입력해주세요.",
+            Toast.makeText(this, "리뷰를 " + CONTENT_MIN_LENGTH + "자 이상 입력해 주세요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }

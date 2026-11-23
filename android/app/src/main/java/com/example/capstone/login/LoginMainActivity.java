@@ -94,12 +94,12 @@ public class LoginMainActivity extends AppCompatActivity {
         String password = etPassword.getText().toString().trim();
 
         if (TextUtils.isEmpty(id)) {
-            Toast.makeText(this, "아이디를 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "아이디를 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (TextUtils.isEmpty(password)) {
-            Toast.makeText(this, "비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "비밀번호를 입력해 주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 

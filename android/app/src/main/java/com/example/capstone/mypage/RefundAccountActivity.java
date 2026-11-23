@@ -162,15 +162,15 @@ public class RefundAccountActivity extends AppCompatActivity {
             String holder = etHolder.getText().toString().trim();
 
             if (bank[0] == null) {
-                toast("은행을 선택해주세요.");
+                toast("은행을 선택해 주세요.");
                 return;
             }
             if (accountNo.length() < 10 || accountNo.length() > 16) {
-                toast("계좌번호를 정확히 입력해주세요. (10~16자리)");
+                toast("계좌번호를 정확히 입력해 주세요. (10~16자리)");
                 return;
             }
             if (TextUtils.isEmpty(holder)) {
-                toast("예금주명을 입력해주세요.");
+                toast("예금주명을 입력해 주세요.");
                 return;
             }
             if (MyPageStore.hasRefundAccount(bank[0], accountNo)) {

@@ -118,27 +118,27 @@ public class AddressEditActivity extends AppCompatActivity {
         String address2 = etAddress2.getText().toString().trim();
 
         if (TextUtils.isEmpty(label)) {
-            toast("배송지명을 입력해주세요.");
+            toast("배송지명을 입력해 주세요.");
             return;
         }
         if (TextUtils.isEmpty(receiver)) {
-            toast("받는 분 이름을 입력해주세요.");
+            toast("받는 분 이름을 입력해 주세요.");
             return;
         }
         if (phone == null) {
-            toast("연락처를 정확히 입력해주세요.");
+            toast("연락처를 정확히 입력해 주세요.");
             return;
         }
         if (!zip.matches("[0-9]{5}")) {
-            toast("주소 검색으로 주소를 입력해주세요.");
+            toast("주소 검색으로 주소를 입력해 주세요.");
             return;
         }
         if (TextUtils.isEmpty(address1)) {
-            toast("주소 검색으로 주소를 입력해주세요.");
+            toast("주소 검색으로 주소를 입력해 주세요.");
             return;
         }
         if (TextUtils.isEmpty(address2)) {
-            toast("상세 주소를 입력해주세요.");
+            toast("상세 주소를 입력해 주세요.");
             return;
         }
 
