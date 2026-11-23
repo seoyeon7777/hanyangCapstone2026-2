@@ -23,6 +23,7 @@ import com.example.capstone.MainActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.LocalAccounts;
 import com.example.capstone.data.RecommendApi;
+import com.example.capstone.ui.EmailCheck;
 import com.example.capstone.ui.EmailDomainInput;
 
 import java.util.Calendar;
@@ -32,11 +33,11 @@ public class SigninActivity extends AppCompatActivity {
     public static final String EXTRA_PHONE = "extra_phone";
 
     private static final String ID_RULE_MESSAGE =
-            "아이디는 영문 소문자와 숫자를 포함해 4~16자로 입력해주세요.";
+            "아이디는 영문 소문자와 숫자를 포함해 4~16자로 입력해 주세요.";
     private static final String PASSWORD_RULE_MESSAGE =
-            "비밀번호는 영문 대소문자, 숫자, 특수문자 중 2가지 이상을 조합해 8~16자로 입력해주세요.";
+            "비밀번호는 영문 대소문자, 숫자, 특수문자 중 2가지 이상을 조합해 8~16자로 입력해 주세요.";
     private static final String PASSWORD_CHAR_MESSAGE =
-            "비밀번호에 쓸 수 없는 문자가 있습니다. 특수문자는 안내된 것만 쓸 수 있어요.";
+            "비밀번호에 쓸 수 없는 문자가 있어요. 특수문자는 안내된 것만 쓸 수 있어요.";
 
     private ImageButton btnBack, btnHome;
 
@@ -345,7 +346,7 @@ public class SigninActivity extends AppCompatActivity {
             if (LocalAccounts.idExists(this, id)) {
                 Toast.makeText(
                         this,
-                        "이미 사용 중인 아이디입니다.",
+                        "이미 사용 중인 아이디예요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -356,7 +357,7 @@ public class SigninActivity extends AppCompatActivity {
 
             Toast.makeText(
                     this,
-                    "사용 가능한 아이디입니다.",
+                    "사용 가능한 아이디예요.",
                     Toast.LENGTH_SHORT
             ).show();
         });
@@ -552,7 +553,7 @@ public class SigninActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "비밀번호가 일치하지 않습니다.",
+                        "비밀번호가 일치하지 않아요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -591,7 +592,7 @@ public class SigninActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "이미 가입된 이메일입니다.",
+                        "이미 가입된 이메일이에요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -646,9 +647,10 @@ public class SigninActivity extends AppCompatActivity {
             // 확인이 끝나면 이 버튼을 다시 누른 것처럼 이어서 가입한다
             if (!email.isEmpty() && !email.equals(domainCheckedEmail)) {
                 btnNext.setEnabled(false);
-                RecommendApi.checkEmailDomain(email, new RecommendApi.Callback<Boolean>() {
+                // 형식과 도메인을 다른 이메일 입력과 같은 방식(EmailCheck)으로 확인한다
+                EmailCheck.verify(email, new EmailCheck.Listener() {
                     @Override
-                    public void onSuccess(Boolean ok) {
+                    public void onValid() {
                         if (isFinishing() || isDestroyed()) {
                             return;   // 확인 중에 화면을 나갔으면 가입을 이어가지 않는다
                         }
@@ -658,17 +660,11 @@ public class SigninActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onError(int code, String message) {
+                    public void onInvalid(String message) {
                         if (isFinishing() || isDestroyed()) {
                             return;
                         }
                         btnNext.setEnabled(true);
-                        if (code == 0) {
-                            // 서버에 연결이 안 되면 막지 않는다 (이메일은 선택 항목)
-                            domainCheckedEmail = email;
-                            btnNext.performClick();
-                            return;
-                        }
                         Toast.makeText(SigninActivity.this, message, Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -694,7 +690,7 @@ public class SigninActivity extends AppCompatActivity {
             if (!saved) {
                 Toast.makeText(
                         this,
-                        "이미 가입된 아이디, 휴대폰 번호 또는 이메일입니다.",
+                        "이미 가입된 아이디, 휴대폰 번호 또는 이메일이에요.",
                         Toast.LENGTH_SHORT
                 ).show();
 

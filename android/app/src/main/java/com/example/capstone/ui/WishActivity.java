@@ -293,7 +293,7 @@ public class WishActivity extends AppCompatActivity {
         emptyView.addView(message);
 
         TextView subMessage = makeText(
-                "마음에 드는 상품에 하트를 눌러보세요",
+                "마음에 드는 상품에 하트를 눌러 보세요",
                 13,
                 false,
                 GRAY

@@ -68,6 +68,24 @@ public class BodyProfileSurveyTest {
         assertEquals(ANSWERS[2], card.surveyAnswers[2]);
     }
 
+    /** 키는 사진으로 치수를 잴 때 받으므로, 설문만 한 카드는 키 없이도 만들어진다 (설문에는 키를 안 쓴다) */
+    @Test
+    public void surveyOnlyCardWorksWithoutHeight() {
+        LoginSession.login(context, "가", "a@test.com", "");
+        finishSurvey(ANSWERS, BodyTypeActivity.TYPE_WAVE, System.currentTimeMillis());
+        AccountPrefs.survey(context).edit()
+                .putFloat(AccountPrefs.key(context, AccountPrefs.SURVEY_HEIGHT), 0f)
+                .apply();
+
+        BodyProfileStore.Profile card = BodyTypeActivity.saveSurveyProfile(context);
+
+        assertNotNull(card);
+        assertTrue(card.isSurveyOnly());
+        assertTrue(card.heightCm <= 0f);
+        assertEquals("웨이브", card.bodyType);
+        assertFalse(BodyTypeActivity.lastSurveySummary(context).contains("키"));
+    }
+
     @Test
     public void eachSaveAddsCardAndNewestBecomesCurrent() {
         LoginSession.login(context, "가", "a@test.com", "");
@@ -126,6 +144,23 @@ public class BodyProfileSurveyTest {
         assertFalse(list.get(0).isSurveyOnly());
         assertEquals("웨이브", list.get(0).bodyType);
         assertEquals(38.5f, list.get(0).part("SHOULDER"), 0.01f);
+    }
+
+    @Test
+    public void cardKeepsWeightUntilRemeasured() throws Exception {
+        // 카드에 측정 때 넣은 몸무게를 남기고, 이름만 바꾸는 저장은 그 값을 건드리지 않는다
+        LoginSession.login(context, "가", "a@test.com", "");
+        JSONObject parts = new JSONObject();
+        parts.put("SHOULDER", 40.0);
+        BodyProfileStore.Profile card = BodyProfileStore.save(
+                context, null, "측정", 165f, 58.5f, 0f, "스트레이트", parts, ANSWERS);
+        assertEquals(58.5f, BodyProfileStore.getProfiles(context).get(0).weightKg, 0.01f);
+
+        BodyProfileStore.save(context, card.id, "새 이름", 165f, 0f, "스트레이트", parts, ANSWERS);
+        assertEquals(58.5f, BodyProfileStore.getProfiles(context).get(0).weightKg, 0.01f);
+
+        BodyProfileStore.save(context, card.id, "새 이름", 166f, 52f, 0f, "스트레이트", parts, ANSWERS);
+        assertEquals(52f, BodyProfileStore.getProfiles(context).get(0).weightKg, 0.01f);
     }
 
     @Test

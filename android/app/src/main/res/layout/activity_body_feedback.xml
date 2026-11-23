@@ -101,7 +101,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="내추럴 체형 입니다"
+                    android:text="내추럴 체형이에요"
                     android:textSize="27sp"
                     android:textStyle="bold"
                     android:textColor="#111111"/>

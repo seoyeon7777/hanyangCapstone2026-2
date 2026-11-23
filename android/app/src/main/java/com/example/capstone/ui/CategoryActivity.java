@@ -455,7 +455,7 @@ public class CategoryActivity extends AppCompatActivity {
             if (!selectedSize.isEmpty()) {
                 Toast.makeText(
                         this,
-                        "사이즈별 상품 데이터는 아직 연결되지 않았습니다.",
+                        "사이즈별 상품 데이터는 아직 연결되지 않았어요.",
                         Toast.LENGTH_SHORT
                 ).show();
             }

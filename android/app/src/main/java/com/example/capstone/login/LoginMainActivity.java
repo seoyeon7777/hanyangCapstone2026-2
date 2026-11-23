@@ -107,7 +107,7 @@ public class LoginMainActivity extends AppCompatActivity {
         LocalAccounts.Account account = LocalAccounts.loginWithId(this, id, password);
 
         if (account == null) {
-            Toast.makeText(this, "아이디 또는 비밀번호가 올바르지 않습니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "아이디 또는 비밀번호가 올바르지 않아요.", Toast.LENGTH_SHORT).show();
             return;
         }
 

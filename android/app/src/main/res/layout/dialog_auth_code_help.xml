@@ -175,7 +175,7 @@
             android:layout_marginStart="34dp"
             android:layout_marginTop="8dp"
             android:lineSpacingExtra="2dp"
-            android:text="카카오톡 플러스친구의 차단 여부를 확인해주세요. 그래도 해결되지 않는다면 카카오톡 채널로 문의주세요."
+            android:text="카카오톡 플러스친구의 차단 여부를 확인해 주세요. 그래도 해결되지 않는다면 카카오톡 채널로 문의해 주세요."
             android:textColor="#777777"
             android:textSize="14sp" />
 

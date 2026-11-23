@@ -26,6 +26,7 @@ import com.example.capstone.R;
 import com.example.capstone.data.CartStore;
 import com.example.capstone.data.FitResult;
 import com.example.capstone.data.MyPageStore;
+import com.example.capstone.data.DummyData;
 import com.example.capstone.data.Product;
 import com.example.capstone.data.RecommendApi;
 import com.example.capstone.data.SizeFitChecker;
@@ -73,8 +74,8 @@ public class OrderActivity extends AppCompatActivity {
 
     private Spinner spOrderRequest;
     private static final String[] DELIVERY_REQUESTS = {
-            "선택 안 함", "문 앞에 놓아주세요", "경비실에 맡겨주세요",
-            "택배함에 넣어주세요", "배송 전 연락 바랍니다", "부재 시 문 앞에 놓아주세요",
+            "선택 안 함", "문 앞에 놓아 주세요", "경비실에 맡겨 주세요",
+            "택배함에 넣어 주세요", "배송 전 연락 주세요", "부재 시 문 앞에 놓아 주세요",
             "직접 입력"
     };
     private EditText etOrderRequest;
@@ -311,7 +312,7 @@ public class OrderActivity extends AppCompatActivity {
 
     private View couponCard(ViewGroup parent, CheckoutCoupons.Coupon coupon, BottomSheetDialog sheet) {
         View card = couponDetail(parent, coupon);
-        boolean usable = coupon.discountFor(totalPrice) > 0;
+        boolean usable = coupon.discountFor(couponLines()) > 0;
 
         if (coupon == selectedCoupon) {
             card.setBackgroundResource(R.drawable.bg_card_active);
@@ -331,19 +332,39 @@ public class OrderActivity extends AppCompatActivity {
     private View couponDetail(ViewGroup parent, CheckoutCoupons.Coupon coupon) {
         View card = LayoutInflater.from(this).inflate(R.layout.item_coupon_owned, parent, false);
 
-        int discount = coupon.discountFor(totalPrice);
+        List<CheckoutCoupons.Line> lines = couponLines();
+        int discount = coupon.discountFor(lines);
         boolean usable = discount > 0;
+        // 쓸 수 없는 이유: 쿠폰을 쓸 수 있는 상품이 없을 때와 최소 주문 금액에 못 미칠 때를 나눠 알려 준다
+        String unusableReason = coupon.appliesToAny(lines)
+                ? "이번 주문에는 사용할 수 없어요"
+                : "이 주문 상품에는 쓸 수 없어요";
 
         ((TextView) card.findViewById(R.id.tvCouponDiscount)).setText(coupon.discountText());
         ((TextView) card.findViewById(R.id.tvCouponName)).setText(coupon.name);
         ((TextView) card.findViewById(R.id.tvCouponCondition)).setText(coupon.conditionText
-                + "\n" + (usable ? "이번 주문 할인 -" + won(discount) : "이번 주문에는 사용할 수 없어요"));
+                + (coupon.scopeText.isEmpty() ? "" : "\n" + coupon.scopeText + "에만 사용")
+                + "\n" + (usable ? "이번 주문 할인 -" + won(discount) : unusableReason));
         ((TextView) card.findViewById(R.id.tvCouponExpire)).setText(coupon.expireText());
         return card;
     }
 
     private int couponDiscount() {
-        return selectedCoupon == null ? 0 : selectedCoupon.discountFor(totalPrice);
+        return selectedCoupon == null ? 0 : selectedCoupon.discountFor(couponLines());
+    }
+
+    /** 쿠폰 적용 범위를 따질 주문 상품 목록 (신상·상의 같은 분류는 상품 목록에서 찾는다) */
+    private List<CheckoutCoupons.Line> couponLines() {
+        List<CheckoutCoupons.Line> result = new ArrayList<>();
+        for (OrderLine line : orderLines()) {
+            Product product = DummyData.getProductById(line.productId);
+            result.add(new CheckoutCoupons.Line(
+                    line.name,
+                    product == null ? "" : product.getCategory(),
+                    DummyData.isNew(product),
+                    line.unitPrice * line.quantity));
+        }
+        return result;
     }
 
     private int payPrice() {

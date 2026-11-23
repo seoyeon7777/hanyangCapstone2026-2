@@ -2,6 +2,7 @@ package com.example.capstone.mypage;
 
 import com.example.capstone.R;
 import com.example.capstone.data.MyPageStore;
+import com.example.capstone.ui.AppDialog;
 import com.example.capstone.data.MyPageStore.Order;
 import com.example.capstone.data.MyPageStore.RefundAccount;
 import com.example.capstone.data.RecommendApi;
@@ -203,12 +204,22 @@ public class ClaimRequestActivity extends AppCompatActivity {
             }
         }
 
+        // 신청하면 되돌릴 수 없으니 한 번 더 묻는다
+        final String claimType = type;
+        final String claimRefund = refund;
+        AppDialog.show(this, false,
+                claimType + " 신청",
+                "신청하면 되돌릴 수 없어요. 계속할까요?",
+                "닫기", null,
+                "신청하기", () -> sendClaim(claimType, reason, claimRefund));
+    }
 
+    private void sendClaim(String type, String reason, String refund) {
         MyPageStore.requestClaim(order, type, reason, refund);
         if (MyPageStore.CLAIM_RETURN.equals(type)) {
             RecommendApi.recordReturn(this, order.orderNo);
         }
-        Toast.makeText(this, type + " 신청이 완료되었습니다.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, type + " 신청이 완료되었어요.", Toast.LENGTH_SHORT).show();
         finish();
     }
 }

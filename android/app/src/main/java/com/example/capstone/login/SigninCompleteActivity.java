@@ -39,7 +39,7 @@ public class SigninCompleteActivity extends AppCompatActivity {
             name = "고객";
         }
 
-        tvWelcome.setText(name + " 고객님\n환영합니다!");
+        tvWelcome.setText(name + " 고객님\n환영해요!");
     }
 
     private void setListeners() {

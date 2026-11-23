@@ -47,6 +47,13 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                 .putExtra("USER_HEIGHT_CM", heightCm);
     }
 
+    /** 치수가 있는 체형 카드의 사진을 다시 분석해 그 카드의 치수를 덮어쓴다 */
+    public static final String EXTRA_REMEASURE = "remeasure";
+
+    public static Intent remeasureIntent(android.content.Context context, String profileId, float heightCm) {
+        return continueIntent(context, profileId, heightCm).putExtra(EXTRA_REMEASURE, true);
+    }
+
 
     // =====================================================
     // 화면
@@ -263,6 +270,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         // 설문만 한 체형에 사진 분석을 이어서 하는지 (없으면 새 체형)
         MeasurementSession.continueProfileId =
                 getIntent().getStringExtra(EXTRA_CONTINUE_PROFILE_ID);
+        MeasurementSession.remeasure = getIntent().getBooleanExtra(EXTRA_REMEASURE, false);
 
         // 나가기 (전에는 화면에 나가는 버튼이 없어 시스템 뒤로가기로만 나갈 수 있었다)
         findViewById(R.id.btnPhotoBack)
@@ -375,7 +383,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
 
 
                     textPhotoStatus.setText(
-                            "정면 사진을 분석하고 있습니다..."
+                            "정면 사진을 분석하고 있어요..."
                     );
 
 
@@ -408,13 +416,13 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         if (ready) {
 
             textPhotoStatus.setText(
-                    "사진 준비 완료 · 신체 분석을 시작해주세요."
+                    "사진 준비 완료 · 신체 분석을 시작해 주세요."
             );
 
         } else {
 
             textPhotoStatus.setText(
-                    "정면과 옆면 사진을 모두 선택해주세요."
+                    "정면과 옆면 사진을 모두 선택해 주세요."
             );
         }
     }
@@ -449,7 +457,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
 
                         if (basicResult == null) {
                             analysisError(
-                                    "정면 사진에서 전신을 정확하게 인식하지 못했습니다."
+                                    "정면 사진에서 전신을 정확하게 인식하지 못했어요."
                             );
                             return;
                         }
@@ -458,7 +466,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
 
                         if (frontSilhouette == null) {
                             analysisError(
-                                    "정면 사진에서 신체 외곽선을 인식하지 못했습니다."
+                                    "정면 사진에서 신체 외곽선을 인식하지 못했어요."
                             );
                             return;
                         }
@@ -466,7 +474,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                         textFrontStatus.setText("✓ 정면 신체 분석 완료");
                         AnalysisTimer.mark("정면 관절·윤곽");
                         textPhotoStatus.setText(
-                                "옆면 사진을 분석하고 있습니다...");
+                                "옆면 사진을 분석하고 있어요...");
 
                         analyzeSidePhoto();
                     })
@@ -477,7 +485,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     );
 
         } catch (IOException e) {
-            analysisError("정면 사진을 불러올 수 없습니다.");
+            analysisError("정면 사진을 불러올 수 없어요.");
         }
     }
 
@@ -512,7 +520,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     );
 
         } catch (IOException e) {
-            analysisError("옆면 사진을 불러올 수 없습니다.");
+            analysisError("옆면 사진을 불러올 수 없어요.");
         }
     }
 
@@ -523,7 +531,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                 SilhouetteBuilder.build(mask, axis);
 
         if (sideSilhouette == null) {
-            analysisError("옆면 사진에서 신체 외곽선을 인식하지 못했습니다.");
+            analysisError("옆면 사진에서 신체 외곽선을 인식하지 못했어요.");
             return;
         }
 
@@ -557,7 +565,7 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                     });
             return;
         }
-        textPhotoStatus.setText("분석이 끝났어요. 결과를 불러옵니다.");
+        textPhotoStatus.setText("분석이 끝났어요. 결과를 불러와요.");
         openResultOrWarn();
     }
 
@@ -609,10 +617,10 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
         }
 
         if (textFrontStatus != null) {
-            textFrontStatus.setText("정면 사진을 선택해주세요.");
+            textFrontStatus.setText("정면 사진을 선택해 주세요.");
         }
         if (textSideStatus != null) {
-            textSideStatus.setText("옆면 사진을 선택해주세요.");
+            textSideStatus.setText("옆면 사진을 선택해 주세요.");
         }
         if (btnAnalyzePhotos != null) {
             btnAnalyzePhotos.setEnabled(false);

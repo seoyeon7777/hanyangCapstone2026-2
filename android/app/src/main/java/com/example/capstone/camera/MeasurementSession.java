@@ -83,6 +83,9 @@ public final class MeasurementSession {
      */
     public static String continueProfileId;
 
+    /** true면 이미 치수가 있는 카드의 치수를 새 측정값으로 덮어쓴다 ("사진 다시 분석하기"). 설문만 한 카드에 채우는 것과 구분한다 */
+    public static boolean remeasure;
+
     public static void clear() {
         modelCirc = null;
         front = null;

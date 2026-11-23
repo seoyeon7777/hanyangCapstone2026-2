@@ -23,7 +23,8 @@ public class AddressEditActivity extends AppCompatActivity {
     /** 수정할 배송지 id. 없으면 새 배송지 추가 */
     public static final String EXTRA_ADDRESS_ID = "EXTRA_ADDRESS_ID";
 
-    private EditText etLabel, etReceiver, etPhone, etZipCode, etAddress1, etAddress2;
+    private com.example.capstone.login.PhoneFields phoneFields;
+    private EditText etLabel, etReceiver, etZipCode, etAddress1, etAddress2;
     private CheckBox cbDefault;
     private Button btnSearchZip, btnSave;
 
@@ -53,7 +54,7 @@ public class AddressEditActivity extends AppCompatActivity {
     private void initViews() {
         etLabel = findViewById(R.id.etLabel);
         etReceiver = findViewById(R.id.etReceiver);
-        etPhone = findViewById(R.id.etPhone);
+        phoneFields = new com.example.capstone.login.PhoneFields(findViewById(R.id.phoneFields));   // 010 + 4자리 + 4자리 칸
         etZipCode = findViewById(R.id.etZipCode);
         etAddress1 = findViewById(R.id.etAddress1);
         etAddress2 = findViewById(R.id.etAddress2);
@@ -68,14 +69,14 @@ public class AddressEditActivity extends AppCompatActivity {
             // 새 배송지는 회원 정보로 받는 분/연락처를 미리 채워둔다.
             MyPageStore.User user = MyPageStore.getUser();
             etReceiver.setText(user.name);
-            etPhone.setText(com.example.capstone.data.LocalAccounts.formatPhone(user.phone));
+            phoneFields.setNumber(user.phone);
             cbDefault.setChecked(MyPageStore.getAddresses().isEmpty());
             return;
         }
 
         etLabel.setText(editing.label);
         etReceiver.setText(editing.receiver);
-        etPhone.setText(com.example.capstone.data.LocalAccounts.formatPhone(editing.phone));
+        phoneFields.setNumber(editing.phone);
         etZipCode.setText(editing.zipCode);
         etAddress1.setText(editing.address1);
         etAddress2.setText(editing.address2);
@@ -111,7 +112,7 @@ public class AddressEditActivity extends AppCompatActivity {
     private void saveAddress() {
         String label = etLabel.getText().toString().trim();
         String receiver = etReceiver.getText().toString().trim();
-        String phone = MyPageUi.normalizePhone(etPhone.getText().toString());
+        String phone = phoneFields.number();
         String zip = etZipCode.getText().toString().trim();
         String address1 = etAddress1.getText().toString().trim();
         String address2 = etAddress2.getText().toString().trim();
@@ -152,7 +153,7 @@ public class AddressEditActivity extends AppCompatActivity {
                     && existing.zipCode.trim().equals(zip)
                     && existing.address1.trim().equals(address1)
                     && existing.address2.trim().equals(address2)) {
-                toast("이미 등록된 동일한 배송지가 있습니다.");
+                toast("이미 등록된 동일한 배송지가 있어요.");
                 return;
             }
         }
@@ -161,7 +162,7 @@ public class AddressEditActivity extends AppCompatActivity {
         MyPageStore.saveAddress(new Address(id, label, receiver, phone, zip,
                 address1, address2, editing == null ? "" : editing.request, cbDefault.isChecked()));
 
-        toast(editing == null ? "배송지가 추가되었습니다." : "배송지가 수정되었습니다.");
+        toast(editing == null ? "배송지가 추가되었어요." : "배송지가 수정되었어요.");
         finish();
     }
 

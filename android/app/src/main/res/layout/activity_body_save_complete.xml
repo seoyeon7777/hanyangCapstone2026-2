@@ -27,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="내 체형 정보가 저장되었습니다"
+            android:text="내 체형 정보가 저장되었어요"
             android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="#111111"
@@ -58,7 +58,7 @@
                 android:id="@+id/tvGoMyBody"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="저장한 체형 정보는 마이페이지에서 확인할 수 있어요"
+                android:text="저장한 체형 정보는 하단 체형 탭에서 확인할 수 있어요"
                 android:textColor="#666666"
                 android:textSize="13sp" />
 

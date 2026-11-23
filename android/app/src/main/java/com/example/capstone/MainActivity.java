@@ -477,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
                 && RecommendApi.isCatalogLoading();
 
         textHomeEmpty.setText(
-                catalogMissing ? "서버에 연결할 수 없어요" : emptyText
+                catalogMissing ? RecommendApi.MSG_CONNECT_FAIL : emptyText
         );
 
         textHomeEmpty.setVisibility(
@@ -655,7 +655,7 @@ public class MainActivity extends AppCompatActivity {
                                 homeErrorShown = true;
                                 Toast.makeText(
                                         MainActivity.this,
-                                        message + " 잠시 뒤 다시 불러올게요",
+                                        RecommendApi.MSG_WAIT,
                                         Toast.LENGTH_LONG
                                 ).show();
                             }
@@ -673,7 +673,7 @@ public class MainActivity extends AppCompatActivity {
 
                             Toast.makeText(
                                     MainActivity.this,
-                                    "체형 진단을 하면 골격 맞춤 추천을 볼 수 있어요. 지금은 일반 추천을 보여 줄게요",
+                                    "체형 진단을 하면 골격 맞춤 추천을 볼 수 있어요. 지금은 일반 추천을 보여 드려요",
                                     Toast.LENGTH_LONG
                             ).show();
 
@@ -687,7 +687,15 @@ public class MainActivity extends AppCompatActivity {
                             homeProducts.addAll(DummyData.getProducts());
                             productAdapter.notifyDataSetChanged();
 
-                            message += " 기본 상품을 보여 줄게요";
+                            // 서버 없이 보여 주는 기본 상품은 맞춤 추천이 아니므로 체형 맞춤 토글도 끈다
+                            // 토스트는 두 줄 안에 들어가게 짧게 쓴다 (길면 끝이 잘린다)
+                            if (bodyMode) {
+                                setModeSilently(false);
+                                updateHomeTitle("");
+                                message = "연결에 실패해서 체형 맞춤을 껐어요. 잠시 후 다시 시도해 주세요.";
+                            } else {
+                                message = RecommendApi.MSG_CONNECT_FAIL;
+                            }
                         }
 
                         Toast.makeText(

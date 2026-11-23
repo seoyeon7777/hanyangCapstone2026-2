@@ -140,7 +140,7 @@ public class BodyFeedbackActivity extends AppCompatActivity {
 
         SpannableStringBuilder text =
                 new SpannableStringBuilder(
-                        typeText + " 입니다");
+                        typeText + "이에요");
 
         text.setSpan(
                 new StyleSpan(Typeface.BOLD),
@@ -477,28 +477,20 @@ public class BodyFeedbackActivity extends AppCompatActivity {
                                 : View.VISIBLE);
     }
 
-    // 사진 정밀 분석 화면으로 이동
+    // 사진 정밀 분석 화면으로 이동 (치수를 재기 직전에 키·몸무게·나이를 받는다)
     private void openCameraFitting() {
 
-        float heightCm =
-                BodyTypeActivity.lastSurveyHeight(this);
+        BodyInputDialog.show(this, BodyTypeActivity.lastSurveyHeight(this), height -> {
 
-        if (heightCm <= 0f) {
+            Intent intent =
+                    new Intent(this, PhotoMeasurementActivity.class);
 
-            startActivity(
-                    new Intent(this, FittingActivity.class));
+            intent.putExtra(
+                    BodyMeasurementContract.EXTRA_USER_HEIGHT_CM,
+                    height);
 
-            return;
-        }
-
-        Intent intent =
-                new Intent(this, PhotoMeasurementActivity.class);
-
-        intent.putExtra(
-                BodyMeasurementContract.EXTRA_USER_HEIGHT_CM,
-                heightCm);
-
-        startActivity(intent);
+            startActivity(intent);
+        });
     }
 
     // 저장된 프로필 찾기

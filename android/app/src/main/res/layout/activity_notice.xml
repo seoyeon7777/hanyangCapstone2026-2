@@ -166,7 +166,7 @@
             <TextView
                 android:id="@+id/tvEmpty"
                 style="@style/MyPageEmpty"
-                android:text="등록된 글이 없습니다." />
+                android:text="등록된 글이 없어요." />
 
         </LinearLayout>
     </ScrollView>

@@ -75,11 +75,11 @@ public class MyReviewActivity extends AppCompatActivity {
 
         if (tab == TAB_WRITABLE) {
             renderWritable(writable);
-            tvEmpty.setText("작성 가능한 리뷰가 없습니다.");
+            tvEmpty.setText("작성 가능한 리뷰가 없어요.");
             tvEmpty.setVisibility(writable.isEmpty() ? View.VISIBLE : View.GONE);
         } else {
             renderWritten(written);
-            tvEmpty.setText("작성한 리뷰가 없습니다.");
+            tvEmpty.setText("작성한 리뷰가 없어요.");
             tvEmpty.setVisibility(written.isEmpty() ? View.VISIBLE : View.GONE);
         }
 
@@ -125,9 +125,9 @@ public class MyReviewActivity extends AppCompatActivity {
 
             view.findViewById(R.id.btnDelete).setOnClickListener(v ->
                     MyPageUi.confirm(this, "리뷰 삭제",
-                            "삭제한 리뷰는 복구할 수 없습니다.\n삭제하시겠습니까?", () -> {
+                            "삭제한 리뷰는 복구할 수 없어요.\n삭제할까요?", () -> {
                                 MyPageStore.deleteReview(review);
-                                Toast.makeText(this, "리뷰가 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(this, "리뷰가 삭제되었어요.", Toast.LENGTH_SHORT).show();
                                 showTab(currentTab);
                             }));
 

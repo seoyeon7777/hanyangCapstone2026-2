@@ -60,19 +60,19 @@ public class SizeWarningDialog {
     public enum Action {
 
         CART(
-                "그래도 장바구니에 담으시겠습니까?",
+                "그래도 장바구니에 담을까요?",
                 "그래도 담기",
                 "확인하지 않고 장바구니에 담기"
         ),
 
         ORDER(
-                "그래도 주문하시겠습니까?",
+                "그래도 주문할까요?",
                 "그래도 주문하기",
                 "확인하지 않고 주문하기"
         ),
 
         PAYMENT(
-                "그래도 결제하시겠습니까?",
+                "그래도 결제할까요?",
                 "그래도 결제하기",
                 "확인하지 않고 결제하기"
         );
@@ -227,12 +227,12 @@ public class SizeWarningDialog {
         if (noProfileOnly) {
 
             textTitle.setText(
-                    "아직 체형 측정을 하지 않았습니다"
+                    "아직 체형 측정을 하지 않았어요"
             );
 
             textMessage.setText(
                     "체형 측정을 하면 선택한 사이즈가 "
-                            + "회원님의 체형에 맞는지 확인할 수 있습니다."
+                            + "회원님의 체형에 맞는지 확인할 수 있어요."
             );
 
             textDetail.setVisibility(View.GONE);
@@ -250,7 +250,7 @@ public class SizeWarningDialog {
         } else {
 
             textTitle.setText(
-                    "사이즈가 맞지 않습니다"
+                    "사이즈가 맞지 않아요"
             );
 
             textMessage.setText(
@@ -465,13 +465,13 @@ public class SizeWarningDialog {
             return "고르신 "
                     + results.get(0).getSelectedSize()
                     + " 사이즈는 회원님의 체형과 "
-                    + "옷이 맞지 않습니다.";
+                    + "옷이 맞지 않아요.";
         }
 
         return "주문하려는 상품 중 "
                 + count
                 + "개가 회원님의 체형과 "
-                + "옷이 맞지 않습니다.";
+                + "옷이 맞지 않아요.";
     }
 
 
@@ -519,7 +519,7 @@ public class SizeWarningDialog {
                     builder.append("\n");
                 }
 
-                builder.append("체형 정보가 없어 확인할 수 없습니다.");
+                builder.append("체형 정보가 없어 확인할 수 없어요.");
 
                 continue;
             }

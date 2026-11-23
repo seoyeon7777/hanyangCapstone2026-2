@@ -215,7 +215,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="쿠폰 받기에서 쿠폰을 받아보세요"
+                    android:text="쿠폰 받기에서 쿠폰을 받아 보세요"
                     android:textColor="#999999"
                     android:textSize="13sp" />
 
@@ -312,7 +312,7 @@
                         android:layout_width="0dp"
                         android:layout_height="48dp"
                         android:layout_weight="1"
-                        android:hint="쿠폰번호를 입력해주세요"
+                        android:hint="쿠폰번호를 입력해 주세요"
                         android:inputType="textCapCharacters"
                         android:maxLength="20"
                         android:background="@drawable/bg_edit"

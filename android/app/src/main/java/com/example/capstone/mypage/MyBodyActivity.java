@@ -121,9 +121,9 @@ public class MyBodyActivity extends AppCompatActivity {
         final List<String> targets = new ArrayList<>(selectedIds);
         boolean includesActive = activeId != null && targets.contains(activeId);
 
-        String message = "선택한 체형 " + targets.size() + "개를 삭제하시겠습니까?";
+        String message = "선택한 체형 " + targets.size() + "개를 삭제할까요?";
         if (includesActive) {
-            message += "\n현재 체형도 삭제돼요. 남은 체형이 있으면 그중 하나가 현재 체형이 되고, 없으면 현재 체형이 비어요.";
+            message += "\n현재 체형도 삭제돼요. 남은 체형이 있으면 그중 하나가 현재 체형이 되고, 없으면 현재 체형이 비어 있어요.";
         }
         MyPageUi.confirm(this, "선택 삭제", message, () -> {
             for (String id : targets) {
@@ -201,8 +201,9 @@ public class MyBodyActivity extends AppCompatActivity {
                 .setBackgroundResource(active ? R.drawable.bg_card : R.drawable.bg_info_box);
         boolean surveyOnly = profile.isSurveyOnly();
         ((TextView) card.findViewById(R.id.tvProfileSummary)).setText(
-                "키 " + (profile.heightCm > 0f ? BodyValueTable.cm(profile.heightCm) : "-")
-                        + " · 체형 " + profile.bodyType
+                (profile.heightCm > 0f ? "키 " + BodyValueTable.cm(profile.heightCm) + " · " : "")
+                        + (profile.weightKg > 0f ? "몸무게 " + BodyValueTable.cm(profile.weightKg).replace("cm", "kg") + " · " : "")
+                        + "체형 " + profile.bodyType
                         + (surveyOnly ? " (설문)" : "")
                         + " · " + profile.savedDate());
 
@@ -231,6 +232,11 @@ public class MyBodyActivity extends AppCompatActivity {
                 loadProfiles();
             });
         }
+
+        // 치수까지 측정한 체형: 사진을 다시 분석해 이 카드의 치수를 새로 잰다 (키·몸무게·나이도 다시 확인)
+        TextView tvRemeasure = card.findViewById(R.id.tvRemeasure);
+        tvRemeasure.setVisibility(!surveyOnly && !selectMode ? View.VISIBLE : View.GONE);
+        tvRemeasure.setOnClickListener(v -> remeasurePhoto(profile));
 
         TextView btnSetActive = card.findViewById(R.id.btnSetActive);
         btnSetActive.setText(active ? "현재 체형" : "현재 체형으로 선택");
@@ -266,9 +272,9 @@ public class MyBodyActivity extends AppCompatActivity {
         card.findViewById(R.id.btnEditProfile).setOnClickListener(v -> openFeedback(profile));
         card.findViewById(R.id.tvRename).setOnClickListener(v -> showRename(profile));
         card.findViewById(R.id.tvDelete).setOnClickListener(v -> {
-            String message = "'" + profile.name + "'을(를) 삭제하시겠습니까?";
+            String message = "'" + profile.name + "'을(를) 삭제할까요?";
             if (active) {
-                message += "\n현재 체형이에요. 삭제하면 남은 체형이 있으면 그중 하나가 현재 체형이 되고, 없으면 현재 체형이 비어요.";
+                message += "\n현재 체형이에요. 삭제하면 남은 체형이 있으면 그중 하나가 현재 체형이 되고, 없으면 현재 체형이 비어 있어요.";
             }
             MyPageUi.confirm(this, "체형 삭제", message, () -> {
                 BodyProfileStore.delete(this, profile.id);
@@ -278,13 +284,16 @@ public class MyBodyActivity extends AppCompatActivity {
     }
 
     private void continuePhoto(BodyProfileStore.Profile profile) {
-        float height = profile.heightCm > 0f ? profile.heightCm : BodyInput.height(this);
-        if (height < 100f || height > 230f) {
-            Toast.makeText(this, "키 정보가 없어요. '새 체형 추가하기'에서 키를 입력해 주세요.",
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-        startActivity(PhotoMeasurementActivity.continueIntent(this, profile.id, height));
+        // 설문만 한 카드는 키·몸무게·나이를 아직 안 받았을 수 있다 → 치수를 재기 직전에 받는다
+        com.example.capstone.ui.BodyInputDialog.show(this, profile.heightCm,
+                height -> startActivity(PhotoMeasurementActivity.continueIntent(this, profile.id, height)));
+    }
+
+    private void remeasurePhoto(BodyProfileStore.Profile profile) {
+        MyPageUi.confirm(this, "사진 다시 분석",
+                "'" + profile.name + "'의 치수를 새로 잴까요? 새 사진으로 분석하면 이 체형의 치수가 바뀌어요.",
+                () -> com.example.capstone.ui.BodyInputDialog.show(this, profile.heightCm,
+                        height -> startActivity(PhotoMeasurementActivity.remeasureIntent(this, profile.id, height))));
     }
 
     private void selectAsCurrent(BodyProfileStore.Profile profile) {

@@ -222,7 +222,7 @@ public class CartActivity extends AppCompatActivity {
         emptyLayout.addView(message);
 
         TextView subMessage = makeText(
-                "마음에 드는 상품을 담아보세요",
+                "마음에 드는 상품을 담아 보세요",
                 13, false, GRAY
         );
 
@@ -541,13 +541,6 @@ public class CartActivity extends AppCompatActivity {
 
         btnGoOrder.setOnClickListener(v -> {
 
-            // 구매는 로그인해야 한다. 비회원이면 로그인 안내 → 로그인(가입) 뒤 장바구니로 돌아오고,
-            // 다시 주문하기를 누르면 체형 측정 확인 창이 뜬다 (비회원 장바구니는 로그인 계정 장바구니에 합쳐진다)
-            if (!LoginSession.isLoggedIn(this)) {
-                LoginGate.require(this, "로그인하면 구매할 수 있어요.", () -> { });
-                return;
-            }
-
             StringBuilder productNames =
                     new StringBuilder();
 
@@ -578,11 +571,18 @@ public class CartActivity extends AppCompatActivity {
                 Toast.makeText(
                         this,
                         cartProducts.isEmpty()
-                                ? "장바구니에 상품이 없습니다."
+                                ? "장바구니에 상품이 없어요."
                                 : "주문할 상품을 선택해주세요.",
                         Toast.LENGTH_SHORT
                 ).show();
 
+                return;
+            }
+
+            // 구매는 로그인해야 한다. 비회원이면 로그인 안내 → 로그인(가입) 뒤 장바구니로 돌아오고,
+            // 다시 주문하기를 누르면 체형 측정 확인 창이 뜬다 (선택부터 확인한 뒤 로그인을 묻는다)
+            if (!LoginSession.isLoggedIn(this)) {
+                LoginGate.require(this, "로그인하면 구매할 수 있어요.", () -> { });
                 return;
             }
 
@@ -682,14 +682,16 @@ public class CartActivity extends AppCompatActivity {
         }
 
         if (titleCount != null) {
+            // "전체 선택 (n/m)"과 같은 기준(담은 상품 줄 수)으로 센다
             titleCount.setText(
-                    "장바구니 " + cartQuantity
+                    "장바구니 " + cartProducts.size()
             );
         }
 
         if (totalQuantityText != null) {
+            // 위의 제목·"전체 선택 (n/m)"과 같은 기준(선택한 상품 줄 수)으로 센다. 수량은 총 상품 금액에 반영된다
             totalQuantityText.setText(
-                    totalQuantity + "개"
+                    selectedCount + "개"
             );
         }
 
@@ -751,7 +753,7 @@ public class CartActivity extends AppCompatActivity {
 
             btnGoOrder.setText(
                     selectedCount == 0
-                            ? "주문할 상품을 선택해주세요"
+                            ? "주문할 상품을 선택해 주세요"
                             : formatPrice(totalPrice) + " 주문하기"
             );
         }

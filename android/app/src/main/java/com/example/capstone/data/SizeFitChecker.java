@@ -69,7 +69,7 @@ public class SizeFitChecker {
 
         String[] names = {
                 "가슴둘레", "어깨너비", "허리둘레",
-                "골반둘레", "허벅지둘레"
+                "엉덩이둘레", "허벅지둘레"
         };
 
         int compared = 0;

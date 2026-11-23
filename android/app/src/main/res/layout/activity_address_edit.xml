@@ -39,19 +39,19 @@
             <EditText
                 android:id="@+id/etReceiver"
                 style="@style/MyPageEdit"
-                android:hint="이름을 입력해주세요"
+                android:hint="이름을 입력해 주세요"
                 android:maxLength="20" />
 
             <TextView
                 style="@style/MyPageFormLabel"
                 android:text="연락처" />
 
-            <EditText
-                android:id="@+id/etPhone"
-                style="@style/MyPageEdit"
-                android:hint="010-0000-0000"
-                android:inputType="phone"
-                android:maxLength="13" />
+            <include
+                android:id="@+id/phoneFields"
+                layout="@layout/view_phone_fields"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp" />
 
             <TextView
                 style="@style/MyPageFormLabel"

@@ -58,16 +58,16 @@ public final class AuthCode {
     /** 맞으면 null, 아니면 화면에 보여 줄 문구 */
     public String check(String input, String target) {
         if (code == null) {
-            return "먼저 인증받기를 눌러주세요.";
+            return "먼저 인증받기를 눌러 주세요.";
         }
         if (target == null || !target.equals(this.target)) {
-            return "인증번호를 다시 받아주세요.";
+            return "인증번호를 다시 받아 주세요.";
         }
         if (System.currentTimeMillis() > expiresAt) {
-            return "인증번호가 만료되었어요. 다시 받아주세요.";
+            return "인증번호가 만료되었어요. 다시 받아 주세요.";
         }
         if (input == null || !input.equals(code)) {
-            return "인증번호가 일치하지 않습니다.";
+            return "인증번호가 일치하지 않아요.";
         }
         return null;
     }
@@ -114,7 +114,7 @@ public final class AuthCode {
         View view = LayoutInflater.from(activity).inflate(R.layout.dialog_auth_code, null, false);
         ((TextView) view.findViewById(R.id.tvAuthCode)).setText(code);
         ((TextView) view.findViewById(R.id.tvAuthMessage)).setText(
-                shownTarget + "(으)로 인증번호를 보냈어요.\n5분 안에 입력해주세요.\n(시연용: 문자·메일 대신 이 창에 보여 줘요)");
+                shownTarget + "(으)로 인증번호를 보냈어요.\n5분 안에 입력해 주세요.\n(시연용: 문자·메일 대신 이 창에 보여 줘요)");
 
         AlertDialog dialog = new AlertDialog.Builder(activity)
                 .setView(view)

@@ -284,7 +284,7 @@
                 android:gravity="center"
                 android:paddingTop="70dp"
                 android:paddingBottom="70dp"
-                android:text="해당 카테고리의 상품이 없습니다."
+                android:text="해당 카테고리의 상품이 없어요."
                 android:textSize="13sp"
                 android:textColor="#999999"
                 android:visibility="gone"/>

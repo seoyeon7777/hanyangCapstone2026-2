@@ -43,7 +43,7 @@ public class OrderCompleteActivity extends AppCompatActivity {
             // 제목 "주문이 완료되었습니다"(굵게)는 그대로 두고 아래에 이체할 계좌를 보여 준다
             tvCompletePrice.setTextColor(0xFF111111);
             tvCompletePrice.setText(
-                    "다음 계좌정보로 이체해주시면 결제가 완료됩니다.\n"
+                    "다음 계좌정보로 이체해주시면 결제가 완료돼요.\n"
                             + "계좌번호정보: " + MaskText.account(BANK_ACCOUNT) + "\n"
                             + "예금주: " + MaskText.holder(BANK_HOLDER) + "\n"
                             + "금액: " + formattedPrice

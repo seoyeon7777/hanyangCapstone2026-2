@@ -368,7 +368,42 @@ public class MyPageStore {
     private static final List<Address> addresses = new ArrayList<>();
     private static final List<PaymentCard> cards = new ArrayList<>();
     private static final List<MyReview> reviews = new ArrayList<>();
-    private static final List<Notice> notices = new ArrayList<>();
+    // 공지사항: 지금은 서버가 없어 몇 개를 코드에 넣어 둔다 (최신 순)
+    private static final List<Notice> notices = new ArrayList<>(
+            Arrays.asList(
+                    new Notice(
+                            "업데이트",
+                            "11월 앱 업데이트 안내",
+                            "2026.11.21",
+                            "· 장바구니 담기도 로그인 후 이용할 수 있어요 (찜·바로 구매와 같아요).\n"
+                                    + "· 주문 취소·반품 신청 전에 확인 창이 뜨고, 배송지 연락처는 010-0000-0000 모양으로 입력돼요.\n"
+                                    + "· 결제 화면에서 전자영수증 받을 이메일을 적을 수 있어요 (메일 발송은 준비 중이에요).\n"
+                                    + "· 주소 검색과 설문 안내 문구를 다듬었어요."
+                    ),
+                    new Notice(
+                            "안내",
+                            "체형 분석 사진은 기기 안에서만 처리돼요",
+                            "2026.11.15",
+                            "정면·옆면 사진은 서버로 보내지 않고 내 폰 안에서만 분석해요. 분석이 끝나면 앱이 들고 있던 사진은 바로 지워요. "
+                                    + "앨범에 있는 원본 사진은 지우지 않아요."
+                    ),
+                    new Notice(
+                            "안내",
+                            "체형 맞춤 서비스 이용 방법",
+                            "2026.11.10",
+                            "하단 「체형」 메뉴에서 설문(최대 15문항)에 답하면 스트레이트·웨이브·내추럴 중 "
+                                    + "나의 골격 체형을 알려 드려요. 사진으로 정밀 분석하면(이때 키·몸무게·나이를 입력해요) 치수까지 재서 추천 사이즈를 볼 수 있어요. "
+                                    + "체형은 여러 개 저장하고 「현재 체형」으로 고를 수 있어요."
+                    ),
+                    new Notice(
+                            "공지",
+                            "시연용 서비스 안내",
+                            "2026.11.01",
+                            "이 앱은 캡스톤 프로젝트 시연용이에요. 결제·인증번호·전자영수증은 실제로 처리되거나 발송되지 않고, "
+                                    + "인증번호는 화면에 보여 드려요. 상품과 가격도 예시예요."
+                    )
+            )
+    );
     private static final List<Inquiry> inquiries = new ArrayList<>();
 
     private static final Set<String> receivedCouponIds = new HashSet<>();
@@ -386,7 +421,7 @@ public class MyPageStore {
                     faq(
                             "체형분석",
                             "체형분석은 어떻게 이용하나요?",
-                            "로그인한 뒤 하단 「체형」 메뉴에서 「새 체형 추가하기」를 누르세요. 키·몸무게·나이를 입력하고 15개 설문에 답하면(7번부터는 「여기까지 하고 결과보기」로 먼저 볼 수 있어요) 나의 골격 체형(스트레이트·웨이브·내추럴)을 알려 드려요. 결과는 홈의 「체형 맞춤」 추천에 바로 쓰여요."
+                            "로그인한 뒤 하단 「체형」 메뉴에서 「새 체형 추가하기」를 누르세요. 15개 설문에 답하면(7번부터는 「여기까지 하고 결과보기」로 먼저 볼 수 있어요) 나의 골격 체형(스트레이트·웨이브·내추럴)을 알려 드려요. 사진으로 치수까지 재려면 설문 뒤에 키·몸무게·나이를 입력해요. 결과는 홈의 「체형 맞춤」 추천에 바로 쓰여요."
                     ),
                     faq(
                             "체형분석",
@@ -396,7 +431,7 @@ public class MyPageStore {
                     faq(
                             "체형분석",
                             "「사진으로 정밀 분석하기」와 「이대로 저장하기」는 뭐가 다른가요?",
-                            "「이대로 저장하기」는 설문 결과만 내 체형으로 저장해요. 「사진으로 정밀 분석하기」는 정면·옆면 전신 사진으로 가슴·허리·골반 등의 치수까지 재서 저장해요. 치수가 있으면 상품 상세의 추천 사이즈와 주문 전 사이즈 확인을 받을 수 있어요. 저장하지 않고 나가면 결과는 남지 않아요."
+                            "「이대로 저장하기」는 설문 결과만 내 체형으로 저장해요. 「사진으로 정밀 분석하기」는 정면·옆면 전신 사진으로 가슴·허리·엉덩이 등의 치수까지 재서 저장해요. 치수가 있으면 상품 상세의 추천 사이즈와 주문 전 사이즈 확인을 받을 수 있어요. 저장하지 않고 나가면 결과는 남지 않아요."
                     ),
                     faq(
                             "체형분석",
@@ -405,13 +440,13 @@ public class MyPageStore {
                     ),
                     faq(
                             "체형분석",
-                            "전신 사진은 어떻게 고르면 정확한가요?",
+                            "전신 사진은 어떻게 고르면 정확하나요?",
                             "머리부터 발끝까지 모두 나오고 몸에 붙는 옷을 입은 정면·옆면 사진을 골라 주세요. 카메라를 기울이지 않고 찍은 사진일수록, 밝고 단순한 배경일수록 정확해요. 정면과 옆면은 같은 사람의 사진이어야 해요."
                     ),
                     faq(
                             "체형분석",
                             "사진으로 잰 치수가 실제와 달라요.",
-                            "옷의 두께, 자세, 사진 각도에 따라 오차가 생길 수 있어요. 치수를 잰 뒤 나오는 화면에서 가슴·허리·골반 선을 위아래로 끌어 몸에 맞게 조정하면 치수가 다시 계산돼요. 그래도 다르면 몸에 붙는 옷을 입고 찍은 사진으로 다시 분석해 주세요. 결과는 참고용이니 상품의 실측 사이즈도 함께 확인해 주세요."
+                            "옷의 두께, 자세, 사진 각도에 따라 오차가 생길 수 있어요. 몸에 붙는 옷을 입고 찍은 사진으로 다시 분석해 보세요. 결과는 참고용이니 상품의 실측 사이즈도 함께 확인해 주세요."
                     ),
                     faq(
                             "체형분석",
@@ -431,57 +466,57 @@ public class MyPageStore {
                     faq(
                             "주문/결제",
                             "어떤 결제 수단을 쓸 수 있나요?",
-                            "신용/체크카드로 결제할 수 있습니다. 결제 수단은 마이페이지 > 결제 수단에서 관리할 수 있습니다."
+                            "신용/체크카드로 결제할 수 있어요. 결제 수단은 마이페이지 > 결제 수단에서 관리할 수 있어요."
                     ),
                     faq(
                             "주문/결제",
                             "쿠폰은 어떻게 받고 사용하나요?",
-                            "마이페이지 > 쿠폰함 > 쿠폰 받기에서 쿠폰을 받을 수 있으며, 결제할 때 받은 쿠폰을 적용할 수 있습니다."
+                            "마이페이지 > 쿠폰함 > 쿠폰 받기에서 쿠폰을 받을 수 있으며, 결제할 때 받은 쿠폰을 적용할 수 있어요."
                     ),
                     faq(
                             "배송",
                             "배송은 얼마나 걸리나요?",
-                            "결제 완료 후 영업일 기준 2~3일 이내에 받아보실 수 있습니다. 도서산간 지역은 추가로 시간이 걸릴 수 있습니다."
+                            "결제 완료 후 영업일 기준 2~3일 이내에 받아보실 수 있어요. 도서산간 지역은 추가로 시간이 걸릴 수 있어요."
                     ),
                     faq(
                             "배송",
                             "배송지를 바꾸고 싶어요.",
-                            "배송준비중 전까지는 마이페이지 > 배송지 관리에서 배송지를 변경할 수 있습니다."
+                            "배송준비중 전까지는 마이페이지 > 배송지 관리에서 배송지를 변경할 수 있어요."
                     ),
                     faq(
                             "취소/반품/교환",
                             "주문을 취소하고 싶어요.",
-                            "결제완료 상태까지는 주문내역에서 바로 취소할 수 있습니다. 배송준비중부터는 1:1 문의로 요청해주세요."
+                            "결제완료 상태까지는 주문내역에서 바로 취소할 수 있어요. 배송준비중부터는 1:1 문의로 요청해 주세요."
                     ),
                     faq(
                             "취소/반품/교환",
-                            "반품·교환은 언제까지 가능한가요?",
-                            "상품을 받은 날로부터 7일 이내에 신청할 수 있습니다. 착용, 세탁했거나 택을 제거한 상품은 반품·교환이 어렵습니다."
+                            "반품·교환은 언제까지 가능하나요?",
+                            "배송완료 후 7일 이내에 신청할 수 있어요. 결제 후 3일이 지나면 배송완료로 처리돼요. 착용, 세탁했거나 택을 제거한 상품은 반품·교환이 어려워요."
                     ),
                     faq(
                             "취소/반품/교환",
                             "환불은 언제 되나요?",
-                            "반품 상품이 확인된 후 영업일 기준 3~5일 이내에 환불됩니다. 환불 계좌는 마이페이지 > 환불 계좌에서 등록할 수 있습니다."
+                            "반품 상품이 확인된 후 영업일 기준 3~5일 이내에 환불돼요. 환불 계좌는 마이페이지 > 환불 계좌에서 등록할 수 있어요."
                     ),
                     faq(
                             "회원정보",
                             "비밀번호를 바꾸고 싶어요.",
-                            "마이페이지 > 프로필 수정 > 비밀번호 변경에서 바꿀 수 있습니다."
+                            "마이페이지 > 프로필 수정 > 비밀번호 변경에서 바꿀 수 있어요."
                     ),
                     faq(
                             "회원정보",
                             "아이디/비밀번호를 잊어버렸어요.",
-                            "로그인 화면의 아이디 찾기, 비밀번호 재설정에서 찾을 수 있습니다."
+                            "로그인 화면의 아이디 찾기, 비밀번호 재설정에서 찾을 수 있어요."
                     ),
                     faq(
                             "회원정보",
                             "회원 탈퇴는 어떻게 하나요?",
-                            "마이페이지 > 프로필 수정 하단의 「회원 탈퇴」에서 탈퇴할 수 있습니다. 탈퇴하면 배송지, 쿠폰, 찜, 체형, 리뷰 등 모든 정보가 삭제되며 복구할 수 없습니다. 단, 주문 내역은 관련 법령에 따라 일정 기간 보관됩니다."
+                            "마이페이지 > 프로필 수정 하단의 「회원 탈퇴」에서 탈퇴할 수 있어요. 탈퇴하면 배송지, 쿠폰, 찜, 체형, 리뷰 등 모든 정보가 삭제되며 복구할 수 없어요. 단, 주문 내역은 관련 법령에 따라 일정 기간 보관돼요."
                     ),
                     faq(
                             "기타",
                             "문의 답변은 언제 받을 수 있나요?",
-                            "영업일 기준 1~2일 이내에 답변드립니다. 답변은 1:1 문의 > 문의내역에서 확인할 수 있습니다."
+                            "영업일 기준 1~2일 이내에 답변드려요. 답변은 1:1 문의 > 문의내역에서 확인할 수 있어요."
                     )
             )
     );
@@ -1137,6 +1172,7 @@ public class MyPageStore {
     }
 
     public static List<Order> getOrders(int status, int months) {
+        advanceDeliveries();
         List<Order> result = new ArrayList<>();
         String from = months > 0 ? monthsAgo(months) : "";
 
@@ -1174,6 +1210,8 @@ public class MyPageStore {
         if (orderNo == null) {
             return null;
         }
+
+        advanceDeliveries();
 
         for (Order order : orders) {
             if (order.orderNo.equals(orderNo)) {
@@ -1480,6 +1518,7 @@ public class MyPageStore {
 
     // 리뷰
     public static List<Order> getWritableReviewOrders() {
+        advanceDeliveries();
         List<Order> result = new ArrayList<>();
 
         for (Order order : orders) {
@@ -1592,6 +1631,59 @@ public class MyPageStore {
     // 공통
     public static String formatPrice(int price) {
         return new DecimalFormat("#,###").format(price) + "원";
+    }
+
+    /**
+     * (임시) 배송 서버가 없어서 결제 후 이 일수가 지나면 자동으로 배송완료로 본다.
+     * 실제 배송 연동이 생기면 advanceDeliveries와 함께 지우고 서버 상태를 쓴다.
+     */
+    public static final int DELIVERY_DAYS = 3;
+
+    /** 반품·교환을 신청할 수 있는 기간(일). 배송완료일(= 주문일 + DELIVERY_DAYS)부터 센다 */
+    public static final int RETURN_DAYS = 7;
+
+    /** 결제 후 DELIVERY_DAYS일이 지난 주문(결제완료·상품준비중·배송중)을 배송완료로 바꾼다. 바뀐 게 있으면 저장한다 */
+    private static void advanceDeliveries() {
+        long now = System.currentTimeMillis();
+        boolean changed = false;
+
+        for (Order order : orders) {
+            if ((order.status == STATUS_PAID || order.status == STATUS_READY
+                    || order.status == STATUS_SHIPPING)
+                    && isDelivered(order.orderDate, now)) {
+                order.status = STATUS_DONE;
+                changed = true;
+            }
+        }
+
+        if (changed && storage != null) {
+            save();
+        }
+    }
+
+    /** 주문일("yyyy.MM.dd")로부터 DELIVERY_DAYS일이 지났으면 true. 날짜를 읽을 수 없으면 false */
+    public static boolean isDelivered(String orderDate, long nowMillis) {
+        long days = daysSince(orderDate, nowMillis);
+        return days >= DELIVERY_DAYS;
+    }
+
+    /** 주문일부터 지난 날 수. 날짜를 읽을 수 없으면 -1 */
+    private static long daysSince(String orderDate, long nowMillis) {
+        try {
+            Date ordered = new SimpleDateFormat("yyyy.MM.dd", Locale.KOREA).parse(orderDate);
+            if (ordered == null) {
+                return -1;
+            }
+            return (nowMillis - ordered.getTime()) / (24L * 60 * 60 * 1000);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /** 배송완료일(주문일 + DELIVERY_DAYS)로부터 RETURN_DAYS일이 지났으면 true. 날짜를 읽을 수 없으면 false(막지 않는다) */
+    public static boolean isReturnPeriodOver(String orderDate, long nowMillis) {
+        long days = daysSince(orderDate, nowMillis);
+        return days >= 0 && days > DELIVERY_DAYS + RETURN_DAYS;
     }
 
     public static String today() {

@@ -5,9 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,12 +13,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.capstone.R;
 import com.example.capstone.data.BodyInput;
 import com.example.capstone.data.BodyMeasurementContract;
-import com.example.capstone.data.BodyPrior;
-import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.login.LoginGate;
 import com.example.capstone.login.LoginSession;
 
-/** 팀원 피팅 진입: 키·몸무게·나이 → 체형 자가진단. */
+/** 체형 분석 진입: 설문 시작 (키·몸무게·나이는 사진으로 치수를 잴 때 받는다). */
 public class FittingActivity extends AppCompatActivity {
 
     /** true면 체형분석 탭의 첫 화면(저장한 체형이 없을 때)으로 연 것 → 뒤로 버튼을 숨기고 제목 "체형 분석" */
@@ -64,14 +60,9 @@ public class FittingActivity extends AppCompatActivity {
     }
 
     private void startFitting() {
-        float heightCm = readHeight();
-        if (heightCm <= 0f) {
-            return;
-        }
-        if (!readWeightAndAge(false)) {
-            return;
-        }
-        notifyIfNoEstimate(heightCm);
+        // 설문(골격 체형 진단)에는 키·몸무게·나이를 쓰지 않는다. 그 값은 사진으로 치수를 잴 때 받는다
+        // (BodyInputDialog). 지난번에 넣은 키가 있으면 설문 카드에 같이 저장하도록 넘긴다.
+        float heightCm = Math.max(0f, BodyInput.height(this));
 
         // 비회원이면 설문 전에 "결과는 앱을 실행하는 동안에만 저장돼요" 안내를 먼저 보여 준다
         if (!LoginSession.isLoggedIn(this)
@@ -124,100 +115,5 @@ public class FittingActivity extends AppCompatActivity {
                     .putBoolean(KEY_SKIP_GUEST_NOTICE, true)
                     .apply();
         }
-    }
-
-    /**
-     * 몸무게(kg)·나이를 확인해 저장한다. 잘못되면 안내 후 false.
-     * useSavedWhenBlank가 true면 비어 있을 때 지난번 값을 쓴다.
-     */
-    private boolean readWeightAndAge(boolean useSavedWhenBlank) {
-        EditText editWeight = findViewById(R.id.editWeight);
-        EditText editAge = findViewById(R.id.editAge);
-        String weightText = editWeight.getText().toString().trim();
-        String ageText = editAge.getText().toString().trim();
-
-        float weightKg;
-        if (weightText.isEmpty()) {
-            weightKg = useSavedWhenBlank ? BodyInput.weight(this) : -1f;
-            if (weightKg <= 0f) {
-                Toast.makeText(this, "몸무게를 입력해주세요.", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        } else {
-            try {
-                weightKg = Float.parseFloat(weightText);
-            } catch (NumberFormatException e) {
-                Toast.makeText(this, "몸무게를 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-            if (weightKg < 25f || weightKg > 150f) {
-                Toast.makeText(this, "몸무게를 25~150kg 사이로 입력해주세요.", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
-
-        float age;
-        if (ageText.isEmpty()) {
-            age = useSavedWhenBlank ? BodyInput.age(this) : -1f;
-            if (age <= 0f) {
-                Toast.makeText(this, "나이를 입력해주세요.", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        } else {
-            try {
-                age = Integer.parseInt(ageText);
-            } catch (NumberFormatException e) {
-                Toast.makeText(this, "나이를 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-            if (age < BodyPrior.INPUT_AGE_MIN || age > BodyPrior.INPUT_AGE_MAX) {
-                Toast.makeText(this, "나이를 10~99세 사이로 입력해주세요.", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        }
-
-        BodyInput.save(this, -1f, weightKg, age);
-        // 입력한 값으로 사이즈 알림용 치수를 바로 갱신한다
-        BodyProfileStore.syncActiveProfile(this);
-        return true;
-    }
-
-    /** 입력한 값이 치수를 어림할 수 있는 범위 밖이면(저장은 된다) 사진 결과만 쓰게 된다고 미리 알린다. */
-    private void notifyIfNoEstimate(float heightCm) {
-        BodyPrior.Result prior = BodyInput.prior(this, heightCm);
-        if (prior == null) {
-            Toast.makeText(this,
-                    "입력한 값이 어림 가능한 범위 밖이라 사진 결과만 보여 드려요.",
-                    Toast.LENGTH_LONG).show();
-        } else if (prior.reference) {
-            Toast.makeText(this,
-                    "키·나이가 확인한 범위 밖이라 어림한 치수는 참고용이에요.",
-                    Toast.LENGTH_LONG).show();
-        }
-    }
-
-    /** 입력한 키를 확인해 저장하고 돌려준다. 잘못된 값이면 안내 후 -1. */
-    private float readHeight() {
-        EditText editHeight = findViewById(R.id.editHeight);
-        String heightText = editHeight.getText().toString().trim();
-        if (heightText.isEmpty()) {
-            Toast.makeText(this, "키를 입력해주세요.", Toast.LENGTH_SHORT).show();
-            return -1f;
-        }
-
-        float heightCm;
-        try {
-            heightCm = Float.parseFloat(heightText);
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "키를 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
-            return -1f;
-        }
-        if (heightCm < 100f || heightCm > 230f) {
-            Toast.makeText(this, "키를 100~230cm 사이로 입력해주세요.", Toast.LENGTH_SHORT).show();
-            return -1f;
-        }
-
-        BodyInput.save(this, heightCm, -1f, -1f);
-        return heightCm;
     }
 }

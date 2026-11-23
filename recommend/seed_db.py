@@ -80,12 +80,12 @@ def seed(conn, items):
 def main():
     url = database_url()
     if not url:
-        sys.exit("DB 주소가 없어요. DATABASE_URL 환경 변수나 저장소 맨 위 database_url.txt에 넣어 주세요")
+        sys.exit("DB 주소가 없습니다. DATABASE_URL 환경 변수나 저장소 맨 위 database_url.txt에 넣어 주십시오")
     import psycopg
     items = load_items()
     with psycopg.connect(url, prepare_threshold=None) as conn:
         seed(conn, items)
-    print(f"시연용 상품 {len(items)}개를 DB에 넣었어요")
+    print(f"시연용 상품 {len(items)}개를 DB에 넣었습니다")
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ sys.path.insert(0, ROOT)
 
 ADMIN_URL = os.environ.get("TEST_DATABASE_URL")
 if not ADMIN_URL:
-    print("TEST_DATABASE_URL이 없어서 DB 테스트를 건너뛰어요 (로컬 PostgreSQL 주소를 넣으면 실행)")
+    print("TEST_DATABASE_URL이 없어서 DB 테스트를 건너뜁니다 (로컬 PostgreSQL 주소를 넣으면 실행)")
     raise SystemExit(0)
 
 import psycopg  # noqa: E402

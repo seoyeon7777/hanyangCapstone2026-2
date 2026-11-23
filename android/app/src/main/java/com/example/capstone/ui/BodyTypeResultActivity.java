@@ -81,7 +81,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                         + "• 어깨·팔꿈치·무릎이 보이는 옷 (롱코트, 긴 치마, 두꺼운 패딩은 피하기)\n"
                         + "• 팔은 몸에서 살짝 벌리고, 단색 배경 앞에서 전신이 나오게\n"
                         + "• 머리를 묶으면 머리 꼭대기가 더 정확히 잡혀요\n"
-                        + "\n옷이 헐렁하면 가슴·허리·골반 둘레가 실제보다 크게 나와요."
+                        + "\n옷이 헐렁하면 가슴·허리·엉덩이 둘레가 실제보다 크게 나와요."
         );
         message.setTextSize(14f);
         message.setLineSpacing(0f, 1.2f);
@@ -272,16 +272,10 @@ public class BodyTypeResultActivity extends AppCompatActivity {
         // 자세한 신체 분석 → 정면·옆면 사진 고르기. 로그인해야 할 수 있다 (비회원이면 로그인 안내 → 로그인 뒤 이어서 시작)
         btnYes.setOnClickListener(v -> LoginGate.require(this,
                 "사진으로 치수를 측정하려면 로그인해야 해요.\n로그인하면 방금 한 설문 결과도 내 체형으로 저장돼요.",
-                () -> {
+                () -> BodyInputDialog.show(this, userHeightCm, height -> {
 
-                    if (userHeightCm < 100f || userHeightCm > 230f) {
-                        Toast.makeText(
-                                this,
-                                "키 정보가 없습니다. 피팅 시작 화면에서 키를 다시 입력해주세요.",
-                                Toast.LENGTH_LONG
-                        ).show();
-                        return;
-                    }
+                    // 설문 뒤 이 창에서 받은 키 (설문에는 키를 안 쓴다)
+                    userHeightCm = height;
 
                     // 비회원이 여기서 로그인하고 이어가는 경우: 방금 한 설문 결과를 지금 계정의 내 체형으로 저장한다
                     saveSurveyToAccountIfNeeded();
@@ -293,7 +287,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
                     } else {
                         showClothesTip();
                     }
-                }));
+                })));
 
         // 이대로 저장하기: 사진 없이 지금 결과만 '내 체형'으로 저장
         findViewById(R.id.btnSaveSurvey).setOnClickListener(v -> saveSurvey());

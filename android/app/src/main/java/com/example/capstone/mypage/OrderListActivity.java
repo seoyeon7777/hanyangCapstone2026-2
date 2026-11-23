@@ -240,8 +240,17 @@ public class OrderListActivity extends AppCompatActivity {
 
         btnCancel.setOnClickListener(v ->
                 startActivity(ClaimRequestActivity.newIntent(this, order.orderNo, true)));
-        btnReturn.setOnClickListener(v ->
-                startActivity(ClaimRequestActivity.newIntent(this, order.orderNo, false)));
+        btnReturn.setOnClickListener(v -> {
+            // 배송완료일(주문일 + 3일)로부터 7일이 지났으면 신청을 받지 않는다 (FAQ·약관과 같은 기준)
+            if (MyPageStore.isReturnPeriodOver(order.orderDate, System.currentTimeMillis())) {
+                AppDialog.alert(this, "반품·교환 기간이 지났어요",
+                        "배송완료 후 " + MyPageStore.RETURN_DAYS
+                                + "일 이내에만 신청할 수 있어요. 그 뒤에는 1:1 문의로 알려 주세요.",
+                        "확인");
+                return;
+            }
+            startActivity(ClaimRequestActivity.newIntent(this, order.orderNo, false));
+        });
         btnTracking.setOnClickListener(v -> showTracking(order));
         btnReview.setOnClickListener(v ->
                 startActivity(ReviewWriteActivity.newWriteIntent(this, order.orderNo)));
@@ -254,7 +263,7 @@ public class OrderListActivity extends AppCompatActivity {
         // [여기에 DB 입력] 주문의 택배사/송장번호/배송 상태 조회 (delivery)
         String message;
         if (TextUtils.isEmpty(order.trackingNo)) {
-            message = "아직 송장번호가 등록되지 않았습니다.";
+            message = "아직 송장번호가 등록되지 않았어요.";
         } else {
             message = "택배사: " + order.courier
                     + "\n송장번호: " + order.trackingNo

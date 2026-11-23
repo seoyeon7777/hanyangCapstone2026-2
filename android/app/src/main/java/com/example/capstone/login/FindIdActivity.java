@@ -2,6 +2,7 @@ package com.example.capstone.login;
 
 import com.example.capstone.R;
 import com.example.capstone.data.LocalAccounts;
+import com.example.capstone.ui.EmailCheck;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -32,7 +33,8 @@ public class FindIdActivity extends AppCompatActivity {
 
     private Button btnByPhone, btnByEmail;
     private TextView tvContactLabel;
-    private EditText etPhone, etAuthCode;
+    private PhoneFields phoneFields;      // 휴대폰으로 찾을 때 (010 + 4자리 + 4자리)
+    private EditText etPhone, etAuthCode;  // etPhone은 이메일로 찾을 때만 보인다
     private Button btnRequestAuth, btnVerifyCode, btnConfirm;
 
     private LinearLayout containerResult;
@@ -66,6 +68,7 @@ public class FindIdActivity extends AppCompatActivity {
         btnByEmail = findViewById(R.id.btnByEmail);
 
         tvContactLabel = findViewById(R.id.tvContactLabel);
+        phoneFields = new PhoneFields(findViewById(R.id.phoneFields));
         etPhone = findViewById(R.id.etPhone);
         etAuthCode = findViewById(R.id.etAuthCode);
 
@@ -92,12 +95,12 @@ public class FindIdActivity extends AppCompatActivity {
 
         if (byPhone) {
             tvContactLabel.setText("휴대폰 번호");
-            etPhone.setHint("010-0000-0000");
-            PhoneInput.attach(etPhone);
+            phoneFields.setVisible(true);
+            etPhone.setVisibility(View.GONE);
         } else {
             tvContactLabel.setText("이메일");
-            etPhone.setHint("example@gmail.com");
-            PhoneInput.detach(etPhone);
+            phoneFields.setVisible(false);
+            etPhone.setVisibility(View.VISIBLE);
             etPhone.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
         }
     }
@@ -136,6 +139,7 @@ public class FindIdActivity extends AppCompatActivity {
         }
         byPhone = phone;
         etPhone.setText("");
+        phoneFields.clear();
         resetFlow();
         applyMethod();
     }
@@ -174,12 +178,16 @@ public class FindIdActivity extends AppCompatActivity {
 
         // 인증확인 버튼
         // 인증번호를 받은 뒤 번호·이메일을 고치면 처음부터 다시 (처음 요청한 계정이 그대로 인증되는 것을 막는다)
+        Runnable contactChanged = () -> {
+            if (sentTarget != null && !sentTarget.equals(normalizedContact())) {
+                resetFlow();
+            }
+        };
+        phoneFields.setOnChanged(contactChanged);
         etPhone.addTextChangedListener(new SimpleWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (sentTarget != null && !sentTarget.equals(normalizedContact())) {
-                    resetFlow();
-                }
+                contactChanged.run();
             }
         });
         btnVerifyCode.setOnClickListener(v -> verifyAuthCode());
@@ -196,11 +204,41 @@ public class FindIdActivity extends AppCompatActivity {
         if (contact == null) {
             Toast.makeText(this, byPhone
                             ? "휴대폰 번호를 정확히 입력해주세요."
-                            : "올바른 이메일 형식이 아닙니다. (예: example@gmail.com)",
+                            : EmailCheck.FORMAT_ERROR,
                     Toast.LENGTH_SHORT).show();
             return;
         }
 
+        if (byPhone) {
+            sendAuthCodeTo(contact);
+            return;
+        }
+
+        // 이메일은 다른 이메일 입력과 같은 방식(형식 + 도메인)으로 확인한 뒤 조회한다
+        btnRequestAuth.setEnabled(false);
+        EmailCheck.verify(contact, new EmailCheck.Listener() {
+            @Override
+            public void onValid() {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                btnRequestAuth.setEnabled(true);
+                sendAuthCodeTo(contact);
+            }
+
+            @Override
+            public void onInvalid(String message) {
+                if (isFinishing() || isDestroyed()) {
+                    return;
+                }
+                btnRequestAuth.setEnabled(true);
+                Toast.makeText(FindIdActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    /** 확인된 연락처로 가입한 계정을 찾아 인증번호를 보낸다 */
+    private void sendAuthCodeTo(String contact) {
         // [여기에 DB 입력] 이 휴대폰·이메일로 가입된 회원 조회 (users)
         LocalAccounts.Account account = byPhone
                 ? LocalAccounts.findAccountByPhone(this, contact)
@@ -208,15 +246,18 @@ public class FindIdActivity extends AppCompatActivity {
 
         if (account == null) {
             Toast.makeText(this, byPhone
-                            ? "이 휴대폰 번호로 가입된 계정이 없습니다."
-                            : "이 이메일로 가입된 계정이 없습니다.",
+                            ? "이 휴대폰 번호로 가입된 계정이 없어요."
+                            : "이 이메일로 가입된 계정이 없어요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }
 
-        String shown = byPhone ? LocalAccounts.formatPhone(contact) : contact;
-        etPhone.setText(shown);
-        etPhone.setSelection(shown.length());
+        if (byPhone) {
+            phoneFields.setNumber(contact);
+        } else {
+            etPhone.setText(contact);
+            etPhone.setSelection(contact.length());
+        }
         resetFlow();
 
         // [여기에 DB 입력] 발송한 인증번호를 만료시각과 함께 저장 (auth_codes)
@@ -249,7 +290,7 @@ public class FindIdActivity extends AppCompatActivity {
         btnVerifyCode.setText("인증완료");
         btnVerifyCode.setEnabled(false);
         setConfirmEnabled(true);
-        Toast.makeText(this, "인증이 완료되었습니다.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "인증이 완료되었어요.", Toast.LENGTH_SHORT).show();
     }
 
     /** 본인확인을 마친 뒤 아이디를 화면에 보여준다. */
@@ -280,15 +321,15 @@ public class FindIdActivity extends AppCompatActivity {
 
     /** 입력한 연락처를 정규화한다 (전화번호는 010-0000-0000, 이메일은 소문자). 올바르지 않으면 null */
     private String normalizedContact() {
-        String input = etPhone.getText().toString().replaceAll("\\s", "");
-
         if (byPhone) {
-            return LocalAccounts.normalizePhone(input);
+            return phoneFields.number();
         }
+
+        String input = etPhone.getText().toString().replaceAll("\\s", "");
 
         String email = input.toLowerCase(Locale.ROOT);
         if (email.indexOf('@') <= 0 || email.indexOf('@') != email.lastIndexOf('@')
-                || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                || !EmailCheck.isValidFormat(email)) {
             return null;
         }
         return email;

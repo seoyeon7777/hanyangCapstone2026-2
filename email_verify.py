@@ -71,7 +71,7 @@ def smtp_config():
         if os.environ.get(key):
             config[key] = os.environ[key]
     if not (config.get("SMTP_HOST") and config.get("SMTP_USER") and config.get("SMTP_PASSWORD")):
-        raise MailConfigError("메일 서버 설정이 없어요 (email_smtp.txt 또는 SMTP_ 환경변수)")
+        raise MailConfigError("메일 서버 설정이 없습니다 (email_smtp.txt 또는 SMTP_ 환경변수)")
     return config
 
 
@@ -171,7 +171,7 @@ def check():
     """회원가입 이메일(선택)용: 형식 + 도메인이 실제로 있는지. 확인을 못 하면 exists는 null"""
     body = _json_body()
     if body is None:
-        return _error("요청 본문은 JSON 객체여야 해요", 400)
+        return _error("요청 본문은 JSON 객체여야 합니다", 400)
     email = normalize_email(body.get("email"))
     if email is None:
         return _error("이메일 형식이 올바르지 않아요", 400)
@@ -197,7 +197,7 @@ def _json_body():
 def send():
     body = _json_body()
     if body is None:
-        return _error("요청 본문은 JSON 객체여야 해요", 400)
+        return _error("요청 본문은 JSON 객체여야 합니다", 400)
     email = normalize_email(body.get("email"))
     if email is None:
         return _error("이메일 형식이 올바르지 않아요", 400)
@@ -269,10 +269,10 @@ def _page(inner):
 def status():
     body = _json_body()
     if body is None:
-        return _error("요청 본문은 JSON 객체여야 해요", 400)
+        return _error("요청 본문은 JSON 객체여야 합니다", 400)
     request_id = body.get("request_id")
     if not isinstance(request_id, str):
-        return _error("request_id가 필요해요", 400)
+        return _error("request_id가 필요합니다", 400)
     with _LOCK:
         _forget_expired(time.time())
         item = _REQUESTS.get(request_id)

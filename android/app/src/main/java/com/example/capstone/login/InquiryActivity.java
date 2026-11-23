@@ -50,7 +50,7 @@ public class InquiryActivity extends AppCompatActivity {
     private static final int COLOR_TAB_INACTIVE = Color.parseColor("#AAAAAA");
 
     /** 문의 유형 첫 항목은 선택 안내용이라 실제 유형이 아니다. */
-    private static final String TYPE_PLACEHOLDER = "문의 유형을 선택해주세요";
+    private static final String TYPE_PLACEHOLDER = "문의 유형을 선택해 주세요";
 
     /** 내용 최대 글자수 (레이아웃의 maxLength와 같은 값) */
     private static final int CONTENT_MAX_LENGTH = 1000;
@@ -225,7 +225,7 @@ public class InquiryActivity extends AppCompatActivity {
         // [여기에 DB 입력] 답변 내용 조회 (inquiry_answers) - 지금은 답변 저장소가 없어 안내 문구만
         ((TextView) view.findViewById(R.id.tvDetailAnswer)).setText(answered
                 ? "답변이 등록되었어요."
-                : "아직 답변이 등록되지 않았습니다.");
+                : "아직 답변이 등록되지 않았어요.");
 
         view.findViewById(R.id.btnCloseSheet).setOnClickListener(v -> sheet.dismiss());
         sheet.show();
@@ -269,7 +269,7 @@ public class InquiryActivity extends AppCompatActivity {
         // [여기에 DB 입력] 저장에 성공했을 때만 아래 화면 전환을 할 것
         MyPageStore.addInquiry(type, title, content);
         renderHistory();
-        Toast.makeText(this, "문의가 등록되었습니다.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "문의가 등록되었어요.", Toast.LENGTH_SHORT).show();
 
         clearWriteForm();
         showHistoryTab();

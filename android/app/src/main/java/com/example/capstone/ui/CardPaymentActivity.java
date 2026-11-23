@@ -109,11 +109,42 @@ public class CardPaymentActivity extends AppCompatActivity {
             if (!cbConfirm.isChecked()) {
                 return;
             }
-            Intent result = new Intent();
-            result.putExtra(RESULT_CARD, selectedCard);
-            result.putExtra(RESULT_INSTALLMENT, String.valueOf(spInstallment.getSelectedItem()));
-            setResult(RESULT_OK, result);
-            finish();
+            // 전자영수증 이메일은 선택이지만, 넣었으면 형식이 맞아야 한다
+            EditText etReceipt = findViewById(R.id.etConfirmEmail);
+            String receiptEmail = etReceipt.getText().toString().trim();
+            Runnable done = () -> {
+                Intent result = new Intent();
+                result.putExtra(RESULT_CARD, selectedCard);
+                result.putExtra(RESULT_INSTALLMENT, String.valueOf(spInstallment.getSelectedItem()));
+                setResult(RESULT_OK, result);
+                finish();
+            };
+            if (receiptEmail.isEmpty()) {
+                done.run();
+                return;
+            }
+            // 형식과 도메인을 가입·프로필 이메일과 같은 방식으로 확인한다
+            btnPay.setEnabled(false);
+            EmailCheck.verify(receiptEmail, new EmailCheck.Listener() {
+                @Override
+                public void onValid() {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+                    done.run();
+                }
+
+                @Override
+                public void onInvalid(String message) {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+                    btnPay.setEnabled(true);
+                    android.widget.Toast.makeText(CardPaymentActivity.this, message,
+                            android.widget.Toast.LENGTH_SHORT).show();
+                    etReceipt.requestFocus();
+                }
+            });
         });
 
         setButtonEnabled(btnNext, false);

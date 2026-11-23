@@ -87,7 +87,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
-                android:text="키·몸무게·나이를 입력해주세요"
+                android:text="설문으로 골격 체형을 알아봐요"
                 android:textColor="#111111"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -96,52 +96,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="7dp"
-                android:text="입력한 값은 신체 치수를 추정할 때 기준값으로 사용됩니다. 몸무게는 최근에 잰 값을 정확히 넣을수록 치수가 정확해져요."
+                android:text="질문에 답하면 스트레이트·웨이브·내추럴 중 나의 골격 체형을 알려 드려요. 사진으로 치수까지 재고 싶다면 설문 뒤에 키·몸무게·나이를 입력해요."
                 android:textColor="#777777"
                 android:textSize="13sp" />
-
-            <EditText
-                android:id="@+id/editHeight"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="18dp"
-                android:backgroundTint="#111111"
-                android:hint="키를 입력하세요 (cm)"
-                android:inputType="numberDecimal"
-                android:paddingStart="4dp"
-                android:paddingEnd="4dp"
-                android:textColor="#000000"
-                android:textColorHint="#999999"
-                android:textSize="16sp" />
-
-            <EditText
-                android:id="@+id/editWeight"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="6dp"
-                android:backgroundTint="#111111"
-                android:hint="몸무게를 입력하세요 (kg)"
-                android:inputType="numberDecimal"
-                android:paddingStart="4dp"
-                android:paddingEnd="4dp"
-                android:textColor="#000000"
-                android:textColorHint="#999999"
-                android:textSize="16sp" />
-
-            <EditText
-                android:id="@+id/editAge"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="6dp"
-                android:backgroundTint="#111111"
-                android:hint="나이를 입력하세요 (만 나이)"
-                android:inputType="number"
-                android:maxLength="2"
-                android:paddingStart="4dp"
-                android:paddingEnd="4dp"
-                android:textColor="#000000"
-                android:textColorHint="#999999"
-                android:textSize="16sp" />
 
             <Button
                 android:id="@+id/btnStartFitting"
@@ -149,7 +106,7 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="26dp"
                 android:backgroundTint="#111111"
-                android:text="체형 분석 시작하기"
+                android:text="설문 시작하기"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
@@ -210,7 +167,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="키·몸무게·나이 입력"
+                            android:text="체형 자가진단"
                             android:textColor="#111111"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -219,7 +176,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="신체 치수를 추정하기 위한 기준값 입력"
+                            android:text="15가지 질문으로 골격 체형 특징 분석"
                             android:textColor="#888888"
                             android:textSize="12sp" />
 
@@ -254,7 +211,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="체형 자가진단"
+                            android:text="정밀 체형 측정 (선택)"
                             android:textColor="#111111"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -263,7 +220,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="7가지 질문으로 골격 체형 특징 분석"
+                            android:text="키·몸무게·나이 입력 후 정면·옆면 전신 사진으로 신체 치수 분석"
                             android:textColor="#888888"
                             android:textSize="12sp" />
 
@@ -284,50 +241,6 @@
                         android:background="@drawable/bg_step_circle"
                         android:gravity="center"
                         android:text="3"
-                        android:textColor="#FFFFFF"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="정밀 체형 측정"
-                            android:textColor="#111111"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="정면·옆면 전신 사진으로 신체 치수 분석"
-                            android:textColor="#888888"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:background="@drawable/bg_step_circle"
-                        android:gravity="center"
-                        android:text="4"
                         android:textColor="#FFFFFF"
                         android:textSize="13sp"
                         android:textStyle="bold" />
@@ -366,7 +279,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:gravity="center"
-                android:text="정밀 체형 측정은 자가진단 후 선택할 수 있습니다."
+                android:text="정밀 체형 측정은 자가진단 후 선택할 수 있어요."
                 android:textColor="#999999"
                 android:textSize="12sp" />
 

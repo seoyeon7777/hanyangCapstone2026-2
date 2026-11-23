@@ -424,8 +424,10 @@ public class BodyTypeActivity extends AppCompatActivity {
         progressBar.setIndicatorColor(gaugeColor(currentQuestion));
 
         String notice = "";
-        if (currentQuestion >= LAST_THREE_FROM) {
-            notice = "설문 3번만 더 하시면 더 정확한 결과를 얻게 돼요!";
+        if (number >= total) {
+            notice = "마지막 문항이에요! 답하고 결과를 확인해 보세요";
+        } else if (currentQuestion >= LAST_THREE_FROM) {
+            notice = "설문 " + (total - currentQuestion) + "번만 더 하시면 더 정확한 결과를 얻게 돼요!";
         } else if (currentQuestion >= ALMOST_DONE_FROM) {
             notice = "조금만 더 하면 설문이 완성돼요!";
         }
@@ -563,8 +565,8 @@ public class BodyTypeActivity extends AppCompatActivity {
                                 BodyTypeActivity.this,
                                 true,
                                 "체형 진단을 하지 못했어요",
-                                message + "\n답은 저장해 두었어요. 추천 서버가 켜져 있는지 확인하고 다시 시도해 주세요.",
-                                "나중에",
+                                message + "\n설문 답변은 저장해 두었어요.",
+                                "나가기",
                                 BodyTypeActivity.this::finish,
                                 "다시 시도",
                                 BodyTypeActivity.this::showResult
@@ -789,7 +791,7 @@ public class BodyTypeActivity extends AppCompatActivity {
                 .getFloat(AccountPrefs.key(context, AccountPrefs.SURVEY_HEIGHT), 0f);
     }
 
-    /** 예) "웨이브 체형 · 키 170cm · 10.19 저장" */
+    /** 예) "웨이브 체형 · 키 170cm · 10.19 저장" (키를 안 받았으면 "웨이브 체형 · 10.19 저장") */
     public static String lastSurveySummary(Context context) {
 
         SimpleDateFormat format =
@@ -797,9 +799,8 @@ public class BodyTypeActivity extends AppCompatActivity {
 
         if (!LoginSession.isLoggedIn(context)) {
             return (GuestSurvey.type() >= 0 ? typeName(GuestSurvey.type()) : "진단 전")
-                    + " · 키 "
-                    + Math.round(GuestSurvey.heightCm())
-                    + "cm · "
+                    + heightPart(GuestSurvey.heightCm())
+                    + " · "
                     + format.format(new Date(GuestSurvey.savedAt()))
                     + " 저장";
         }
@@ -812,11 +813,14 @@ public class BodyTypeActivity extends AppCompatActivity {
                 : "진단 전";
 
         return type
-                + " · 키 "
-                + Math.round(prefs.getFloat(AccountPrefs.key(context, AccountPrefs.SURVEY_HEIGHT), 0f))
-                + "cm · "
+                + heightPart(prefs.getFloat(AccountPrefs.key(context, AccountPrefs.SURVEY_HEIGHT), 0f))
+                + " · "
                 + format.format(new Date(prefs.getLong(AccountPrefs.key(context, AccountPrefs.SURVEY_AT), 0L)))
                 + " 저장";
+    }
+
+    private static String heightPart(float heightCm) {
+        return heightCm > 0f ? " · 키 " + Math.round(heightCm) + "cm" : "";
     }
 
     /** 최근 설문을 답이 선택된 상태로 1번 문항부터 다시 연다. */

@@ -49,7 +49,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="가입할 때 등록한 휴대폰이나 이메일로 아이디를 찾을 수 있습니다."
+        android:text="가입할 때 등록한 휴대폰이나 이메일로 아이디를 찾을 수 있어요."
         android:textSize="13sp"
         android:textColor="@color/black"
         android:layout_marginTop="8dp"
@@ -98,17 +98,29 @@
         android:orientation="horizontal"
         android:layout_marginBottom="16dp">
 
-        <EditText
-            android:id="@+id/etPhone"
+        <FrameLayout
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="010-0000-0000"
-            android:inputType="number"
-            android:background="@drawable/bg_edit"
-            android:paddingHorizontal="16dp"
-            android:textSize="14sp"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp">
+
+            <include
+                android:id="@+id/phoneFields"
+                layout="@layout/view_phone_fields"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/etPhone"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:visibility="gone"
+                android:hint="example@gmail.com"
+                android:inputType="textEmailAddress"
+                android:background="@drawable/bg_edit"
+                android:paddingHorizontal="16dp"
+                android:textSize="14sp" />
+        </FrameLayout>
 
         <Button
             android:id="@+id/btnRequestAuth"
@@ -140,7 +152,7 @@
             android:id="@+id/etAuthCode"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:hint="인증번호를 입력해주세요."
+            android:hint="인증번호를 입력해 주세요."
             android:inputType="number"
             android:maxLength="4"
             android:background="@drawable/bg_edit"
@@ -187,7 +199,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="회원님의 계정입니다"
+            android:text="회원님의 계정이에요"
             android:textSize="13sp"
             android:textColor="#5A5A5A"/>
 

@@ -40,7 +40,7 @@
             <TextView
                 android:id="@+id/tvEmpty"
                 style="@style/MyPageEmpty"
-                android:text="등록된 배송지가 없습니다.\n배송지를 추가해주세요." />
+                android:text="등록된 배송지가 없어요.\n배송지를 추가해 주세요." />
         </LinearLayout>
     </ScrollView>
 

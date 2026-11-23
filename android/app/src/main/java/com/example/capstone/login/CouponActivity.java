@@ -265,7 +265,7 @@ public class CouponActivity extends AppCompatActivity {
         // 화면을 열어 둔 사이에 기간이 지난 경우
         if (CouponExpiry.isExpired(coupon[4], System.currentTimeMillis())) {
             markExpired(button);
-            Toast.makeText(this, "기간이 지난 쿠폰입니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "기간이 지난 쿠폰이에요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -273,12 +273,12 @@ public class CouponActivity extends AppCompatActivity {
         //                 저장에 실패하면 버튼을 원래 상태로 되돌릴 것
         if (!MyPageStore.receiveCoupon(coupon[0])) {
             markReceived(button);
-            Toast.makeText(this, "이미 받은 쿠폰입니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "이미 받은 쿠폰이에요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         markReceived(button);
-        Toast.makeText(this, "쿠폰을 받았습니다.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "쿠폰을 받았어요.", Toast.LENGTH_SHORT).show();
     }
 
     /** 화면을 다시 열었을 때, 이전에 받은 쿠폰을 받기 버튼 상태에 다시 반영한다. */
@@ -319,13 +319,13 @@ public class CouponActivity extends AppCompatActivity {
         }
 
         if (code.length() < COUPON_CODE_MIN_LENGTH) {
-            Toast.makeText(this, "쿠폰번호는 " + COUPON_CODE_MIN_LENGTH + "자리 이상이어야 합니다.",
+            Toast.makeText(this, "쿠폰번호는 " + COUPON_CODE_MIN_LENGTH + "자리 이상이어야 해요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (!code.matches("[A-Za-z0-9-]+")) {
-            Toast.makeText(this, "쿠폰번호는 영문, 숫자, - 만 사용할 수 있습니다.",
+            Toast.makeText(this, "쿠폰번호는 영문, 숫자, - 만 사용할 수 있어요.",
                     Toast.LENGTH_SHORT).show();
             return;
         }
@@ -335,6 +335,6 @@ public class CouponActivity extends AppCompatActivity {
         // [여기에 DB 입력] 입력한 쿠폰번호가 있는지, 기간이 지났는지, 이미 등록했는지 확인 (coupons)
         //                 문제가 있으면 안내 후 return, 괜찮으면 회원 쿠폰으로 저장 (user_coupons)
         etCouponCode.setText("");
-        Toast.makeText(this, normalized + " 쿠폰이 등록되었습니다.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, normalized + " 쿠폰이 등록되었어요.", Toast.LENGTH_SHORT).show();
     }
 }

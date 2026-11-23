@@ -106,7 +106,7 @@
                 android:background="@drawable/bg_info_box"
                 android:lineSpacingExtra="4dp"
                 android:padding="16dp"
-                android:text="· 카드 정보는 결제대행사(PG)에 안전하게 보관되며, 앱에는 카드번호 끝 4자리만 저장됩니다.\n· 기본 결제 수단은 주문서에서 자동으로 선택됩니다."
+                android:text="· 카드 정보는 결제대행사(PG)에 안전하게 보관되며, 앱에는 카드번호 끝 4자리만 저장돼요.\n· 기본 결제 수단은 주문서에서 자동으로 선택돼요."
                 android:textColor="#5A5A5A"
                 android:textSize="12sp" />
 

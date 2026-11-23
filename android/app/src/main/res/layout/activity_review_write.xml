@@ -88,7 +88,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="24dp"
-                android:text="별점을 선택해주세요" />
+                android:text="별점을 선택해 주세요" />
 
             <!-- ============ 내용 ============ -->
             <TextView
@@ -101,7 +101,7 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_edit"
                 android:gravity="top|start"
-                android:hint="사이즈, 핏, 색감 등 솔직한 후기를 남겨주세요. (10자 이상)"
+                android:hint="사이즈, 핏, 색감 등 솔직한 후기를 남겨 주세요. (10자 이상)"
                 android:inputType="textMultiLine"
                 android:maxLength="500"
                 android:minHeight="180dp"
