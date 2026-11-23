@@ -194,6 +194,9 @@ public final class RecommendApi {
 
         JSONObject answerJson = new JSONObject();
 
+        // 새 15문항 설문 답이라는 표시 (서버가 이 표로 채점한다. 답은 7~15개)
+        answerJson.put("version", BodyProfileStore.SURVEY_VERSION);
+
         for (int i = 0; i < answers.length; i++) {
             answerJson.put("q" + (i + 1), answers[i]);
         }
@@ -662,13 +665,7 @@ public final class RecommendApi {
         JSONObject body = new JSONObject();
 
         try {
-            JSONObject answerJson = new JSONObject();
-
-            for (int i = 0; i < answers.length; i++) {
-                answerJson.put("q" + (i + 1), answers[i]);
-            }
-
-            body.put("answers", answerJson);
+            body.put("answers", answersJson(answers));
 
             if (measurements != null) {
                 body.put("measurements", measurements);
@@ -824,6 +821,7 @@ public final class RecommendApi {
                 .remove(AccountPrefs.key(context, AccountPrefs.SURVEY_TYPE))
                 .remove(AccountPrefs.key(context, AccountPrefs.SURVEY_HEIGHT))
                 .remove(AccountPrefs.key(context, AccountPrefs.SURVEY_AT))
+                .remove(AccountPrefs.key(context, AccountPrefs.SURVEY_VERSION))
                 .apply();
     }
 

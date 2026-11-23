@@ -12,6 +12,8 @@ public final class AccountPrefs {
     public static final String SURVEY_TYPE = "last_survey_type";
     public static final String SURVEY_HEIGHT = "last_survey_height";
     public static final String SURVEY_AT = "last_survey_at";
+    /** 저장한 설문 답의 문항표 버전 (2 = 새 15문항). 없으면 옛 7문항 답 */
+    public static final String SURVEY_VERSION = "last_survey_version";
     public static final String INPUT_HEIGHT = "height_cm";
     public static final String INPUT_WEIGHT = "weight_kg";
     public static final String INPUT_AGE = "age_years";
@@ -22,7 +24,7 @@ public final class AccountPrefs {
     public static final String RECOMMEND_LIKED_LOCAL = "liked_local_products";
 
     private static final String[] SURVEY_KEYS = {
-            SURVEY_ANSWERS, SURVEY_TYPE, SURVEY_HEIGHT, SURVEY_AT,
+            SURVEY_ANSWERS, SURVEY_TYPE, SURVEY_HEIGHT, SURVEY_AT, SURVEY_VERSION,
             INPUT_HEIGHT, INPUT_WEIGHT, INPUT_AGE
     };
 

@@ -6,8 +6,8 @@ import pytest
 
 import server
 
-ANSWERS = {f"q{i}": 1 for i in range(1, 8)}
-ANSWERS_N = {"q1": 3, "q2": 3, "q3": 3, "q4": 3, "q5": 3, "q6": 3, "q7": 3}
+ANSWERS = {"version": 2, **{f"q{i}": 1 for i in range(1, 16)}}   # 새 설문 15문항
+ANSWERS_N = {"version": 2, **{f"q{i}": 3 for i in range(1, 16)}}
 MEAS = {"height": 165.0, "shoulder_width": 31.5, "arm_length": 53.1, "upper_body_length": 47.0, "leg_length": 86.1}
 ITEMS = [{"product_id": 1, "clothing_type": "top", "product_name": "a", "tags": ["fit:slim"]},
          {"product_id": 2, "clothing_type": "top", "product_name": "b", "tags": ["fit:over"]},

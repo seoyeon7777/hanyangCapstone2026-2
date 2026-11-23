@@ -52,7 +52,7 @@ A의 나머지 입력(어깨너비, 팔 길이)은 원본 `body_infos.shoulder`,
 | `primary_type`, `secondary_type` | 비율이 가장 큰 타입, 두 번째로 큰 타입 (S / W / N) |
 | `confidence` | 1위와 2위의 격차. 작을수록 애매한 체형 |
 | `is_mixed` | 격차가 0.10 미만이라 혼합형으로 본 경우 true |
-| `answers` | 설문 답(q1~q7) |
+| `answers` | 설문 답. 새 설문은 `{"version": 2, "q1".."q15"}`(7~15문항), 예전 기록은 q1~q7 |
 | `is_current` | 현재 유효한 결과인지. 재진단하면 이전 행을 false로 바꾼다 |
 | `created_at`, `updated_at` | 진단한 시각, 수정한 시각 |
 

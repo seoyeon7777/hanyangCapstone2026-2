@@ -15,7 +15,7 @@ ITEMS = {item["product_id"]: item for item in load_items()}
 STRAIGHT = {"ratio": {"S": 1.0, "W": 0.0, "N": 0.0}, "kind": "single", "primary": "S"}
 WAVE = {"ratio": {"S": 0.0, "W": 1.0, "N": 0.0}, "kind": "single", "primary": "W"}
 MIXED = {"ratio": {"S": 0.45, "W": 0.15, "N": 0.40}, "kind": "mixed", "primary": "S"}
-ANSWERS = {"q1": 1, "q2": 3, "q3": 1, "q4": 2, "q5": 1, "q6": 1, "q7": 3}
+ANSWERS = {"version": 2, "q1": 1, "q2": 3, "q3": 1, "q4": 2, "q5": 1, "q6": 1, "q7": 3, "q8": 1, "q9": 2, "q10": 1, "q11": 1, "q12": 1, "q13": 2, "q14": 1, "q15": 3}   # 새 설문 15문항
 
 
 def close(a, b, tol=1e-3):

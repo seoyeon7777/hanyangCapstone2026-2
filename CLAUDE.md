@@ -432,7 +432,9 @@ match_score(body, item) -> {
 - `feed_api.diagnose()`: /api/diagnose와 /api/feed·/api/feed/scroll이 같이 쓴다. **치수가 이상하면(범위 밖·빠짐) 400 대신 설문만으로 진단**하고 notice에 이유. 설문 답이 틀린 경우만 400. 치수가 객체가 아니면 400
 - 앱: 설문 마지막 "결과 확인" → `RecommendApi.diagnose`(답 + `cameraMeasurements`) → 서버 결과로 `BodyTypeResultActivity` (체형 + 비율 % + 혼합형 안내). 서버에 못 붙으면 답만 저장하고 "다시 시도/나중에" 창
 - (11/15, 지현) **앱 설문을 새 15문항(A·B·C 글자 보기, 사진 없음)으로 바꿈**. 질문 위 "n / 15" + 게이지(1~9 검정·10~12 초록·13~14 주황·15 노랑) + "%", 10~12번 "조금만 더 하면 설문이 완성돼요!", 13~15번 "설문 3번만 더 하시면…". 7~14번에 "여기까지 하고 결과보기"(그 문항까지 답한 7~14개로 진단), 15번은 "결과 확인". 저장된 답은 7~15개(`BodyProfileStore.SURVEY_MIN/MAX_ANSWERS`)
-  - **주의: 서버 채점은 아직 옛 7문항 그대로**(팀원 결정으로 안 건드림). 서버는 q1~q7만 옛 문항 뜻으로 채점하고 q8~q15는 무시 → 새 문항에 맞는 결과를 내려면 A 파트 `body_profile.SURVEY`를 새 15문항에 맞게 바꿔야 한다
+  - 서버 채점(11/15 추가): 앱이 answers에 `"version": 2`를 붙여 보내면 `body_profile.SURVEY15`로 채점, 없으면 옛 7문항 `SURVEY` 그대로(sample.csv·evaluate.py·기존 테스트 영향 없음). A=S·B=W·C=N 2점, 가중치 Q3 어깨·Q14 전체 실루엣 1.5(옛 Q1·Q6처럼), **Q15 어울리는 옷 0.5**(몸이 아니라 취향으로 답할 수 있어서), 나머지 1.0. 답한 문항(7~15개, 앞에서부터 이어서)의 최고점으로 나눔. 동점이면 Q14 → Q3 → 마지막 문항부터 거꾸로 본 답 순 → 무작위 답에서 세 체형이 1/3씩(7문항 전 조합 729·729·729). 테스트 `tests/test_a_survey15.py` 10개
+  - 앱은 버전 없는 예전 답(옛 7문항)을 읽지 않는다(`BodyProfileStore` 카드의 `surveyVersion`, `AccountPrefs.SURVEY_VERSION`) → 예전 카드는 저장된 골격 이름 100%로 추천
+  - 가중치는 임시값. 새 문항 정답 데이터(sample.csv 같은 것)가 아직 없어 정확도는 못 쟀다
   - `lastSurveyType`은 이제 서버 진단 결과만 저장 (진단 전이면 없음 → `lastSurveySummary`는 "진단 전"). `MeasurementResultActivity`의 `finalBodyType`도 `/api/diagnose`를 쓴다
 - **팀 결정(10/24): 카메라 치수는 진단에 섞지 않고 설문만** — `rec_config.DIAGNOSIS_USE_MEASUREMENTS = False`. 서버는 치수가 와도 무시하고(`used_measurements` false), 앱도 안 보낸다(`loadFeed`·`diagnose`·`finalBodyType`). `RecommendApi.cameraMeasurements`는 다시 켤 때를 위해 남김
   - 이유(10/24 분석): 치수 점수만으로는 sample.csv 내추럴 1/10, 애매한 설문에 치수를 더하면 웨이브 32→49%·내추럴 33→19%로 쏠림. 내추럴용 치수 지표가 약하고(최대점 N 1.1 / W 2.25), 기준 구간이 좁아(상체÷다리 0.5511~0.5639) 1cm 오차로 뒤집힘
@@ -542,7 +544,7 @@ match_score(body, item) -> {
 - [x] 1109 UI 수정(4-21): 상단바 통일·고정, 아이콘, 필터 칩, 2·3열 보기, 검색·찜·장바구니·마이페이지·쿠폰·결제 화면 정리
 - [x] 주문·반품·쿠폰·리뷰 정리(4-26): 상품별 주문 저장, 주문 상세·취소/반품 화면, 환불 계좌, 쿠폰 사용 처리·완료/만료, 별점 0.5, 검색 띄어쓰기, 키·몸무게 계정별
 - [x] 11/16 통합(4-27): 혜림 4-26, 지현 15문항 설문, 연오 4-22~4-25, 유빈 결과·피드백 화면
-- [ ] 서버 설문 채점(body_profile.SURVEY)을 새 15문항에 맞추기 — 지금은 q1~q7만 옛 뜻으로 채점 (A 담당)
+- [x] 서버 설문 채점을 새 15문항에 맞추기 (11/16, 지현) — `body_profile.SURVEY15`, `"version": 2`, Q15 가중치 0.5, 7~15문항, 세 체형 균형. 4-12 참고, 테스트 `tests/test_a_survey15.py` 10개
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend

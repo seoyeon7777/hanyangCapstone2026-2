@@ -104,7 +104,7 @@
             android:layout_marginTop="45dp"
             android:gravity="center"
             android:lineSpacingExtra="4dp"
-            android:text="Q1. 내 어깨는 어떤 모습에 가까운가요?"
+            android:text="Q1. 목의 길이와 특징은?"
             android:textColor="#000000"
             android:textSize="20.5sp"
             android:textStyle="bold" />
@@ -119,7 +119,7 @@
             android:gravity="center_vertical"
             android:paddingLeft="18dp"
             android:paddingRight="18dp"
-            android:text="① 둥글고 도톰해 보여요"
+            android:text="A. 목이 비교적 짧고 탄탄하며 두께감이 있다."
             android:textAllCaps="false"
             android:textColor="#000000"
             android:textSize="15sp" />
@@ -134,7 +134,7 @@
             android:gravity="center_vertical"
             android:paddingLeft="18dp"
             android:paddingRight="18dp"
-            android:text="② 얇고 부드러워 보여요"
+            android:text="B. 목이 길고 가늘며 여리여리하다."
             android:textAllCaps="false"
             android:textColor="#000000"
             android:textSize="15sp" />
@@ -149,12 +149,12 @@
             android:gravity="center_vertical"
             android:paddingLeft="18dp"
             android:paddingRight="18dp"
-            android:text="③ 넓고 각진 느낌이에요"
+            android:text="C. 목의 힘줄이나 뼈가 도드라져 보인다."
             android:textAllCaps="false"
             android:textColor="#000000"
             android:textSize="15sp" />
 
-        <!-- Q1~Q7 그림 카드 보기 (위 2개 + 아래 가운데 1개). 사진·글자는 BodyTypeActivity에서 바꿈 -->
+        <!-- 그림 카드 보기 (지금은 사진이 없어 15문항 모두 글자 버튼. 사진이 생기면 BodyTypeActivity.CARD_IMAGES에 넣는다) (위 2개 + 아래 가운데 1개). 사진·글자는 BodyTypeActivity에서 바꿈 -->
         <LinearLayout
             android:id="@+id/cardOptions"
             android:layout_width="match_parent"
@@ -200,7 +200,7 @@
                             android:id="@+id/cardImage1"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:contentDescription="둥글고 도톰해 보여요"
+                            android:contentDescription="목이 짧고 탄탄해요"
                             android:scaleType="fitCenter"
                             android:src="@drawable/img_q1_shoulder_1" />
 
@@ -219,7 +219,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="둥글고 도톰해 보여요"
+                        android:text="목이 짧고 탄탄해요"
                         android:textColor="#000000"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -258,7 +258,7 @@
                             android:id="@+id/cardImage2"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:contentDescription="얇고 부드러워 보여요"
+                            android:contentDescription="목이 길고 가늘어요"
                             android:scaleType="fitCenter"
                             android:src="@drawable/img_q1_shoulder_2" />
 
@@ -277,7 +277,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="얇고 부드러워 보여요"
+                        android:text="목이 길고 가늘어요"
                         android:textColor="#000000"
                         android:textSize="14sp"
                         android:textStyle="bold" />
@@ -325,7 +325,7 @@
                             android:id="@+id/cardImage3"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:contentDescription="넓고 각진 느낌이에요"
+                            android:contentDescription="힘줄·뼈가 도드라져요"
                             android:scaleType="fitCenter"
                             android:src="@drawable/img_q1_shoulder_3" />
 
@@ -344,7 +344,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:gravity="center"
-                        android:text="넓고 각진 느낌이에요"
+                        android:text="힘줄·뼈가 도드라져요"
                         android:textColor="#000000"
                         android:textSize="14sp"
                         android:textStyle="bold" />

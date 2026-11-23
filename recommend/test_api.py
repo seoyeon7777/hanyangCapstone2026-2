@@ -137,7 +137,7 @@ def test_routes_registered():
     assert {"/api/form", "/api/items", "/api/items/validate", "/api/recommend"} <= rules  # B
 
 
-ANSWERS = {"q1": 1, "q2": 3, "q3": 1, "q4": 2, "q5": 1, "q6": 1, "q7": 3}   # try_classify.py 예시
+ANSWERS = {"version": 2, "q1": 1, "q2": 3, "q3": 1, "q4": 2, "q5": 1, "q6": 1, "q7": 3, "q8": 1, "q9": 2, "q10": 1, "q11": 1, "q12": 1, "q13": 2, "q14": 1, "q15": 3}   # try_classify.py 예시 (새 설문 15문항)
 MEASURES = {"height": 165.0, "shoulder_width": 31.5, "arm_length": 53.1,
             "upper_body_length": 47.0, "leg_length": 86.1}
 
