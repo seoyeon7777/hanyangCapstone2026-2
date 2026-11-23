@@ -478,11 +478,15 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
 
                         analyzeSidePhoto();
                     })
-                    .addOnFailureListener(e ->
-                            analysisError(
-                                    "정면 사진 분석 오류: " + e.getMessage()
-                            )
-                    );
+                    .addOnFailureListener(e -> {
+                        // 원인(개발자용 문구)은 로그에만 남기고, 사용자에게는 할 일을 알린다
+                        android.util.Log.w("PhotoMeasurement", "정면 사진 분석 실패", e);
+                        analysisError(
+                                e instanceof IllegalStateException
+                                        ? "정면 사진에서 사람을 찾지 못했어요. 머리부터 발끝까지 보이는 전신 사진을 골라 주세요."
+                                        : "정면 사진을 분석하지 못했어요. 다른 사진으로 다시 시도해 주세요."
+                        );
+                    });
 
         } catch (IOException e) {
             analysisError("정면 사진을 불러올 수 없어요.");
@@ -513,11 +517,10 @@ public class PhotoMeasurementActivity extends AppCompatActivity {
                                                         ? BodyShapeFeatures.bodyAxis(poseTask.getResult())
                                                         : null);
                                     }))
-                    .addOnFailureListener(e ->
-                            analysisError(
-                                    "옆면 사진 분석 오류: " + e.getMessage()
-                            )
-                    );
+                    .addOnFailureListener(e -> {
+                        android.util.Log.w("PhotoMeasurement", "옆면 사진 분석 실패", e);
+                        analysisError("옆면 사진을 분석하지 못했어요. 다른 사진으로 다시 시도해 주세요.");
+                    });
 
         } catch (IOException e) {
             analysisError("옆면 사진을 불러올 수 없어요.");
