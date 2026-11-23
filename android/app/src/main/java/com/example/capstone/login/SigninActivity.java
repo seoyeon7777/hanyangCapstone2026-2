@@ -91,7 +91,9 @@ public class SigninActivity extends AppCompatActivity {
 
         // 본인확인 화면에서 인증한 번호. 고칠 수 없다
         etPhone = findViewById(R.id.etPhone);
-        etPhone.setText(getIntent().getStringExtra(EXTRA_PHONE));
+        // 저장은 숫자만(01012345678)이지만 화면에는 다른 곳처럼 010-0000-0000으로 보여 준다
+        String phoneExtra = getIntent().getStringExtra(EXTRA_PHONE);
+        etPhone.setText(phoneExtra == null ? "" : com.example.capstone.data.LocalAccounts.formatPhone(phoneExtra));
 
         spYear = findViewById(R.id.spYear);
         spMonth = findViewById(R.id.spMonth);

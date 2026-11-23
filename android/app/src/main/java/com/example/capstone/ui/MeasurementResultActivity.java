@@ -259,6 +259,16 @@ public class MeasurementResultActivity extends AppCompatActivity {
                 formatBasic("키", height)
         );
 
+        // 입력한 몸무게도 같이 보여 준다 (입력값이라 사진 측정값과 구분되게 kg로 표시, 없으면 줄을 숨김)
+        float inputWeight = com.example.capstone.data.BodyInput.weight(this);
+        TextView textWeight = findViewById(R.id.textResultWeight);
+        if (inputWeight > 0f) {
+            textWeight.setText(String.format(Locale.KOREA, "몸무게\n%.1f kg", inputWeight));
+        } else {
+            textWeight.setVisibility(View.GONE);
+            findViewById(R.id.dividerResultWeight).setVisibility(View.GONE);
+        }
+
         textShoulder.setText(
                 formatBasic("어깨너비", shoulder)
         );

@@ -10,8 +10,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.capstone.MainActivity;
 import com.example.capstone.R;
+import com.example.capstone.data.MyPageStore;
+import com.example.capstone.mypage.OrderDetailActivity;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class OrderCompleteActivity extends AppCompatActivity {
@@ -54,6 +58,8 @@ public class OrderCompleteActivity extends AppCompatActivity {
             );
         }
 
+        showSummary(getIntent().getStringExtra("orderNo"));
+
         btnGoHome.setOnClickListener(v -> {
 
             Intent intent = new Intent(
@@ -67,6 +73,52 @@ public class OrderCompleteActivity extends AppCompatActivity {
             );
 
             startActivity(intent);
+            finish();
+        });
+    }
+
+    /** 방금 한 주문의 주문번호·상품·배송지를 보여 주고, 주문 상세로 가는 버튼을 켠다 (주문을 못 찾으면 그대로 숨김) */
+    private void showSummary(String groupNo) {
+        if (groupNo == null) {
+            return;
+        }
+        List<MyPageStore.Order> items = new ArrayList<>();
+        for (MyPageStore.Order order : MyPageStore.getOrders(MyPageStore.STATUS_ALL)) {
+            if (groupNo.equals(order.getGroupNo())) {
+                items.add(order);
+            }
+        }
+        if (items.isEmpty()) {
+            return;
+        }
+
+        StringBuilder names = new StringBuilder();
+        for (MyPageStore.Order order : items) {
+            if (names.length() > 0) {
+                names.append('\n');
+            }
+            names.append(order.productName);
+            if (order.option != null && !order.option.isEmpty()) {
+                names.append(" (").append(order.option).append(')');
+            }
+            names.append(" × ").append(order.quantity);
+        }
+
+        MyPageStore.Order first = items.get(0);
+        String address = first.shippingAddress == null ? "" : first.shippingAddress;
+        if (first.receiver != null && !first.receiver.isEmpty()) {
+            address = first.receiver + "\n" + address;
+        }
+
+        ((TextView) findViewById(R.id.tvSummaryOrderNo)).setText(groupNo);
+        ((TextView) findViewById(R.id.tvSummaryItems)).setText(names.toString());
+        ((TextView) findViewById(R.id.tvSummaryAddress)).setText(address.isEmpty() ? "-" : address);
+        findViewById(R.id.layoutOrderSummary).setVisibility(View.VISIBLE);
+
+        Button btnDetail = findViewById(R.id.btnOrderDetail);
+        btnDetail.setVisibility(View.VISIBLE);
+        btnDetail.setOnClickListener(v -> {
+            startActivity(OrderDetailActivity.newIntent(this, groupNo));
             finish();
         });
     }

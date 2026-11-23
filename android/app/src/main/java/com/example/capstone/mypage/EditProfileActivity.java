@@ -102,7 +102,8 @@ public class EditProfileActivity extends AppCompatActivity {
 
         // 이름은 환불 계좌 예금주로 쓰므로 바꿀 수 없다 (변경 버튼 없음)
         findViewById(R.id.btnEditEmail).setOnClickListener(v -> editEmail());
-        // 휴대폰 번호는 가입할 때 본인확인한 번호라 바꿀 수 없다 (변경 버튼 없음)
+        // 휴대폰 번호: 기록을 나누는 이름이 아이디라서(4-25) 번호를 바꿔도 기록은 그대로다. 새 번호로 인증받으면 바뀐다
+        findViewById(R.id.btnEditPhone).setOnClickListener(v -> editPhone());
 
         findViewById(R.id.menuChangePw).setOnClickListener(v ->
                 startActivity(new Intent(this, ChangePasswordActivity.class)));
@@ -266,6 +267,90 @@ public class EditProfileActivity extends AppCompatActivity {
         });
 
         view.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
+    }
+
+    /**
+     * 휴대폰 번호 변경: 010 + 새 번호 두 칸을 넣고 "인증번호 받기" → 안내 창의 인증번호 4자리를 입력 → 인증확인.
+     * 이미 가입된 번호·지금 번호와 같은 번호는 인증번호를 보내기 전에 막는다. 번호를 고치면 인증받기부터 다시 한다.
+     */
+    private void editPhone() {
+        MyPageStore.User user = MyPageStore.getUser();
+        String current = MyPageUi.normalizePhone(user.phone == null ? "" : user.phone);
+
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_phone_change, null, false);
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(view).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView btnSend = view.findViewById(R.id.btnSendPhoneCode);
+        TextView btnVerify = view.findViewById(R.id.btnVerifyPhone);
+        TextView tvNotice = view.findViewById(R.id.tvPhoneNotice);
+        View layoutCode = view.findViewById(R.id.layoutPhoneCode);
+        EditText etCode = view.findViewById(R.id.etPhoneCode);
+        com.example.capstone.login.PhoneFields fields =
+                new com.example.capstone.login.PhoneFields(view.findViewById(R.id.layoutPhoneFields));
+        AuthCode authCode = new AuthCode();
+        authCode.bindTimer(view.findViewById(R.id.tvPhoneTimer));
+        dialog.setOnDismissListener(d -> authCode.clear());   // 창을 닫으면 남은 시간 갱신을 멈춘다
+        // 인증번호를 받은 번호. 번호를 고치면 비운다
+        String[] sent = {null};
+
+        fields.setOnChanged(() -> {
+            if (sent[0] != null) {
+                sent[0] = null;
+                authCode.clear();
+                etCode.setText("");
+                btnSend.setText("인증번호 받기");
+                tvNotice.setVisibility(View.GONE);
+                layoutCode.setVisibility(View.GONE);
+                setVerifyEnabled(btnVerify, false);
+            }
+        });
+
+        btnSend.setOnClickListener(v -> {
+            String phone = fields.number();
+            if (phone == null) {
+                toast("휴대폰 번호를 정확히 입력해 주세요. (010-0000-0000)");
+                return;
+            }
+            if (phone.equals(current)) {
+                toast("지금 등록된 번호와 같아요.");
+                return;
+            }
+            // [여기에 DB 입력] 다른 회원이 쓰는 번호인지 중복 확인 (users)
+            if (LocalAccounts.isTaken(this, LoginSession.getUserId(this), phone)) {
+                toast("이미 가입된 휴대폰 번호예요.");
+                return;
+            }
+            // 문자 발송 서비스가 없어서 인증번호를 안내 창에 보여 준다 (다시 받으면 시간도 처음부터)
+            authCode.issue(this, phone, AuthCode.maskPhone(phone));
+            sent[0] = phone;
+            etCode.setText("");
+            btnSend.setText("재전송");
+            tvNotice.setText("안내 창에 보이는 인증번호 4자리를 입력해 주세요. (5분 동안 유효)");
+            tvNotice.setVisibility(View.VISIBLE);
+            layoutCode.setVisibility(View.VISIBLE);
+            setVerifyEnabled(btnVerify, true);
+        });
+
+        btnVerify.setOnClickListener(v -> {
+            if (sent[0] == null) {
+                return;
+            }
+            String error = authCode.check(etCode.getText().toString().trim(), sent[0]);
+            if (error != null) {
+                toast(error);
+                return;
+            }
+            authCode.hideTimer();
+            saveProfile(user.name, user.email, sent[0]);
+            toast("휴대폰 번호가 변경되었어요.");
+            dialog.dismiss();
+        });
+
+        view.findViewById(R.id.btnPhoneCancel).setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
 

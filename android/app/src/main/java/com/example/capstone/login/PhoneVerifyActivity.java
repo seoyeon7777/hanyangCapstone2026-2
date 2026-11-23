@@ -24,9 +24,6 @@ import com.example.capstone.ui.AppDialog;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
-import java.security.SecureRandom;
-import java.util.Locale;
-
 /** 회원가입 본인확인: 010 - XXXX - XXXX 휴대폰 번호로 인증한다 */
 public class PhoneVerifyActivity extends AppCompatActivity {
 
@@ -39,8 +36,11 @@ public class PhoneVerifyActivity extends AppCompatActivity {
     private boolean isCodeSent = false;
     private boolean isCodeVerified = false;
 
-    // 문자 발송 서비스(서버)가 생기면 서버가 번호로 보내고, 앱은 번호를 모르게 한다
-    private String sentCode = "";
+    // 문자 발송 서비스(서버)가 생기면 서버가 번호로 보내고, 앱은 번호를 모르게 한다.
+    // 지금은 아이디 찾기·프로필과 같은 방식(안내 창에 인증번호를 보여 주고 남은 시간을 센다)
+    private final AuthCode authCode = new AuthCode();
+    // 인증번호를 받은 번호. 번호를 고치면 비운다
+    private String sentPhone = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +64,14 @@ public class PhoneVerifyActivity extends AppCompatActivity {
 
         btnVerify = findViewById(R.id.btnVerify);
         btnVerifyCode = findViewById(R.id.btnVerifyCode);
+
+        authCode.bindTimer(findViewById(R.id.tvAuthTimer));
+    }
+
+    @Override
+    protected void onDestroy() {
+        authCode.clear();   // 남은 시간 갱신을 멈춘다
+        super.onDestroy();
     }
 
     private void setListeners() {
@@ -91,23 +99,16 @@ public class PhoneVerifyActivity extends AppCompatActivity {
 
             // 다시 받으면 새 번호를 만들고 인증도 처음부터
             resetVerification();
-            sentCode = String.format(Locale.ROOT, "%04d", new SecureRandom().nextInt(10000));
+            authCode.issue(this, phone, AuthCode.maskPhone(phone));
+            sentPhone = phone;
             isCodeSent = true;
-            // 한 번 보낸 뒤로는 누를 때마다 새 인증번호
-            btnVerify.setText("다시 요청");
+            // 한 번 보낸 뒤로는 누를 때마다 새 인증번호 (아이디 찾기·프로필과 같은 "재전송")
+            btnVerify.setText("재전송");
 
-            tvAuthCodeNotice.setText(
-                    "인증번호: " + sentCode + " (문자 발송 기능 준비 중이라 화면에 보여 드려요)");
             tvAuthCodeNotice.setVisibility(View.VISIBLE);
 
             etAuthCode.setText("");
             etAuthCode.requestFocus();
-
-            Toast.makeText(
-                    this,
-                    phone + " (으)로 인증번호가 발송되었어요.",
-                    Toast.LENGTH_SHORT
-            ).show();
         });
 
         etAuthCode.addTextChangedListener(new TextWatcher() {
@@ -145,17 +146,8 @@ public class PhoneVerifyActivity extends AppCompatActivity {
         // 인증번호 4자리를 다 넣어야 눌린다. 하나라도 다르면 안내 창, 같으면 다음 화면
         btnVerifyCode.setOnClickListener(v -> {
 
-            String authCode =
+            String inputCode =
                     etAuthCode.getText().toString().trim();
-
-            if (!isCodeSent || !authCode.equals(sentCode)) {
-                AppDialog.notice(
-                        this,
-                        "인증번호가 올바르지 않아요.\n다시 입력해 주세요.",
-                        "확인"
-                );
-                return;
-            }
 
             String phone = checkedPhone();
 
@@ -163,6 +155,18 @@ public class PhoneVerifyActivity extends AppCompatActivity {
                 return;
             }
 
+            // 인증번호·받은 번호·유효 시간(5분)을 한꺼번에 확인한다
+            String error = authCode.check(inputCode, phone);
+            if (!isCodeSent || error != null) {
+                AppDialog.notice(
+                        this,
+                        error != null ? error : "먼저 인증받기를 눌러 주세요.",
+                        "확인"
+                );
+                return;
+            }
+
+            authCode.hideTimer();
             isCodeVerified = true;
             setPhoneLocked(true);
 
@@ -267,7 +271,8 @@ public class PhoneVerifyActivity extends AppCompatActivity {
         }
         isCodeSent = false;
         isCodeVerified = false;
-        sentCode = "";
+        sentPhone = "";
+        authCode.clear();
 
         tvAuthCodeNotice.setVisibility(View.GONE);
         btnVerify.setText("인증받기");

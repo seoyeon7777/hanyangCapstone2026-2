@@ -56,9 +56,20 @@ public class ChangePasswordActivity extends AppCompatActivity {
         String newPw = etNewPw.getText().toString();
         String newPwConfirm = etNewPwConfirm.getText().toString();
 
-        // 모두 비워두면 변경하지 않고 돌아간다.
-        if (currentPw.isEmpty() && newPw.isEmpty() && newPwConfirm.isEmpty()) {
-            finish();
+        // 이 화면은 비밀번호를 바꾸려고 연 것이라 비워 둔 칸이 있으면 알려 준다 (바꾸지 않으려면 뒤로 가기)
+        if (currentPw.isEmpty()) {
+            toast("현재 비밀번호를 입력해 주세요.");
+            etCurrentPw.requestFocus();
+            return;
+        }
+        if (newPw.isEmpty()) {
+            toast("새 비밀번호를 입력해 주세요.");
+            etNewPw.requestFocus();
+            return;
+        }
+        if (newPwConfirm.isEmpty()) {
+            toast("새 비밀번호를 한 번 더 입력해 주세요.");
+            etNewPwConfirm.requestFocus();
             return;
         }
         String userId = LoginSession.getUserId(this);

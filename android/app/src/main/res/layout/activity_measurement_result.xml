@@ -85,6 +85,22 @@
                     android:layout_height="1dp"
                     android:background="#DDDDDD"/>
 
+                <!-- 입력한 몸무게 (값이 없으면 코드에서 줄째 숨김) -->
+                <TextView
+                    android:id="@+id/textResultWeight"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="몸무게"
+                    android:textColor="#000000"
+                    android:textSize="15sp"
+                    android:paddingVertical="12dp"/>
+
+                <View
+                    android:id="@+id/dividerResultWeight"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#DDDDDD"/>
+
                 <TextView
                     android:id="@+id/textResultShoulder"
                     android:layout_width="match_parent"

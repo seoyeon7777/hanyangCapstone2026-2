@@ -294,6 +294,7 @@ public class BodyTypeResultActivity extends AppCompatActivity {
 
         // 저장하지 않고 나가기 (뒤로가기도 같음)
         btnNo.setOnClickListener(v -> confirmLeave());
+        findViewById(R.id.btnResultBack).setOnClickListener(v -> confirmLeave());
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {

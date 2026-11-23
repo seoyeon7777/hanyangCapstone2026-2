@@ -143,25 +143,43 @@
         android:textColor="@color/black"
         android:textSize="12sp" />
 
-    <EditText
-        android:id="@+id/etAuthCode"
+    <!-- 입력칸 오른쪽 끝에 남은 시간(mm:ss)이 줄어든다 (login/AuthCode) -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="인증번호를 입력해 주세요."
-        android:inputType="number"
-        android:maxLength="4"
-        android:background="@drawable/bg_edit"
-        android:paddingHorizontal="16dp"
-        android:textSize="14sp"
-        android:layout_marginBottom="6dp"/>
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp">
 
-    <!-- 문자 발송 기능이 없어서 보낸 인증번호를 화면에 보여 준다 -->
+        <EditText
+            android:id="@+id/etAuthCode"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="인증번호를 입력해 주세요."
+            android:inputType="number"
+            android:maxLength="4"
+            android:background="@drawable/bg_edit"
+            android:paddingStart="16dp"
+            android:paddingEnd="72dp"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tvAuthTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="16dp"
+            android:textColor="#E5542F"
+            android:textSize="13sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- 문자 발송 기능이 없어서 인증번호는 안내 창에 보여 준다 (아이디 찾기·프로필과 같은 방식) -->
     <TextView
         android:id="@+id/tvAuthCodeNotice"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginBottom="12dp"
+        android:text="안내 창에 보이는 인증번호 4자리를 입력해 주세요. (5분 동안 유효)"
         android:textColor="#888888"
         android:textSize="11sp"
         android:visibility="gone"/>
