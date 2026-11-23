@@ -142,6 +142,7 @@
                 <!-- 제목 + 회색 설명. 줄 어디를 눌러도 스위치가 바뀜 (MyBodyActivity) -->
                 <LinearLayout
                     android:id="@+id/rowSizeWarning"
+                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"

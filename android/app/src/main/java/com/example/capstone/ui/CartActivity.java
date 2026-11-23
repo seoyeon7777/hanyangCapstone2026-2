@@ -596,24 +596,6 @@ public class CartActivity extends AppCompatActivity {
             final int quantity = totalQuantity;
             final int price = totalPrice;
 
-            // 기존 체형 적합도 경고 유지
-            List<FitResult> warnings =
-                    SizeFitChecker.checkCart(this);
-
-            if (!warnings.isEmpty()) {
-
-                SizeWarningDialog.show(
-                        CartActivity.this,
-                        warnings,
-                        SizeWarningDialog.Action.ORDER,
-                        () -> goOrder(
-                                names, option, quantity, price, lineIds
-                        )
-                );
-
-                return;
-            }
-
             goOrder(names, option, quantity, price, lineIds);
         });
     }

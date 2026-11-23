@@ -460,6 +460,16 @@ match_score(body, item) -> {
 - **사진 다시 분석하기**: 치수까지 측정한 체형 카드에 "사진 다시 분석하기 ›" 추가(`MyBodyActivity.remeasurePhoto`). 확인 → 키·몸무게·나이 입력 창 → 사진 분석 → 저장하면 그 카드의 이름·설문·골격은 그대로 두고 키·치수만 새 값으로 덮어쓴다(`MeasurementSession.remeasure`, `PhotoMeasurementActivity.remeasureIntent`). 설문만 한 카드의 "사진 분석 이어서 하기"와 구분
 - 확인: pytest 264·test_api 30·test_feed 41·test_integration 8, 앱 단위 테스트 102개 통과(`CheckoutCouponsTest`·`ReturnPeriodTest` 추가). 에뮬레이터에서 배송완료 후 7일 지난 주문 반품 막힘/1일 지난 주문은 신청 화면, 쿠폰(바지는 둘 다 사용 불가·신상 스커트는 신상 쿠폰만 −12,300원), 사진 다시 분석(같은 카드 유지·키 156→160·치수 교체)을 확인. 긴소매 상의(베이직 셔츠 19,000원)는 겨울 긴소매 쿠폰 "이번 주문 할인 -5,700원"·신상품 쿠폰 "이 주문 상품에는 쓸 수 없습니다"로 보이고 적용됨을 에뮬레이터에서 확인
 
+### 4-31. 11/23 통합 (develop)
+- 합친 것: feature/hyerim 11/17(리뷰를 상품 리뷰에 연결, 4-26) + feature/jihyun-merge 11/16(서버 설문 채점 새 15문항 `SURVEY15`·`"version": 2`, 4-12) + feature/yeonoh 11/19~22(4-28~4-30: 앱 전체 점검, 문구 말투, 키·몸무게·나이를 사진 분석 직전에, 반품 7일·쿠폰 범위·사진 다시 분석, 체형 카드 몸무게, 오류 안내 문구) + feature/yubin-update 11/18~22 업로드
+- 겹친 부분
+  - 서버 설문 채점: 연오는 같은 작업을 했다가 "A 담당에게 맡긴다"며 되돌렸으므로 **지현 버전**(`body_profile.SURVEY15`)을 쓴다. 앱도 지현 방식대로 answers에 `"version": 2`를 붙인다. 서버 오류 문구는 개발자용이라 합쇼체
+  - FAQ "체형 분석은 어떻게 하나요?": 연오 순서(설문 뒤에 키·몸무게·나이) + 지현 "7번부터 여기까지 하고 결과보기" 안내
+  - `BodyProfileSurveyTest`: 테스트가 설문 저장을 흉내 낼 때 설문 버전(`AccountPrefs.SURVEY_VERSION`)도 저장하도록 고침(지현의 "버전 없는 옛 답은 읽지 않음" 때문에 8개 실패하던 것)
+  - 유빈 업로드는 파일 통째로라 가장 가까운 옛 버전 기준으로 바뀐 줄만 얹었다: 사이즈 경고 **팝업을 없애고** 상품 상세에 안내 문구(`textSizeFitNotice`, 추천 사이즈 빨간 글씨)를 항상 보여 줌, 장바구니 주문하기의 사이즈 경고 팝업 삭제, 체형 설정의 "사이즈 경고 팝업" 줄 숨김, FAQ 문구, 내 체형 피드백의 추천 인물 사진(`celebrity_*` 9장, 약 19MB). 유빈 코드에서 빠졌던 "추천 사이즈 표시" 설정 확인은 다시 넣었고, 새 안내 문구는 해요체로 맞춤
+  - 주의: 추천 인물 사진을 넣을 칸(`imgCelebrity1~3`)이 아직 레이아웃에 없어 화면에는 안 나온다. 실제 연예인 사진이라 초상권·저작권을 확인해야 하고, 9장이 19MB라 앱 크기가 커진다
+- 확인: javac 컴파일 오류 0, 앱 단위 테스트 102개 통과, pytest 274·test_feed 41·test_integration 8·test_api 30 통과. 실제 화면은 Android Studio에서 확인 필요
+
 ### 4-12. 체형 채점은 서버 한 곳 (12단계)
 - 팀 결정(10/24): 설문 채점을 **서버(A 파트 `body_profile.classify`) 하나**로 통일. 앱(`BodyTypeActivity`)의 자체 채점(문항별 1점·q6·q7 2배)은 삭제
   - 이유: 같은 답인데 앱 결과 화면과 서버 진단(홈 추천)이 달랐다 — 답 조합 2,187개 중 578개(26%), `sample.csv` 30명 중 6명. 정확도도 서버가 높았다(30명 기준 설문만 83% vs 앱 77%, 표본이 작아 확정은 아님)
@@ -488,10 +498,10 @@ match_score(body, item) -> {
 
 ## 5. 정답 테스트 (반드시 통과)
 
-`python -m pytest` (맨 위에서) — 264개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
+`python -m pytest` (맨 위에서) — 274개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 32개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_api.py` — 현재 30개 통과 (Flask 필요: `pip install -r requirements.txt`).
 `TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 10개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
@@ -582,6 +592,8 @@ match_score(body, item) -> {
 - [x] 주문·반품·쿠폰·리뷰 정리(4-26): 상품별 주문 저장, 주문 상세·취소/반품 화면, 환불 계좌, 쿠폰 사용 처리·완료/만료, 별점 0.5, 검색 띄어쓰기, 키·몸무게 계정별
 - [x] 11/16 통합(4-27): 혜림 4-26, 지현 15문항 설문, 연오 4-22~4-25, 유빈 결과·피드백 화면
 - [x] 서버 설문 채점을 새 15문항에 맞추기 (11/16, 지현) — `body_profile.SURVEY15`, `"version": 2`, Q15 가중치 0.5, 7~15문항, 세 체형 균형. 4-12 참고, 테스트 `tests/test_a_survey15.py` 10개
+- [x] 11/23 통합(4-31): 혜림 리뷰 연결, 지현 서버 15문항 채점, 연오 11/19~22 점검, 유빈 사이즈 안내·추천 인물 사진
+- [ ] 추천 인물 사진: 레이아웃 칸(`imgCelebrity1~3`) 추가, 초상권·저작권 확인, 용량 줄이기 (유빈)
 - [ ] 설문 보기 순서 섞기 검토: 7문항 모두 ①=스트레이트라 '첫 보기' 습관이면 스트레이트로 쏠림 (①을 40%만 골라도 S 47.5%)
 - [ ] Android Studio에서 설문 → 결과 화면(비율 표시) → 홈 추천 체형이 같은지 확인
 - [ ] 팀 결정: B의 avoid_mode(penalty/exclude), mixed_strategy — 지금은 penalty·blend

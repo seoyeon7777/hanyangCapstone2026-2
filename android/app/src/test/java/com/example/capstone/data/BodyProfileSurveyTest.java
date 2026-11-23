@@ -48,6 +48,8 @@ public class BodyProfileSurveyTest {
                 .putInt(AccountPrefs.key(context, AccountPrefs.SURVEY_TYPE), type)
                 .putFloat(AccountPrefs.key(context, AccountPrefs.SURVEY_HEIGHT), 165f)
                 .putLong(AccountPrefs.key(context, AccountPrefs.SURVEY_AT), at)
+                // 앱(BodyTypeActivity)처럼 새 15문항 설문 버전도 같이 저장한다 (버전 없는 옛 답은 읽지 않음)
+                .putInt(AccountPrefs.key(context, AccountPrefs.SURVEY_VERSION), BodyProfileStore.SURVEY_VERSION)
                 .apply();
     }
 

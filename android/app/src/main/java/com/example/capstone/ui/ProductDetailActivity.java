@@ -44,6 +44,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     private TextView btnFitting;
     private TextView btnReview;
     private TextView textSizeRecommend;
+    private TextView textSizeFitNotice;
 
     private View layoutOptionSelect;
 
@@ -75,6 +76,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         btnFitting = findViewById(R.id.btnFitting);
         btnReview = findViewById(R.id.btnReview);
         textSizeRecommend = findViewById(R.id.textSizeRecommend);
+        textSizeFitNotice = findViewById(R.id.textSizeFitNotice);
 
         layoutOptionSelect = findViewById(R.id.layoutOptionSelect);
 
@@ -372,14 +374,18 @@ public class ProductDetailActivity extends AppCompatActivity {
         if (currentProduct == null
                 || !BodyProfileStore.isSettingOn(this, BodyProfileStore.SETTING_SIZE_RECOMMEND)) {
             textSizeRecommend.setVisibility(View.GONE);
+            textSizeFitNotice.setVisibility(View.GONE);
             return;
         }
         textSizeRecommend.setVisibility(View.VISIBLE);
+        textSizeRecommend.setTextColor(android.graphics.Color.parseColor("#D32F2F"));
         UserBodyProfile profile = UserBodyProfile.getInstance();
         if (!RecommendApi.hasDiagnosis(this) || !profile.hasMeasurement()) {
             textSizeRecommend.setText("내 치수 사이즈 확인하러 가기  ›");
             textSizeRecommend.setOnClickListener(v ->
                     startActivity(new Intent(this, FittingActivity.class)));
+            textSizeFitNotice.setText("아직 체형 측정을 하지 않았어요.\n체형 측정을 하면 선택한 사이즈가 회원님 체형에 맞는지 확인할 수 있어요.");
+            textSizeFitNotice.setVisibility(View.VISIBLE);
             return;
         }
         textSizeRecommend.setOnClickListener(null);
@@ -388,8 +394,47 @@ public class ProductDetailActivity extends AppCompatActivity {
         textSizeRecommend.setText(recommended == null
                 ? "이 상품은 사이즈 비교 정보가 없어요"
                 : "내 치수 기준 추천 사이즈: " + recommended);
+        updateSizeFitNotice();
     }
 
+    private void updateSizeFitNotice() {
+        if (currentProduct == null) return;
+        if (!RecommendApi.hasDiagnosis(this) || !UserBodyProfile.getInstance().hasMeasurement()) return;
+        if (selectedSize == null || selectedSize.trim().isEmpty()) {
+            textSizeFitNotice.setText("옵션에서 사이즈를 선택하면 체형과의 적합 여부를 안내해 드려요.");
+            textSizeFitNotice.setVisibility(View.VISIBLE);
+            return;
+        }
+        FitResult fit = SizeFitChecker.check(currentProduct, selectedSize);
+        StringBuilder message = new StringBuilder();
+        switch (fit.getStatus()) {
+            case TIGHT:
+            case LOOSE:
+            case MIXED:
+                message.append("사이즈가 맞지 않을 수 있어요. (선택: ")
+                        .append(selectedSize).append(")\n");
+                break;
+            case FIT:
+                message.append("선택한 ").append(selectedSize)
+                        .append(" 사이즈는 회원님 체형에 잘 맞는 편이에요.\n");
+                break;
+            case NO_CHART:
+                message.append("이 상품은 사이즈 비교 정보가 없어 맞는지 확인할 수 없어요.\n");
+                break;
+            default:
+                message.append("사이즈가 맞는지 확인할 수 없어요.\n");
+        }
+        if (fit.getReasons() != null) {
+            for (String reason : fit.getReasons()) {
+                if (reason != null && !reason.trim().isEmpty())
+                    message.append("• ").append(reason).append("\n");
+            }
+        }
+        if (fit.needsWarning())
+            message.append("구매 전 추천 사이즈와 선택한 사이즈를 다시 확인해 주세요.");
+        textSizeFitNotice.setText(message.toString().trim());
+        textSizeFitNotice.setVisibility(View.VISIBLE);
+    }
 
     // =========================
     // 옵션 선택 창 띄우기
@@ -442,6 +487,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         selectedSize = size;
         selectedColor = color;
         selectedQuantity = quantity;
+        updateSizeRecommendText();
     }
 
 
@@ -450,48 +496,9 @@ public class ProductDetailActivity extends AppCompatActivity {
     // =========================
 
     private void checkFitThen(Runnable action, SizeWarningDialog.Action warningAction) {
-
-        FitResult fitResult =
-                SizeFitChecker.check(
-                        currentProduct,
-                        selectedSize
-                );
-
-
-        // 맞지 않거나 체형 측정을 안 했으면 주의 팝업
-        if (fitResult.needsWarning()) {
-
-            SizeWarningDialog.show(
-                    ProductDetailActivity.this,
-                    fitResult,
-                    warningAction,
-                    new SizeWarningDialog.OnActionListener() {
-
-                        @Override
-                        public void onContinue() {
-
-                            action.run();
-                        }
-
-                        @Override
-                        public void onCancel() {
-
-                            // 사이즈를 다시 고르도록
-                            // 사이즈만 비우고 옵션 창을 다시 연다
-                            selectedSize = "";
-
-                            showOptionSheet();
-                        }
-                    }
-            );
-
-            return;
-        }
-
-
+        // 사이즈 경고는 상품 상세 화면에 상시 표시하므로 구매를 막는 팝업은 띄우지 않는다.
         action.run();
     }
-
 
     // =========================
     // 장바구니에 담기
