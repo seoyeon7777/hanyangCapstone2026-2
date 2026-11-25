@@ -65,7 +65,7 @@ if __name__ == "__main__":
     if STORE.kind == "postgres":
         print("\n  데이터           DB (database_url.txt 또는 DATABASE_URL) - 서버를 꺼도 기록이 남습니다")
     else:
-        print("\n  데이터           메모리 + recommend/data/items.json - 서버를 끄면 기록이 사라집니다")
+        print(f"\n  데이터           메모리 + {STORE.source or 'recommend/data/items.json'} - 서버를 끄면 기록이 사라집니다")
     print(f"  PC 브라우저      http://127.0.0.1:{port}/feed-demo")
     print(f"  에뮬레이터       http://10.0.2.2:{port}")
     if host == "0.0.0.0":

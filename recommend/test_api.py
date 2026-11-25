@@ -2,15 +2,17 @@
 
 실행: python test_api.py
 """
+import json
 import os
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from app import app  # noqa: E402
 import feed_api  # noqa: E402
 from feed import load_items  # noqa: E402
-from store import MemoryStore  # noqa: E402
+from store import MemoryStore, file_store  # noqa: E402
 
 # database_url.txt가 있어도 팀 DB(Supabase)를 건드리지 않게 테스트는 항상 메모리 저장소로
 feed_api.STORE = MemoryStore(load_items())
@@ -429,6 +431,43 @@ def test_items_carry_description_for_detail_screen():
         assert r["description"] == items[r["product_id"]]["description"] and r["description"].endswith("요.")
     look = client.get("/api/feed?S=1").get_json()["sections"][-1]["items"][0]
     assert look["top"]["description"] and look["bottom"]["description"]
+
+def test_outside_items_file_serves_products_and_photos():
+    # 저장소 밖 상품 파일: 설명·가격·신상 값이 그대로 나가고, 연결된 사진만 서버가 원본 그대로 보낸다
+    photo = b"\xff\xd8test-photo"
+    with tempfile.TemporaryDirectory() as folder:
+        os.mkdir(os.path.join(folder, "img"))
+        for name, content in (("BL-001.jpg", photo), ("secret.jpg", b"x")):
+            with open(os.path.join(folder, "img", name), "wb") as f:
+                f.write(content)
+        base = {"clothing_type": "top", "tags": ["fit:slim"], "seasons": ["fall"], "popularity": 0.5,
+                "price": 32000, "brand": "시연용 브랜드", "description": "블라우스예요.", "is_new": True}
+        data = {"image_dir": "img", "items": [
+            {**base, "product_id": "BL-001", "product_name": "블라우스", "image_file": "BL-001.jpg"},
+            {**base, "product_id": "BL-002", "product_name": "사진 없는 블라우스", "image_file": "../x.jpg"}]}
+        path = os.path.join(folder, "products.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+        before = feed_api.STORE
+        feed_api.STORE = file_store(path)
+        try:
+            res = client.post("/api/feed/scroll", json={"mode": "general"}, base_url="http://10.0.2.2:5000")
+            got = {i["product_id"]: i for i in res.get_json()["items"]}
+            assert got["BL-001"]["image_url"] == "http://10.0.2.2:5000/product-images/BL-001.jpg"
+            assert (got["BL-001"]["price"], got["BL-001"]["is_new"], got["BL-001"]["description"]) == (32000, True, "블라우스예요.")
+            assert "image_url" not in got["BL-002"]
+            res = client.get("/product-images/BL-001.jpg")
+            assert res.status_code == 200 and res.data == photo
+            res.close()
+            for name in ("secret.jpg", "none.jpg", "..%2Fproducts.json"):
+                assert client.get(f"/product-images/{name}").status_code == 404, name
+        finally:
+            feed_api.STORE = before
+        try:
+            file_store(os.path.join(folder, "none.json"))
+            raise AssertionError("없는 상품 파일인데 오류가 나지 않음")
+        except FileNotFoundError:
+            pass
 
 
 if __name__ == "__main__":

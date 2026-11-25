@@ -16,6 +16,7 @@ GET  /api/feed/scroll?user_id=u1&S=0.6&W=0.3&N=0.1&page=0&size=10   ← 홈 화�
      /api/feed, /api/feed/scroll 둘 다 mode로 홈 화면 토글을 받는다
        mode=body    (기본) 토글 ON: 골격 맞춤 추천 — 체형 필요
        mode=general        토글 OFF: 일반 쇼핑몰 추천(인기·자주 누른 스타일·계절) — 체형 없어도 됨
+GET  /product-images/<파일 이름>   상품 파일(items_file.txt)에 연결된 사진. 응답의 image_url이 이 주소를 가리킨다
 GET  /feed-demo       연습용 스크롤 화면 (친구들 홈 화면이 오기 전 확인용)
 
 상품·사용자 기록은 store.py가 맡는다: DB 주소(DATABASE_URL 또는 database_url.txt)가 있으면 PostgreSQL(Supabase),
@@ -23,8 +24,9 @@ GET  /feed-demo       연습용 스크롤 화면 (친구들 홈 화면이 오기
 """
 import math
 from datetime import date
+from urllib.parse import quote
 
-from flask import Blueprint, current_app, jsonify, render_template, request
+from flask import Blueprint, abort, current_app, jsonify, render_template, request, send_file
 
 from rec_config import (
     SEASONS, SEASON_BY_MONTH, REDIAG_MESSAGE, UNLIKE_EVENT, SCROLL_PAGE_SIZE, SCROLL_MAX_PAGE_SIZE,
@@ -71,13 +73,27 @@ def make_body(ratio):
 # 화면 표시용 상품 정보. price·brand·image_url은 DB 상품에만 있다 (items.json 시연 상품에는 없음).
 # description은 상품 상세의 설명문. 점수 계산에는 쓰지 않는다 (B에는 이름·태그만 넘긴다. matching_b.py)
 # seasons는 모든 상품에 있다 — 앱 카테고리 화면의 계절 필터가 쓴다 (없으면 계절을 고르는 순간 서버 상품이 전부 사라짐)
-DISPLAY_KEYS = ("price", "brand", "image_url", "seasons", "description")
+DISPLAY_KEYS = ("price", "brand", "image_url", "seasons", "description", "is_new")
 
 
 def for_screen(r):
     """점수 결과 하나 → 앱에 보낼 모양: 추천 이유(reason) + 가격·브랜드·사진 주소(있으면)."""
     item = STORE.item(r["product_id"]) or {}
-    return {**r, "reason": reason(r), **{k: item[k] for k in DISPLAY_KEYS if k in item}}
+    shown = {**r, "reason": reason(r), **{k: item[k] for k in DISPLAY_KEYS if k in item}}
+    name = item.get("image_file")
+    if name and not shown.get("image_url") and STORE.image_path(name):
+        # 앱이 접속한 주소를 그대로 쓴다 (에뮬레이터는 10.0.2.2, 폰은 PC IP)
+        shown["image_url"] = f"{request.host_url}product-images/{quote(name)}"
+    return shown
+
+
+@feed_bp.get("/product-images/<name>")
+def product_image(name):
+    # 상품 파일에 적힌 사진만 보낸다 (폴더의 다른 파일은 열 수 없다). 사진은 편집하지 않고 원본 그대로
+    path = STORE.image_path(name)
+    if path is None:
+        abort(404)
+    return send_file(path)
 
 
 def with_reasons(feed):

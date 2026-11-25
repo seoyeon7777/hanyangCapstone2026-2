@@ -1,10 +1,12 @@
 """11단계: 상품·사용자 저장소.
 
 DB 주소가 있으면 PostgreSQL(Supabase, 표 모양은 db/db.sql), 없으면 JSON 파일 + 서버 메모리.
+JSON 파일은 items_file.txt(또는 ITEMS_FILE)가 가리키는 저장소 밖 파일이 있으면 그것, 없으면 recommend/data/items.json.
 feed_api.py는 어느 쪽이든 같은 함수만 부른다.
 
     items()                      추천 후보 상품 목록 (C의 item 모양)
     item(product_id)             상품 하나 (없으면 None)
+    image_path(name)             서버가 직접 보내 주는 상품 사진의 파일 경로 (상품 파일에 연결된 사진만, 없으면 None)
     user(user_id)                {"body", "answers", "pref", "history", "history_since_body"} (처음 보는 사용자면 None)
                                  history_since_body = 지금 체형으로 진단된 뒤의 반응만 (재진단 안내 판단용)
     ensure_user(user_id)         사용자가 없으면 만든다
@@ -22,7 +24,7 @@ import threading
 import time
 
 from rec_config import (
-    OUTFIT_GROUP, DATABASE_URL_FILE, DB_ITEMS_CACHE_SECONDS, DB_DEMO_USER_NAME, DB_POOL_SIZE,
+    OUTFIT_GROUP, DATABASE_URL_FILE, ITEMS_FILE_POINTER, DB_ITEMS_CACHE_SECONDS, DB_DEMO_USER_NAME, DB_POOL_SIZE,
 )
 from feed import load_items, update_pref, pref_from_history
 
@@ -48,9 +50,47 @@ def database_url():
     return url or None
 
 
+def items_file():
+    """ITEMS_FILE 환경 변수 → 저장소 맨 위 items_file.txt 순서로 찾는다. 없으면 None. 상대 경로는 저장소 맨 위 기준."""
+    path = os.environ.get("ITEMS_FILE", "").strip()
+    pointer = os.path.join(ROOT, ITEMS_FILE_POINTER)
+    if not path and os.path.exists(pointer):
+        with open(pointer, encoding="utf-8-sig") as f:   # 메모장이 붙이는 BOM도 받는다
+            path = f.read().strip().strip('"')
+    return os.path.join(ROOT, path) if path else None
+
+
+def file_store(path):
+    """저장소 밖 상품 파일 → MemoryStore. {"image_dir": 사진 폴더(파일 기준 상대 경로 가능), "items": [...]}
+
+    경로를 적었는데 파일이 없으면 시연 상품 30개로 조용히 넘어가지 않고 오류를 낸다.
+    """
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"상품 파일이 없습니다: {path} (items_file.txt 또는 ITEMS_FILE을 확인하십시오)")
+    with open(path, encoding="utf-8-sig") as f:
+        data = json.load(f)
+    image_dir = os.path.join(os.path.dirname(os.path.abspath(path)), data.get("image_dir", ""))
+    images, missing = {}, 0
+    for item in data["items"]:
+        name = item.get("image_file")
+        if not name:
+            continue
+        full = os.path.join(image_dir, name)
+        if os.path.basename(name) == name and os.path.isfile(full):   # 폴더를 벗어나는 이름은 받지 않는다
+            images[name] = full
+        else:
+            missing += 1
+    if missing:
+        print(f"  경고: 상품 사진 {missing}개를 찾지 못했습니다 (사진 폴더: {image_dir})")
+    return MemoryStore(data["items"], images, source=path)
+
+
 def make_store():
     url = database_url()
-    return PgStore(url) if url else MemoryStore(load_items())
+    if url:
+        return PgStore(url)
+    path = items_file()
+    return file_store(path) if path else MemoryStore(load_items())
 
 
 def _new_user():
@@ -66,7 +106,9 @@ class MemoryStore:
 
     kind = "memory"
 
-    def __init__(self, items):
+    def __init__(self, items, images=None, source=None):
+        self.source = source          # 저장소 밖 상품 파일 경로 (기본 시연 상품이면 None)
+        self._images = images or {}   # 사진 파일 이름 → 전체 경로
         self._items = list(items)
         self._by_id = {i["product_id"]: i for i in self._items}
         self._users = {}
@@ -77,6 +119,9 @@ class MemoryStore:
 
     def item(self, product_id):
         return self._by_id.get(product_id)
+
+    def image_path(self, name):
+        return self._images.get(name)
 
     def user(self, user_id):
         return self._users.get(user_id)
@@ -218,6 +263,9 @@ class PgStore:
         if self._items is None or time.monotonic() - self._loaded_at > DB_ITEMS_CACHE_SECONDS:
             self._load_items()
         return self._items
+
+    def image_path(self, name):
+        return None   # DB 상품은 main_image_url 주소를 그대로 쓴다
 
     def item(self, product_id):
         self.items()

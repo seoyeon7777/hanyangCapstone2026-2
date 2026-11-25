@@ -164,6 +164,9 @@ GENERAL_REASON_SEASON = "지금 계절에 입기 좋아요"
 # DATABASE_URL 환경 변수 또는 저장소 맨 위 database_url.txt(깃에 안 올라감)에 주소가 있으면 PostgreSQL(Supabase)을 쓴다.
 # 둘 다 없으면 지금처럼 recommend/data/items.json + 서버 메모리 (시연용, 서버를 끄면 기록이 사라짐)
 DATABASE_URL_FILE = "database_url.txt"
+# DB를 안 쓸 때 시연 상품을 저장소 밖 파일에서 읽으려면: ITEMS_FILE 환경 변수 또는 저장소 맨 위 items_file.txt(깃에 안 올라감)에
+# 상품 JSON 경로를 한 줄로 넣는다 (tools/build_demo_items.py가 만드는 모양. ETRI 데이터는 저장소에 넣지 않기 때문)
+ITEMS_FILE_POINTER = "items_file.txt"
 DB_ITEMS_CACHE_SECONDS = 60    # DB 상품 목록을 다시 읽는 간격(초). 요청마다 상품 전체를 읽지 않게
 DB_POOL_SIZE = 4              # DB 연결을 최대 몇 개까지 열어 두고 나눠 쓸지 (여러 사람이 동시에 써도 덜 기다리게)
 DB_DEMO_USER_NAME = "앱 사용자"  # 앱이 처음 보낸 user_id로 users 행을 만들 때 넣는 이름 (회원가입 전 사용자)
