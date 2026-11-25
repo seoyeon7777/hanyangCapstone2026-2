@@ -69,8 +69,9 @@ def make_body(ratio):
 
 
 # 화면 표시용 상품 정보. price·brand·image_url은 DB 상품에만 있다 (items.json 시연 상품에는 없음).
+# description은 상품 상세의 설명문. 점수 계산에는 쓰지 않는다 (B에는 이름·태그만 넘긴다. matching_b.py)
 # seasons는 모든 상품에 있다 — 앱 카테고리 화면의 계절 필터가 쓴다 (없으면 계절을 고르는 순간 서버 상품이 전부 사라짐)
-DISPLAY_KEYS = ("price", "brand", "image_url", "seasons")
+DISPLAY_KEYS = ("price", "brand", "image_url", "seasons", "description")
 
 
 def for_screen(r):

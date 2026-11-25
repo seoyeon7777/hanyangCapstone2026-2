@@ -229,7 +229,7 @@ class PgStore:
             cur.execute(
                 """
                 SELECT p.product_id, p.product_name, c.clothing_type, t.tags, p.seasons, p.popularity,
-                       p.price, b.brand_name, p.main_image_url
+                       p.price, b.brand_name, p.main_image_url, p.description
                 FROM products p
                 JOIN categories c ON c.category_id = p.category_id
                 JOIN product_tags t ON t.product_id = p.product_id
@@ -244,8 +244,8 @@ class PgStore:
         items = [{
             "product_id": pid, "product_name": name, "clothing_type": ctype,
             "tags": list(tags), "seasons": list(seasons), "popularity": float(popularity),
-            "price": price, "brand": brand or "", "image_url": image or "",
-        } for pid, name, ctype, tags, seasons, popularity, price, brand, image in self._run(work)]
+            "price": price, "brand": brand or "", "image_url": image or "", "description": description or "",
+        } for pid, name, ctype, tags, seasons, popularity, price, brand, image, description in self._run(work)]
         self._by_id = {i["product_id"]: i for i in items}
         self._items = items
         self._loaded_at = time.monotonic()

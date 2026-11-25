@@ -75,7 +75,7 @@ def test_items_same_as_json():
     assert from_db.keys() == from_json.keys()
     for pid, item in from_json.items():
         got = from_db[pid]
-        for key in ("product_name", "clothing_type", "tags", "seasons", "popularity"):
+        for key in ("product_name", "clothing_type", "tags", "seasons", "popularity", "description"):
             assert got[key] == item[key], (pid, key)
 
 

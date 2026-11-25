@@ -1,9 +1,10 @@
 {
-  "_comment": "시연용 가짜 상품 30개 (상의 12, 하의 8, 아우터 6, 원피스 4). 태그는 B 파트 data/tag_weight.json·balance.json 이름. 손계산 테스트용 옛 태그 버전은 items_fake.json",
+  "_comment": "시연용 가짜 상품 30개 (상의 12, 하의 8, 아우터 6, 원피스 4). 설명(description)도 이름·태그로 지은 가짜 글. 태그는 B 파트 data/tag_weight.json·balance.json 이름. 손계산 테스트용 옛 태그 버전은 items_fake.json",
   "items": [
     {
       "product_id": "t01",
       "product_name": "칼라 셔츠",
+      "description": "칼라가 달린 면 셔츠예요. 몸에 붙는 슬림 핏이에요.",
       "clothing_type": "top",
       "tags": [
         "fit:slim",
@@ -18,6 +19,7 @@
     {
       "product_id": "t02",
       "product_name": "세로 절개 셔츠",
+      "description": "세로 절개선이 들어간 면 셔츠예요. 몸에 붙는 슬림 핏이에요.",
       "clothing_type": "top",
       "tags": [
         "fit:slim",
@@ -32,6 +34,7 @@
     {
       "product_id": "t03",
       "product_name": "베이직 라운드넥 니트",
+      "description": "라운드넥 기본 니트예요. 몸에 붙는 슬림 핏이에요.",
       "clothing_type": "top",
       "tags": [
         "fit:slim",
@@ -46,6 +49,7 @@
     {
       "product_id": "t04",
       "product_name": "크롭 니트",
+      "description": "기장이 짧은 크롭 니트예요.",
       "clothing_type": "top",
       "tags": [
         "len:crop",
@@ -60,6 +64,7 @@
     {
       "product_id": "t05",
       "product_name": "퍼프 소매 블라우스",
+      "description": "퍼프 소매가 달린 쉬폰 블라우스예요.",
       "clothing_type": "top",
       "tags": [
         "mat:chiffon"
@@ -73,6 +78,7 @@
     {
       "product_id": "t06",
       "product_name": "러플 블라우스",
+      "description": "러플 장식이 있는 쉬폰 블라우스예요.",
       "clothing_type": "top",
       "tags": [
         "det:ruffle",
@@ -87,6 +93,7 @@
     {
       "product_id": "t07",
       "product_name": "캐시미어 브이넥 니트",
+      "description": "캐시미어 소재의 브이넥 니트예요.",
       "clothing_type": "top",
       "tags": [
         "mat:cashmere",
@@ -101,6 +108,7 @@
     {
       "product_id": "t08",
       "product_name": "오버사이즈 셔츠",
+      "description": "품이 넉넉한 오버사이즈 핏의 면 셔츠예요.",
       "clothing_type": "top",
       "tags": [
         "fit:over",
@@ -115,6 +123,7 @@
     {
       "product_id": "t09",
       "product_name": "박시 티셔츠",
+      "description": "품이 넉넉한 박시한 면 티셔츠예요.",
       "clothing_type": "top",
       "tags": [
         "fit:over",
@@ -129,6 +138,7 @@
     {
       "product_id": "t10",
       "product_name": "두꺼운 캐주얼 니트",
+      "description": "울이 들어간 두꺼운 니트예요. 넉넉한 핏이라 편하게 입기 좋아요.",
       "clothing_type": "top",
       "tags": [
         "fit:over",
@@ -144,6 +154,7 @@
     {
       "product_id": "t11",
       "product_name": "드롭숄더 맨투맨",
+      "description": "어깨선이 아래로 내려오는 면 맨투맨이에요. 넉넉한 핏이에요.",
       "clothing_type": "top",
       "tags": [
         "fit:over",
@@ -160,6 +171,7 @@
     {
       "product_id": "t12",
       "product_name": "하이넥 니트",
+      "description": "목까지 올라오는 하이넥 니트예요. 몸에 붙는 슬림 핏이에요.",
       "clothing_type": "top",
       "tags": [
         "fit:slim",
@@ -174,6 +186,7 @@
     {
       "product_id": "b01",
       "product_name": "H라인 스커트",
+      "description": "위아래 폭이 일자로 떨어지는 H라인 타이트 스커트예요.",
       "clothing_type": "skirt",
       "tags": [
         "sil:IH",
@@ -190,6 +203,7 @@
     {
       "product_id": "b02",
       "product_name": "센터프레스 슬랙스",
+      "description": "가운데 주름선을 잡은 울 슬랙스예요. 일자로 떨어지는 실루엣이에요.",
       "clothing_type": "pants",
       "tags": [
         "sil:IH",
@@ -206,6 +220,7 @@
     {
       "product_id": "b03",
       "product_name": "스트레이트 핏 데님",
+      "description": "일자로 떨어지는 스트레이트 핏 데님 팬츠예요.",
       "clothing_type": "pants",
       "tags": [
         "sil:IH",
@@ -222,6 +237,7 @@
     {
       "product_id": "b04",
       "product_name": "하이웨이스트 슬림 팬츠",
+      "description": "허리선이 높은 슬림 핏 팬츠예요.",
       "clothing_type": "pants",
       "tags": [
         "waist:high",
@@ -238,6 +254,7 @@
     {
       "product_id": "b05",
       "product_name": "A라인 스커트",
+      "description": "아래로 갈수록 퍼지는 A라인 스커트예요.",
       "clothing_type": "skirt",
       "tags": [
         "sil:A"
@@ -251,6 +268,7 @@
     {
       "product_id": "b06",
       "product_name": "하이웨이스트 와이드 팬츠",
+      "description": "허리선이 높고 통이 넓은 와이드 팬츠예요.",
       "clothing_type": "pants",
       "tags": [
         "waist:high",
@@ -267,6 +285,7 @@
     {
       "product_id": "b07",
       "product_name": "워싱 와이드 데님",
+      "description": "워싱 처리한 통 넓은 데님 팬츠예요.",
       "clothing_type": "pants",
       "tags": [
         "sil:wide",
@@ -283,6 +302,7 @@
     {
       "product_id": "b08",
       "product_name": "스키니 팬츠",
+      "description": "다리에 붙는 스키니 팬츠예요.",
       "clothing_type": "pants",
       "tags": [
         "sil:skinny",
@@ -299,6 +319,7 @@
     {
       "product_id": "o01",
       "product_name": "숏 테일러드 재킷",
+      "description": "기장이 짧은 테일러드 재킷이에요.",
       "clothing_type": "outer",
       "tags": [
         "item:tailored_jacket",
@@ -313,6 +334,7 @@
     {
       "product_id": "o02",
       "product_name": "무릎 위 기장 코트",
+      "description": "무릎 위까지 오는 기장의 울 코트예요.",
       "clothing_type": "outer",
       "tags": [
         "mat:wool"
@@ -326,6 +348,7 @@
     {
       "product_id": "o03",
       "product_name": "벨트 울 코트",
+      "description": "허리 벨트가 있는 울 코트예요. 몸에 맞는 슬림 핏이에요.",
       "clothing_type": "outer",
       "tags": [
         "mat:wool",
@@ -340,6 +363,7 @@
     {
       "product_id": "o04",
       "product_name": "오버사이즈 롱 코트",
+      "description": "품이 넉넉하고 기장이 긴 울 코트예요.",
       "clothing_type": "outer",
       "tags": [
         "fit:over",
@@ -355,6 +379,7 @@
     {
       "product_id": "o05",
       "product_name": "워싱 데님 재킷",
+      "description": "워싱 처리한 데님 재킷이에요.",
       "clothing_type": "outer",
       "tags": [
         "mat:denim"
@@ -368,6 +393,7 @@
     {
       "product_id": "o06",
       "product_name": "롱 패딩",
+      "description": "품이 넉넉하고 기장이 긴 나일론 패딩이에요.",
       "clothing_type": "outer",
       "tags": [
         "fit:over",
@@ -382,6 +408,7 @@
     {
       "product_id": "d01",
       "product_name": "H라인 미디 원피스",
+      "description": "위아래 폭이 일자로 떨어지는 H라인 미디 원피스예요.",
       "clothing_type": "dress",
       "tags": [
         "sil:IH"
@@ -395,6 +422,7 @@
     {
       "product_id": "d02",
       "product_name": "허리 강조 A라인 원피스",
+      "description": "허리선을 강조하고 아래로 퍼지는 A라인 원피스예요.",
       "clothing_type": "dress",
       "tags": [
         "sil:A"
@@ -408,6 +436,7 @@
     {
       "product_id": "d03",
       "product_name": "랩 원피스",
+      "description": "앞을 여며 입는 쉬폰 랩 원피스예요.",
       "clothing_type": "dress",
       "tags": [
         "mat:chiffon"
@@ -421,6 +450,7 @@
     {
       "product_id": "d04",
       "product_name": "루즈핏 셔츠 원피스",
+      "description": "기장이 긴 면 셔츠 원피스예요. 넉넉한 루즈핏이에요.",
       "clothing_type": "dress",
       "tags": [
         "fit:over",

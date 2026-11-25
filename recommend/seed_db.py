@@ -4,7 +4,7 @@
     python recommend/seed_db.py
 DB 주소는 서버와 같은 곳에서 찾는다 (DATABASE_URL 환경 변수 → 저장소 맨 위 database_url.txt).
 
-여러 번 실행해도 된다: 같은 product_id(t01 …)가 있으면 이름·종류·계절·인기도·태그를 items.json 값으로 덮어쓴다.
+여러 번 실행해도 된다: 같은 product_id(t01 …)가 있으면 이름·설명·종류·계절·인기도·태그를 items.json 값으로 덮어쓴다.
 실제 상품이 들어오면 이 스크립트 대신 상품 등록 기능으로 products·product_tags를 채운다.
 """
 import json
@@ -61,13 +61,14 @@ def seed(conn, items):
         for item in items:
             cur.execute(
                 """INSERT INTO products (product_id, brand_id, fabric_id, category_id, product_name, price,
-                                         seasons, popularity)
-                   VALUES (%s, %s, %s, %s, %s, 0, %s, %s)
+                                         seasons, popularity, description)
+                   VALUES (%s, %s, %s, %s, %s, 0, %s, %s, %s)
                    ON CONFLICT (product_id) DO UPDATE SET
                        category_id = EXCLUDED.category_id, product_name = EXCLUDED.product_name,
-                       seasons = EXCLUDED.seasons, popularity = EXCLUDED.popularity""",
+                       seasons = EXCLUDED.seasons, popularity = EXCLUDED.popularity,
+                       description = EXCLUDED.description""",
                 (item["product_id"], brand_id, fabric_id, category_ids[item["clothing_type"]],
-                 item["product_name"], item["seasons"], item["popularity"]),
+                 item["product_name"], item["seasons"], item["popularity"], item.get("description")),
             )
             cur.execute(
                 """INSERT INTO product_tags (product_id, tags, fit_stated, source)

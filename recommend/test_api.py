@@ -419,6 +419,18 @@ def test_items_carry_seasons_for_app_filter():
     assert look["top"]["seasons"] and look["bottom"]["seasons"]
 
 
+def test_items_carry_description_for_detail_screen():
+    # 앱 상품 상세는 응답의 description을 보여 준다 → 홈·카탈로그·코디의 모든 상품에 있어야 한다
+    reset()
+    items = {i["product_id"]: i for i in load_items()}
+    d = client.post("/api/feed/scroll", json={"mode": "general", "size": 50}).get_json()
+    assert d["items"]
+    for r in d["items"]:
+        assert r["description"] == items[r["product_id"]]["description"] and r["description"].endswith("요.")
+    look = client.get("/api/feed?S=1").get_json()["sections"][-1]["items"][0]
+    assert look["top"]["description"] and look["bottom"]["description"]
+
+
 if __name__ == "__main__":
     tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_")]
     failed = 0
