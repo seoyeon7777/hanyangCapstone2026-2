@@ -411,6 +411,11 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // 홈을 벗어나면 기다리던 홈 요청은 버린다. 늦게 온 응답이 다른 목록에 "상품이 늘었다"고 알리면
+        // RecyclerView가 목록과 맞지 않는다며 앱이 꺼진다. 홈으로 돌아오면 처음부터 다시 불러온다
+        homeRequestId++;
+        homeLoading = false;
+
         List<Product> products = new ArrayList<>();
 
         for (Product product : DummyData.getProducts()) {
