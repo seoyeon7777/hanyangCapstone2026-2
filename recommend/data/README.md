@@ -120,7 +120,7 @@
 | `is_new` | 신상 여부 (아래 8장 미정) |
 | `sizes` | S, M, L (DB `product_options`) |
 
-현재 DB `products`에는 `description`·`main_image_url`·`popularity`가 있다. 서버(`store.py`)는 `description`을 읽지 않아 응답에 안 실린다. 신상 구분용 컬럼이 있는지는 확인하지 못했다.
+현재 DB `products`에는 `description`·`main_image_url`·`popularity`가 있다. 서버는 `description`을 상품 응답에 실어 보낸다(11/25. 시연 상품 30개에는 가짜 설명을 넣었다. 앱 상세 화면 표시는 아직). 신상 구분용 컬럼이 있는지는 확인하지 못했다.
 
 ## 8. 역할 분담
 
