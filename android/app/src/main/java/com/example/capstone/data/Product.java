@@ -34,6 +34,7 @@ public class Product {
     private String reason = "";
     private String imageUrl = "";
     private String description = "";
+    private String dataSource = "";
     private float popularity = -1f;
 
     public Product(int id, String brand, String name, int price) {
@@ -141,6 +142,7 @@ public class Product {
         line.setServerInfo(serverId, reason);
         line.setImageUrl(imageUrl);
         line.setDescription(description);
+        line.setDataSource(dataSource);
         line.setPopularity(popularity);
         line.liked = liked;
         line.cartLineId = lineId;
@@ -199,6 +201,15 @@ public class Product {
 
     public void setDescription(String description) {
         this.description = description == null ? "" : description;
+    }
+
+    /** 상품 정보의 출처 표시 (DataCredit.SOURCE_ETRI 등. 없으면 빈 문자열) */
+    public String getDataSource() {
+        return dataSource;
+    }
+
+    public void setDataSource(String dataSource) {
+        this.dataSource = dataSource == null ? "" : dataSource;
     }
 
     public float getPopularity() {

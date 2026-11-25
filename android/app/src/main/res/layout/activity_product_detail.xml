@@ -241,6 +241,21 @@
                 android:textStyle="bold"
                 android:background="#FFFFFF" />
 
+            <!-- 데이터 출처 (ETRI 상품만) -->
+            <TextView
+                android:id="@+id/textDetailCredit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#F5F5F5"
+                android:paddingStart="20dp"
+                android:paddingTop="16dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="16dp"
+                android:lineSpacingExtra="3dp"
+                android:textColor="#777777"
+                android:textSize="11sp"
+                android:visibility="gone" />
+
             <!-- 아래 여백 -->
             <View
                 android:layout_width="match_parent"

@@ -415,6 +415,7 @@ public final class RecommendApi {
             // 값이 null이면 "null"이라는 글자가 되지 않게 빈 문자열로
             product.setDescription(item.isNull("description") ? "" : item.optString("description", ""));
         }
+        product.setDataSource(item.optString("data_source", ""));
         // 추천 이유는 토글(ON/OFF)마다 달라서 받을 때마다 새로 넣는다
         product.setServerInfo(serverId, item.optString("reason", ""));
 

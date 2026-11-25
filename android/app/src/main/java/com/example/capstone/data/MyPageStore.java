@@ -372,6 +372,12 @@ public class MyPageStore {
     private static final List<Notice> notices = new ArrayList<>(
             Arrays.asList(
                     new Notice(
+                            "안내",
+                            "상품 이미지와 정보의 출처",
+                            "2026.11.25",
+                            DataCredit.ETRI
+                    ),
+                    new Notice(
                             "업데이트",
                             "11월 앱 업데이트 안내",
                             "2026.11.21",

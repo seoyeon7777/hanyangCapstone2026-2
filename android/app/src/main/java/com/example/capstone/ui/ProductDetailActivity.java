@@ -15,6 +15,7 @@ import com.example.capstone.login.LoginSession;
 import com.example.capstone.data.AccountPrefs;
 import com.example.capstone.data.BodyProfileStore;
 import com.example.capstone.data.CartStore;
+import com.example.capstone.data.DataCredit;
 import com.example.capstone.login.LoginGate;
 import com.example.capstone.data.DummyData;
 import com.example.capstone.data.LocalLikes;
@@ -187,6 +188,13 @@ public class ProductDetailActivity extends AppCompatActivity {
         if (currentProduct != null && !currentProduct.getDescription().isEmpty()) {
             textDetailDescription.setText(KoreanLineBreak.keepWords(currentProduct.getDescription()));
             textDetailDescription.setVisibility(View.VISIBLE);
+        }
+
+        // ETRI 데이터로 만든 상품에만 맨 아래에 출처를 보여 준다
+        TextView textDetailCredit = findViewById(R.id.textDetailCredit);
+        if (currentProduct != null && DataCredit.SOURCE_ETRI.equals(currentProduct.getDataSource())) {
+            textDetailCredit.setText(KoreanLineBreak.keepWords(DataCredit.ETRI));
+            textDetailCredit.setVisibility(View.VISIBLE);
         }
 
         ProductImages.bind(
