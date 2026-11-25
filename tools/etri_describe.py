@@ -35,11 +35,50 @@ BAD_IN_FEATURE = re.compile(r"없|않|사이즈|모델|착용")
 
 # 앱에서 부를 이름으로 쓸 수 있는 세부 종류 낱말 (F 줄이 이 낱말로 끝나고 짧으면 이름에 쓴다)
 SUBTYPE_ENDS = ("코트", "자켓", "재킷", "점퍼", "가디건", "조끼", "블라우스", "셔츠", "니트", "티셔츠",
-                "맨투맨", "후디", "원피스", "팬츠", "스커트", "베스트")
+                "맨투맨", "후디", "원피스", "팬츠", "스커트", "베스트",
+                "슬랙스", "수트", "슈트", "레깅스")
+
+# ---------- 데님 ----------
+BLUE_DENIM = ("블루", "하늘색", "네이비")          # 이 색의 데님은 색 이름 대신 "청바지·데님"으로 부른다
+# 옷 자체가 데님이라고 볼 수 없는 말: 장식·배색, 다른 옷과의 코디, 데님처럼 보이는 가죽
+_NOT_DENIM_BODY = re.compile(r"패치|배색|배합|매치|코디|어울|함께|레더")
+# 형태(F) 줄이 자기 옷 이름으로 끝날 때: "데님 팬츠", "데님 롱 조끼", "스키니 진", "청 자켓"
+_DENIM_NAME_LINE = re.compile(r"(?:데님(?:\s\S+){0,2}\s?(?:팬츠|바지|진|자켓|재킷|점퍼|스커트|치마|조끼|셔츠|원피스|코트)|"
+                              r"(?:스키니|와이드|부츠컷|일자|배기)\s진|청\s?(?:바지|자켓|재킷|치마|스커트))$")
+
+
+def is_denim(attrs: dict[str, list[str]]) -> bool:
+    """소재(M)에 데님이 적혔거나, 형태(F) 줄이 데님 옷 이름일 때. 코디 설명(E)은 보지 않는다"""
+    if any("데님" in line and not _NOT_DENIM_BODY.search(line) for line in attrs.get("M", [])):
+        return True
+    return any(_DENIM_NAME_LINE.search(line) and not _NOT_DENIM_BODY.search(line) for line in attrs.get("F", []))
+
+
+def _jeans_noun(subtype: str) -> str:
+    """"바지"→"청바지", "와이드 데님 팬츠"→"와이드 청바지" """
+    words = [w for w in subtype.split() if w != "데님"]
+    if words and words[-1] in ("바지", "팬츠", "진", "청바지"):
+        words.pop()
+    return " ".join(words + ["청바지"])
+
+
+def garment_noun(kind_code: str, attrs: dict[str, list[str]]) -> str:
+    """설명 첫 문장과 이름에 쓸 옷 이름. 파란 데님 바지는 "청바지" """
+    subtype = pick_subtype(attrs.get("F", []), KINDS[kind_code][0])
+    # 데님이어도 점프 수트·레깅스·슬랙스는 청바지라고 부르지 않는다
+    if kind_code == "PT" and is_denim(attrs) and subtype.split()[-1] in ("바지", "팬츠", "진", "청바지"):
+        colors, _ = main_colors(attrs.get("C", []))
+        if not colors or colors[0] in BLUE_DENIM:
+            return _jeans_noun(subtype)
+    return subtype
+
+
+# 이름이 아니라 문장 조각인 줄: "전체적으로 박시한 맨투맨", "머메이드 라인의 스커트"
+NOT_A_NAME = re.compile(r"전체|(?:라인|형태|스타일)의|느낌|으로")
 
 # ---------- 색상(C) ----------
 COLORS = (   # (찾을 말, 설명에 쓸 말). 긴 말이 먼저
-    ("스카이 블루", "스카이블루"), ("스카이블루", "스카이블루"), ("하늘색", "스카이블루"), ("소라색", "소라색"),
+    ("스카이 블루", "하늘색"), ("스카이블루", "하늘색"), ("하늘색", "하늘색"), ("소라색", "하늘색"),
     ("베이비 핑크", "베이비핑크"), ("연 베이지", "연베이지"), ("연베이지", "연베이지"),
     ("블랙", "블랙"), ("검정", "블랙"), ("화이트", "화이트"), ("흰색", "화이트"), ("아이보리", "아이보리"),
     ("크림", "크림"), ("베이지", "베이지"), ("브라운", "브라운"), ("갈색", "브라운"), ("카멜", "카멜"),
@@ -64,6 +103,19 @@ MOODS = (
 )
 OCCASIONS = (("데일리", "데일리 룩"), ("데이트", "데이트 룩"), ("캠퍼스", "캠퍼스 룩"), ("오피스", "오피스 룩"),
              ("하객", "하객 룩"), ("바캉스", "바캉스 룩"), ("피크닉", "피크닉 룩"))
+
+
+# 화면에 보이는 글(설명·상품명)에서 우리말로 바꿔 쓸 일본식 표현. 태그는 원문으로 붙이므로 영향이 없다
+PLAIN_WORDS = (("소라색", "하늘색"), ("시보리", "고무단"), ("세라 칼라", "세일러 칼라"), ("카라", "칼라"))
+# "고무단"은 받침이 있어 "시보리를·시보리로"의 조사도 바꿔야 한다
+_SIBORI_JOSA = {"를": "을", "가": "이", "로": "으로", "는": "은", "와": "과"}
+
+
+def plain_korean(text: str) -> str:
+    text = re.sub(r"시보리([를가로는와])(?![가-힣])", lambda m: "고무단" + _SIBORI_JOSA[m.group(1)], text)
+    for old, new in PLAIN_WORDS:
+        text = text.replace(old, new)
+    return text
 
 
 def _has_batchim(word: str) -> bool:
@@ -105,7 +157,7 @@ def pick_subtype(lines: list[str], kind_name: str) -> str:
     for line in lines:
         words = line.split()
         if 2 <= len(words) <= 3 and len(line) <= 14 and words[-1] in SUBTYPE_ENDS \
-                and not BAD_IN_FEATURE.search(line):
+                and not BAD_IN_FEATURE.search(line) and not NOT_A_NAME.search(line):
             return line
     return kind_name
 
@@ -179,7 +231,8 @@ def attribute_sentence(lines: list[str]) -> str:
     return ", ".join([a for a, _ in pairs[:-1]] + [pairs[-1][1]]) + "."
 
 
-def color_sentence(lines: list[str]) -> str:
+def main_colors(lines: list[str]) -> tuple[list[str], str]:
+    """옷 본체의 색(적힌 순서대로 최대 MAX_COLORS개)과 무늬. 단추·안감 같은 장식 색 줄은 뺀다"""
     colors: list[str] = []
     pattern = ""
     for line in lines:
@@ -198,7 +251,31 @@ def color_sentence(lines: list[str]) -> str:
         for _, name in sorted(found):
             if name not in colors:
                 colors.append(name)
-    colors = colors[:MAX_COLORS]
+    return colors[:MAX_COLORS], pattern
+
+
+def product_name(kind_code: str, attrs: dict[str, list[str]]) -> str:
+    """"하늘색 블라우스", "아이보리 플로럴 원피스" — 첫 번째 색 + 무늬 + 세부 종류. 없는 부분은 뺀다"""
+    subtype = garment_noun(kind_code, attrs)
+    colors, pattern = main_colors(attrs.get("C", []))
+    if "청바지" in subtype:
+        return plain_korean(subtype)
+    if is_denim(attrs):
+        # 파란 데님은 색 대신 "데님"("데님 셔츠"), 다른 색은 "그레이 데님 바지"
+        if colors and colors[0] in BLUE_DENIM:
+            colors = []
+        if "데님" not in subtype and not subtype.startswith("청"):
+            words_ = subtype.split()
+            subtype = " ".join(words_[:-1] + ["데님", words_[-1]])
+    words = []
+    for word in (colors[:1] + [pattern.removesuffix("무늬").strip()]):
+        if word and word not in subtype.replace(" ", "") and word not in subtype:
+            words.append(word)
+    return plain_korean(" ".join(words + [subtype]))
+
+
+def color_sentence(lines: list[str]) -> str:
+    colors, pattern = main_colors(lines)
     solid = any("단색" in line and not ACCENT.search(line) for line in lines)
     if colors and pattern:
         return f"색은 {'·'.join(colors)}에 {ieyo(pattern)}."
@@ -244,7 +321,7 @@ def describe(kind_code: str, attrs: dict[str, list[str]]) -> str:
     name = KINDS[kind_code][0]
     f_lines = attrs.get("F", [])
     subtype = pick_subtype(f_lines, name)
-    sentences = [ieyo(subtype) + "."]
+    sentences = [ieyo(garment_noun(kind_code, attrs)) + "."]
     f_lines = [_dedupe_words(x) for x in f_lines]
     features = [x for x in pick_features(f_lines) if x != subtype]
     if features:
@@ -253,7 +330,7 @@ def describe(kind_code: str, attrs: dict[str, list[str]]) -> str:
                  color_sentence(attrs.get("C", [])), mood_sentence(attrs.get("E", []))):
         if part:
             sentences.append(part)
-    return " ".join(sentences)
+    return plain_korean(" ".join(sentences))
 
 
 def load_items(path: str) -> "OrderedDict[str, dict]":

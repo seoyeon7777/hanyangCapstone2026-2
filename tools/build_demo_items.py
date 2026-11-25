@@ -5,10 +5,10 @@ CSV는 첫 줄이 열 이름이다 (엑셀에서 "CSV UTF-8"로 저장).
     price         필수. 시연용 가격(원). 0은 앱에서 담기·구매가 막혀 받지 않는다
     popularity    선택. 인기도 0~1 (비우면 0.5)
     is_new        선택. 신상이면 1 (비우면 아님)
-    product_name  선택. 비우면 속성에서 고른 이름
+    product_name  선택. 비우면 "색 + 무늬 + 세부 종류" (예: 하늘색 블라우스)
     brand         선택. 비우면 "시연용 브랜드"
     seasons       선택. spring summer fall winter 중에서 띄어 씀 (비우면 네 계절 모두. 원본에 계절 정보가 없다)
-설명(tools/etri_describe.py)·태그(tagging.py)·사진 연결은 이 스크립트가 붙인다.
+설명(tools/etri_describe.py)·태그(tools/etri_tagging.py → tagging.py)·사진 연결은 이 스크립트가 붙인다.
 
     python tools/build_demo_items.py <상품 목록.csv> <정리한 TSV> <사진 폴더> <저장할 products.json>
 
@@ -25,8 +25,8 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matching  # noqa: E402
-from tagging import tag_item_full  # noqa: E402
-from etri_describe import KINDS, describe, load_items, pick_subtype  # noqa: E402
+from etri_describe import KINDS, describe, load_items, pick_subtype, product_name  # noqa: E402
+from etri_tagging import etri_tags  # noqa: E402
 
 SEASONS = ("spring", "summer", "fall", "winter")
 DEFAULT_BRAND = "시연용 브랜드"
@@ -57,11 +57,12 @@ def build_item(row: dict, source: dict, rules) -> dict:
     seasons = (row.get("seasons") or "").split() or list(SEASONS)
     if any(s not in SEASONS for s in seasons):
         raise ValueError(f"seasons는 {' '.join(SEASONS)} 중에서 띄어 써야 합니다")
-    name = row.get("product_name") or pick_subtype(attrs.get("F", []), KINDS[kind][0])
-    text = "\n".join(line for ftype in ("F", "M", "E") for line in attrs.get(ftype, []))
+    name = row.get("product_name") or product_name(kind, attrs)
+    # 태그에는 색을 붙인 이름 대신 세부 종류를 넣는다 (색·무늬 낱말이 태그로 읽히지 않게). 직접 적은 이름은 그대로 읽는다
+    tag_name = row.get("product_name") or pick_subtype(attrs.get("F", []), KINDS[kind][0])
     return {
         "product_id": item_id, "product_name": name, "clothing_type": KINDS[kind][1],
-        "tags": tag_item_full(name, text, rules)["tags"], "seasons": seasons, "popularity": popularity,
+        "tags": etri_tags(tag_name, attrs, KINDS[kind][1], rules), "seasons": seasons, "popularity": popularity,
         "price": price, "brand": row.get("brand") or DEFAULT_BRAND, "is_new": is_new in TRUE_WORDS,
         "description": describe(kind, attrs), "image_file": f"{item_id}.jpg",
         "data_source": "etri",   # 앱이 상품 상세 하단에 ETRI 출처 문구를 보여 주는 표시
@@ -125,6 +126,10 @@ def main(argv: list[str]) -> int:
         by_type[item["clothing_type"]] = by_type.get(item["clothing_type"], 0) + 1
     print(f"상품 {len(items)}개를 저장했습니다: {out}")
     print("  종류별: " + ", ".join(f"{k} {v}" for k, v in sorted(by_type.items())))
+    names = [i["product_name"] for i in items]
+    repeated = sorted({n for n in names if names.count(n) > 1})
+    if repeated:
+        print(f"  같은 상품명 {len(repeated)}종: {', '.join(repeated)} (product_name 열로 바꿀 수 있습니다)")
     untagged = [i["product_id"] for i in items if not i["tags"]]
     if untagged:
         print(f"  태그가 없는 상품 {len(untagged)}개: {', '.join(untagged)}")
