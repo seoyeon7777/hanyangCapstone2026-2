@@ -583,6 +583,12 @@ public class CategoryActivity extends AppCompatActivity {
                             if (a.isFromServer() != b.isFromServer()) {
                                 return a.isFromServer() ? 1 : -1;
                             }
+                            if (a.isFromServer()) {
+                                return Integer.compare(
+                                        RecommendApi.catalogRank(a),
+                                        RecommendApi.catalogRank(b)
+                                );
+                            }
                             return Integer.compare(
                                     b.getId(),
                                     a.getId()

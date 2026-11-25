@@ -416,6 +416,7 @@ public final class RecommendApi {
             product.setDescription(item.isNull("description") ? "" : item.optString("description", ""));
         }
         product.setDataSource(item.optString("data_source", ""));
+        product.setNewArrival(item.optBoolean("is_new", false));
         // 추천 이유는 토글(ON/OFF)마다 달라서 받을 때마다 새로 넣는다
         product.setServerInfo(serverId, item.optString("reason", ""));
 

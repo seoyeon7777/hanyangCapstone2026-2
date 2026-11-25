@@ -27,17 +27,26 @@
             android:minHeight="0dp" />
 
         <FrameLayout
+            android:id="@+id/frameCartImage"
             android:layout_width="105dp"
             android:layout_height="130dp"
             android:background="#F3F3F3">
 
             <TextView
+                android:id="@+id/textCartImageLabel"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="상품 이미지"
                 android:textColor="#AAAAAA"
                 android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/imgCartProduct"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:visibility="gone" />
 
         </FrameLayout>
 

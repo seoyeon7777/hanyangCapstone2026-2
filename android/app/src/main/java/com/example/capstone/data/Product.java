@@ -35,6 +35,7 @@ public class Product {
     private String imageUrl = "";
     private String description = "";
     private String dataSource = "";
+    private boolean newArrival;
     private float popularity = -1f;
 
     public Product(int id, String brand, String name, int price) {
@@ -143,6 +144,7 @@ public class Product {
         line.setImageUrl(imageUrl);
         line.setDescription(description);
         line.setDataSource(dataSource);
+        line.setNewArrival(newArrival);
         line.setPopularity(popularity);
         line.liked = liked;
         line.cartLineId = lineId;
@@ -210,6 +212,15 @@ public class Product {
 
     public void setDataSource(String dataSource) {
         this.dataSource = dataSource == null ? "" : dataSource;
+    }
+
+    /** 서버가 신상(is_new)으로 알려 준 상품. 내장 상품의 신상 여부는 DummyData.isNew가 정한다 */
+    public boolean isNewArrival() {
+        return newArrival;
+    }
+
+    public void setNewArrival(boolean newArrival) {
+        this.newArrival = newArrival;
     }
 
     public float getPopularity() {

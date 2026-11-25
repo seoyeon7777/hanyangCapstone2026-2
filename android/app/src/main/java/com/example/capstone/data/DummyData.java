@@ -335,8 +335,11 @@ public class DummyData {
     }
 
     public static boolean isNew(Product product) {
-        if (product == null || product.isFromServer()) {
+        if (product == null) {
             return false;
+        }
+        if (product.isFromServer()) {
+            return product.isNewArrival();
         }
         int localCount = 0;
         for (Product p : PRODUCTS) {

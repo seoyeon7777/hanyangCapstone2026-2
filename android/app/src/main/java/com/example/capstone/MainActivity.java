@@ -433,12 +433,18 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if ("신상".equals(selectedMenu)) {
+            // 서버 신상은 인기 순서(카탈로그 순위)대로 먼저, 그 뒤에 내장 신상.
+            // 서버 상품 번호는 받은 순서라 번호 역순으로 놓으면 인기 순서가 뒤집힌다
             Collections.sort(
                     products,
-                    (a, b) -> Integer.compare(
-                            b.getId(),
-                            a.getId()
-                    )
+                    (a, b) -> {
+                        if (a.isFromServer() != b.isFromServer()) {
+                            return a.isFromServer() ? -1 : 1;
+                        }
+                        return a.isFromServer()
+                                ? Integer.compare(RecommendApi.catalogRank(a), RecommendApi.catalogRank(b))
+                                : Integer.compare(b.getId(), a.getId());
+                    }
             );
         } else if ("베스트".equals(selectedMenu)) {
             Collections.sort(

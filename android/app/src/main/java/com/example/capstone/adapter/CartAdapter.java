@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.capstone.R;
 import com.example.capstone.data.CartStore;
+import com.example.capstone.data.ProductImages;
 import com.example.capstone.ui.AppDialog;
 import com.example.capstone.data.Product;
 import com.example.capstone.ui.ProductDetailActivity;
@@ -65,6 +67,8 @@ public class CartAdapter
     ) {
 
         Product product = cartList.get(position);
+
+        ProductImages.bind(holder.frameImage, holder.textImageLabel, holder.imgProduct, product);
 
         holder.cbSelect.setChecked(product.isCartSelected());
 
@@ -290,12 +294,19 @@ public class CartAdapter
         TextView btnChangeOption;
         CheckBox cbSelect;
         View layoutProduct;
+        View frameImage;
+        TextView textImageLabel;
+        ImageView imgProduct;
 
         public CartViewHolder(
                 @NonNull View itemView
         ) {
 
             super(itemView);
+
+            frameImage = itemView.findViewById(R.id.frameCartImage);
+            textImageLabel = itemView.findViewById(R.id.textCartImageLabel);
+            imgProduct = itemView.findViewById(R.id.imgCartProduct);
 
             cbSelect = itemView.findViewById(
                     R.id.cbCartSelect
