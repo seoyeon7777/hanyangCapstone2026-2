@@ -220,9 +220,16 @@ match_score(body, item) -> {
   - 연결 풀: 연결을 최대 `DB_POOL_SIZE`(4)개 열어 두고 요청마다 빌려 씀 (예전에는 하나를 모두가 차례로 써서 동시 6명이면 3.4초 → 지금 0.3초, 왕복 80ms 가정). 끊긴 연결은 버리고 새 연결로 한 번 다시
   - DB 왕복 줄이기: 읽기는 트랜잭션 없이, 사용자+현재 체형은 한 쿼리. API는 체형이 바뀌었을 때만 save_body하고 저장 뒤 사용자를 다시 읽지 않는다(event도 응답 pref를 직접 계산) → 스크롤 13번 → 2번, 찜 13번 → 3번 (PostgreSQL 로그로 셈)
 - 응답 상품에 DB의 `price`, `brand`, `image_url`과 모든 상품의 `seasons`·`description`을 더해 보낸다 (`feed_api.for_screen`). feed.py 결과 모양은 그대로
-  - `description`(11/25)은 상품 상세에 보여 줄 설명문이다. 점수 계산에는 쓰지 않는다. 시연 상품 30개는 `items.json`에 가짜 설명이 있고, DB에는 `seed_db.py`를 다시 실행해야 들어간다. 앱 표시는 아직 없다
+  - `description`(11/25)은 상품 상세에 보여 줄 설명문이다. 점수 계산에는 쓰지 않는다. 시연 상품 30개는 `items.json`에 가짜 설명이 있고, DB에는 `seed_db.py`를 다시 실행해야 들어간다. 앱은 상품 상세의 "상품 정보" 아래에 보여 주고, 값이 없으면(내장 상품) 그 칸을 숨긴다 (`Product.getDescription`)
   - `seasons`는 11/03 추가: 앱 카테고리 화면의 계절 필터가 상품의 seasons로 거르는데, 서버가 안 보내서 계절을 고르면 서버 상품이 전부 사라졌다 (`test_items_carry_seasons_for_app_filter`)
 - 앱(RecommendApi.toProduct)은 응답의 price·brand를 카드에 쓴다 (없으면 가격 숨김·브랜드 자리에 종류). image_url은 아직 안 씀 (사진 불러오기 라이브러리 필요)
+
+### 4-33. 시연 상품은 저장소 밖 상품 파일로 (11/25)
+- 팀원 결정(연오): 시연용이라 ETRI 상품 300개는 Supabase 대신 **저장소 밖 JSON 파일**로 넣는다. DB 코드는 그대로 두었고 `database_url.txt`가 있으면 DB가 우선
+- `ITEMS_FILE` 환경 변수 → 맨 위 `items_file.txt`(깃 제외)의 경로 → 없으면 `items.json`(시연 30개). 적어 둔 파일이 없으면 서버가 오류를 낸다. 테스트(`test_api.py`)는 항상 `items.json`
+- 파일 모양: `{"image_dir": 사진 폴더(파일 기준 상대 경로 가능), "items": [상품 + price·brand·description·is_new·image_file]}`. 만드는 법은 `tools/build_demo_items.py`와 `recommend/data/README.md` "상품 파일로 넣기". 결과 파일은 저장소에 넣지 않는다(스크립트가 저장소 안 경로를 거부)
+- 사진: `GET /product-images/<이름>`이 상품 파일에 적힌 사진만 원본 그대로 보내고, 응답의 `image_url`은 앱이 접속한 주소로 만든다. 응답에 `is_new`도 싣는다(앱 신상 표시는 아직)
+- 앱 상품 카드·상세 사진은 `centerCrop` → `fitCenter` (ETRI 이용 조건: 사진을 자르거나 편집하지 않는다)
 
 ### 4-11. 안드로이드 카메라·치수 변경 (10/21)
 - 관절 인식: ML Kit Pose → **MediaPipe Pose Landmarker** (`android/.../camera/MediaPipePoseDetector.java`, 모델 `assets/models/pose_landmarker_full.task` 약 9MB는 저장소에 포함). `camera/Pose`·`PoseLandmark`는 ML Kit와 같은 이름·번호(33개)라 치수 계산 코드는 그대로다. 윤곽 분리(selfie segmentation)는 ML Kit 유지
@@ -516,10 +523,10 @@ match_score(body, item) -> {
 
 ## 5. 정답 테스트 (반드시 통과)
 
-`python -m pytest` (맨 위에서) — 274개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
+`python -m pytest` (맨 위에서) — 296개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
-`cd recommend && python test_api.py` — 현재 31개 통과 (Flask 필요: `pip install -r requirements.txt`).
+`cd recommend && python test_api.py` — 현재 32개 통과 (Flask 필요: `pip install -r requirements.txt`).
 `TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:5432/postgres python recommend/test_db.py` — 현재 10개 통과 (로컬 PostgreSQL. **Supabase 주소 넣지 말 것**).
 
 아래 표의 숫자는 **임시 매칭 기준**이다 (test_feed.py). 실제 B 연결 값은 B의 가중치를 따르므로 test_integration.py가 "C 결과 = B 결과"인지로 확인한다.
