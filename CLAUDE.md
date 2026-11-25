@@ -229,6 +229,14 @@ match_score(body, item) -> {
 - `ITEMS_FILE` 환경 변수 → 맨 위 `items_file.txt`(깃 제외)의 경로 → 없으면 `items.json`(시연 30개). 적어 둔 파일이 없으면 서버가 오류를 낸다. 테스트(`test_api.py`)는 항상 `items.json`
 - 파일 모양: `{"image_dir": 사진 폴더(파일 기준 상대 경로 가능), "items": [상품 + price·brand·description·is_new·image_file]}`. 만드는 법은 `tools/build_demo_items.py`와 `recommend/data/README.md` "상품 파일로 넣기". 결과 파일은 저장소에 넣지 않는다(스크립트가 저장소 안 경로를 거부)
 - 사진: `GET /product-images/<이름>`이 상품 파일에 적힌 사진만 원본 그대로 보내고, 응답의 `image_url`은 앱이 접속한 주소로 만든다. 응답에 `is_new`도 싣는다(앱 신상 표시는 아직)
+- 태그: `tools/etri_tagging.py`가 부위를 꾸미는 모양 낱말("일자형 소매", "와이드 커프스")을 지우고 띄어 쓴 키워드("A 라인", "하이 웨이스트")를 붙인 뒤 `tagging.py`에 넣는다. `tagging.py`·`data/*.json`은 바꾸지 않음. 전후 수치는 README 4-1
+- 상품명: 비우면 "색 + 무늬 + 세부 종류"(`etri_describe.product_name`)
+- 데님(`etri_describe.is_denim`: 소재 줄이나 자기 옷 이름 줄에 데님. 코디 설명·장식은 제외): 파란 데님 바지는 "청바지", 다른 색은 "그레이 데님 바지", 파란 데님 상의·치마 등은 "데님 셔츠"
+- 설명·상품명의 일본식 표현은 우리말로(`etri_describe.PLAIN_WORDS`: 소라색→하늘색, 시보리→고무단, 카라→칼라). 색 이름 "스카이블루"도 하늘색으로 통일
+- 신상: 서버 상품은 `is_new`를 따른다(`Product.isNewArrival`, `DummyData.isNew`). NEW 표시·신상 탭·카테고리 최신순·신상품 쿠폰에 같이 적용. 메인 신상 탭은 서버 신상(카탈로그 순서) 다음에 내장 신상
+- 베스트: 바꾸지 않음(general 순서). 같은 종류 연속 제한 때문에 인기도 순과 몇 자리 다를 수 있다
+- 장바구니에도 상품 사진을 보여 준다. 주문 화면들은 원래 사진 칸이 없다
+- 알려진 문제(미수정): 옵션 창의 색상이 모든 상품에 BLACK·WHITE·GRAY·NAVY로 고정이라 ETRI 상품의 실제 색과 다르다
 - 앱 상품 카드·상세 사진은 `centerCrop` → `fitCenter` (ETRI 이용 조건: 사진을 자르거나 편집하지 않는다)
 - 출처 문구(`data/DataCredit.ETRI`, README 2장 문장): 공지사항 맨 위 "상품 이미지와 정보의 출처" + 상품 상세 맨 아래. 상세는 상품 파일의 `data_source`가 `etri`인 상품에만 (내장 상품·시연 30개에는 안 붙임)
 
@@ -524,7 +532,7 @@ match_score(body, item) -> {
 
 ## 5. 정답 테스트 (반드시 통과)
 
-`python -m pytest` (맨 위에서) — 296개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
+`python -m pytest` (맨 위에서) — 325개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
 `cd recommend && python test_api.py` — 현재 32개 통과 (Flask 필요: `pip install -r requirements.txt`).
