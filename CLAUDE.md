@@ -236,7 +236,7 @@ match_score(body, item) -> {
 - 신상: 서버 상품은 `is_new`를 따른다(`Product.isNewArrival`, `DummyData.isNew`). NEW 표시·신상 탭·카테고리 최신순·신상품 쿠폰에 같이 적용. 메인 신상 탭은 서버 신상(카탈로그 순서) 다음에 내장 신상
 - 베스트: 바꾸지 않음(general 순서). 같은 종류 연속 제한 때문에 인기도 순과 몇 자리 다를 수 있다
 - 장바구니에도 상품 사진을 보여 준다. 주문 화면들은 원래 사진 칸이 없다
-- 알려진 문제(미수정): 옵션 창의 색상이 모든 상품에 BLACK·WHITE·GRAY·NAVY로 고정이라 ETRI 상품의 실제 색과 다르다
+- 옵션 색상: 상품에 `colors`가 있으면 그것만(ETRI 상품은 대표 색 하나, 미리 선택), 빈 목록이면 색상 칸을 숨기고 사이즈만, `colors`가 없는 상품(내장·시연 30개·DB)은 공통 4색. 틀린 색은 목록 CSV의 `colors` 열로 고친다
 - 앱 상품 카드·상세 사진은 `centerCrop` → `fitCenter` (ETRI 이용 조건: 사진을 자르거나 편집하지 않는다)
 - 출처 문구(`data/DataCredit.ETRI`, README 2장 문장): 공지사항 맨 위 "상품 이미지와 정보의 출처" + 상품 상세 맨 아래. 상세는 상품 파일의 `data_source`가 `etri`인 상품에만 (내장 상품·시연 30개에는 안 붙임)
 
@@ -532,7 +532,7 @@ match_score(body, item) -> {
 
 ## 5. 정답 테스트 (반드시 통과)
 
-`python -m pytest` (맨 위에서) — 325개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
+`python -m pytest` (맨 위에서) — 326개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
 `cd recommend && python test_api.py` — 현재 32개 통과 (Flask 필요: `pip install -r requirements.txt`).
