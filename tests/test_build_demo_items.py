@@ -30,8 +30,13 @@ def test_builds_server_items(tmp_path):
     assert (item["price"], item["popularity"], item["is_new"], item["brand"]) == (32000, 0.8, True, "시연용 브랜드")
     assert item["seasons"] == ["spring", "summer", "fall", "winter"]
     assert item["data_source"] == "etri"
-    assert item["colors"] == []          # 색 속성이 없으면 색상 선택 없음
+    assert item["colors"] == ["블랙", "화이트", "그레이", "네이비"]   # 색 속성이 없으면 임시 색 4가지
     assert "det:ruffle" in item["tags"] and item["description"].startswith("블라우스예요.")
+
+
+def test_temp_colors_follow_the_photo_color():
+    assert tool.demo_colors({"C": ["하늘색"]}) == ["하늘색", "블랙", "화이트", "그레이"]
+    assert tool.demo_colors({"C": ["화이트"]}) == ["화이트", "블랙", "그레이", "네이비"]   # 같은 색은 한 번만
 
 
 def test_all_errors_reported_and_nothing_written(tmp_path, capsys):
