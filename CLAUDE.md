@@ -230,6 +230,7 @@ match_score(body, item) -> {
 - 파일 모양: `{"image_dir": 사진 폴더(파일 기준 상대 경로 가능), "items": [상품 + price·brand·description·is_new·image_file]}`. 만드는 법은 `tools/build_demo_items.py`와 `recommend/data/README.md` "상품 파일로 넣기". 결과 파일은 저장소에 넣지 않는다(스크립트가 저장소 안 경로를 거부)
 - 사진: `GET /product-images/<이름>`이 상품 파일에 적힌 사진만 원본 그대로 보내고, 응답의 `image_url`은 앱이 접속한 주소로 만든다. 응답에 `is_new`도 싣는다(앱 신상 표시는 아직)
 - 앱 상품 카드·상세 사진은 `centerCrop` → `fitCenter` (ETRI 이용 조건: 사진을 자르거나 편집하지 않는다)
+- 출처 문구(`data/DataCredit.ETRI`, README 2장 문장): 공지사항 맨 위 "상품 이미지와 정보의 출처" + 상품 상세 맨 아래. 상세는 상품 파일의 `data_source`가 `etri`인 상품에만 (내장 상품·시연 30개에는 안 붙임)
 
 ### 4-11. 안드로이드 카메라·치수 변경 (10/21)
 - 관절 인식: ML Kit Pose → **MediaPipe Pose Landmarker** (`android/.../camera/MediaPipePoseDetector.java`, 모델 `assets/models/pose_landmarker_full.task` 약 9MB는 저장소에 포함). `camera/Pose`·`PoseLandmark`는 ML Kit와 같은 이름·번호(33개)라 치수 계산 코드는 그대로다. 윤곽 분리(selfie segmentation)는 ML Kit 유지
