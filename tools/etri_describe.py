@@ -274,6 +274,12 @@ def product_name(kind_code: str, attrs: dict[str, list[str]]) -> str:
     return plain_korean(" ".join(words + [subtype]))
 
 
+def option_colors(attrs: dict[str, list[str]]) -> list[str]:
+    """옵션에서 고를 색: 사진 속 옷 한 벌의 대표 색(이름에 쓰는 첫 번째 색) 하나. 색 정보가 없으면 빈 목록"""
+    colors, _ = main_colors(attrs.get("C", []))
+    return colors[:1]
+
+
 def color_sentence(lines: list[str]) -> str:
     colors, pattern = main_colors(lines)
     solid = any("단색" in line and not ACCENT.search(line) for line in lines)

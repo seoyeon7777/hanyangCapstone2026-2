@@ -7,6 +7,7 @@ CSV는 첫 줄이 열 이름이다 (엑셀에서 "CSV UTF-8"로 저장).
     is_new        선택. 신상이면 1 (비우면 아님)
     product_name  선택. 비우면 "색 + 무늬 + 세부 종류" (예: 하늘색 블라우스)
     brand         선택. 비우면 "시연용 브랜드"
+    colors        선택. 옵션에서 고를 색을 띄어 씀. 비우면 속성의 대표 색 하나 (색 정보가 없으면 색상 선택 없이 팝니다)
     seasons       선택. spring summer fall winter 중에서 띄어 씀 (비우면 네 계절 모두. 원본에 계절 정보가 없다)
 설명(tools/etri_describe.py)·태그(tools/etri_tagging.py → tagging.py)·사진 연결은 이 스크립트가 붙인다.
 
@@ -25,7 +26,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matching  # noqa: E402
-from etri_describe import KINDS, describe, load_items, pick_subtype, product_name  # noqa: E402
+from etri_describe import KINDS, describe, load_items, option_colors, pick_subtype, product_name  # noqa: E402
 from etri_tagging import etri_tags  # noqa: E402
 
 SEASONS = ("spring", "summer", "fall", "winter")
@@ -65,6 +66,7 @@ def build_item(row: dict, source: dict, rules) -> dict:
         "tags": etri_tags(tag_name, attrs, KINDS[kind][1], rules), "seasons": seasons, "popularity": popularity,
         "price": price, "brand": row.get("brand") or DEFAULT_BRAND, "is_new": is_new in TRUE_WORDS,
         "description": describe(kind, attrs), "image_file": f"{item_id}.jpg",
+        "colors": (row.get("colors") or "").split() or option_colors(attrs),
         "data_source": "etri",   # 앱이 상품 상세 하단에 ETRI 출처 문구를 보여 주는 표시
     }
 

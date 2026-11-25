@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 
-from etri_describe import describe, plain_korean, product_name  # noqa: E402
+from etri_describe import describe, option_colors, plain_korean, product_name  # noqa: E402
 from etri_spacing import fix_spacing  # noqa: E402
 
 ATTRS = {
@@ -58,6 +58,12 @@ def test_denim_names():
     # 코디 설명이나 장식의 데님은 옷의 소재가 아니다
     assert product_name("KN", {"E": ["데님과 잘 어울리는"], "C": ["블루"]}) == "블루 니트"
     assert product_name("PT", {"M": ["데님 패치 장식"], "C": ["블루"]}) == "블루 바지"
+
+
+def test_option_color_is_the_one_color_in_the_photo():
+    assert option_colors(ATTRS) == ["하늘색"]
+    assert option_colors({"C": ["아이보리", "그린"]}) == ["아이보리"]
+    assert option_colors({"C": ["블랙 단추 포인트"]}) == []
 
 
 def test_spacing_keeps_separate_words():

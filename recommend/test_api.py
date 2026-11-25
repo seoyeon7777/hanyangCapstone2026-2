@@ -442,7 +442,7 @@ def test_outside_items_file_serves_products_and_photos():
                 f.write(content)
         base = {"clothing_type": "top", "tags": ["fit:slim"], "seasons": ["fall"], "popularity": 0.5,
                 "price": 32000, "brand": "시연용 브랜드", "description": "블라우스예요.", "is_new": True,
-                "data_source": "etri"}
+                "data_source": "etri", "colors": []}
         data = {"image_dir": "img", "items": [
             {**base, "product_id": "BL-001", "product_name": "블라우스", "image_file": "BL-001.jpg"},
             {**base, "product_id": "BL-002", "product_name": "사진 없는 블라우스", "image_file": "../x.jpg"}]}
@@ -457,6 +457,7 @@ def test_outside_items_file_serves_products_and_photos():
             assert got["BL-001"]["image_url"] == "http://10.0.2.2:5000/product-images/BL-001.jpg"
             assert (got["BL-001"]["price"], got["BL-001"]["is_new"], got["BL-001"]["description"]) == (32000, True, "블라우스예요.")
             assert got["BL-001"]["data_source"] == "etri"
+            assert got["BL-001"]["colors"] == []   # 빈 목록도 그대로 보낸다 (앱은 색상 선택을 숨긴다)
             assert "image_url" not in got["BL-002"]
             res = client.get("/product-images/BL-001.jpg")
             assert res.status_code == 200 and res.data == photo

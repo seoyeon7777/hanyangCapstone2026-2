@@ -30,6 +30,7 @@ def test_builds_server_items(tmp_path):
     assert (item["price"], item["popularity"], item["is_new"], item["brand"]) == (32000, 0.8, True, "시연용 브랜드")
     assert item["seasons"] == ["spring", "summer", "fall", "winter"]
     assert item["data_source"] == "etri"
+    assert item["colors"] == []          # 색 속성이 없으면 색상 선택 없음
     assert "det:ruffle" in item["tags"] and item["description"].startswith("블라우스예요.")
 
 
