@@ -236,9 +236,16 @@ match_score(body, item) -> {
 - 신상: 서버 상품은 `is_new`를 따른다(`Product.isNewArrival`, `DummyData.isNew`). NEW 표시·신상 탭·카테고리 최신순·신상품 쿠폰에 같이 적용. 메인 신상 탭은 서버 신상(카탈로그 순서) 다음에 내장 신상
 - 베스트: 바꾸지 않음(general 순서). 같은 종류 연속 제한 때문에 인기도 순과 몇 자리 다를 수 있다
 - 장바구니에도 상품 사진을 보여 준다. 주문 화면들은 원래 사진 칸이 없다
-- 옵션 색상: 상품에 `colors`가 있으면 그것만(ETRI 상품은 대표 색 하나, 미리 선택), 빈 목록이면 색상 칸을 숨기고 사이즈만, `colors`가 없는 상품(내장·시연 30개·DB)은 공통 4색. 틀린 색은 목록 CSV의 `colors` 열로 고친다
+- 옵션 색상: 상품에 `colors`가 있으면 그것만(**임시:** ETRI 상품은 사진 속 색 + 블랙·화이트·그레이·네이비 중에서 4가지. `build_demo_items.demo_colors`. 실제 판매 색이 아니고 사진은 바뀌지 않음), 빈 목록이면 색상 칸을 숨기고 사이즈만, `colors`가 없는 상품(내장·시연 30개·DB)은 공통 4색. 틀린 색은 목록 CSV의 `colors` 열로 고친다
 - 앱 상품 카드·상세 사진은 `centerCrop` → `fitCenter` (ETRI 이용 조건: 사진을 자르거나 편집하지 않는다)
 - 출처 문구(`data/DataCredit.ETRI`, README 2장 문장): 공지사항 맨 위 "상품 이미지와 정보의 출처" + 상품 상세 맨 아래. 상세는 상품 파일의 `data_source`가 `etri`인 상품에만 (내장 상품·시연 30개에는 안 붙임)
+
+### 4-34. 상품 300개 시험과 홈 화면 수정 (11/25)
+- 후보에서 임시 300개(체형별 100개)를 저장소 밖에 만들어 시험. 서버: 모드·체형별로 300개 스크롤이 겹침·빠짐 없음, 요청당 10ms 안쪽, 상위 20개 겹침 S·W 3 / S·N 2 / W·N 0
+- **수정 1 (앱 종료)**: 홈 요청을 기다리는 동안 다른 탭으로 가면, 늦게 온 응답이 바뀐 목록에 추가를 알려 `IndexOutOfBoundsException: Inconsistency detected`로 꺼졌다(11-16 종료 기록과 같은 오류). `updateProducts`가 홈을 벗어날 때 `homeRequestId++`. 응답을 6초 늦춘 서버로 재현 → 수정 후 3번 모두 정상
+- **수정 2 (홈 스크롤 걸림)**: 바닥 근처에서 상품이 붙으면 아래로 스크롤이 안 됐다(위로 올렸다 내리면 풀림). `homeScrollView`의 `overScrollMode="never"`. 에뮬레이터에서 반응 없는 스와이프 34/40 → 2/40, 300개 끝까지 도달. 실제 폰에서는 확인하지 않았다(에뮬레이터는 화면 갱신이 멈추는 모습도 있었다)
+- 남은 점: 홈·신상·베스트는 불러온 카드를 모두 들고 있다(300개에서 메모리 약 190~300MB, 시험 중 종료는 없었음). 탭을 눌렀을 때 화면이 멈추는 시간은 재지 못했다
+- **팀 결정 필요 (C)**: `MAX_SAME_REP_TAG = 3`이면 좋은 상품이 대표 태그 2~3개에 몰려, 첫 10개 중 점수 0.6 이상이 S 6 / W 8 / N 9개뿐이고 나머지는 약한 상품이 채운다. 5로 계산하면 셋 다 10개. 값은 바꾸지 않았다(정답 테스트가 3 기준)
 
 ### 4-11. 안드로이드 카메라·치수 변경 (10/21)
 - 관절 인식: ML Kit Pose → **MediaPipe Pose Landmarker** (`android/.../camera/MediaPipePoseDetector.java`, 모델 `assets/models/pose_landmarker_full.task` 약 9MB는 저장소에 포함). `camera/Pose`·`PoseLandmark`는 ML Kit와 같은 이름·번호(33개)라 치수 계산 코드는 그대로다. 윤곽 분리(selfie segmentation)는 ML Kit 유지
@@ -532,7 +539,7 @@ match_score(body, item) -> {
 
 ## 5. 정답 테스트 (반드시 통과)
 
-`python -m pytest` (맨 위에서) — 326개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
+`python -m pytest` (맨 위에서) — 327개 모두 통과 (pytest.ini가 tests/만 모은다. recommend/ 테스트는 아래처럼 따로 실행).
 `cd recommend && python test_feed.py` — 현재 41개 통과 (C 로직, 임시 매칭 기준 손계산. 토글 OFF 6개 포함).
 `cd recommend && python test_integration.py` — 현재 8개 통과 (A+B+C 연결).
 `cd recommend && python test_api.py` — 현재 32개 통과 (Flask 필요: `pip install -r requirements.txt`).
