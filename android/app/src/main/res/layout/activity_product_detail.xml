@@ -70,7 +70,7 @@
                     android:id="@+id/imgDetailProduct"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
+                    android:scaleType="fitCenter"
                     android:visibility="gone" />
 
             </FrameLayout>
@@ -148,6 +148,16 @@
                     android:textColor="#111111"
                     android:textSize="17sp"
                     android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/textDetailDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="5dp"
+                    android:textColor="#333333"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
 
                 <!-- 옵션 선택 -->
                 <!-- 누르면 사이즈 / 색상 선택 창이 열린다 -->

@@ -33,6 +33,7 @@ public class Product {
     private String serverId = "";
     private String reason = "";
     private String imageUrl = "";
+    private String description = "";
     private float popularity = -1f;
 
     public Product(int id, String brand, String name, int price) {
@@ -139,6 +140,7 @@ public class Product {
                 colors.toArray(new String[0]), styles.toArray(new String[0]), seasons.toArray(new String[0]));
         line.setServerInfo(serverId, reason);
         line.setImageUrl(imageUrl);
+        line.setDescription(description);
         line.setPopularity(popularity);
         line.liked = liked;
         line.cartLineId = lineId;
@@ -188,6 +190,15 @@ public class Product {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl == null ? "" : imageUrl;
+    }
+
+    /** 상품 설명문 (추천 서버 상품만. 없으면 빈 문자열) */
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description == null ? "" : description;
     }
 
     public float getPopularity() {

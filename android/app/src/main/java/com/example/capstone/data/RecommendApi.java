@@ -411,6 +411,10 @@ public final class RecommendApi {
         if (item.has("image_url")) {
             product.setImageUrl(item.optString("image_url", ""));
         }
+        if (item.has("description")) {
+            // 값이 null이면 "null"이라는 글자가 되지 않게 빈 문자열로
+            product.setDescription(item.isNull("description") ? "" : item.optString("description", ""));
+        }
         // 추천 이유는 토글(ON/OFF)마다 달라서 받을 때마다 새로 넣는다
         product.setServerInfo(serverId, item.optString("reason", ""));
 

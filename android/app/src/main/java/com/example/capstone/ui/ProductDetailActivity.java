@@ -182,6 +182,13 @@ public class ProductDetailActivity extends AppCompatActivity {
             textDetailReason.setVisibility(View.VISIBLE);
         }
 
+        // 설명이 있는 상품(추천 서버 상품)만 "상품 정보" 아래에 보여 준다
+        TextView textDetailDescription = findViewById(R.id.textDetailDescription);
+        if (currentProduct != null && !currentProduct.getDescription().isEmpty()) {
+            textDetailDescription.setText(KoreanLineBreak.keepWords(currentProduct.getDescription()));
+            textDetailDescription.setVisibility(View.VISIBLE);
+        }
+
         ProductImages.bind(
                 findViewById(R.id.frameDetailImage),
                 findViewById(R.id.textDetailImageLabel),
