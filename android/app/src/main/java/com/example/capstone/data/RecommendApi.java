@@ -417,6 +417,14 @@ public final class RecommendApi {
         }
         product.setDataSource(item.optString("data_source", ""));
         product.setNewArrival(item.optBoolean("is_new", false));
+        JSONArray colorArray = item.optJSONArray("colors");
+        if (colorArray != null) {
+            List<String> optionColors = new ArrayList<>();
+            for (int i = 0; i < colorArray.length(); i++) {
+                optionColors.add(colorArray.getString(i));
+            }
+            product.setOptionColors(optionColors);
+        }
         // 추천 이유는 토글(ON/OFF)마다 달라서 받을 때마다 새로 넣는다
         product.setServerInfo(serverId, item.optString("reason", ""));
 

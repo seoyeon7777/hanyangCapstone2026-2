@@ -325,6 +325,9 @@ public final class CartStore {
         j.put("price", line.getPrice());
         j.put("category", line.getCategory());
         j.put("image_url", line.getImageUrl());
+        if (line.getOptionColors() != null) {
+            j.put("option_colors", new JSONArray(line.getOptionColors()));
+        }
         j.put("size", line.getSelectedSize());
         j.put("color", line.getSelectedColor());
         j.put("quantity", line.getCartQuantity());
@@ -347,6 +350,14 @@ public final class CartStore {
             source.setFilterInfo(j.optString("category"), null, null, null);
             source.setServerInfo(serverId, "");
             source.setImageUrl(j.optString("image_url"));
+            JSONArray colors = j.optJSONArray("option_colors");
+            if (colors != null) {
+                List<String> optionColors = new ArrayList<>();
+                for (int i = 0; i < colors.length(); i++) {
+                    optionColors.add(colors.optString(i));
+                }
+                source.setOptionColors(optionColors);
+            }
         }
         return source.copyForCart(lineId, j.optString("size"), j.optString("color"),
                 clampQuantity(j.optInt("quantity", 1)), j.optBoolean("selected", true));

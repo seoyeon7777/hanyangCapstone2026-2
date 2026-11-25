@@ -36,6 +36,8 @@ public class Product {
     private String description = "";
     private String dataSource = "";
     private boolean newArrival;
+    // 옵션에서 고를 색. null이면 앱 공통 색 목록, 빈 목록이면 색상 선택이 없는 상품
+    private List<String> optionColors;
     private float popularity = -1f;
 
     public Product(int id, String brand, String name, int price) {
@@ -118,14 +120,27 @@ public class Product {
 
     /** "L / NAVY" 모양의 선택 옵션. 고른 옵션이 없으면 빈 문자열 */
     public String getOptionLabel() {
-        boolean hasSize = selectedSize != null && !selectedSize.isEmpty();
-        boolean hasColor = selectedColor != null && !selectedColor.isEmpty();
+        return optionText(selectedSize, selectedColor);
+    }
+
+    /** 사이즈·색상 중 있는 것만 " / "로 잇는다 (색상이 없는 상품은 "M") */
+    public static String optionText(String size, String color) {
+        boolean hasSize = size != null && !size.isEmpty();
+        boolean hasColor = color != null && !color.isEmpty();
 
         if (hasSize && hasColor) {
-            return selectedSize + " / " + selectedColor;
+            return size + " / " + color;
         }
 
-        return hasSize ? selectedSize : hasColor ? selectedColor : "";
+        return hasSize ? size : hasColor ? color : "";
+    }
+
+    public List<String> getOptionColors() {
+        return optionColors == null ? null : new ArrayList<>(optionColors);
+    }
+
+    public void setOptionColors(List<String> colors) {
+        optionColors = colors == null ? null : new ArrayList<>(colors);
     }
 
     public long getCartLineId() {
@@ -145,6 +160,7 @@ public class Product {
         line.setDescription(description);
         line.setDataSource(dataSource);
         line.setNewArrival(newArrival);
+        line.setOptionColors(optionColors);
         line.setPopularity(popularity);
         line.liked = liked;
         line.cartLineId = lineId;

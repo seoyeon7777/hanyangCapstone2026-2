@@ -536,7 +536,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         CartStore.add(this, currentProduct, selectedSize, selectedColor, selectedQuantity);
 
-        String message = selectedSize + " / " + selectedColor + " / " + selectedQuantity + "개";
+        String message = Product.optionText(selectedSize, selectedColor) + " / " + selectedQuantity + "개";
 
         AppDialog.show(this, false,
                 "장바구니에 담았어요",
@@ -556,7 +556,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         intent.putExtra("productNames", currentProduct.getName());
         intent.putExtra(OrderActivity.EXTRA_BRAND, currentProduct.getBrand());
         intent.putExtra(OrderActivity.EXTRA_PRODUCT_ID, currentProduct.getId());
-        intent.putExtra("productOption", selectedSize + " / " + selectedColor);
+        intent.putExtra("productOption", Product.optionText(selectedSize, selectedColor));
         intent.putExtra("totalQuantity", selectedQuantity);
         intent.putExtra("totalPrice", currentProduct.getPrice() * selectedQuantity);
         if (currentProduct.isFromServer()) {

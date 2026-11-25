@@ -35,8 +35,8 @@ public class ProductOptionSheet {
     // =========================
     // 선택 가능한 색상
     //
-    // 지금은 상품마다 옵션 데이터가 없으므로 공통으로 사용.
-    // 나중에 product_options API에서 받아오면 교체하면 된다.
+    // 상품에 색 목록(Product.getOptionColors)이 있으면 그것을 쓰고, 없으면 이 공통 목록을 쓴다.
+    // 색 목록이 빈 상품은 색상 선택 없이 판다 (색상 값은 빈 문자열).
     // =========================
 
     public static final String[] COLORS = {
@@ -174,9 +174,12 @@ public class ProductOptionSheet {
         btnConfirm.setText(confirmText);
 
 
+        String[] colors = colorsFor(product);
+        boolean needsColor = colors.length > 0;
+
         // 선택 상태 (람다 안에서 바꾸기 위해 배열 사용)
         String[] selectedSize = {initialSize};
-        String[] selectedColor = {initialColor};
+        String[] selectedColor = {startColor(colors, initialColor)};
         int[] quantity = {Math.max(1, initialQuantity)};
 
 
@@ -195,10 +198,10 @@ public class ProductOptionSheet {
                             && !selectedColor[0].isEmpty();
 
 
-            if (hasSize && hasColor) {
+            if (hasSize && (hasColor || !needsColor)) {
 
                 textSelected.setText(
-                        selectedSize[0] + " / " + selectedColor[0]
+                        Product.optionText(selectedSize[0], selectedColor[0])
                 );
 
                 textSelected.setTextColor(0xFF111111);
@@ -243,10 +246,15 @@ public class ProductOptionSheet {
         addChips(
                 context,
                 groupColor,
-                COLORS,
+                colors,
                 selectedColor,
                 refresh
         );
+
+        if (!needsColor) {
+            view.findViewById(R.id.textOptionColorTitle).setVisibility(View.GONE);
+            groupColor.setVisibility(View.GONE);
+        }
 
 
         // =========================
@@ -287,14 +295,15 @@ public class ProductOptionSheet {
         // 확인
         // =========================
 
-        bindConfirm(btnConfirm, context, dialog, selectedSize, selectedColor, quantity, listener);
+        bindConfirm(btnConfirm, context, dialog, selectedSize, selectedColor, needsColor, quantity, listener);
 
         if (secondaryText != null) {
 
             btnSecondary.setText(secondaryText);
             btnSecondary.setVisibility(View.VISIBLE);
 
-            bindConfirm(btnSecondary, context, dialog, selectedSize, selectedColor, quantity, secondaryListener);
+            bindConfirm(btnSecondary, context, dialog, selectedSize, selectedColor, needsColor, quantity,
+                    secondaryListener);
         }
 
 
@@ -309,12 +318,33 @@ public class ProductOptionSheet {
     }
 
 
+    static String[] colorsFor(Product product) {
+        java.util.List<String> own = product == null ? null : product.getOptionColors();
+        return own == null ? COLORS : own.toArray(new String[0]);
+    }
+
+    /**
+     * 창을 열 때 골라 둘 색. 색이 하나뿐이면 미리 고른다.
+     * 전에 고른 색이 지금 목록에 없으면(예전에 담은 장바구니) 다시 고르게 한다. 색상이 없는 상품은 빈 문자열
+     */
+    static String startColor(String[] colors, String initial) {
+        if (colors.length == 0) {
+            return "";
+        }
+        if (java.util.Arrays.asList(colors).contains(initial)) {
+            return initial;
+        }
+        return colors.length == 1 ? colors[0] : null;
+    }
+
+
     private static void bindConfirm(
             TextView button,
             Context context,
             BottomSheetDialog dialog,
             String[] selectedSize,
             String[] selectedColor,
+            boolean needsColor,
             int[] quantity,
             OnConfirmListener listener
     ) {
@@ -333,8 +363,8 @@ public class ProductOptionSheet {
                 return;
             }
 
-            if (selectedColor[0] == null
-                    || selectedColor[0].isEmpty()) {
+            if (needsColor && (selectedColor[0] == null
+                    || selectedColor[0].isEmpty())) {
 
                 Toast.makeText(
                         context,
