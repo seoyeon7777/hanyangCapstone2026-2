@@ -29,6 +29,7 @@ def test_builds_server_items(tmp_path):
     assert (item["product_id"], item["clothing_type"], item["image_file"]) == ("BL-001", "top", "BL-001.jpg")
     assert (item["price"], item["popularity"], item["is_new"], item["brand"]) == (32000, 0.8, True, "시연용 브랜드")
     assert item["seasons"] == ["spring", "summer", "fall", "winter"]
+    assert item["data_source"] == "etri"
     assert "det:ruffle" in item["tags"] and item["description"].startswith("블라우스예요.")
 
 

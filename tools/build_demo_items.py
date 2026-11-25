@@ -64,6 +64,7 @@ def build_item(row: dict, source: dict, rules) -> dict:
         "tags": tag_item_full(name, text, rules)["tags"], "seasons": seasons, "popularity": popularity,
         "price": price, "brand": row.get("brand") or DEFAULT_BRAND, "is_new": is_new in TRUE_WORDS,
         "description": describe(kind, attrs), "image_file": f"{item_id}.jpg",
+        "data_source": "etri",   # 앱이 상품 상세 하단에 ETRI 출처 문구를 보여 주는 표시
     }
 
 
